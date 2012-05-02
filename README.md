@@ -48,6 +48,8 @@ if __name__ == '__main__':
 ## Example Applications
 To show off what can be made with SoCo, a basic commandline application and a simple web application are included in the `examples` folder.
 
+![Screenshot of web app](https://github.com/rahims/SoCo/raw/master/examples/webapp/screenshot.png)
+
 ## Features
 SoCo currently supports the following basic controls:
 
