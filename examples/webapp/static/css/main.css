@@ -1,0 +1,17 @@
+body {
+    padding-top: 60px;
+}
+
+.row {
+    margin-top: 40px;
+}
+
+/* From http://webdesignerwall.com/demo/css3-image-styles/ */
+.card .image-wrap {
+	-webkit-box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	-moz-box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	box-shadow: inset 0 0 1px rgba(0,0,0,.8), inset 0 2px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(0,0,0,.4);
+	-webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>SoCo - Sonos Web Controller</title>
+
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    </head>
+    <body class="container">
+        <div class="row">
+            <div id="info" class="span12"></div>
+            <div class="span6 card">
+                <img id="track-image" src="{{ track.image }}" >
+            </div>
+            <div class="span6">
+                <h1 id="track-title"></h1>
+                <h2 id="track-artist"></h2>
+                <h2 id="track-album"></h2>
+                <div class="row">
+                    <button id="previous" class="btn"><i class="icon-backward"></i> Previous</button>
+                    <button id="pause" class="btn"><i class="icon-pause"></i> Pause</button>
+                    <button id="next" class="btn"><i class="icon-forward"></i> Next</button>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+        <script type="text/javascript">
+            var currTrack = '';
+            var playing = true;
+
+            function checkChange() {
+                $.getJSON('http://127.0.0.1:5000/info-light').done(function(data) {
+                    $('#track-title').text(data['title']);
+
+                    if (currTrack != data['title'])
+                    {
+                        loadData();
+                    }
+                });
+            }
+
+            function loadData() {
+                $.getJSON('http://127.0.0.1:5000/info').done(function(data) {
+                    $('#track-title').text(data['title']);
+                    $('#track-artist').text(data['artist']);
+                    $('#track-album').text(data['album']);
+                    $('.card').empty();
+                    $('.card').html('<span class="image-wrap card" style="position:relative; display:inline-block; background:url(' + data['image'] + ') no-repeat center center; width: 400px; height: 400px;" /><img style="opacity:0" id="track-image" src="' + data['image'] + '"></span>');
+
+                    currTrack = data['title'];
+                });
+            }
+
+            $(document).ready(function() {
+                loadData();
+
+                $("img").load(function() {
+                    $(this).wrap(function(){
+                        return '<span class="image-wrap ' + $(this).attr('class') + '" style="position:relative; display:inline-block; background:url(' + $(this).attr('src') + ') no-repeat center center; width: ' + $(this).width() + 'px; height: ' + $(this).height() + 'px;" />';
+                    });
+                    $(this).css("opacity","0");
+                });
+
+                setInterval("checkChange()", 1000);
+
+                $('#next').click(function() {
+                    $.ajax('http://127.0.0.1:5000/next');
+                    loadData();
+                });
+
+                $('#previous').click(function() {
+                    $.ajax('http://127.0.0.1:5000/previous');
+                    loadData();
+                });
+
+                $('#pause').click(function() {
+                    if (playing == true)
+                    {
+                        $.ajax('http://127.0.0.1:5000/pause');
+                        playing = false;
+
+                        $('#pause').html('<i class="icon-play"></i> Play');
+                    }
+                    else {
+                        $.ajax('http://127.0.0.1:5000/play');
+                        playing = true;
+
+                        $('#pause').html('<i class="icon-pause"></i> Pause');
+                    }
+                });
+            });
+        </script>
+   </body>
+</html>
