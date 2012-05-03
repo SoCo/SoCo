@@ -65,13 +65,14 @@ SoCo currently supports the following basic controls:
     * Track length
     * Duration played (for example, 30 seconds into a 3 minute song)
     * Playlist position (for example, item 5 in the playlist)
+* Mute (or unmute) the speaker
+* Set the speaker volume
+* Turn on (or off) the white status light on the unit
 
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:
 
 * SSDP for dynamic discovery of Sonos devices
-* mute/unmute
-* volume controls
 * playlist management
 * specify a song to play
 * better error checking
