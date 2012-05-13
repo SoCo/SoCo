@@ -94,7 +94,6 @@ Want to contribute to SoCo? Here's what needs to be done:
 
 * SSDP for dynamic discovery of Sonos devices
 * playlist management
-* specify a song to play
 * better error checking
 
 ## License
