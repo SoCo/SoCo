@@ -38,11 +38,17 @@ from soco import SoCo
 if __name__ == '__main__':
     sonos = SoCo('10.0.0.102') # Pass in the IP of your Sonos speaker
 
-    sonos.play()
+    # Pass in a URI to a media file to have it streamed through the Sonos speaker
+    sonos.play('http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
 
     track = sonos.get_current_track_info()
 
     print track['title']
+
+    sonos.pause()
+
+    # Pass in no arguments to play a stopped or paused track
+    sonos.play()
 ```
 
 ## Example Applications
@@ -62,12 +68,25 @@ SoCo currently supports the following basic controls:
     * Track title
     * Artist
     * Album
+    * Album Art (if available)
     * Track length
     * Duration played (for example, 30 seconds into a 3 minute song)
     * Playlist position (for example, item 5 in the playlist)
 * Mute (or unmute) the speaker
-* Set the speaker volume
+* Get or set the speaker volume
+* Get or set the speaker's bass EQ
+* Get or set the speaker's treble EQ
+* Toggle the speaker's loudness compensation
 * Turn on (or off) the white status light on the unit
+* Switch the speaker's source to line-in (doesn't work on the Play:3 since it doesn't have a line-in)
+* Get the speaker's information
+    * Zone Name
+    * Zone Icon
+    * UID (usually something like RINCON_XXXXXXXXXXXXXXXXX)
+    * Serial Number
+    * Software version
+    * Hardware version
+    * MAC Address
 
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:

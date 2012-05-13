@@ -6,15 +6,20 @@ class SoCo(object):
     """A simple class for controlling a Sonos speaker.
 
     Public functions:
-    play -- Plays the currently selected track.
+    play -- Plays the currently selected track or a music stream.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
     next -- Go to the next track.
     previous -- Go back to the previous track.
     mute -- Mute (or unmute) the speaker.
-    set_volume -- Set the volume of the speaker.
+    volume -- Get or set the volume of the speaker.
+    bass -- Get or set the speaker's bass EQ.
+    treble -- Set the speaker's treble EQ.
+    set_loudness -- Turn on (or off) the speaker's loudness compensation.
+    switch_to_line_in -- Switch the speaker's input to line-in.
     status_light -- Turn on (or off) the Sonos status light.
     get_current_track_info -- Get information about the currently playing track.
+    get_speaker_info -- Get information about the Sonos speaker.
 
     """
 
@@ -22,11 +27,16 @@ class SoCo(object):
     RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
     DEVICE_ENDPOINT = '/DeviceProperties/Control'
 
+    speaker_info = {}
+
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
 
-    def play(self):
-        """Start playing the currently selected track.
+    def play(self, uri=''):
+        """Play the currently selected track or play a stream.
+
+        Arguments:
+        uri -- URI of a stream to be played.
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -36,16 +46,30 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+        if uri is not '':
+            action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 
-        body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
+            body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
 
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
-            return True
+            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+                # The track is enqueued, now play it.
+                return self.play()
+            else:
+                return self.__parse_error(response)
+
         else:
-            return self.__parse_error(response)
+            action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+
+            body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
+
+            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+
+            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
+                return True
+            else:
+                return self.__parse_error(response)
 
     def pause(self):
         """ Pause the currently playing track.
@@ -172,27 +196,185 @@ class SoCo(object):
         else:
             return self.parse(response)
 
-    def set_volume(self, volume):
-        """ Set the Sonos speaker volume.
+    def volume(self, volume=False):
+        """ Get or set the Sonos speaker volume.
 
         Arguments:
         volume -- A value between 0 and 100.
         
         Returns:
-        True if the Sonos speaker successfully set the volume.
+        If the volume argument was specified: returns true if the Sonos speaker
+        successfully set the volume.
+
+        If the volume argument was not specified: returns the current volume of
+        the Sonos speaker.
         
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
         
         """
-        action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
+        if volume:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
 
-        body = '<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredVolume>' + repr(volume) + '</DesiredVolume></u:SetVolume>'
+            body = '<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredVolume>' + repr(volume) + '</DesiredVolume></u:SetVolume>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetVolumeResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetVolumeResponse></s:Body></s:Envelope>'):
+                return True
+            else:
+                return self.__parse_error(response)
+        else:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetVolume"'
+
+            body = '<u:GetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetVolume>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            dom = XML.fromstring(response)
+
+            volume = dom.findtext('.//CurrentVolume')
+
+            return int(volume)
+
+    def bass(self, bass=False):
+        """ Get or set the Sonos speaker's bass EQ.
+
+        Arguments:
+        bass -- A value between -10 and 10.
+        
+        Returns:
+        If the bass argument was specified: returns true if the Sonos speaker
+        successfully set the bass EQ.
+
+        If the bass argument was not specified: returns the current base value.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        
+        """
+        if bass:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetBass"'
+
+            body = '<u:SetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredBass>' + repr(bass) + '</DesiredBass></u:SetBass>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetBassResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetBassResponse></s:Body></s:Envelope>'):
+                return True
+            else:
+                return self.__parse_error(response)
+        else:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetBass"'
+
+            body = '<u:GetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetBass>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            dom = XML.fromstring(response)
+
+            bass = dom.findtext('.//CurrentBass')
+
+            return int(bass)
+
+    def treble(self, treble=False):
+        """ Get or set the Sonos speaker's treble EQ.
+
+        Arguments:
+        treble -- A value between -10 and 10.
+        
+        Returns:
+        If the treble argument was specified: returns true if the Sonos speaker
+        successfully set the treble EQ.
+
+        If the treble argument was not specified: returns the current treble value.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        
+        """
+        if treble:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetTreble"'
+
+            body = '<u:SetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredTreble>' + repr(treble) + '</DesiredTreble></u:SetTreble>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetTrebleResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetTrebleResponse></s:Body></s:Envelope>'):
+                return True
+            else:
+                return self.__parse_error(response)
+        else:
+            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetTreble"'
+
+            body = '<u:GetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetTreble>'
+
+            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+
+            dom = XML.fromstring(response)
+
+            treble = dom.findtext('.//CurrentTreble')
+
+            return int(treble)
+
+    def set_loudness(self, loudness):
+        """ Set the Sonos speaker's loudness compensation.
+
+        Loudness is a complicated topic. You can find a nice summary about this
+        feature here: http://forums.sonos.com/showthread.php?p=4698#post4698
+
+        Arguments:
+        loudness -- True to turn on loudness compensation. False to disable it.
+        
+        Returns:
+        True if the Sonos speaker successfully set the loundess compensation. 
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        
+        """
+        action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudness"'
+
+        if loudness is True:
+            loudness_value = '1'
+        else:
+            loudness_value = '0'
+
+        body = '<u:SetLoudness xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredLoudness>' + loudness_value + '</DesiredLoudness></u:SetLoudness>'
 
         response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
 
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetVolumeResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetVolumeResponse></s:Body></s:Envelope>'):
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLoudnessResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetLoudnessResponse></s:Body></s:Envelope>'):
+            return True
+        else:
+            return self.__parse_error(response)
+
+    def switch_to_line_in(self):
+        """ Switch the speaker's input to line-in.
+
+        Returns:
+        True if the Sonos speaker successfully switched to line-in.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned. Note, an error will be returned if you try
+        to switch to line-in on a device (like the Play:3) that doesn't have
+        line-in capability.
+
+        """
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+
+        speaker_info = self.get_speaker_info()
+
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon-stream:' + speaker_info['uid'] + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
             return True
         else:
             return self.__parse_error(response)
@@ -235,7 +417,8 @@ class SoCo(object):
         
         Returns:
         A dictionary containing the following information about the currently
-        playing track: playlist_position, duration, title, artist, album.
+        playing track: playlist_position, duration, title, artist, album, and
+        a link to the album art.
         
         If we're unable to return data for a field, we'll return an empty
         string. This can happen for all kinds of reasons so be sure to check
@@ -254,24 +437,62 @@ class SoCo(object):
         track = {}
 
         track['playlist_position'] = dom.findtext('.//Track')
-
         track['duration'] = dom.findtext('.//TrackDuration')
+        track['uri'] = dom.findtext('.//TrackURI')
 
         d = dom.findtext('.//TrackMetaData')
 
-        if d is not '':
+        # If the speaker is playing from the line-in source, querying for track
+        # metadata will return "NOT_IMPLEMENTED".
+        if d is not '' or d is not 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
             metadata = XML.fromstring(d.encode('utf-8'))
 
             track['title'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
             track['artist'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
             track['album'] = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+
+            album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+
+            if album_art is not None:
+                track['album_art'] = 'http://' + self.speaker_ip + ':1400' + metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+            else:
+                track['album_art'] = ''
         else:
             track['title'] = ''
             track['artist'] = ''
             track['album'] = ''
+            track['album_art'] = ''
 
         return track
+
+    def get_speaker_info(self, refresh=False):
+        """ Get information about the Sonos speaker.
+
+        Arguments:
+        refresh -- Refresh the speaker info cache.
+
+        Returns:
+        Information about the Sonos speaker, such as the UID, MAC Address, and
+        Zone Name.
+
+        """
+        if self.speaker_info and refresh is False:
+            return self.speaker_info
+        else:
+            response = requests.get('http://' + self.speaker_ip + ':1400/status/zp')
+
+            dom = XML.fromstring(response.content)
+
+            self.speaker_info['zone_name'] = dom.findtext('.//ZoneName')
+            self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
+            self.speaker_info['uid'] = dom.findtext('.//LocalUID')
+            self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
+            self.speaker_info['software_version'] = dom.findtext('.//SoftwareVersion')
+            self.speaker_info['hardware_version'] = dom.findtext('.//HardwareVersion')
+            self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
+
+            return self.speaker_info
 
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
