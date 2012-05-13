@@ -72,6 +72,7 @@ SoCo currently supports the following basic controls:
     * Track length
     * Duration played (for example, 30 seconds into a 3 minute song)
     * Playlist position (for example, item 5 in the playlist)
+    * Track URI
 * Mute (or unmute) the speaker
 * Get or set the speaker volume
 * Get or set the speaker's bass EQ
