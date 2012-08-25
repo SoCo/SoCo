@@ -20,6 +20,8 @@ class SoCo(object):
     status_light -- Turn on (or off) the Sonos status light.
     get_current_track_info -- Get information about the currently playing track.
     get_speaker_info -- Get information about the Sonos speaker.
+    partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
+    join -- Join this speaker to another "master" speaker.
 
     """
 
@@ -27,7 +29,8 @@ class SoCo(object):
     RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
     DEVICE_ENDPOINT = '/DeviceProperties/Control'
 
-    speaker_info = {}
+    speaker_info = {} # Stores information about the current speaker
+    speakers_ip = [] # Stores the IP addresses of all the speakers in a network
 
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
@@ -353,6 +356,63 @@ class SoCo(object):
         else:
             return self.__parse_error(response)
 
+    def partymode (self):
+        """ Put all the speakers in the network in the same group, a.k.a Party Mode.
+		
+		This blog shows the initial research responsible for this:
+        http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
+		
+		The trick seems to be (only tested on a two-speaker setup) to tell each
+        speaker which to join. There's probably a bit more to it if multiple
+        groups have been defined.
+
+        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
+		
+		Returns:
+		True if partymode is set
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+		"""
+
+        master_speaker_info = self.get_speaker_info()
+        ips = self.get_speakers_ip()
+        
+        rc = True
+        # loop through all IP's in topology and make them join this master
+        for ip in ips:
+            if not (ip == self.speaker_ip):
+                Slave = SoCo(ip)
+                ret = Slave.join(master_speaker_info["uid"])
+                if ret is False:
+                    rc = False
+			
+        return rc
+
+    def join(self, master_uid):
+        """ Join this speaker to another "master" speaker.
+
+        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
+				
+		Returns:
+		True if this speaker has joined the master speaker
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+		"""
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:' + master_uid + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'        
+        
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            return True
+        else:
+            return self.__parse_error(response)
+
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
 
@@ -493,6 +553,34 @@ class SoCo(object):
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
 
             return self.speaker_info
+
+    def get_speakers_ip(self, refresh=False):
+        """ Get the IP addresses of all the Sonos speakers in the network.
+
+        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
+
+        Arguments:
+        refresh -- Refresh the speakers IP cache.
+
+        Returns:
+        IP addresses of the Sonos speakers.
+
+        """
+
+        if self.speakers_ip and refresh is False:
+            return self.speakers_ip
+        else:
+            response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
+            text = response.text
+            grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)
+
+            for i in grp:
+                response = requests.get('http://' + i + ':1400/status')
+
+                if response.status_code == 200:
+                    (self.speakers_ip).append(i)
+
+            return self.speakers_ip
 
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.

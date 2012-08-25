@@ -88,6 +88,8 @@ SoCo currently supports the following basic controls:
     * Software version
     * Hardware version
     * MAC Address
+* Find all the Sonos speakers in a network. Code contributed by Thomas Bartvig.
+* Put all Sonos speakers in a network into "party mode". Code contributed by Thomas Bartvig.
 
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:
@@ -95,6 +97,9 @@ Want to contribute to SoCo? Here's what needs to be done:
 * SSDP for dynamic discovery of Sonos devices
 * playlist management
 * better error checking
+
+## Contributors
+* Thomas Bartvig [thomas.bartvig@gmail.com](mailto:thomas.bartvig@gmail.com)
 
 ## License
 Copyright (C) 2012 Rahim Sonawalla ([rsonawalla@gmail.com](mailto:rsonawalla@gmail.com) / [@rahims](http://twitter.com/rahims)).

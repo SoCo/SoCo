@@ -8,7 +8,7 @@ if __name__ == '__main__':
     if (len(sys.argv) != 3):
         print "Usage: sonoshell.py [speaker's IP] [cmd]"
         print ""
-        print "Valid commands: play, pause, stop, next, previous, and current"
+        print "Valid commands: play, pause, stop, next, previous, current, and partymode"
         sys.exit()
 
     speaker_ip = sys.argv[1]
@@ -16,7 +16,9 @@ if __name__ == '__main__':
 
     sonos = SoCo(speaker_ip)
 
-    if (cmd == 'play'):
+    if (cmd == 'partymode'):
+        print sonos.partymode()
+    elif (cmd == 'play'):
         print sonos.play()
     elif (cmd == 'pause'):
         print sonos.pause()
@@ -31,4 +33,4 @@ if __name__ == '__main__':
 
         print 'Current track: ' + track['artist'] + ' - ' + track['title'] + '. From album ' + track['album'] + '. This is track number ' + track['playlist_position'] + ' in the playlist. It is ' + track['duration'] + ' minutes long.'
     else:
-        print "Valid commands: play, pause, stop, next, previous, and current"
+        print "Valid commands: play, pause, stop, next, previous, current, and partymode"
