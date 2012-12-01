@@ -95,7 +95,7 @@ Want to contribute to SoCo? Here's what needs to be done:
 
 ## Contributors
 * Thomas Bartvig [thomas.bartvig@gmail.com](mailto:thomas.bartvig@gmail.com)
-* Dave O'Connor [doc@gmail.com](mailto:doc@gmail.com)
+* Dave O'Connor doc@andvari.net
 
 ## License
 Copyright (C) 2012 Rahim Sonawalla ([rsonawalla@gmail.com](mailto:rsonawalla@gmail.com) / [@rahims](http://twitter.com/rahims)).
