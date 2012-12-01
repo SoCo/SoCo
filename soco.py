@@ -1,6 +1,47 @@
 import xml.etree.cElementTree as XML
 
 import requests
+import select
+import socket
+
+class SonosDiscovery(object):
+    """A simple class for discovering Sonos speakers.
+
+    Public functions:
+    get_player_ips -- Get a list of IPs of all zoneplayers.
+    """
+
+    PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
+HOST: 239.255.255.250:reservedSSDPport
+MAN: ssdp:discover
+MX: 3
+ST: urn:schemas-upnp-org:service:AVTransport:1"""
+
+    MCAST_GRP = "239.255.255.250"
+    MCAST_PORT = 1900
+
+    def __init__(self):
+        self._all_players = []
+        self._sock = socket.socket(
+                socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+
+
+    def get_player_ips(self):
+        players = []
+
+        self._sock.sendto(self.PLAYER_SEARCH, (self.MCAST_GRP, self.MCAST_PORT))
+
+        while True:
+            print "selecting"
+            rs, _, _ = select.select([self._sock], [], [], 1)
+            if rs:
+                _, addr = self._sock.recvfrom(2048)
+                players.append(addr[0])
+            else:
+                break
+        self._all_players = players
+        return players
 
 class SoCo(object):
     """A simple class for controlling a Sonos speaker.
@@ -22,6 +63,7 @@ class SoCo(object):
     get_speaker_info -- Get information about the Sonos speaker.
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
+    get_info -- get information on this speaker.
 
     """
 
@@ -581,6 +623,24 @@ class SoCo(object):
                     (self.speakers_ip).append(i)
 
             return self.speakers_ip
+
+    def get_info(self):
+        """Get some interesting info about the player."""
+        info = {}
+        response = requests.get('http://%s:1400/xml/device_description.xml' % self.speaker_ip)
+        dom = XML.fromstring(response.text)
+        device_info = dom.findall('{urn:schemas-upnp-org:device-1-0}device')[0]
+        desired_info = [
+                'modelNumber',
+                'softwareVersion', 
+                'hardwareVersion',
+                'serialNum', 
+                'roomName']
+        for tag in desired_info:
+            found_tags = device_info.findall('{urn:schemas-upnp-org:device-1-0}%s' % tag)
+            if found_tags:
+                info[tag] = found_tags[0].text
+        return info
 
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
