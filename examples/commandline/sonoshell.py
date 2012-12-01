@@ -19,7 +19,7 @@ if __name__ == '__main__':
     if speaker_spec == "all":
         sonos = SonosDiscovery()
         if (cmd == 'list_ips'):
-            print '\n'.join(sonos.get_player_ips())
+            print '\n'.join(sonos.get_speaker_ips())
         else:
             print "Valid commands (with 'all'): list_ips"
     else:
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         if (cmd == 'partymode'):
             print sonos.partymode()
         elif (cmd == 'info'):
-            all_info = sonos.get_info()
+            all_info = sonos.get_speaker_info()
             for item in all_info:
                 print "%s: %s" % (item, all_info[item])
         elif (cmd == 'play'):
