@@ -8,29 +8,25 @@ SoCo depends on the [Requests](http://docs.python-requests.org/) HTTP library. T
 
 `pip install requests`
 
-Since this was created at a weekend hackathon, I didn't have time to code up dynamic discovery of Sonos devices (done through [SSDP](http://en.wikipedia.org/wiki/Simple_Service_Discovery_Protocol)). In order to use this class, you'll need to pass in the IP address of the Sonos speaker you'd like to control. A simple way to determine the IP address of your Sonos speaker is to launch the official Sonos application and click on "About My Sonos System" from the menu. From there, you'll see an output similar to the one below:
-
-```
-Associated ZP: 10.0.0.103
----------------------------------
-BRIDGE: BRIDGE
-Serial Number: 00-0E-58-4F-87-AC:F
-Version: 3.7 (build 17551200)
-Hardware Version: 1.5.0.0-2
-IP Address: 10.0.0.100
----------------------------------
-PLAY:5: HACK CHILL ROOM1
-Serial Number: 00-0E-58-5D-15-32:E
-Version: 3.7 (build 17551200e)
-Hardware Version: 1.16.4.1-2
-IP Address: 10.0.0.102
-OTP: 1.1.1(1-16-4-zp5s-0.5)
----------------------------------
-```
-
-To be clear, you only need the official Sonos application to get the IP address of the speaker. This class does not depend on the official Sonos application in any way.
-
 ## Basic Usage
+
+Discovery does IP addresses only for now, returning a list IP addresses of players.
+
+```python
+#!/usr/bin/env python
+from soco import SoCo
+from soco import SonosDiscovery
+
+if __name__ == '__main__':
+    sonos_devices = SonosDiscovery()
+
+    for ip in sonos_devices.get_speaker_ips():
+        device = SoCo(ip)
+        zone_name = device.get_speaker_info()['zone_name']
+        print "IP of %s is %s" % (zone_name, ip)
+
+```
+
 ```python
 #!/usr/bin/env python
 from soco import SoCo
@@ -94,12 +90,12 @@ SoCo currently supports the following basic controls:
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:
 
-* SSDP for dynamic discovery of Sonos devices
 * playlist management
 * better error checking
 
 ## Contributors
 * Thomas Bartvig [thomas.bartvig@gmail.com](mailto:thomas.bartvig@gmail.com)
+* Dave O'Connor doc@andvari.net
 
 ## License
 Copyright (C) 2012 Rahim Sonawalla ([rsonawalla@gmail.com](mailto:rsonawalla@gmail.com) / [@rahims](http://twitter.com/rahims)).
