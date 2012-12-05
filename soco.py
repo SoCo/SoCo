@@ -1,6 +1,47 @@
 import xml.etree.cElementTree as XML
 
 import requests
+import select
+import socket
+
+class SonosDiscovery(object):
+    """A simple class for discovering Sonos speakers.
+
+    Public functions:
+    get_speaker_ips -- Get a list of IPs of all zoneplayers.
+    """
+
+    PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
+HOST: 239.255.255.250:reservedSSDPport
+MAN: ssdp:discover
+MX: 3
+ST: urn:schemas-upnp-org:service:AVTransport:1"""
+
+    MCAST_GRP = "239.255.255.250"
+    MCAST_PORT = 1900
+
+    def __init__(self):
+        self._all_speakers = []
+        self._sock = socket.socket(
+                socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+
+
+    def get_speaker_ips(self):
+        speakers = []
+
+        self._sock.sendto(self.PLAYER_SEARCH, (self.MCAST_GRP, self.MCAST_PORT))
+
+        while True:
+            print "selecting"
+            rs, _, _ = select.select([self._sock], [], [], 1)
+            if rs:
+                _, addr = self._sock.recvfrom(2048)
+                speakers.append(addr[0])
+            else:
+                break
+        self._all_speakers = speakers
+        return speakers
 
 class SoCo(object):
     """A simple class for controlling a Sonos speaker.
@@ -22,6 +63,7 @@ class SoCo(object):
     get_speaker_info -- Get information about the Sonos speaker.
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
+    get_info -- get information on this speaker.
 
     """
 
