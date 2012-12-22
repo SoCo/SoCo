@@ -71,11 +71,11 @@ class SoCo(object):
     RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
     DEVICE_ENDPOINT = '/DeviceProperties/Control'
 
-    speaker_info = {} # Stores information about the current speaker
     speakers_ip = [] # Stores the IP addresses of all the speakers in a network
 
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
+        self.speaker_info = {} # Stores information about the current speaker
 
     def play(self, uri=''):
         """Play the currently selected track or play a stream.
