@@ -115,6 +115,51 @@ class SoCo(object):
                 return True
             else:
                 return self.__parse_error(response)
+    def remove_from_queue(self, index):
+        """ Removes a track from the queue.
+
+        index: the index of the track to remove; first item in the queue is 1
+
+        Returns:
+        True if the Sonos speaker successfully removed the track
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        #TODO: what do these parameters actually do?
+        instance = updid = '0'
+        objid = 'Q:0/'+str(index)
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
+        body = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>'+instance+'</InstanceID><ObjectID>'+objid+'</ObjectID><UpdateID>'+updid+'</UpdateID></u:RemoveTrackFromQueue>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+
+    def add_to_queue(self, uri):
+        """ Adds a given track to the queue.
+
+        Returns:
+        True if the Sonos speaker successfully added the track
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
+
+        body = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>'+uri+'</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
+        body2 = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
 
     def pause(self):
         """ Pause the currently playing track.
