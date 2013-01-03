@@ -146,7 +146,8 @@ class SoCo(object):
         """ Adds a given track to the queue.
 
         Returns:
-        True if the Sonos speaker successfully added the track
+        If the Sonos speaker successfully added the track, returns the queue
+		position of the track added.
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
@@ -161,7 +162,9 @@ class SoCo(object):
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
-            return True
+            dom = XML.fromstring(response)
+            qnumber = dom.findtext('.//FirstTrackNumberEnqueued')
+            return int(qnumber)
 
     def pause(self):
         """ Pause the currently playing track.
@@ -193,7 +196,7 @@ class SoCo(object):
         
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        epeaker will be returned.
         
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
