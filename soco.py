@@ -64,6 +64,8 @@ class SoCo(object):
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
     get_info -- get information on this speaker.
+	add_to_queue -- add a track to the end of the queue
+	remove_from_queue -- remove a track from the queue
 
     """
 
@@ -115,6 +117,7 @@ class SoCo(object):
                 return True
             else:
                 return self.__parse_error(response)
+
     def remove_from_queue(self, index):
         """ Removes a track from the queue.
 
@@ -153,7 +156,6 @@ class SoCo(object):
         action = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
 
         body = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>'+uri+'</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
-        body2 = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 
         response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
         if "errorCode" in response:
