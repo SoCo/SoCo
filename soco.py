@@ -85,7 +85,7 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
@@ -121,11 +121,11 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker successfully paused the track.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
 
@@ -140,14 +140,14 @@ class SoCo(object):
 
     def stop(self):
         """ Stop the currently playing track.
-        
+
         Returns:
         True if the Sonos speaker successfully stopped the playing track.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
 
@@ -162,10 +162,10 @@ class SoCo(object):
 
     def next(self):
         """ Go to the next track.
-        
+
         Returns:
         True if the Sonos speaker successfully skipped to the next track.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned. Keep in mind that next() can return errors
@@ -173,7 +173,7 @@ class SoCo(object):
         Pandora and you call next() several times in quick succession an error
         code will likely be returned (since Pandora has limits on how many
         songs can be skipped).
-        
+
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Next"'
 
@@ -188,17 +188,17 @@ class SoCo(object):
 
     def previous(self):
         """ Go back to the previously played track.
-        
+
         Returns:
         True if the Sonos speaker successfully went to the previous track.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned. Keep in mind that previous() can return errors
         for a variety of reasons. For example, previous() will return an error
         code (error code 701) if the Sonos is streaming Pandora since you can't
         go back on tracks.
-        
+
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Previous"'
 
@@ -216,14 +216,14 @@ class SoCo(object):
 
         Arguments:
         mute -- True to mute. False to unmute.
-        
+
         Returns:
         True if the Sonos speaker was successfully muted or unmuted.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         if mute is True:
             mute_value = '1'
@@ -246,18 +246,18 @@ class SoCo(object):
 
         Arguments:
         volume -- A value between 0 and 100.
-        
+
         Returns:
         If the volume argument was specified: returns true if the Sonos speaker
         successfully set the volume.
 
         If the volume argument was not specified: returns the current volume of
         the Sonos speaker.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         if volume:
             action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
@@ -288,17 +288,17 @@ class SoCo(object):
 
         Arguments:
         bass -- A value between -10 and 10.
-        
+
         Returns:
         If the bass argument was specified: returns true if the Sonos speaker
         successfully set the bass EQ.
 
         If the bass argument was not specified: returns the current base value.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         if bass:
             action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetBass"'
@@ -329,17 +329,17 @@ class SoCo(object):
 
         Arguments:
         treble -- A value between -10 and 10.
-        
+
         Returns:
         If the treble argument was specified: returns true if the Sonos speaker
         successfully set the treble EQ.
 
         If the treble argument was not specified: returns the current treble value.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         if treble:
             action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetTreble"'
@@ -373,14 +373,14 @@ class SoCo(object):
 
         Arguments:
         loudness -- True to turn on loudness compensation. False to disable it.
-        
+
         Returns:
-        True if the Sonos speaker successfully set the loundess compensation. 
-        
+        True if the Sonos speaker successfully set the loundess compensation.
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudness"'
 
@@ -400,16 +400,16 @@ class SoCo(object):
 
     def partymode (self):
         """ Put all the speakers in the network in the same group, a.k.a Party Mode.
-		
+
 		This blog shows the initial research responsible for this:
         http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
-		
+
 		The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-		
+
 		Returns:
 		True if partymode is set
 
@@ -420,7 +420,7 @@ class SoCo(object):
 
         master_speaker_info = self.get_speaker_info()
         ips = self.get_speakers_ip()
-        
+
         rc = True
         # loop through all IP's in topology and make them join this master
         for ip in ips:
@@ -429,14 +429,14 @@ class SoCo(object):
                 ret = Slave.join(master_speaker_info["uid"])
                 if ret is False:
                     rc = False
-			
+
         return rc
 
     def join(self, master_uid):
         """ Join this speaker to another "master" speaker.
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-				
+
 		Returns:
 		True if this speaker has joined the master speaker
 
@@ -446,8 +446,8 @@ class SoCo(object):
 		"""
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 
-        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:' + master_uid + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'        
-        
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:' + master_uid + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+
         response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
 
         if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
@@ -460,7 +460,7 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker successfully switched to line-in.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned. Note, an error will be returned if you try
@@ -489,14 +489,14 @@ class SoCo(object):
 
         Arguments:
         led_on -- True to turn on the light. False to turn off the light.
-        
+
         Returns:
         True if the Sonos speaker successfully turned on (or off) the light.
-        
+
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-        
+
         """
         if led_on is True:
             led_state = 'On'
@@ -516,17 +516,17 @@ class SoCo(object):
 
     def get_current_track_info(self):
         """ Get information about the currently playing track.
-        
+
         Returns:
         A dictionary containing the following information about the currently
         playing track: playlist_position, duration, title, artist, album, and
         a link to the album art.
-        
+
         If we're unable to return data for a field, we'll return an empty
         string. This can happen for all kinds of reasons so be sure to check
         values. For example, a track may not have complete metadata and be
         missing an album name. In this case track['album'] will be an empty string.
-        
+
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo"'
 
