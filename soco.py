@@ -15,6 +15,91 @@ import requests
 import select
 import socket
 
+
+PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
+HOST: 239.255.255.250:reservedSSDPport
+MAN: ssdp:discover
+MX: 1
+ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
+
+MCAST_GRP = "239.255.255.250"
+MCAST_PORT = 1900
+
+TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
+RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
+DEVICE_ENDPOINT = '/DeviceProperties/Control'
+
+ENQUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+ENQUEUE_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+ENQUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
+
+PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+PLAY_BODY = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
+PLAY_RESPONSE =  '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'
+
+PAUSE_ACTION =  '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
+PAUSE_BODY = '<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Pause>'
+PAUSE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PauseResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PauseResponse></s:Body></s:Envelope>'
+
+STOP_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
+STOP_BODY = '<u:Stop xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Stop>'
+STOP_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:StopResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:StopResponse></s:Body></s:Envelope>'
+
+NEXT_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Next"'
+NEXT_BODY = '<u:Next xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Next>'
+NEXT_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:NextResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:NextResponse></s:Body></s:Envelope>'
+
+PREV_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Previous"'
+PREV_BODY = '<u:Previous xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Previous>'
+PREV_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PreviousResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PreviousResponse></s:Body></s:Envelope>'
+
+MUTE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetMute"'
+MUTE_BODY_TEMPLATE = '<u:SetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredMute>{mute}</DesiredMute></u:SetMute>'
+MUTE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetMuteResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetMuteResponse></s:Body></s:Envelope>'
+
+SET_VOLUME_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
+SET_VOLUME_BODY_TEMPLATE  = '<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredVolume>{volume}</DesiredVolume></u:SetVolume>'
+SET_VOLUME_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetVolumeResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetVolumeResponse></s:Body></s:Envelope>'
+
+GET_VOLUME_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetVolume"'
+GET_VOLUME_BODY = '<u:GetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetVolume>'
+
+SET_BASS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetBass"'
+SET_BASS_BODY_TEMPLATE = '<u:SetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredBass>{bass}</DesiredBass></u:SetBass>'
+SET_BASS_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetBassResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetBassResponse></s:Body></s:Envelope>'
+
+GET_BASS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetBass"'
+GET_BASS_BODY = '<u:GetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetBass>'
+
+SET_TREBLE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetTreble"'
+SET_TREBLE_BODY_TEMPLATE = '<u:SetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredTreble>{treble}</DesiredTreble></u:SetTreble>'
+SET_TREBLE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetTrebleResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetTrebleResponse></s:Body></s:Envelope>'
+
+GET_TREBLE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetTreble"'
+GET_TREBLE_BODY = '<u:GetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetTreble>'
+
+SET_LOUDNESS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudness"'
+SET_LOUDNESS_BODY_TEMPLATE = '<u:SetLoudness xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredLoudness>{loudness}</DesiredLoudness></u:SetLoudness>'
+SET_LOUDNESS_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLoudnessResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetLoudnessResponse></s:Body></s:Envelope>'
+
+JOIN_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+JOIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:{master_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+JOIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
+
+SET_LINEIN_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+SET_LINEIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon-stream:{speaker_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+SET_LINEIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
+
+SET_LEDSTATE_ACTION = '"urn:schemas-upnp-org:service:DeviceProperties:1#SetLEDState"'
+SET_LEDSTATE_BODY_TEMPLATE = '<u:SetLEDState xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredLEDState>{state}</DesiredLEDState>'
+SET_LEDSTATE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLEDStateResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetLEDStateResponse></s:Body></s:Envelope>'
+
+GET_CUR_TRACK_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo"'
+GET_CUR_TRACK_BODY = '<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetPositionInfo>'
+
+SOAP_TEMPLATE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>{body}</s:Body></s:Envelope>'
+
+
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
 
@@ -22,17 +107,7 @@ class SonosDiscovery(object):
     get_speaker_ips -- Get a list of IPs of all zoneplayers.
     """
 
-    PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
-HOST: 239.255.255.250:reservedSSDPport
-MAN: ssdp:discover
-MX: 1
-ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
-
-    MCAST_GRP = "239.255.255.250"
-    MCAST_PORT = 1900
-
     def __init__(self):
-        self._all_speakers = []
         self._sock = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
@@ -41,7 +116,7 @@ ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
     def get_speaker_ips(self):
         speakers = []
 
-        self._sock.sendto(self.PLAYER_SEARCH, (self.MCAST_GRP, self.MCAST_PORT))
+        self._sock.sendto(PLAYER_SEARCH, (MCAST_GRP, MCAST_PORT))
 
         while True:
             print "selecting"
@@ -51,7 +126,6 @@ ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
                 speakers.append(addr[0])
             else:
                 break
-        self._all_speakers = speakers
         return speakers
 
 class SoCo(object):
@@ -78,10 +152,6 @@ class SoCo(object):
 
     """
 
-    TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
-    RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
-    DEVICE_ENDPOINT = '/DeviceProperties/Control'
-
     speakers_ip = [] # Stores the IP addresses of all the speakers in a network
 
     def __init__(self, speaker_ip):
@@ -102,27 +172,21 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if uri is not '':
-            action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        if uri:
+            body = ENQUEUE_BODY_TEMPLATE.format(uri=uri)
 
-            body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+            response = self.__send_command(TRANSPORT_ENDPOINT, ENQUEUE_ACTION, body)
 
-            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            if (response == ENQUEUE_RESPONSE):
                 # The track is enqueued, now play it.
                 return self.play()
             else:
                 return self.__parse_error(response)
 
         else:
-            action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+            response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
 
-            body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
-
-            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
+            if (response == PLAY_RESPONSE):
                 return True
             else:
                 return self.__parse_error(response)
@@ -138,13 +202,9 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
+        response = self.__send_command(TRANSPORT_ENDPOINT, PAUSE_ACTION, PAUSE_BODY)
 
-        body = '<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Pause>'
-
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PauseResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PauseResponse></s:Body></s:Envelope>'):
+        if (response == PAUSE_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -160,13 +220,11 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
-
         body = '<u:Stop xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Stop>'
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, STOP_ACTION, STOP_BODY)
 
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:StopResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:StopResponse></s:Body></s:Envelope>'):
+        if (response == STOP_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -186,13 +244,9 @@ class SoCo(object):
         songs can be skipped).
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Next"'
+        response = self.__send_command(TRANSPORT_ENDPOINT, NEXT_ACTION, NEXT_BODY)
 
-        body = '<u:Next xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Next>'
-
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:NextResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:NextResponse></s:Body></s:Envelope>'):
+        if (response == NEXT_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -211,13 +265,9 @@ class SoCo(object):
         go back on tracks.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Previous"'
+        response = self.__send_command(TRANSPORT_ENDPOINT, PREV_ACTION, PREV_BODY)
 
-        body = '<u:Previous xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Previous>'
-
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PreviousResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PreviousResponse></s:Body></s:Envelope>'):
+        if (response == PREV_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -236,18 +286,13 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if mute is True:
-            mute_value = '1'
-        else:
-            mute_value = '0'
+        mute_value = '1' if mute else '0'
 
-        action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetMute"'
+        body = MUTE_BODY_TEMPLATE.format(mute=mute_val)
 
-        body = '<u:SetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredMute>' + mute_value + '</DesiredMute></u:SetMute>'
+        response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
 
-        response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetMuteResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetMuteResponse></s:Body></s:Envelope>'):
+        if (response == MUTE_RESPONSE):
             return True
         else:
             return self.parse(response)
@@ -271,22 +316,16 @@ class SoCo(object):
 
         """
         if volume:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
+            body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
 
-            body = '<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredVolume>' + repr(volume) + '</DesiredVolume></u:SetVolume>'
+            response = self.__send_command(RENDERING_ENDPOINT, SET_VOLUME_ACTION, body)
 
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetVolumeResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetVolumeResponse></s:Body></s:Envelope>'):
+            if (response == SET_VOLUME_RESPONSE):
                 return True
             else:
                 return self.__parse_error(response)
         else:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetVolume"'
-
-            body = '<u:GetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetVolume>'
-
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+            response = self.__send_command(RENDERING_ENDPOINT, GET_VOLUME_ACTION, GET_VOLUME_BODY)
 
             dom = XML.fromstring(response)
 
@@ -312,22 +351,16 @@ class SoCo(object):
 
         """
         if bass:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetBass"'
+            body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
-            body = '<u:SetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredBass>' + repr(bass) + '</DesiredBass></u:SetBass>'
+            response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
 
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetBassResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetBassResponse></s:Body></s:Envelope>'):
+            if (response == SET_BASS_RESPONSE):
                 return True
             else:
                 return self.__parse_error(response)
         else:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetBass"'
-
-            body = '<u:GetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetBass>'
-
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+            response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION, GET_BASS_BODY)
 
             dom = XML.fromstring(response)
 
@@ -353,22 +386,16 @@ class SoCo(object):
 
         """
         if treble:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetTreble"'
+            body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
-            body = '<u:SetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><DesiredTreble>' + repr(treble) + '</DesiredTreble></u:SetTreble>'
+            response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
 
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetTrebleResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetTrebleResponse></s:Body></s:Envelope>'):
+            if (response == SET_TREBLE_RESPONSE):
                 return True
             else:
                 return self.__parse_error(response)
         else:
-            action = '"urn:schemas-upnp-org:service:RenderingControl:1#GetTreble"'
-
-            body = '<u:GetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetTreble>'
-
-            response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
+            response = self.__send_command(RENDERING_ENDPOINT, GET_TREBLE_ACTION, GET_TREBLE_BODY)
 
             dom = XML.fromstring(response)
 
@@ -393,18 +420,13 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudness"'
+        loudness_value = '1' if loudness else '0'
 
-        if loudness is True:
-            loudness_value = '1'
-        else:
-            loudness_value = '0'
+        body = SET_LOUDNESS_BODY_TEMPLATE.format(loudness=loudness_value)
 
-        body = '<u:SetLoudness xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredLoudness>' + loudness_value + '</DesiredLoudness></u:SetLoudness>'
+        response = self.__send_command(RENDERING_ENDPOINT, SET_LOUDNESS_ACTION, body)
 
-        response = self.__send_command(SoCo.RENDERING_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLoudnessResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetLoudnessResponse></s:Body></s:Envelope>'):
+        if (response == SET_LOUDNESS_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -455,13 +477,11 @@ class SoCo(object):
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
 		"""
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
 
-        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:' + master_uid + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+        response = self.__send_command(TRANSPORT_ENDPOINT, JOIN_ACTION, body)
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+        if (response == JOIN_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -479,15 +499,13 @@ class SoCo(object):
         line-in capability.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
-
         speaker_info = self.get_speaker_info()
 
-        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon-stream:' + speaker_info['uid'] + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+        body = SET_LINEIN_BODY_TEMPLATE.format(speaker_uid=speaker_info['uid'])
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SET_LINEIN_ACTION, body)
 
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+        if (response == SET_LINEIN_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -509,18 +527,13 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if led_on is True:
-            led_state = 'On'
-        else:
-            led_state = 'Off'
+        led_state = 'On' if led_on else 'Off'
 
-        action = '"urn:schemas-upnp-org:service:DeviceProperties:1#SetLEDState"'
+        body = SET_LEDSTATE_BODY_TEMPLATE.format(state=led_state)
 
-        body = '<u:SetLEDState xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredLEDState>' + led_state + '</DesiredLEDState>'
+        response = self.__send_command(DEVICE_ENDPOINT, SET_LEDSTATE_ACTION, body)
 
-        response = self.__send_command(SoCo.DEVICE_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLEDStateResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetLEDStateResponse></s:Body></s:Envelope>'):
+        if (response == SET_LEDSTATE_RESPONSE):
             return True
         else:
             return self.parse(response)
@@ -539,11 +552,7 @@ class SoCo(object):
         missing an album name. In this case track['album'] will be an empty string.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo"'
-
-        body = '<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetPositionInfo>'
-
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRACK_ACTION, GET_CUR_TRACK_BODY)
 
         dom = XML.fromstring(response)
 
@@ -647,7 +656,7 @@ class SoCo(object):
             'SOAPACTION': action
         }
 
-        soap = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>' + body + '</s:Body></s:Envelope>'
+        soap = SOAP_TEMPLATE.format(body=body)
 
         r = requests.post('http://' + self.speaker_ip + ':1400' + endpoint, data=soap, headers=headers)
 
