@@ -119,7 +119,6 @@ class SonosDiscovery(object):
         self._sock.sendto(PLAYER_SEARCH, (MCAST_GRP, MCAST_PORT))
 
         while True:
-            print "selecting"
             rs, _, _ = select.select([self._sock], [], [], 1)
             if rs:
                 _, addr = self._sock.recvfrom(2048)
