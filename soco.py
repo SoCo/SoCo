@@ -48,7 +48,7 @@ class SoCo(object):
 
     Public functions:
     play -- Plays the current item.
-    play_now -- Plays a track or a music stream by URI.
+    play_uri -- Plays a track or a music stream by URI.
     play_from_queue -- Plays an item in the queue.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
@@ -83,6 +83,7 @@ class SoCo(object):
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
+
     def clear_queue(self):
         """ Removes all tracks from the queue.
 
@@ -101,7 +102,6 @@ class SoCo(object):
         else:
             return True
 
-    
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
         NORMAL -- just play the queue once
@@ -177,7 +177,7 @@ class SoCo(object):
         else:
             return self.__parse_error(response)
 
-    def play_now(self, uri=''):
+    def play_uri(self, uri=''):
         """Play a given stream. Pauses the queue.
 
         Arguments:
@@ -294,12 +294,13 @@ class SoCo(object):
             return True
         else:
             return self.__parse_error(response)
+
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
         format of HH:MM:SS.
 
         Returns:
-        True if the Sonos speaker successfully stopped the playing track.
+        True if the Sonos speaker successfully seeked to the timecode.
         
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos

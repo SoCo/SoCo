@@ -35,7 +35,7 @@ if __name__ == '__main__':
     sonos = SoCo('10.0.0.102') # Pass in the IP of your Sonos speaker
 
     # Pass in a URI to a media file to have it streamed through the Sonos speaker
-    sonos.play('http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
+    sonos.play_uri('http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
 
     track = sonos.get_current_track_info()
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     sonos.pause()
 
-    # Pass in no arguments to play a stopped or paused track
+    # Play a stopped or paused track
     sonos.play()
 ```
 
