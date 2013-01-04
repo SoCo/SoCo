@@ -52,6 +52,7 @@ class SoCo(object):
     play_from_queue -- Plays an item in the queue.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
+    seek -- Move the currently playing track a given elapsed time.
     next -- Go to the next track.
     previous -- Go back to the previous track.
     mute -- Mute (or unmute) the speaker.
@@ -293,7 +294,30 @@ class SoCo(object):
             return True
         else:
             return self.__parse_error(response)
+    def seek(self, timestamp):
+        """ Seeks to a given timestamp in the current track, specified in the
+        format of HH:MM:SS.
 
+        Returns:
+        True if the Sonos speaker successfully stopped the playing track.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        
+        """
+        import re
+        if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$',timestamp):
+            raise ValueError, "invalid timestamp, use HH:MM:SS format"
+
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#Seek'
+        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>REL_TIME</Unit><Target>'+timestamp+'</Target></u:Seek>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+    
     def next(self):
         """ Go to the next track.
         
