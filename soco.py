@@ -47,7 +47,8 @@ class SoCo(object):
     """A simple class for controlling a Sonos speaker.
 
     Public functions:
-    play -- Plays the currently selected track or a music stream.
+    play_now -- Plays a track or a music stream by name.
+    play_from_queue -- Plays an item in the play queue.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
     next -- Go to the next track.
@@ -64,8 +65,8 @@ class SoCo(object):
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
     get_info -- get information on this speaker.
-	add_to_queue -- add a track to the end of the queue
-	remove_from_queue -- remove a track from the queue
+    add_to_queue -- add a track to the end of the queue
+    remove_from_queue -- remove a track from the queue
 
     """
 
@@ -79,7 +80,37 @@ class SoCo(object):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
 
-    def play(self, uri=''):
+    def play_from_queue(self, trackno):
+        """ Play an item from the queue. The track number is required as an
+        argument, where the first track is 1.
+        
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        # first, set the queue itself as the source URI
+        uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if not (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            return self.__parse_error(response)
+        
+        # second, set the track number with a seek command
+        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>'+str(instanceid)+'</InstanceID><Unit>TRACK_NR</Unit><Target>'+str(trackno)+'</Target></u:Seek>'
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+
+        # finally, just play what's set
+        return self.play()
+
+    def play_now(self, uri=''):
         """Play the currently selected track or play a stream.
 
         Arguments:
@@ -147,7 +178,7 @@ class SoCo(object):
 
         Returns:
         If the Sonos speaker successfully added the track, returns the queue
-		position of the track added.
+        position of the track added.
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
@@ -450,23 +481,23 @@ class SoCo(object):
 
     def partymode (self):
         """ Put all the speakers in the network in the same group, a.k.a Party Mode.
-		
-		This blog shows the initial research responsible for this:
+        
+        This blog shows the initial research responsible for this:
         http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
-		
-		The trick seems to be (only tested on a two-speaker setup) to tell each
+        
+        The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-		
-		Returns:
-		True if partymode is set
+        
+        Returns:
+        True if partymode is set
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-		"""
+        """
 
         master_speaker_info = self.get_speaker_info()
         ips = self.get_speakers_ip()
@@ -479,21 +510,21 @@ class SoCo(object):
                 ret = Slave.join(master_speaker_info["uid"])
                 if ret is False:
                     rc = False
-			
+            
         return rc
 
     def join(self, master_uid):
         """ Join this speaker to another "master" speaker.
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-				
-		Returns:
-		True if this speaker has joined the master speaker
+                
+        Returns:
+        True if this speaker has joined the master speaker
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-		"""
+        """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 
         body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:' + master_uid + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'        
