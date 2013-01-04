@@ -3,6 +3,7 @@ import xml.etree.cElementTree as XML
 import requests
 import select
 import socket
+import logging, traceback
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
@@ -782,6 +783,74 @@ class SoCo(object):
                     (self.speakers_ip).append(i)
 
             return self.speakers_ip
+
+    def get_queue(self, start = 0, max_items = 100):
+        """ Get information about the queue.
+        
+        Returns:
+        A list containing a dictionary for each track in the queue. The track dictionary
+        contains the following information about the track: title, artist, album, album_art, uri
+        
+        If we're unable to return data for a field, we'll return an empty
+        list. This can happen for all kinds of reasons so be sure to check
+        values.
+
+        This method is heavly based on Sam Soffes (aka soffes) ruby implementation
+        """
+        
+        meta_data = {
+            'name': 'Browse',
+            'CONTENT_DIRECTORY_XMLNS': 'urn:schemas-upnp-org:service:ContentDirectory:1',
+            'starting_index': start,
+            'requested_count': max_items
+        }
+
+        queue = []
+
+        action = '"%(CONTENT_DIRECTORY_XMLNS)s#%(name)s"' % meta_data
+        body = '''<u:%(name)s xmlns:u="%(CONTENT_DIRECTORY_XMLNS)s">
+                    <ObjectID>Q:0</ObjectID>
+                    <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+                    <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter>
+                    <StartingIndex>%(starting_index)d</StartingIndex>
+                    <RequestedCount>%(requested_count)d</RequestedCount>
+                    <SortCriteria></SortCriteria>
+                    </u:Browse>''' % meta_data
+
+        response = self.__send_command('/MediaServer/ContentDirectory/Control', action, body)
+
+        try:
+            dom = XML.fromstring(response)
+            resultText = dom.findtext('.//Result')
+            if not resultText: return queue
+            
+            resultDom  = XML.fromstring(resultText)
+            for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                try:
+                    item = {
+                        'title': None,
+                        'artist': None,
+                        'album': None,
+                        'album_art': None,
+                        'uri': None
+                        }
+
+                    item['title'] =     element.findtext('{http://purl.org/dc/elements/1.1/}title')
+                    item['artist'] =    element.findtext('{http://purl.org/dc/elements/1.1/}creator')
+                    item['album'] =     element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+                    item['album_art'] = element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+                    item['uri'] =       element.findtext('{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+
+                    queue.append(item)
+                except:
+                    logging.warning('Could not handle item: %s', element)
+                    logging.error(traceback.format_exc())
+
+        except:
+            logging.error('Could not handle result from sonos')
+            logging.error(traceback.format_exc())
+        
+        return queue
 
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
