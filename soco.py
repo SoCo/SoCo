@@ -47,8 +47,9 @@ class SoCo(object):
     """A simple class for controlling a Sonos speaker.
 
     Public functions:
-    play_now -- Plays a track or a music stream by name.
-    play_from_queue -- Plays an item in the play queue.
+    play -- Plays the current item.
+    play_now -- Plays a track or a music stream by URI.
+    play_from_queue -- Plays an item in the queue.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
     next -- Go to the next track.
@@ -101,7 +102,7 @@ class SoCo(object):
             return self.__parse_error(response)
         
         # second, set the track number with a seek command
-        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>'+str(instanceid)+'</InstanceID><Unit>TRACK_NR</Unit><Target>'+str(trackno)+'</Target></u:Seek>'
+        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>TRACK_NR</Unit><Target>'+str(trackno)+'</Target></u:Seek>'
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
         response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
         if "errorCode" in response:
@@ -110,8 +111,27 @@ class SoCo(object):
         # finally, just play what's set
         return self.play()
 
+    def play(self):
+        """Play the currently selected track.
+        
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+
+        body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
+            return True
+        else:
+            return self.__parse_error(response)
+
     def play_now(self, uri=''):
-        """Play the currently selected track or play a stream.
+        """Play a given stream. Pauses the queue.
 
         Arguments:
         uri -- URI of a stream to be played.
@@ -124,31 +144,18 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if uri is not '':
-            action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 
-            body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 
-            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
 
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
-                # The track is enqueued, now play it.
-                return self.play()
-            else:
-                return self.__parse_error(response)
-
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            # The track is enqueued, now play it.
+            return self.play()
         else:
-            action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
-
-            body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
-
-            response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-            if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
-                return True
-            else:
-                return self.__parse_error(response)
-
+            return self.__parse_error(response)
+            
     def remove_from_queue(self, index):
         """ Removes a track from the queue.
 
