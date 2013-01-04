@@ -281,7 +281,7 @@ class SoCo(object):
         
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
-        epeaker will be returned.
+        speaker will be returned.
         
         """
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
