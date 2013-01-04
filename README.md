@@ -86,6 +86,7 @@ SoCo currently supports the following basic controls:
     * MAC Address
 * Find all the Sonos speakers in a network. Code contributed by Thomas Bartvig.
 * Put all Sonos speakers in a network into "party mode". Code contributed by Thomas Bartvig.
+* Manage the Sonos queue (add to it, clear it, play a specific song from it)
 
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:
