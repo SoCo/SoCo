@@ -58,7 +58,7 @@ class SoCo(object):
     volume -- Get or set the volume of the speaker.
     bass -- Get or set the speaker's bass EQ.
     treble -- Set the speaker's treble EQ.
-	set_play_mode -- Change repeat and shuffle settings on the queue.
+    set_play_mode -- Change repeat and shuffle settings on the queue.
     set_loudness -- Turn on (or off) the speaker's loudness compensation.
     switch_to_line_in -- Switch the speaker's input to line-in.
     status_light -- Turn on (or off) the Sonos status light.
@@ -69,6 +69,7 @@ class SoCo(object):
     get_info -- get information on this speaker.
     add_to_queue -- add a track to the end of the queue
     remove_from_queue -- remove a track from the queue
+    clear_queue -- remove all tracks from queue
 
     """
 
@@ -81,7 +82,25 @@ class SoCo(object):
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
+    def clear_queue(self):
+        """ Removes all tracks from the queue.
 
+        Returns:
+        True if the Sonos speaker cleared the queue.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
+        body = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:RemoveAllTracksFromQueue>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+
+    
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
         NORMAL -- just play the queue once
