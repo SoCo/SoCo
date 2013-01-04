@@ -58,6 +58,7 @@ class SoCo(object):
     volume -- Get or set the volume of the speaker.
     bass -- Get or set the speaker's bass EQ.
     treble -- Set the speaker's treble EQ.
+	set_play_mode -- Change repeat and shuffle settings on the queue.
     set_loudness -- Turn on (or off) the speaker's loudness compensation.
     switch_to_line_in -- Switch the speaker's input to line-in.
     status_light -- Turn on (or off) the Sonos status light.
@@ -80,6 +81,32 @@ class SoCo(object):
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
+
+    def set_play_mode(self, playmode):
+        """ Sets the play mode for the queue. Case-insensitive options are:
+        NORMAL -- just play the queue once
+        REPEAT_ALL -- loop the entire queue
+        SHUFFLE -- play all the tracks in the queue with shuffling
+        SHUFFLE_NOREPEAT -- shuffle the queue, play all tracks, stop
+
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+        
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        modes = ('NORMAL','SHUFFLE_NOREPEAT','SHUFFLE','REPEAT_ALL')
+        playmode = playmode.upper()
+        if not playmode in modes: raise KeyError, "invalid play mode"
+
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
+        body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
 
     def play_from_queue(self, trackno):
         """ Play an item from the queue. The track number is required as an
