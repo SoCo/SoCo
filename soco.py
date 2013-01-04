@@ -457,8 +457,8 @@ class SoCo(object):
         # loop through all IP's in topology and make them join this master
         for ip in ips:
             if not (ip == self.speaker_ip):
-                Slave = SoCo(ip)
-                ret = Slave.join(master_speaker_info["uid"])
+                slave = SoCo(ip)
+                ret = slave.join(master_speaker_info["uid"])
                 if ret is False:
                     rc = False
 
@@ -628,7 +628,7 @@ class SoCo(object):
 
         """
 
-        if self.speakers_ip and refresh is False:
+        if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
             response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
@@ -639,7 +639,7 @@ class SoCo(object):
                 response = requests.get('http://' + i + ':1400/status')
 
                 if response.status_code == 200:
-                    (self.speakers_ip).append(i)
+                    self.speakers_ip.append(i)
 
             return self.speakers_ip
 
