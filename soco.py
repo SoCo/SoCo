@@ -16,6 +16,7 @@ import select
 import socket
 
 
+__all__ = ['SonosDiscovery', 'SoCo']
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
