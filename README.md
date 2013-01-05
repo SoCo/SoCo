@@ -98,7 +98,12 @@ Want to contribute to SoCo? Here's what needs to be done:
 * Thomas Bartvig [thomas.bartvig@gmail.com](mailto:thomas.bartvig@gmail.com)
 * Dave O'Connor doc@andvari.net
 * [nixscripter](https://github.com/nixscripter)
-* [labero](https://github.com/labero)
+* [Joel Björkman](https://github.com/labero)
+
+## Related Projects
+More of a Ruby fan? Not a problem, [Sam Soffes](https://github.com/soffes) is building out an awesome [Ruby gem](https://github.com/soffes/sonos).
+
+Looking for a GUI that's more than just a sample project? [Joel Björkman](https://github.com/labero) is building a Sonos Controller GUI--great for folks on Linux where there isn't an official Sonos Controller application! Find, fork, and contribute to it here: [https://github.com/labero/SoCo-Tk](https://github.com/labero/SoCo-Tk).
 
 ## License
 Copyright (C) 2012 Rahim Sonawalla ([rsonawalla@gmail.com](mailto:rsonawalla@gmail.com) / [@rahims](http://twitter.com/rahims)).
