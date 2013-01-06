@@ -112,9 +112,9 @@ class SoCo(object):
         else:
             return True
 
-    def play_from_queue(self, trackno):
+    def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
-        argument, where the first track is 1.
+        argument, where the first track is 0.
         
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -126,14 +126,27 @@ class SoCo(object):
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
-        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+        body = '''
+            <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+                <InstanceID>0</InstanceID>
+                <CurrentURI>%s</CurrentURI>
+                <CurrentURIMetaData></CurrentURIMetaData>
+            </u:SetAVTransportURI>
+        ''' % uri
 
         response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
         if not (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
             return self.__parse_error(response)
         
         # second, set the track number with a seek command
-        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>TRACK_NR</Unit><Target>'+str(trackno)+'</Target></u:Seek>'
+        body = '''
+            <u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+            <InstanceID>0</InstanceID>
+            <Unit>TRACK_NR</Unit>
+            <Target>%d</Target>
+            </u:Seek>
+        ''' % (queue_index + 1)
+        
         action = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
         response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
         if "errorCode" in response:
