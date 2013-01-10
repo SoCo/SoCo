@@ -768,11 +768,11 @@ class SoCo(object):
         response = self.__send_command('/MediaServer/ContentDirectory/Control', action, body)
 
         try:
-            dom = XML.fromstring(response)
+            dom = XML.fromstring(response.encode('utf-8'))
             resultText = dom.findtext('.//Result')
             if not resultText: return queue
             
-            resultDom  = XML.fromstring(resultText)
+            resultDom  = XML.fromstring(resultText.encode('utf-8'))
             for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 try:
                     item = {
