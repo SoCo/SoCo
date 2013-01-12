@@ -91,7 +91,6 @@ SoCo currently supports the following basic controls:
 ## To-Do
 Want to contribute to SoCo? Here's what needs to be done:
 
-* playlist management
 * better error checking
 
 ## Contributors
