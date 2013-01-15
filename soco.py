@@ -126,7 +126,7 @@ class SoCo(object):
         uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
         body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, PLAY_FROM_QUEUE_ACTION, body)
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
         if not (response == PLAY_FROM_QUEUE_RESPONSE):
             return self.__parse_error(response)
 
@@ -179,7 +179,7 @@ class SoCo(object):
         """
         body = PLAY_URI_BODY_TEMPLATE.format(uri=uri)
 
-        response = self.__send_command(TRANSPORT_ENDPOINT, ENQUEUE_ACTION, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
         if (response == ENQUEUE_RESPONSE):
             # The track is enqueued, now play it.
@@ -498,7 +498,7 @@ class SoCo(object):
 		"""
         body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
 
-        response = self.__send_command(TRANSPORT_ENDPOINT, JOIN_ACTION, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
         if (response == JOIN_RESPONSE):
             return True
@@ -522,7 +522,7 @@ class SoCo(object):
 
         body = SET_LINEIN_BODY_TEMPLATE.format(speaker_uid=speaker_info['uid'])
 
-        response = self.__send_command(TRANSPORT_ENDPOINT, SET_LINEIN_ACTION, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
         if (response == SET_LINEIN_RESPONSE):
             return True
@@ -848,7 +848,6 @@ TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
 RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
 DEVICE_ENDPOINT = '/DeviceProperties/Control'
 
-ENQUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 ENQUEUE_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 ENQUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
 
@@ -856,7 +855,6 @@ PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
 PLAY_BODY = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
 PLAY_RESPONSE =  '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'
 
-PLAY_FROM_QUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
 <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
     <InstanceID>0</InstanceID>
@@ -913,11 +911,11 @@ SET_LOUDNESS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudn
 SET_LOUDNESS_BODY_TEMPLATE = '<u:SetLoudness xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredLoudness>{loudness}</DesiredLoudness></u:SetLoudness>'
 SET_LOUDNESS_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetLoudnessResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetLoudnessResponse></s:Body></s:Envelope>'
 
-JOIN_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+SET_TRANSPORT_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+
 JOIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:{master_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 JOIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
 
-SET_LINEIN_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 SET_LINEIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon-stream:{speaker_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 SET_LINEIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
 
