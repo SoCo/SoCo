@@ -124,30 +124,16 @@ class SoCo(object):
         """
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
-        body = '''
-            <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-                <InstanceID>0</InstanceID>
-                <CurrentURI>%s</CurrentURI>
-                <CurrentURIMetaData></CurrentURIMetaData>
-            </u:SetAVTransportURI>
-        ''' % uri
+        body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-        if not (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, PLAY_FROM_QUEUE_ACTION, body)
+        if not (response == PLAY_FROM_QUEUE_RESPONSE):
             return self.__parse_error(response)
 
         # second, set the track number with a seek command
-        body = '''
-            <u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-            <InstanceID>0</InstanceID>
-            <Unit>TRACK_NR</Unit>
-            <Target>%d</Target>
-            </u:Seek>
-        ''' % (queue_index + 1)
+        body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index+1)
 
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
         if "errorCode" in response:
             return self.__parse_error(response)
 
@@ -164,11 +150,9 @@ class SoCo(object):
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
 
-        body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
+        response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
+        if (response == PLAY_RESPONSE):
             return True
         else:
             response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
@@ -193,13 +177,11 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri)
 
-        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+        response = self.__send_command(TRANSPORT_ENDPOINT, ENQUEUE_ACTION, body)
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
-
-        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+        if (response == ENQUEUE_RESPONSE):
             # The track is enqueued, now play it.
             return self.play()
         else:
@@ -235,8 +217,6 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        body = '<u:Stop xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Stop>'
-
         response = self.__send_command(TRANSPORT_ENDPOINT, STOP_ACTION, STOP_BODY)
 
         if (response == STOP_RESPONSE):
@@ -260,9 +240,8 @@ class SoCo(object):
         if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$',timestamp):
             raise ValueError, "invalid timestamp, use HH:MM:SS format"
 
-        action = 'urn:schemas-upnp-org:service:AVTransport:1#Seek'
-        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>REL_TIME</Unit><Target>'+timestamp+'</Target></u:Seek>'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -764,11 +743,9 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        action = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
+        body = ADD_TO_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
-        body = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>'+uri+'</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
-
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, ADD_TO_QUEUE_ACTION, body)
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -792,9 +769,8 @@ class SoCo(object):
         #TODO: what do these parameters actually do?
         instance = updid = '0'
         objid = 'Q:0/'+str(index)
-        action = 'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
-        body = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>'+instance+'</InstanceID><ObjectID>'+objid+'</ObjectID><UpdateID>'+updid+'</UpdateID></u:RemoveTrackFromQueue>'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        body = REMOVE_FROM_QUEUE_BODY_TEMPLATE.format(instance=instance, objid=objid, updateid=updid)
+        response = self.__send_command(TRANSPORT_ENDPOINT, REMOVE_FROM_QUEUE_ACTION, body)
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -810,9 +786,7 @@ class SoCo(object):
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
         """
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
-        body = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:RemoveAllTracksFromQueue>'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, CLEAR_QUEUE_ACTION, CLEAR_QUEUE_BODY)
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -882,6 +856,18 @@ PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
 PLAY_BODY = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
 PLAY_RESPONSE =  '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'
 
+PLAY_FROM_QUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
+<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+    <InstanceID>0</InstanceID>
+    <CurrentURI>{uri}</CurrentURI>
+    <CurrentURIMetaData></CurrentURIMetaData>
+</u:SetAVTransportURI>
+'''
+PLAY_FROM_QUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
+
+
+
 PAUSE_ACTION =  '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
 PAUSE_BODY = '<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Pause>'
 PAUSE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PauseResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PauseResponse></s:Body></s:Envelope>'
@@ -943,3 +929,27 @@ GET_CUR_TRACK_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionI
 GET_CUR_TRACK_BODY = '<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetPositionInfo>'
 
 SOAP_TEMPLATE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>{body}</s:Body></s:Envelope>'
+
+SEEK_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
+SEEK_TRACK_BODY_TEMPLATE = '''
+<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+<InstanceID>0</InstanceID>
+<Unit>TRACK_NR</Unit>
+<Target>{track}</Target>
+</u:Seek>
+'''
+
+SEEK_TIMESTAMP_BODY_TEMPLATE = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>REL_TIME</Unit><Target>{timestamp}</Target></u:Seek>'
+
+PLAY_URI_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+
+ADD_TO_QUEUE_ACTION = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
+ADD_TO_QUEUE_BODY_TEMPLATE = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>{uri}</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
+
+
+REMOVE_FROM_QUEUE_ACTION = 'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
+REMOVE_FROM_QUEUE_BODY_TEMPLATE = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>{instance}</InstanceID><ObjectID>{objid}</ObjectID><UpdateID>{updateid}</UpdateID></u:RemoveTrackFromQueue>'
+
+CLEAR_QUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
+CLEAR_QUEUE_BODY = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:RemoveAllTracksFromQueue>'
+
