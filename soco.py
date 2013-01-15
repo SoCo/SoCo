@@ -155,12 +155,7 @@ class SoCo(object):
         if (response == PLAY_RESPONSE):
             return True
         else:
-            response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
-
-            if (response == PLAY_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
+            return self.__parse_error(response)
 
 
     def play_uri(self, uri=''):
