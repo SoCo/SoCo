@@ -8,12 +8,12 @@ __version__ = '0.1'
 __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
-
 import xml.etree.cElementTree as XML
 
 import requests
 import select
 import socket
+import logging, traceback
 
 
 __all__ = ['SonosDiscovery', 'SoCo']
@@ -49,15 +49,19 @@ class SoCo(object):
     """A simple class for controlling a Sonos speaker.
 
     Public functions:
-    play -- Plays the currently selected track or a music stream.
+    play -- Plays the current item.
+    play_uri -- Plays a track or a music stream by URI.
+    play_from_queue -- Plays an item in the queue.
     pause -- Pause the currently playing track.
     stop -- Stop the currently playing track.
+    seek -- Move the currently playing track a given elapsed time.
     next -- Go to the next track.
     previous -- Go back to the previous track.
     mute -- Mute (or unmute) the speaker.
     volume -- Get or set the volume of the speaker.
     bass -- Get or set the speaker's bass EQ.
     treble -- Set the speaker's treble EQ.
+    set_play_mode -- Change repeat and shuffle settings on the queue.
     set_loudness -- Turn on (or off) the speaker's loudness compensation.
     switch_to_line_in -- Switch the speaker's input to line-in.
     status_light -- Turn on (or off) the Sonos status light.
@@ -65,7 +69,11 @@ class SoCo(object):
     get_speaker_info -- Get information about the Sonos speaker.
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
-    get_info -- get information on this speaker.
+    get_info -- Get information on this speaker.
+    get_queue -- Get information about the queue.
+    add_to_queue -- Add a track to the end of the queue
+    remove_from_queue -- Remove a track from the queue
+    clear_queue -- Remove all tracks from queue
 
     """
 
@@ -75,8 +83,104 @@ class SoCo(object):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
 
-    def play(self, uri=''):
-        """Play the currently selected track or play a stream.
+    def set_play_mode(self, playmode):
+        """ Sets the play mode for the queue. Case-insensitive options are:
+        NORMAL -- just play the queue once
+        REPEAT_ALL -- loop the entire queue
+        SHUFFLE -- play all the tracks in the queue with shuffling
+        SHUFFLE_NOREPEAT -- shuffle the queue, play all tracks, stop
+
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        modes = ('NORMAL','SHUFFLE_NOREPEAT','SHUFFLE','REPEAT_ALL')
+        playmode = playmode.upper()
+        if not playmode in modes: raise KeyError, "invalid play mode"
+
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
+        body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+
+    def play_from_queue(self, queue_index):
+        """ Play an item from the queue. The track number is required as an
+        argument, where the first track is 0.
+
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        # first, set the queue itself as the source URI
+        uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
+        body = '''
+            <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+                <InstanceID>0</InstanceID>
+                <CurrentURI>%s</CurrentURI>
+                <CurrentURIMetaData></CurrentURIMetaData>
+            </u:SetAVTransportURI>
+        ''' % uri
+
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if not (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            return self.__parse_error(response)
+
+        # second, set the track number with a seek command
+        body = '''
+            <u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
+            <InstanceID>0</InstanceID>
+            <Unit>TRACK_NR</Unit>
+            <Target>%d</Target>
+            </u:Seek>
+        ''' % (queue_index + 1)
+
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+
+        # finally, just play what's set
+        return self.play()
+
+    def play(self):
+        """Play the currently selected track.
+
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
+
+        body = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'):
+            return True
+        else:
+            response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
+
+            if (response == PLAY_RESPONSE):
+                return True
+            else:
+                return self.__parse_error(response)
+
+
+    def play_uri(self, uri=''):
+        """Play a given stream. Pauses the queue.
 
         Arguments:
         uri -- URI of a stream to be played.
@@ -89,24 +193,18 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if uri:
-            body = ENQUEUE_BODY_TEMPLATE.format(uri=uri)
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
 
-            response = self.__send_command(TRANSPORT_ENDPOINT, ENQUEUE_ACTION, body)
+        body = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>' + uri + '</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 
-            if (response == ENQUEUE_RESPONSE):
-                # The track is enqueued, now play it.
-                return self.play()
-            else:
-                return self.__parse_error(response)
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
 
+        if (response == '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'):
+            # The track is enqueued, now play it.
+            return self.play()
         else:
-            response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
+            return self.__parse_error(response)
 
-            if (response == PLAY_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
 
     def pause(self):
         """ Pause the currently playing track.
@@ -145,6 +243,30 @@ class SoCo(object):
             return True
         else:
             return self.__parse_error(response)
+
+    def seek(self, timestamp):
+        """ Seeks to a given timestamp in the current track, specified in the
+        format of HH:MM:SS.
+
+        Returns:
+        True if the Sonos speaker successfully seeked to the timecode.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        import re
+        if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$',timestamp):
+            raise ValueError, "invalid timestamp, use HH:MM:SS format"
+
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#Seek'
+        body = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>REL_TIME</Unit><Target>'+timestamp+'</Target></u:Seek>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
 
     def next(self):
         """ Go to the next track.
@@ -366,8 +488,8 @@ class SoCo(object):
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-		"""
 
+		"""
         master_speaker_info = self.get_speaker_info()
         ips = self.get_speakers_ip()
 
@@ -393,6 +515,7 @@ class SoCo(object):
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
+
 		"""
         body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
 
@@ -561,6 +684,140 @@ class SoCo(object):
 
             return self.speakers_ip
 
+    def get_queue(self, start = 0, max_items = 100):
+        """ Get information about the queue.
+
+        Returns:
+        A list containing a dictionary for each track in the queue. The track dictionary
+        contains the following information about the track: title, artist, album, album_art, uri
+
+        If we're unable to return data for a field, we'll return an empty
+        list. This can happen for all kinds of reasons so be sure to check
+        values.
+
+        This method is heavly based on Sam Soffes (aka soffes) ruby implementation
+
+        """
+        meta_data = {
+            'name': 'Browse',
+            'CONTENT_DIRECTORY_XMLNS': 'urn:schemas-upnp-org:service:ContentDirectory:1',
+            'starting_index': start,
+            'requested_count': max_items
+        }
+
+        queue = []
+
+        action = '"%(CONTENT_DIRECTORY_XMLNS)s#%(name)s"' % meta_data
+        body = '''<u:%(name)s xmlns:u="%(CONTENT_DIRECTORY_XMLNS)s">
+                    <ObjectID>Q:0</ObjectID>
+                    <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+                    <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter>
+                    <StartingIndex>%(starting_index)d</StartingIndex>
+                    <RequestedCount>%(requested_count)d</RequestedCount>
+                    <SortCriteria></SortCriteria>
+                    </u:Browse>''' % meta_data
+
+        response = self.__send_command('/MediaServer/ContentDirectory/Control', action, body)
+
+        try:
+            dom = XML.fromstring(response.encode('utf-8'))
+            resultText = dom.findtext('.//Result')
+            if not resultText: return queue
+
+            resultDom  = XML.fromstring(resultText.encode('utf-8'))
+            for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                try:
+                    item = {
+                        'title': None,
+                        'artist': None,
+                        'album': None,
+                        'album_art': None,
+                        'uri': None
+                        }
+
+                    item['title'] =     element.findtext('{http://purl.org/dc/elements/1.1/}title')
+                    item['artist'] =    element.findtext('{http://purl.org/dc/elements/1.1/}creator')
+                    item['album'] =     element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+                    item['album_art'] = element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+                    item['uri'] =       element.findtext('{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+
+                    queue.append(item)
+                except:
+                    logging.warning('Could not handle item: %s', element)
+                    logging.error(traceback.format_exc())
+
+        except:
+            logging.error('Could not handle result from sonos')
+            logging.error(traceback.format_exc())
+
+        return queue
+
+    def add_to_queue(self, uri):
+        """ Adds a given track to the queue.
+
+        Returns:
+        If the Sonos speaker successfully added the track, returns the queue
+        position of the track added.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
+
+        body = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>'+uri+'</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
+
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            dom = XML.fromstring(response)
+            qnumber = dom.findtext('.//FirstTrackNumberEnqueued')
+            return int(qnumber)
+
+    def remove_from_queue(self, index):
+        """ Removes a track from the queue.
+
+        index: the index of the track to remove; first item in the queue is 1
+
+        Returns:
+        True if the Sonos speaker successfully removed the track
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        #TODO: what do these parameters actually do?
+        instance = updid = '0'
+        objid = 'Q:0/'+str(index)
+        action = 'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
+        body = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>'+instance+'</InstanceID><ObjectID>'+objid+'</ObjectID><UpdateID>'+updid+'</UpdateID></u:RemoveTrackFromQueue>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+
+    def clear_queue(self):
+        """ Removes all tracks from the queue.
+
+        Returns:
+        True if the Sonos speaker cleared the queue.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+        """
+        action = '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
+        body = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:RemoveAllTracksFromQueue>'
+        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        if "errorCode" in response:
+            return self.__parse_error(response)
+        else:
+            return True
+
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
 
@@ -587,6 +844,7 @@ class SoCo(object):
 
         If we're unable to parse the error response for whatever reason, the
         raw response sent back from the Sonos speaker will be returned.
+
         """
         error = XML.fromstring(response)
 
@@ -607,6 +865,7 @@ HOST: 239.255.255.250:reservedSSDPport
 MAN: ssdp:discover
 MX: 1
 ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
+
 
 MCAST_GRP = "239.255.255.250"
 MCAST_PORT = 1900
