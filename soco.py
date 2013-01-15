@@ -104,7 +104,7 @@ class SoCo(object):
 
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
         body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, action, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -126,7 +126,7 @@ class SoCo(object):
         uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
         body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
-        response = self.__send_command(SoCo.TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
+        response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
         if not (response == PLAY_FROM_QUEUE_RESPONSE):
             return self.__parse_error(response)
 
