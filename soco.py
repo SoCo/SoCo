@@ -368,7 +368,7 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if bass:
+        if bass is not False:
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
@@ -403,7 +403,7 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if treble:
+        if treble is not False:
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
