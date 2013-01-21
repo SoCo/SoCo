@@ -85,13 +85,13 @@ class SoCo(object):
 
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
-        NORMAL -- just play the queue once
-        REPEAT_ALL -- loop the entire queue
-        SHUFFLE -- play all the tracks in the queue with shuffling
-        SHUFFLE_NOREPEAT -- shuffle the queue, play all tracks, stop
+        NORMAL -- Turns off shuffle and repeat.
+        REPEAT_ALL -- Turns on repeat and turns off shuffle.
+        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.) 
+        SHUFFLE_NOREPEAT -- Turns on shuffle and turns off repeat.
 
         Returns:
-        True if the Sonos speaker successfully started playing the track.
+        True if the play mode was successfully set.
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
