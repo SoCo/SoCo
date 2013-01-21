@@ -306,7 +306,7 @@ class SoCo(object):
         """
         mute_value = '1' if mute else '0'
 
-        body = MUTE_BODY_TEMPLATE.format(mute=mute_val)
+        body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
 
         response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
 
