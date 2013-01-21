@@ -69,7 +69,7 @@ class SoCo(object):
     get_speaker_info -- Get information about the Sonos speaker.
     partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
     join -- Join this speaker to another "master" speaker.
-    get_info -- Get information on this speaker.
+    get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
