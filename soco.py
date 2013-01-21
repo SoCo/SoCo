@@ -122,8 +122,13 @@ class SoCo(object):
         speaker will be returned.
 
         """
+        # Grab the speaker's information if we haven't already since we'll need
+        # it in the next step.
+        if not self.speaker_info:
+            self.get_speaker_info()
+
         # first, set the queue itself as the source URI
-        uri = 'x-rincon-queue:'+self.speaker_info['uid']+'#0'
+        uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
         body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
