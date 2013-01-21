@@ -669,6 +669,7 @@ class SoCo(object):
         IP addresses of the Sonos speakers.
 
         """
+        import re
 
         if self.speakers_ip and not refresh:
             return self.speakers_ip
