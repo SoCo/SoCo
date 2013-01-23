@@ -87,7 +87,7 @@ class SoCo(object):
         """ Sets the play mode for the queue. Case-insensitive options are:
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
-        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.) 
+        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.)
         SHUFFLE_NOREPEAT -- Turns on shuffle and turns off repeat.
 
         Returns:
