@@ -15,6 +15,8 @@ import select
 import socket
 import logging, traceback
 
+logger = logging.getLogger(__name__)
+
 
 __all__ = ['SonosDiscovery', 'SoCo']
 
@@ -87,7 +89,7 @@ class SoCo(object):
         """ Sets the play mode for the queue. Case-insensitive options are:
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
-        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.) 
+        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.)
         SHUFFLE_NOREPEAT -- Turns on shuffle and turns off repeat.
 
         Returns:
@@ -597,8 +599,8 @@ class SoCo(object):
                     track['artist'] = trackinfo[:index]
                     track['title'] = trackinfo[index+3:]
             except:
-                logging.warning('Could not handle track info: "%s"', trackinfo)
-                logging.warning(traceback.format_exc())
+                logger.warning('Could not handle track info: "%s"', trackinfo)
+                logger.warning(traceback.format_exc())
                 track['artist'] = ''
                 track['title'] = trackinfo
 
@@ -745,12 +747,12 @@ class SoCo(object):
 
                     queue.append(item)
                 except:
-                    logging.warning('Could not handle item: %s', element)
-                    logging.error(traceback.format_exc())
+                    logger.warning('Could not handle item: %s', element)
+                    logger.error(traceback.format_exc())
 
         except:
-            logging.error('Could not handle result from sonos')
-            logging.error(traceback.format_exc())
+            logger.error('Could not handle result from sonos')
+            logger.error(traceback.format_exc())
 
         return queue
 
