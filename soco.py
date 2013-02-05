@@ -584,7 +584,7 @@ class SoCo(object):
         d = dom.findtext('.//TrackMetaData')
 
         # Duration seems to be '0:00:00' when listening to radio
-        if track['duration'] == '0:00:00':
+        if d != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(d.encode('utf-8'))
 
             # #Try parse trackinfo
@@ -604,10 +604,9 @@ class SoCo(object):
 
             track['album'] = ''
             track['album_art'] = ''
-
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
-        elif d is not '' or d is not 'NOT_IMPLEMENTED':
+        elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
             metadata = XML.fromstring(d.encode('utf-8'))
 
