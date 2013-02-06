@@ -4,7 +4,7 @@
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.2'
+__version__ = '0.3'
 __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
@@ -17,7 +17,6 @@ import logging, traceback
 
 logger = logging.getLogger(__name__)
 
-
 __all__ = ['SonosDiscovery', 'SoCo']
 
 class SonosDiscovery(object):
@@ -25,6 +24,7 @@ class SonosDiscovery(object):
 
     Public functions:
     get_speaker_ips -- Get a list of IPs of all zoneplayers.
+
     """
 
     def __init__(self):
@@ -69,13 +69,15 @@ class SoCo(object):
     status_light -- Turn on (or off) the Sonos status light.
     get_current_track_info -- Get information about the currently playing track.
     get_speaker_info -- Get information about the Sonos speaker.
-    partymode -- Put all the speakers in the network in the same group, a.k.a Party Mode.
+    partymode -- Put all the speakers in the network in the same group.
     join -- Join this speaker to another "master" speaker.
     get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
     clear_queue -- Remove all tracks from queue
+    get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
+    get_favorite_radio_stations -- Get favorite radio stations.
 
     """
 
@@ -107,6 +109,7 @@ class SoCo(object):
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
         body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
         response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
+
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -159,6 +162,7 @@ class SoCo(object):
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
+
         if (response == PLAY_RESPONSE):
             return True
         else:
@@ -244,6 +248,7 @@ class SoCo(object):
 
         body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
+
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
@@ -701,26 +706,11 @@ class SoCo(object):
         This method is heavly based on Sam Soffes (aka soffes) ruby implementation
 
         """
-        meta_data = {
-            'name': 'Browse',
-            'CONTENT_DIRECTORY_XMLNS': 'urn:schemas-upnp-org:service:ContentDirectory:1',
-            'starting_index': start,
-            'requested_count': max_items
-        }
-
         queue = []
 
-        action = '"%(CONTENT_DIRECTORY_XMLNS)s#%(name)s"' % meta_data
-        body = '''<u:%(name)s xmlns:u="%(CONTENT_DIRECTORY_XMLNS)s">
-                    <ObjectID>Q:0</ObjectID>
-                    <BrowseFlag>BrowseDirectChildren</BrowseFlag>
-                    <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter>
-                    <StartingIndex>%(starting_index)d</StartingIndex>
-                    <RequestedCount>%(requested_count)d</RequestedCount>
-                    <SortCriteria></SortCriteria>
-                    </u:Browse>''' % meta_data
+        body = GET_QUEUE_BODY_TEMPLATE.format(start, max_items)
 
-        response = self.__send_command('/MediaServer/ContentDirectory/Control', action, body)
+        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
         try:
             dom = XML.fromstring(response.encode('utf-8'))
@@ -750,7 +740,7 @@ class SoCo(object):
                     logger.error(traceback.format_exc())
 
         except:
-            logger.error('Could not handle result from sonos')
+            logger.error('Could not handle result from Sonos')
             logger.error(traceback.format_exc())
 
         return queue
@@ -811,10 +801,84 @@ class SoCo(object):
         speaker will be returned.
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, CLEAR_QUEUE_ACTION, CLEAR_QUEUE_BODY)
+
         if "errorCode" in response:
             return self.__parse_error(response)
         else:
             return True
+
+    def get_favorite_radio_shows(self, start=0, max_items=100):
+        """ Get favorite radio shows from Sonos' Radio app.
+
+        Returns:
+        A list containing the total number of favorites, the number of favorites
+        returned, and the actual list of favorite radio shows, represented as a
+        dictionary with `title` and `uri` keys.
+        
+        Depending on what you're building, you'll want to check to see if the
+        total number of favorites is greater than the amount you
+        requested (`max_items`), if it is, use `start` to page through and
+        get the entire list of favorites.
+
+        """
+        return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
+
+    def get_favorite_radio_stations(self, start=0, max_items=100):
+        """ Get favorite radio stations from Sonos' Radio app.
+
+        Returns:
+        A list containing the total number of favorites, the number of favorites
+        returned, and the actual list of favorite radio stations, represented
+        as a dictionary with `title` and `uri` keys.
+        
+        Depending on what you're building, you'll want to check to see if the
+        total number of favorites is greater than the amount you
+        requested (`max_items`), if it is, use `start` to page through and
+        get the entire list of favorites.
+
+        """
+        return self.__get_radio_favorites(RADIO_STATIONS, start, max_items)
+
+    def __get_radio_favorites(self, favorite_type, start=0, max_items=100):
+        """ Helper method for `get_favorite_radio_*` methods.
+
+        Arguments:
+        favorite_type -- Specify either `RADIO_STATIONS` or `RADIO_SHOWS`.
+        start -- Which number to start the retrieval from. Used for paging.
+        max_items -- The total number of results to return.
+
+        """
+        if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
+            favorite_type = RADIO_STATIONS
+
+        body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start, max_items)
+            
+        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
+
+        dom = XML.fromstring(response)
+
+        result = {}
+        favorites = []
+
+        d = dom.findtext('.//Result')
+
+        if d != '':
+            # Favorites are returned in DIDL-Lite format
+            metadata = XML.fromstring(d.encode('utf-8'))
+
+            for item in metadata.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                favorite = {}
+
+                favorite['title'] = item.findtext('.//{http://purl.org/dc/elements/1.1/}title')
+                favorite['uri'] = item.findtext('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+
+                favorites.append(favorite)
+
+        result['total'] = dom.findtext('.//TotalMatches', 0)
+        result['returned'] = len(favorites)
+        result['favorites'] = favorites
+
+        return result
 
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
@@ -855,7 +919,6 @@ class SoCo(object):
             return response
 
 
-
 # definition section
 
 PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
@@ -864,13 +927,16 @@ MAN: ssdp:discover
 MX: 1
 ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
 
-
 MCAST_GRP = "239.255.255.250"
 MCAST_PORT = 1900
+
+RADIO_STATIONS = 0
+RADIO_SHOWS = 1
 
 TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
 RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
 DEVICE_ENDPOINT = '/DeviceProperties/Control'
+CONTENT_DIRECTORY_ENDPOINT = '/MediaServer/ContentDirectory/Control'
 
 ENQUEUE_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 ENQUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
@@ -887,8 +953,6 @@ PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
 </u:SetAVTransportURI>
 '''
 PLAY_FROM_QUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
-
-
 
 PAUSE_ACTION =  '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
 PAUSE_BODY = '<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Pause>'
@@ -965,9 +1029,10 @@ SEEK_TIMESTAMP_BODY_TEMPLATE = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AV
 
 PLAY_URI_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 
+GET_QUEUE_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1#Browse"><ObjectID>Q:0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{0}</StartingIndex><RequestedCount>{1}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
+
 ADD_TO_QUEUE_ACTION = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
 ADD_TO_QUEUE_BODY_TEMPLATE = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>{uri}</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
-
 
 REMOVE_FROM_QUEUE_ACTION = 'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
 REMOVE_FROM_QUEUE_BODY_TEMPLATE = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>{instance}</InstanceID><ObjectID>{objid}</ObjectID><UpdateID>{updateid}</UpdateID></u:RemoveTrackFromQueue>'
@@ -975,3 +1040,5 @@ REMOVE_FROM_QUEUE_BODY_TEMPLATE = '<u:RemoveTrackFromQueue xmlns:u="urn:schemas-
 CLEAR_QUEUE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
 CLEAR_QUEUE_BODY = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:RemoveAllTracksFromQueue>'
 
+BROWSE_ACTION = '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"'
+GET_RADIO_FAVORITES_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>R:0/{0}</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{1}</StartingIndex><RequestedCount>{2}</RequestedCount><SortCriteria/></u:Browse>'
