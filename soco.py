@@ -376,6 +376,7 @@ class SoCo(object):
 
         """
         if bass is not False:
+            bass = max(-10, min(bass, 10))  # Coerce in range
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
@@ -411,6 +412,7 @@ class SoCo(object):
 
         """
         if treble is not False:
+            treble = max(-10, min(treble, 10))  # Coerce in range
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
