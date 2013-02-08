@@ -620,9 +620,6 @@ class SoCo(object):
 
             if album_art is not None:
                 track['album_art'] = 'http://' + self.speaker_ip + ':1400' + metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-            else:
-                track['album_art'] = ''
-
 
         return track
 
