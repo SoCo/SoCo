@@ -582,9 +582,9 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRACK_ACTION, GET_CUR_TRACK_BODY)
 
-        dom = XML.fromstring(response)
+        dom = XML.fromstring(response.encode('utf-8'))
 
-        track = {}
+        track = {'title': '', 'artist': '', 'album': '', 'album_art': ''}
 
         track['playlist_position'] = dom.findtext('.//Track')
         track['duration'] = dom.findtext('.//TrackDuration')
@@ -599,41 +599,29 @@ class SoCo(object):
             # #Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:metadata-1-0/}streamContent')
 
-            try:
-                index = trackinfo.find(' - ')
-
-                if index > -1:
-                    track['artist'] = trackinfo[:index]
-                    track['title'] = trackinfo[index+3:]
-            except:
+            index = trackinfo.find(' - ')
+            if index > -1:
+                track['artist'] = trackinfo[:index]
+                track['title'] = trackinfo[index+3:]
+            else:
                 logger.warning('Could not handle track info: "%s"', trackinfo)
                 logger.warning(traceback.format_exc())
-                track['artist'] = ''
-                track['title'] = trackinfo
+                track['title'] = trackinfo.encode('utf-8')
 
-            track['album'] = ''
-            track['album_art'] = ''
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
         elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
             metadata = XML.fromstring(d.encode('utf-8'))
 
-            track['title'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
-            track['artist'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
-            track['album'] = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+            track['title'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title').encode('utf-8')
+            track['artist'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator').encode('utf-8')
+            track['album'] = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album').encode('utf-8')
 
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
             if album_art is not None:
                 track['album_art'] = 'http://' + self.speaker_ip + ':1400' + metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-            else:
-                track['album_art'] = ''
-        else:
-            track['title'] = ''
-            track['artist'] = ''
-            track['album'] = ''
-            track['album_art'] = ''
 
         return track
 
@@ -655,7 +643,7 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-            self.speaker_info['zone_name'] = dom.findtext('.//ZoneName')
+            self.speaker_info['zone_name'] = dom.findtext('.//ZoneName').encode('utf-8')
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
@@ -857,7 +845,7 @@ class SoCo(object):
             
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
-        dom = XML.fromstring(response)
+        dom = XML.fromstring(response.encode('utf-8'))
 
         result = {}
         favorites = []
@@ -871,7 +859,7 @@ class SoCo(object):
             for item in metadata.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
 
-                favorite['title'] = item.findtext('.//{http://purl.org/dc/elements/1.1/}title')
+                favorite['title'] = item.findtext('.//{http://purl.org/dc/elements/1.1/}title').encode('utf-8')
                 favorite['uri'] = item.findtext('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
 
                 favorites.append(favorite)
