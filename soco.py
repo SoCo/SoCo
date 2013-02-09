@@ -4,7 +4,7 @@
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.3'
+__version__ = '0.4'
 __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
@@ -341,6 +341,7 @@ class SoCo(object):
 
         """
         if volume:
+            volume = max(0, min(volume, 100)) # Coerce in range
             body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_VOLUME_ACTION, body)
@@ -376,7 +377,7 @@ class SoCo(object):
 
         """
         if bass is not False:
-            bass = max(-10, min(bass, 10))  # Coerce in range
+            bass = max(-10, min(bass, 10)) # Coerce in range
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
@@ -412,7 +413,7 @@ class SoCo(object):
 
         """
         if treble is not False:
-            treble = max(-10, min(treble, 10))  # Coerce in range
+            treble = max(-10, min(treble, 10)) # Coerce in range
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
@@ -596,10 +597,11 @@ class SoCo(object):
         if d != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(d.encode('utf-8'))
 
-            # #Try parse trackinfo
+            #Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:metadata-1-0/}streamContent')
 
             index = trackinfo.find(' - ')
+
             if index > -1:
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index+3:]
