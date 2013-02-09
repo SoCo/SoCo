@@ -102,6 +102,7 @@ Want to contribute to SoCo? Here's what needs to be done:
 * [nixscripter](https://github.com/nixscripter)
 * [Joel Björkman](https://github.com/labero)
 * [Stefan Kögl](https://github.com/stefankoegl)
+* [Kenneth Nielsen](https://github.com/KennethNielsen)
 
 ## Related Projects
 More of a Ruby fan? Not a problem, [Sam Soffes](https://github.com/soffes) is building out an awesome [Ruby gem](https://github.com/soffes/sonos).
