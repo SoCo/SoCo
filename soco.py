@@ -683,6 +683,28 @@ class SoCo(object):
                     self.speakers_ip.append(i)
 
             return self.speakers_ip
+             
+    def get_current_transport_info(self):
+        """ Get the current playback state 
+        
+        Returns:
+        A dictionary containing the following information about the speakers playing state
+        CurrentTransportState (PLAYING or PAUSED_PLAYBACK), CurrentTrasnportStatus (OK, ?),
+        CurrentSpeed(1,?)
+        
+        This allows us to know if speaker is playing or not. Don't know other states of 
+        CurrentTransportStatus,CurrentSpeed
+        
+        """
+        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
+        dom = XML.fromstring(response.encode('utf-8'))
+        
+        playstate = {'CurrentTransportState' : '', 'CurrentTransportStatus' : '', 'CurrentSpeed' : ''}
+        playstate['CurrentTransportState'] = dom.findtext('.//CurrentTransportState')
+        playstate['CurrentTransportStatus'] = dom.findtext('.//CurrentTransportStatus')
+        playstate['CurrentSpeed'] = dom.findtext('.//CurrentSpeed')
+        
+        return playstate
 
     def get_queue(self, start = 0, max_items = 100):
         """ Get information about the queue.
@@ -1005,6 +1027,9 @@ SET_LEDSTATE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/en
 
 GET_CUR_TRACK_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo"'
 GET_CUR_TRACK_BODY = '<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetPositionInfo>'
+
+GET_CUR_TRANSPORT_ACTION = '"urn:schema-upnp-org:service:AVTransport:1#GetTransportInfo"'
+GET_CUR_TRANSPORT_BODY = '<u:GetTransportInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:GetTransportInfo></s:Body></s:Envelope>'
 
 SOAP_TEMPLATE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>{body}</s:Body></s:Envelope>'
 
