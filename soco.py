@@ -689,7 +689,7 @@ class SoCo(object):
         
         Returns:
         A dictionary containing the following information about the speakers playing state
-        CurrentTransportState (PLAYING or PAUSED_PLAYBACK), CurrentTrasnportStatus (OK, ?),
+        CurrentTransportState (PLAYING, PAUSED_PLAYBACK, STOPPED), CurrentTrasnportStatus (OK, ?),
         CurrentSpeed(1,?)
         
         This allows us to know if speaker is playing or not. Don't know other states of 
