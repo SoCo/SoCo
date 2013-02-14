@@ -689,8 +689,8 @@ class SoCo(object):
         
         Returns:
         A dictionary containing the following information about the speakers playing state
-        CurrentTransportState (PLAYING, PAUSED_PLAYBACK, STOPPED), CurrentTrasnportStatus (OK, ?),
-        CurrentSpeed(1,?)
+        current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED), current_trasnport_status (OK, ?),
+        current_speed(1,?)
         
         This allows us to know if speaker is playing or not. Don't know other states of 
         CurrentTransportStatus,CurrentSpeed
@@ -699,10 +699,10 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
         dom = XML.fromstring(response.encode('utf-8'))
         
-        playstate = {'CurrentTransportState' : '', 'CurrentTransportStatus' : '', 'CurrentSpeed' : ''}
-        playstate['CurrentTransportState'] = dom.findtext('.//CurrentTransportState')
-        playstate['CurrentTransportStatus'] = dom.findtext('.//CurrentTransportStatus')
-        playstate['CurrentSpeed'] = dom.findtext('.//CurrentSpeed')
+        playstate = {'current_transport_status' : '', 'current_transport_state' : '', 'current_transport_speed' : ''}
+        playstate['current_transport_state'] = dom.findtext('.//CurrentTransportState')
+        playstate['current_transport_status'] = dom.findtext('.//CurrentTransportStatus')
+        playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
         
         return playstate
 
