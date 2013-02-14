@@ -28,7 +28,7 @@ class SonosDiscovery(object):
     """
 
     def __init__(self):
-        self._sock = socket.socket(
+        self._sock = socket.socket( 
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
