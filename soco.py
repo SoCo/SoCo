@@ -71,6 +71,7 @@ class SoCo(object):
     get_speaker_info -- Get information about the Sonos speaker.
     partymode -- Put all the speakers in the network in the same group.
     join -- Join this speaker to another "master" speaker.
+    unjoin -- Remove this speaker from a group.
     get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
     add_to_queue -- Add a track to the end of the queue
@@ -511,6 +512,23 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
         if (response == JOIN_RESPONSE):
+            return True
+        else:
+            return self.__parse_error(response)
+
+    def unjoin(self):
+        """ Remove this speaker from a group.
+
+        Seems to work ok even if you remove what was previously the group master from it's own group.
+        If the speaker was not in a group also returns ok.
+
+		Returns:
+		True if this speaker has left the group'
+        """
+
+        response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
+        
+        if (response == UNJOIN_RESPONSE):
             return True
         else:
             return self.__parse_error(response)
@@ -995,6 +1013,10 @@ SET_TRANSPORT_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTranspo
 
 JOIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon:{master_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 JOIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
+
+UNJOIN_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#BecomeCoordinatorOfStandaloneGroup"'
+UNJOIN_BODY = '<u:BecomeCoordinatorOfStandaloneGroup xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:BecomeCoordinatorOfStandaloneGroup>'
+UNJOIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:BecomeCoordinatorOfStandaloneGroupResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:BecomeCoordinatorOfStandaloneGroupResponse></s:Body></s:Envelope>'
 
 SET_LINEIN_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>x-rincon-stream:{speaker_uid}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
 SET_LINEIN_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
