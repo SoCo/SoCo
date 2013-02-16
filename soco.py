@@ -170,7 +170,7 @@ class SoCo(object):
             return self.__parse_error(response)
 
 
-    def play_uri(self, uri=''):
+    def play_uri(self, uri='', meta=''):
         """Play a given stream. Pauses the queue.
 
         Arguments:
@@ -184,7 +184,8 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri)
+
+        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri,meta=meta)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
@@ -864,7 +865,7 @@ class SoCo(object):
         body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start, max_items)
             
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
-
+        
         dom = XML.fromstring(response.encode('utf-8'))
 
         result = {}
@@ -1041,7 +1042,7 @@ SEEK_TRACK_BODY_TEMPLATE = '''
 
 SEEK_TIMESTAMP_BODY_TEMPLATE = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Unit>REL_TIME</Unit><Target>{timestamp}</Target></u:Seek>'
 
-PLAY_URI_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData></CurrentURIMetaData></u:SetAVTransportURI>'
+PLAY_URI_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData>{meta}</CurrentURIMetaData></u:SetAVTransportURI>'
 
 GET_QUEUE_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1#Browse"><ObjectID>Q:0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{0}</StartingIndex><RequestedCount>{1}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
 
