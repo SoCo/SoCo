@@ -73,6 +73,7 @@ class SoCo(object):
     join -- Join this speaker to another "master" speaker.
     get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
+    get_current_transport_info -- get speakers playing state
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
     clear_queue -- Remove all tracks from queue
