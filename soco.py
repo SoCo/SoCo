@@ -28,7 +28,7 @@ class SonosDiscovery(object):
     """
 
     def __init__(self):
-        self._sock = socket.socket(
+        self._sock = socket.socket( 
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
@@ -73,6 +73,7 @@ class SoCo(object):
     join -- Join this speaker to another "master" speaker.
     get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
+    get_current_transport_info -- get speakers playing state
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
     clear_queue -- Remove all tracks from queue
@@ -689,8 +690,8 @@ class SoCo(object):
         
         Returns:
         A dictionary containing the following information about the speakers playing state
-        CurrentTransportState (PLAYING or PAUSED_PLAYBACK), CurrentTrasnportStatus (OK, ?),
-        CurrentSpeed(1,?)
+        current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED), current_trasnport_status (OK, ?),
+        current_speed(1,?)
         
         This allows us to know if speaker is playing or not. Don't know other states of 
         CurrentTransportStatus,CurrentSpeed
@@ -699,10 +700,10 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
         dom = XML.fromstring(response.encode('utf-8'))
         
-        playstate = {'CurrentTransportState' : '', 'CurrentTransportStatus' : '', 'CurrentSpeed' : ''}
-        playstate['CurrentTransportState'] = dom.findtext('.//CurrentTransportState')
-        playstate['CurrentTransportStatus'] = dom.findtext('.//CurrentTransportStatus')
-        playstate['CurrentSpeed'] = dom.findtext('.//CurrentSpeed')
+        playstate = {'current_transport_status' : '', 'current_transport_state' : '', 'current_transport_speed' : ''}
+        playstate['current_transport_state'] = dom.findtext('.//CurrentTransportState')
+        playstate['current_transport_status'] = dom.findtext('.//CurrentTransportStatus')
+        playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
         
         return playstate
 
