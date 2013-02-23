@@ -4,7 +4,7 @@
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.4'
+__version__ = '0.5'
 __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
@@ -172,10 +172,11 @@ class SoCo(object):
 
 
     def play_uri(self, uri='', meta=''):
-        """Play a given stream. Pauses the queue.
+        """ Play a given stream. Pauses the queue.
 
         Arguments:
         uri -- URI of a stream to be played.
+        meta --- The track metadata to show in the player, DIDL format.
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -186,7 +187,7 @@ class SoCo(object):
 
         """
 
-        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri,meta=meta)
+        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri, meta=meta)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
@@ -521,11 +522,11 @@ class SoCo(object):
     def unjoin(self):
         """ Remove this speaker from a group.
 
-        Seems to work ok even if you remove what was previously the group master from it's own group.
-        If the speaker was not in a group also returns ok.
+        Seems to work ok even if you remove what was previously the group master
+        from it's own group. If the speaker was not in a group also returns ok.
 
 		Returns:
-		True if this speaker has left the group'
+		True if this speaker has left the group.
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
@@ -709,17 +710,22 @@ class SoCo(object):
         
         Returns:
         A dictionary containing the following information about the speakers playing state
-        current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED), current_trasnport_status (OK, ?),
-        current_speed(1,?)
+        current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED),
+        current_trasnport_status (OK, ?), current_speed(1,?)
         
         This allows us to know if speaker is playing or not. Don't know other states of 
-        CurrentTransportStatus,CurrentSpeed
+        CurrentTransportStatus and CurrentSpeed.
         
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
         dom = XML.fromstring(response.encode('utf-8'))
         
-        playstate = {'current_transport_status' : '', 'current_transport_state' : '', 'current_transport_speed' : ''}
+        playstate = {
+            'current_transport_status': '',
+            'current_transport_state': '',
+            'current_transport_speed': ''
+        }
+
         playstate['current_transport_state'] = dom.findtext('.//CurrentTransportState')
         playstate['current_transport_status'] = dom.findtext('.//CurrentTransportStatus')
         playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
