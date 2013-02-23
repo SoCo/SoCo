@@ -86,6 +86,7 @@ SoCo currently supports the following basic controls:
     * MAC Address
 * Find all the Sonos speakers in a network. Code contributed by Thomas Bartvig.
 * Put all Sonos speakers in a network into "party mode". Code contributed by Thomas Bartvig.
+* "Unjoin" speakers from a group.
 * Manage the Sonos queue (get the items in it, add to it, clear it, play a specific song from it)
 * Get the saved favorite radio stations and shows (title and stream URI)
 
@@ -103,6 +104,8 @@ Want to contribute to SoCo? Here's what needs to be done:
 * [Joel Björkman](https://github.com/labero)
 * [Stefan Kögl](https://github.com/stefankoegl)
 * [Kenneth Nielsen](https://github.com/KennethNielsen)
+* [Scott G. Waters](https://github.com/scottgwaters)
+* [phut](https://github.com/phut)
 
 ## Related Projects
 More of a Ruby fan? Not a problem, [Sam Soffes](https://github.com/soffes) is building out an awesome [Ruby gem](https://github.com/soffes/sonos).
