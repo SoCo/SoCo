@@ -62,6 +62,7 @@ class SoCo(object):
     mute -- Mute (or unmute) the speaker.
     volume -- Get or set the volume of the speaker.
     bass -- Get or set the speaker's bass EQ.
+    set_player_name  -- set the name of the Sonos Speaker
     treble -- Set the speaker's treble EQ.
     set_play_mode -- Change repeat and shuffle settings on the queue.
     set_loudness -- Turn on (or off) the speaker's loudness compensation.
@@ -87,6 +88,29 @@ class SoCo(object):
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
+
+   
+    def set_player_name(self,playername=False):
+        """  Sets the name of the player 
+
+        Returns:
+        True if the player name was successfully set.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        """
+        if playername is not False:
+            body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
+        
+            response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
+        
+            if (response == SET_PLAYER_NAME_RESPONSE):
+                return True
+            else:
+                return self.__parse_error(response)
+
 
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
@@ -1060,3 +1084,8 @@ CLEAR_QUEUE_BODY = '<u:RemoveAllTracksFromQueue xmlns:u="urn:schemas-upnp-org:se
 
 BROWSE_ACTION = '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"'
 GET_RADIO_FAVORITES_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>R:0/{0}</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{1}</StartingIndex><RequestedCount>{2}</RequestedCount><SortCriteria/></u:Browse>'
+
+SET_PLAYER_NAME_ACTION ='"urn:schemas-upnp-org:service:DeviceProperties:1#SetZoneAttributes"'
+SET_PLAYER_NAME_BODY_TEMPLATE = '"<u:SetZoneAttributes xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredZoneName>{playername}</DesiredZoneName><DesiredIcon /><DesiredConfiguration /></u:SetZoneAttributes>"'
+SET_PLAYER_NAME_RESPONSE ='"<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetZoneAttributesResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetZoneAttributesResponse></s:Body></s:Envelope>"'
+
