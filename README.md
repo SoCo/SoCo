@@ -60,6 +60,7 @@ SoCo currently supports the following basic controls:
 * Stop
 * Next track
 * Previous track
+* Get current transport information(if speaker is playing,paused,stopped)
 * Get information about the currently playing track
     * Track title
     * Artist
@@ -84,6 +85,7 @@ SoCo currently supports the following basic controls:
     * Software version
     * Hardware version
     * MAC Address
+* Set the speaker's Zone Name
 * Find all the Sonos speakers in a network. Code contributed by Thomas Bartvig.
 * Put all Sonos speakers in a network into "party mode". Code contributed by Thomas Bartvig.
 * Manage the Sonos queue (get the items in it, add to it, clear it, play a specific song from it)
