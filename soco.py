@@ -59,10 +59,10 @@ class SoCo(object):
     seek -- Move the currently playing track a given elapsed time.
     next -- Go to the next track.
     previous -- Go back to the previous track.
-    mute -- Mute (or unmute) the speaker.
+    mute -- Get or Set Mute (or unmute) the speaker.
     volume -- Get or set the volume of the speaker.
     bass -- Get or set the speaker's bass EQ.
-    treble -- Set the speaker's treble EQ.
+    treble -- Get or set the speaker's treble EQ.
     set_play_mode -- Change repeat and shuffle settings on the queue.
     set_loudness -- Turn on (or off) the speaker's loudness compensation.
     switch_to_line_in -- Switch the speaker's input to line-in.
@@ -301,7 +301,7 @@ class SoCo(object):
         else:
             return self.__parse_error(response)
 
-    def mute(self, mute):
+    def mute(self, mute=None):
         """ Mute or unmute the Sonos speaker.
 
         Arguments:
@@ -309,22 +309,34 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker was successfully muted or unmuted.
+        
+        If the mute argument was not specified: returns the current mute status
+        0 for unmuted, 1 for muted
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
 
         """
-        mute_value = '1' if mute else '0'
+        if mute is None:
+            response = self.__send_command(RENDERING_ENDPOINT, GET_MUTE_ACTION, GET_MUTE_BODY)
 
-        body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
-
-        response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
-
-        if (response == MUTE_RESPONSE):
-            return True
+            dom = XML.fromstring(response)
+            
+            muteState = dom.findtext('.//CurrentMute')
+                        
+            return int(muteState)
         else:
-            return self.parse(response)
+            mute_value = '1' if mute else '0'
+    
+            body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
+    
+            response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
+    
+            if (response == MUTE_RESPONSE):
+                return True
+            else:
+                return self.parse(response)
 
     def volume(self, volume=False):
         """ Get or set the Sonos speaker volume.
@@ -1013,6 +1025,9 @@ PREV_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
 MUTE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetMute"'
 MUTE_BODY_TEMPLATE = '<u:SetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredMute>{mute}</DesiredMute></u:SetMute>'
 MUTE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetMuteResponse xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"></u:SetMuteResponse></s:Body></s:Envelope>'
+
+GET_MUTE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetMute"'
+GET_MUTE_BODY = '<u:GetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel></u:GetMute>'
 
 SET_VOLUME_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
 SET_VOLUME_BODY_TEMPLATE  = '<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1"><InstanceID>0</InstanceID><Channel>Master</Channel><DesiredVolume>{volume}</DesiredVolume></u:SetVolume>'
