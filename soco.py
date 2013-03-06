@@ -605,8 +605,8 @@ class SoCo(object):
 
         Returns:
         A dictionary containing the following information about the currently
-        playing track: playlist_position, duration, title, artist, album, and
-        a link to the album art.
+        playing track: playlist_position, duration, title, artist, album,
+        position and a link to the album art.
 
         If we're unable to return data for a field, we'll return an empty
         string. This can happen for all kinds of reasons so be sure to check
@@ -618,11 +618,13 @@ class SoCo(object):
 
         dom = XML.fromstring(response.encode('utf-8'))
 
-        track = {'title': '', 'artist': '', 'album': '', 'album_art': ''}
+        track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
+            'position': ''}
 
         track['playlist_position'] = dom.findtext('.//Track')
         track['duration'] = dom.findtext('.//TrackDuration')
         track['uri'] = dom.findtext('.//TrackURI')
+        track['position'] = dom.findtext('.//RelTime')
 
         d = dom.findtext('.//TrackMetaData')
 
