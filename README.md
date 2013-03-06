@@ -109,6 +109,9 @@ Want to contribute to SoCo? Here's what needs to be done:
 * [Scott G. Waters](https://github.com/scottgwaters)
 * [phut](https://github.com/phut)
 
+## IRC
+From time to time, folks hang out in #soco on freenode (chat.freenode.net). If you're new to IRC, start with the (webchat client)[http://webchat.freenode.net]. Simple pick a nickname, enter #soco for the channel, and fill in the CAPTCHA.
+
 ## Related Projects
 More of a Ruby fan? Not a problem, [Sam Soffes](https://github.com/soffes) is building out an awesome [Ruby gem](https://github.com/soffes/sonos).
 
