@@ -73,7 +73,6 @@ class SoCo(object):
     partymode -- Put all the speakers in the network in the same group.
     join -- Join this speaker to another "master" speaker.
     unjoin -- Remove this speaker from a group.
-    get_speaker_info -- Get information on this speaker.
     get_queue -- Get information about the queue.
     get_current_transport_info -- get speakers playing state
     add_to_queue -- Add a track to the end of the queue
@@ -362,7 +361,7 @@ class SoCo(object):
             else:
                 return self.parse(response)
 
-    def volume(self, volume=False):
+    def volume(self, volume=None):
         """ Get or set the Sonos speaker volume.
 
         Arguments:
@@ -380,7 +379,7 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if volume:
+        if volume is not None:
             volume = max(0, min(volume, 100)) # Coerce in range
             body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
 
@@ -399,7 +398,7 @@ class SoCo(object):
 
             return int(volume)
 
-    def bass(self, bass=False):
+    def bass(self, bass=None):
         """ Get or set the Sonos speaker's bass EQ.
 
         Arguments:
@@ -416,7 +415,7 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if bass is not False:
+        if bass is not None:
             bass = max(-10, min(bass, 10)) # Coerce in range
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
@@ -435,7 +434,7 @@ class SoCo(object):
 
             return int(bass)
 
-    def treble(self, treble=False):
+    def treble(self, treble=None):
         """ Get or set the Sonos speaker's treble EQ.
 
         Arguments:
@@ -452,7 +451,7 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        if treble is not False:
+        if treble is not None:
             treble = max(-10, min(treble, 10)) # Coerce in range
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
