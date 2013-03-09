@@ -16,7 +16,7 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.join(os.path.abspath('.'), '..'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -25,7 +25,7 @@ import sys, os
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Sonos Controller (SoCo)'
+project = u'SoCo (Sonos Controller)'
 copyright = u'2013, Rahim Sonawalla, et al.'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -164,7 +164,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'SonosControllerSoCodoc'
+htmlhelp_basename = 'SoCoDoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -183,7 +183,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'SonosControllerSoCo.tex', u'Sonos Controller (SoCo) Documentation',
+  ('index', 'SonosControllerSoCo.tex', u'SoCo (Sonos Controller) Documentation',
    u'Rahim Sonawalla, et al.', 'manual'),
 ]
 
@@ -213,7 +213,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'sonoscontrollersoco', u'Sonos Controller (SoCo) Documentation',
+    ('index', 'sonoscontrollersoco', u'SoCo (Sonos Controller) Documentation',
      [u'Rahim Sonawalla, et al.'], 1)
 ]
 
@@ -227,7 +227,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'SonosControllerSoCo', u'Sonos Controller (SoCo) Documentation',
+  ('index', 'SonosControllerSoCo', u'SoCo (Sonos Controller) Documentation',
    u'Rahim Sonawalla, et al.', 'SonosControllerSoCo', 'One line description of project.',
    'Miscellaneous'),
 ]
