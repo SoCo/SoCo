@@ -672,11 +672,22 @@ class SoCo(object):
         # metadata will return "NOT_IMPLEMENTED".
         elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
-            metadata = XML.fromstring(d.encode('utf-8'))
+            metadata  = XML.fromstring(d.encode('utf-8'))
+            md_title  = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
+            md_artist = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
+            md_album  = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
 
-            track['title'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title').encode('utf-8')
-            track['artist'] = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator').encode('utf-8')
-            track['album'] = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album').encode('utf-8')
+            track['title'] = ""
+            if (md_title):
+                track['title'] = md_title.encode('utf-8')
+                
+            track['artist'] = ""
+            if (md_artist):
+                track['artist'] = md_artist.encode('utf-8')
+
+            track['album'] = ""
+            if (md_album):
+                track['album'] = md_album.encode('utf-8')
 
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
