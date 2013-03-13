@@ -1,4 +1,6 @@
 # SoCo
+> **Important Note**: this project originally started out under [rahims/SoCo](https://github.com/rahims/SoCo). As activity and interest have grown over the past year, the developers decided it was best to spin it out into its own project under its own Github Organization. Going forward, please fork and star the newly official repo, [SoCo/SoCo](https://github.com/SoCo/SoCo) as [rahims/SoCo](https://github.com/rahims/SoCo) will be used by [Rahim](https://github.com/rahims) to manage his fork of the official repo.
+
 SoCo (Sonos Controller) is a simple Python class that allows you to programmatically control [Sonos speakers](http://www.sonos.com/system/). It was created at [Music Hack Day Sydney](http://sydney.musichackday.org/2012/), so there is still much room for improvement, however the basic control functionality is there and works well. I've tested it with both a Play:3 and a Play:5.
 
 For more background on this project, please see my [related blog post](http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/).
