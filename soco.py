@@ -1127,7 +1127,7 @@ SEEK_TIMESTAMP_BODY_TEMPLATE = '<u:Seek xmlns:u="urn:schemas-upnp-org:service:AV
 
 PLAY_URI_BODY_TEMPLATE = '<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><CurrentURI>{uri}</CurrentURI><CurrentURIMetaData>{meta}</CurrentURIMetaData></u:SetAVTransportURI>'
 
-GET_QUEUE_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1#Browse"><ObjectID>Q:0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{0}</StartingIndex><RequestedCount>{1}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
+GET_QUEUE_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>Q:0</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{0}</StartingIndex><RequestedCount>{1}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
 
 ADD_TO_QUEUE_ACTION = 'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
 ADD_TO_QUEUE_BODY_TEMPLATE = '<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><EnqueuedURI>{uri}</EnqueuedURI><EnqueuedURIMetaData></EnqueuedURIMetaData><DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued><EnqueueAsNext>1</EnqueueAsNext></u:AddURIToQueue>'
