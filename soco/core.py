@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
 
-""" SoCo (Sonos Controller) is a simple library to control Sonos speakers """
-
-# Will be parsed by setup.py to determine package metadata
-__author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.5'
-__website__ = 'https://github.com/rahims/SoCo'
-__license__ = 'MIT License'
-
 import xml.etree.cElementTree as XML
 
 import requests
@@ -17,7 +9,6 @@ import logging, traceback
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['SonosDiscovery', 'SoCo']
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
