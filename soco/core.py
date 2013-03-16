@@ -998,6 +998,15 @@ class SoCo(object):
             return response
 
 
+    def send_command(self, endpoint, action, body):
+        # additional checks for external interface
+        self.__send_command(endpoint, action, body)
+
+    def parse_error(self, response):
+        # additional checks for external interface
+        self.__parse_error(response)
+
+
 # definition section
 
 PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
