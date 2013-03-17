@@ -1000,11 +1000,11 @@ class SoCo(object):
 
     def send_command(self, endpoint, action, body):
         # additional checks for external interface
-        self.__send_command(endpoint, action, body)
+        return self.__send_command(endpoint, action, body)
 
     def parse_error(self, response):
         # additional checks for external interface
-        self.__parse_error(response)
+        return self.__parse_error(response)
 
 
 # definition section
