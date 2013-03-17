@@ -11,6 +11,14 @@ from soco.utils import really_utf8
 logger = logging.getLogger(__name__)
 
 
+class SoCoException(Exception):
+    """ base exception raised by SoCo """
+
+
+class UnknownSoCoException(SoCoException):
+    """ raised if reason of the error can not be extracted """
+
+
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
 
@@ -103,7 +111,7 @@ class SoCo(object):
             if (response == SET_PLAYER_NAME_RESPONSE):
                 return True
             else:
-                return self.__parse_error(response)
+                self.__parse_error(response)
 
 
     def set_play_mode(self, playmode):
@@ -130,7 +138,7 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             return True
 
@@ -157,14 +165,14 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
         if not (response == PLAY_FROM_QUEUE_RESPONSE):
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
         # second, set the track number with a seek command
         body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index+1)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
         # finally, just play what's set
         return self.play()
@@ -185,7 +193,7 @@ class SoCo(object):
         if (response == PLAY_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
 
     def play_uri(self, uri='', meta=''):
@@ -212,7 +220,7 @@ class SoCo(object):
             # The track is enqueued, now play it.
             return self.play()
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
 
     def pause(self):
@@ -231,7 +239,7 @@ class SoCo(object):
         if (response == PAUSE_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def stop(self):
         """ Stop the currently playing track.
@@ -249,7 +257,7 @@ class SoCo(object):
         if (response == STOP_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
@@ -271,7 +279,7 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             return True
 
@@ -295,7 +303,7 @@ class SoCo(object):
         if (response == NEXT_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def previous(self):
         """ Go back to the previously played track.
@@ -316,7 +324,7 @@ class SoCo(object):
         if (response == PREV_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def mute(self, mute=None):
         """ Mute or unmute the Sonos speaker.
@@ -382,7 +390,7 @@ class SoCo(object):
             if (response == SET_VOLUME_RESPONSE):
                 return True
             else:
-                return self.__parse_error(response)
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_VOLUME_ACTION, GET_VOLUME_BODY)
 
@@ -418,7 +426,7 @@ class SoCo(object):
             if (response == SET_BASS_RESPONSE):
                 return True
             else:
-                return self.__parse_error(response)
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION, GET_BASS_BODY)
 
@@ -454,7 +462,7 @@ class SoCo(object):
             if (response == SET_TREBLE_RESPONSE):
                 return True
             else:
-                return self.__parse_error(response)
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_TREBLE_ACTION, GET_TREBLE_BODY)
 
@@ -490,7 +498,7 @@ class SoCo(object):
         if (response == SET_LOUDNESS_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def partymode (self):
         """ Put all the speakers in the network in the same group, a.k.a Party Mode.
@@ -546,7 +554,7 @@ class SoCo(object):
         if (response == JOIN_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -563,7 +571,7 @@ class SoCo(object):
         if (response == UNJOIN_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
@@ -587,7 +595,7 @@ class SoCo(object):
         if (response == SET_LINEIN_RESPONSE):
             return True
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
     def status_light(self, led_on):
         """ Turn on (or off) the white Sonos status light.
@@ -894,7 +902,7 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, ADD_TO_QUEUE_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             dom = XML.fromstring(response)
             qnumber = dom.findtext('.//FirstTrackNumberEnqueued')
@@ -919,7 +927,7 @@ class SoCo(object):
         body = REMOVE_FROM_QUEUE_BODY_TEMPLATE.format(instance=instance, objid=objid, updateid=updid)
         response = self.__send_command(TRANSPORT_ENDPOINT, REMOVE_FROM_QUEUE_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             return True
 
@@ -936,7 +944,7 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, CLEAR_QUEUE_ACTION, CLEAR_QUEUE_BODY)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             return True
 
@@ -1046,10 +1054,10 @@ class SoCo(object):
         errorCode = error.findtext('.//{urn:schemas-upnp-org:control-1-0}errorCode')
 
         if errorCode is not None:
-            return int(errorCode)
+            raise SoCoException(int(errorCode))
         else:
             # Unknown error, so just return the entire response
-            return response
+            raise UnknownSoCoException(response)
 
 
     def send_command(self, endpoint, action, body):
