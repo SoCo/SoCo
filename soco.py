@@ -259,7 +259,7 @@ class SoCo(object):
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
-        format of HH:MM:SS.
+        format of HH:MM:SS or H:MM:SS.
 
         Returns:
         True if the Sonos speaker successfully seeked to the timecode.
@@ -270,7 +270,7 @@ class SoCo(object):
 
         """
         import re
-        if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$',timestamp):
+        if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$',timestamp):
             raise ValueError, "invalid timestamp, use HH:MM:SS format"
 
         body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
