@@ -15,6 +15,7 @@ Contents
    :maxdepth: 2
 
    tutorial
+   plugins
    soco-mod
 
 
