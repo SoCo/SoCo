@@ -16,6 +16,7 @@ class SoCoPlugin(object):
 
     @property
     def name(self):
+        """ human-readable name of the plugin """
         raise NotImplemented('Plugins should overwrite the name property')
 
 
