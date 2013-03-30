@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
 
-""" SoCo (Sonos Controller) is a simple library to control Sonos speakers """
-
-# Will be parsed by setup.py to determine package metadata
-__author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.5'
-__website__ = 'https://github.com/rahims/SoCo'
-__license__ = 'MIT License'
-
 import xml.etree.cElementTree as XML
 
 import requests
@@ -17,7 +9,6 @@ import logging, traceback
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['SonosDiscovery', 'SoCo']
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
@@ -28,7 +19,7 @@ class SonosDiscovery(object):
     """
 
     def __init__(self):
-        self._sock = socket.socket( 
+        self._sock = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
@@ -89,9 +80,9 @@ class SoCo(object):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
 
-   
+
     def set_player_name(self,playername=False):
-        """  Sets the name of the player 
+        """  Sets the name of the player
 
         Returns:
         True if the player name was successfully set.
@@ -103,9 +94,9 @@ class SoCo(object):
         """
         if playername is not False:
             body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
-        
+
             response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
-        
+
             if (response == SET_PLAYER_NAME_RESPONSE):
                 return True
             else:
@@ -332,7 +323,7 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker was successfully muted or unmuted.
-        
+
         If the mute argument was not specified: returns the current mute status
         0 for unmuted, 1 for muted
 
@@ -345,17 +336,17 @@ class SoCo(object):
             response = self.__send_command(RENDERING_ENDPOINT, GET_MUTE_ACTION, GET_MUTE_BODY)
 
             dom = XML.fromstring(response)
-            
+
             muteState = dom.findtext('.//CurrentMute')
-                        
+
             return int(muteState)
         else:
             mute_value = '1' if mute else '0'
-    
+
             body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
-    
+
             response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
-    
+
             if (response == MUTE_RESPONSE):
                 return True
             else:
@@ -565,7 +556,7 @@ class SoCo(object):
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
-        
+
         if (response == UNJOIN_RESPONSE):
             return True
         else:
@@ -680,7 +671,7 @@ class SoCo(object):
             track['title'] = ""
             if (md_title):
                 track['title'] = md_title.encode('utf-8')
-                
+
             track['artist'] = ""
             if (md_artist):
                 track['artist'] = md_artist.encode('utf-8')
@@ -752,22 +743,22 @@ class SoCo(object):
                     self.speakers_ip.append(i)
 
             return self.speakers_ip
-             
+
     def get_current_transport_info(self):
-        """ Get the current playback state 
-        
+        """ Get the current playback state
+
         Returns:
         A dictionary containing the following information about the speakers playing state
         current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED),
         current_trasnport_status (OK, ?), current_speed(1,?)
-        
-        This allows us to know if speaker is playing or not. Don't know other states of 
+
+        This allows us to know if speaker is playing or not. Don't know other states of
         CurrentTransportStatus and CurrentSpeed.
-        
+
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
+        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY)
         dom = XML.fromstring(response.encode('utf-8'))
-        
+
         playstate = {
             'current_transport_status': '',
             'current_transport_state': '',
@@ -777,7 +768,7 @@ class SoCo(object):
         playstate['current_transport_state'] = dom.findtext('.//CurrentTransportState')
         playstate['current_transport_status'] = dom.findtext('.//CurrentTransportStatus')
         playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
-        
+
         return playstate
 
     def get_queue(self, start = 0, max_items = 100):
@@ -902,7 +893,7 @@ class SoCo(object):
         A list containing the total number of favorites, the number of favorites
         returned, and the actual list of favorite radio shows, represented as a
         dictionary with `title` and `uri` keys.
-        
+
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
@@ -918,7 +909,7 @@ class SoCo(object):
         A list containing the total number of favorites, the number of favorites
         returned, and the actual list of favorite radio stations, represented
         as a dictionary with `title` and `uri` keys.
-        
+
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
@@ -940,7 +931,7 @@ class SoCo(object):
             favorite_type = RADIO_STATIONS
 
         body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start, max_items)
-            
+
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
         dom = XML.fromstring(response.encode('utf-8'))
@@ -1005,6 +996,15 @@ class SoCo(object):
         else:
             # Unknown error, so just return the entire response
             return response
+
+
+    def send_command(self, endpoint, action, body):
+        # additional checks for external interface
+        return self.__send_command(endpoint, action, body)
+
+    def parse_error(self, response):
+        # additional checks for external interface
+        return self.__parse_error(response)
 
 
 # definition section
