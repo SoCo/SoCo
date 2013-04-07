@@ -5,7 +5,8 @@ import xml.etree.cElementTree as XML
 import requests
 import select
 import socket
-import logging, traceback
+import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,6 @@ class SonosDiscovery(object):
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
-
     def get_speaker_ips(self):
         speakers = []
 
@@ -37,6 +37,7 @@ class SonosDiscovery(object):
             else:
                 break
         return speakers
+
 
 class SoCo(object):
     """A simple class for controlling a Sonos speaker.
@@ -74,14 +75,13 @@ class SoCo(object):
 
     """
 
-    speakers_ip = [] # Stores the IP addresses of all the speakers in a network
+    speakers_ip = []  # Stores the IP addresses of all the speakers in a network
 
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
-        self.speaker_info = {} # Stores information about the current speaker
+        self.speaker_info = {}  # Stores information about the current speaker
 
-
-    def set_player_name(self,playername=False):
+    def set_player_name(self, playername=False):
         """  Sets the name of the player
 
         Returns:
@@ -95,13 +95,12 @@ class SoCo(object):
         if playername is not False:
             body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
 
-            response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
+            response = self.__send_command(DEVICE_ENDPOINT, SET_PLAYER_NAME_ACTION, body)
 
             if (response == SET_PLAYER_NAME_RESPONSE):
                 return True
             else:
                 return self.__parse_error(response)
-
 
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
@@ -118,12 +117,13 @@ class SoCo(object):
         speaker will be returned.
 
         """
-        modes = ('NORMAL','SHUFFLE_NOREPEAT','SHUFFLE','REPEAT_ALL')
+        modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
-        if not playmode in modes: raise KeyError, "invalid play mode"
+        if not playmode in modes:
+            raise KeyError("invalid play mode")
 
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
-        body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
+        body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>' + playmode + '</NewPlayMode></u:SetPlayMode>'
         response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
 
         if "errorCode" in response:
@@ -157,7 +157,7 @@ class SoCo(object):
             return self.__parse_error(response)
 
         # second, set the track number with a seek command
-        body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index+1)
+        body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index + 1)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
         if "errorCode" in response:
@@ -184,7 +184,6 @@ class SoCo(object):
         else:
             return self.__parse_error(response)
 
-
     def play_uri(self, uri='', meta=''):
         """ Play a given stream. Pauses the queue.
 
@@ -210,7 +209,6 @@ class SoCo(object):
             return self.play()
         else:
             return self.__parse_error(response)
-
 
     def pause(self):
         """ Pause the currently playing track.
@@ -261,8 +259,8 @@ class SoCo(object):
 
         """
         import re
-        if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$',timestamp):
-            raise ValueError, "invalid timestamp, use HH:MM:SS format"
+        if not re.match(r'^[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$', timestamp):
+            raise ValueError("invalid timestamp, use HH:MM:SS format")
 
         body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
@@ -350,7 +348,7 @@ class SoCo(object):
             if (response == MUTE_RESPONSE):
                 return True
             else:
-                return self.parse(response)
+                return self.__parse_error(response)
 
     def volume(self, volume=None):
         """ Get or set the Sonos speaker volume.
@@ -371,7 +369,7 @@ class SoCo(object):
 
         """
         if volume is not None:
-            volume = max(0, min(volume, 100)) # Coerce in range
+            volume = max(0, min(volume, 100))  # Coerce in range
             body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_VOLUME_ACTION, body)
@@ -407,7 +405,7 @@ class SoCo(object):
 
         """
         if bass is not None:
-            bass = max(-10, min(bass, 10)) # Coerce in range
+            bass = max(-10, min(bass, 10))  # Coerce in range
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
@@ -443,7 +441,7 @@ class SoCo(object):
 
         """
         if treble is not None:
-            treble = max(-10, min(treble, 10)) # Coerce in range
+            treble = max(-10, min(treble, 10))  # Coerce in range
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
@@ -489,26 +487,26 @@ class SoCo(object):
         else:
             return self.__parse_error(response)
 
-    def partymode (self):
+    def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party Mode.
 
-		This blog shows the initial research responsible for this:
+        This blog shows the initial research responsible for this:
         http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
 
-		The trick seems to be (only tested on a two-speaker setup) to tell each
+        The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
 
-		Returns:
-		True if partymode is set
+        Returns:
+        True if partymode is set
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
 
-		"""
+        """
         master_speaker_info = self.get_speaker_info()
         ips = self.get_speakers_ip()
 
@@ -528,14 +526,14 @@ class SoCo(object):
 
         Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
 
-		Returns:
-		True if this speaker has joined the master speaker
+        Returns:
+        True if this speaker has joined the master speaker
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
 
-		"""
+        """
         body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
@@ -551,8 +549,8 @@ class SoCo(object):
         Seems to work ok even if you remove what was previously the group master
         from it's own group. If the speaker was not in a group also returns ok.
 
-		Returns:
-		True if this speaker has left the group.
+        Returns:
+        True if this speaker has left the group.
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
@@ -612,7 +610,7 @@ class SoCo(object):
         if (response == SET_LEDSTATE_RESPONSE):
             return True
         else:
-            return self.parse(response)
+            return self.__parse_error(response)
 
     def get_current_track_info(self):
         """ Get information about the currently playing track.
@@ -632,8 +630,7 @@ class SoCo(object):
 
         dom = XML.fromstring(response.encode('utf-8'))
 
-        track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
-            'position': ''}
+        track = {'title': '', 'artist': '', 'album': '', 'album_art': '', 'position': ''}
 
         track['playlist_position'] = dom.findtext('.//Track')
         track['duration'] = dom.findtext('.//TrackDuration')
@@ -653,7 +650,7 @@ class SoCo(object):
 
             if index > -1:
                 track['artist'] = trackinfo[:index]
-                track['title'] = trackinfo[index+3:]
+                track['title'] = trackinfo[index + 3:]
             else:
                 logger.warning('Could not handle track info: "%s"', trackinfo)
                 logger.warning(traceback.format_exc())
@@ -663,10 +660,10 @@ class SoCo(object):
         # metadata will return "NOT_IMPLEMENTED".
         elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
-            metadata  = XML.fromstring(d.encode('utf-8'))
-            md_title  = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
+            metadata = XML.fromstring(d.encode('utf-8'))
+            md_title = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
             md_artist = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
-            md_album  = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+            md_album = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
 
             track['title'] = ""
             if (md_title):
@@ -771,7 +768,7 @@ class SoCo(object):
 
         return playstate
 
-    def get_queue(self, start = 0, max_items = 100):
+    def get_queue(self, start=0, max_items=100):
         """ Get information about the queue.
 
         Returns:
@@ -794,9 +791,10 @@ class SoCo(object):
         try:
             dom = XML.fromstring(response.encode('utf-8'))
             resultText = dom.findtext('.//Result')
-            if not resultText: return queue
+            if not resultText:
+                return queue
 
-            resultDom  = XML.fromstring(resultText.encode('utf-8'))
+            resultDom = XML.fromstring(resultText.encode('utf-8'))
             for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 try:
                     item = {
@@ -805,13 +803,13 @@ class SoCo(object):
                         'album': None,
                         'album_art': None,
                         'uri': None
-                        }
+                    }
 
-                    item['title'] =     element.findtext('{http://purl.org/dc/elements/1.1/}title')
-                    item['artist'] =    element.findtext('{http://purl.org/dc/elements/1.1/}creator')
-                    item['album'] =     element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
+                    item['title'] = element.findtext('{http://purl.org/dc/elements/1.1/}title')
+                    item['artist'] = element.findtext('{http://purl.org/dc/elements/1.1/}creator')
+                    item['album'] = element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
                     item['album_art'] = element.findtext('{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-                    item['uri'] =       element.findtext('{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+                    item['uri'] = element.findtext('{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
 
                     queue.append(item)
                 except:
@@ -861,7 +859,7 @@ class SoCo(object):
         """
         #TODO: what do these parameters actually do?
         instance = updid = '0'
-        objid = 'Q:0/'+str(index)
+        objid = 'Q:0/' + str(index)
         body = REMOVE_FROM_QUEUE_BODY_TEMPLATE.format(instance=instance, objid=objid, updateid=updid)
         response = self.__send_command(TRANSPORT_ENDPOINT, REMOVE_FROM_QUEUE_ACTION, body)
         if "errorCode" in response:
@@ -1031,7 +1029,7 @@ ENQUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelop
 
 PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
 PLAY_BODY = '<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Play>'
-PLAY_RESPONSE =  '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'
+PLAY_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PlayResponse></s:Body></s:Envelope>'
 
 PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
 <u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
@@ -1042,7 +1040,7 @@ PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
 '''
 PLAY_FROM_QUEUE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetAVTransportURIResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:SetAVTransportURIResponse></s:Body></s:Envelope>'
 
-PAUSE_ACTION =  '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
+PAUSE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
 PAUSE_BODY = '<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><Speed>1</Speed></u:Pause>'
 PAUSE_RESPONSE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:PauseResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"></u:PauseResponse></s:Body></s:Envelope>'
 
@@ -1144,4 +1142,3 @@ GET_RADIO_FAVORITES_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:ser
 SET_PLAYER_NAME_ACTION ='"urn:schemas-upnp-org:service:DeviceProperties:1#SetZoneAttributes"'
 SET_PLAYER_NAME_BODY_TEMPLATE = '"<u:SetZoneAttributes xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredZoneName>{playername}</DesiredZoneName><DesiredIcon /><DesiredConfiguration /></u:SetZoneAttributes>"'
 SET_PLAYER_NAME_RESPONSE ='"<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetZoneAttributesResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetZoneAttributesResponse></s:Body></s:Envelope>"'
-
