@@ -779,22 +779,24 @@ class SoCo(object):
         IP addresses of the Sonos speakers.
 
         """
-        import re
 
         if self.speakers_ip and not refresh:
             return self.speakers_ip
-        else:
-            response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
-            text = response.text
-            grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)
 
-            for i in grp:
-                response = requests.get('http://' + i + ':1400/status')
+        # Refresh topo if refreshing here
+        self.__get_topology(refresh=refresh)
 
-                if response.status_code == 200:
-                    self.speakers_ip.append(i)
+        # Reset speakers_ip in case we are refreshing a pre-existing speakers_ip
+        self.speakers_ip = []
 
-            return self.speakers_ip
+        for d in self.topology.values():
+            ip = d['ip']
+            response = requests.get('http://' + ip + ':1400/status')
+
+            if response.status_code == 200:
+                self.speakers_ip.append(ip)
+
+        return self.speakers_ip
 
     def get_current_transport_info(self):
         """ Get the current playback state
