@@ -6,6 +6,7 @@ import requests
 import select
 import socket
 import logging, traceback
+from soco.utils import really_utf8
 
 logger = logging.getLogger(__name__)
 
@@ -758,7 +759,7 @@ class SoCo(object):
         if not self.topology or refresh:
             self.topology = {}
             response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
-            dom = XML.fromstring(response.content)
+            dom = XML.fromstring(really_utf8(response.content))
             for player in dom.find('ZonePlayers'):
                 if player.text not in self.topology:
                     self.topology[player.text] = {}
