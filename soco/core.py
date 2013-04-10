@@ -8,15 +8,9 @@ import socket
 import logging, traceback
 from soco.utils import really_utf8
 
+from .exceptions import SoCoException, UnknownSoCoException
+
 logger = logging.getLogger(__name__)
-
-
-class SoCoException(Exception):
-    """ base exception raised by SoCo """
-
-
-class UnknownSoCoException(SoCoException):
-    """ raised if reason of the error can not be extracted """
 
 
 class SonosDiscovery(object):
