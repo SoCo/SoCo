@@ -71,7 +71,7 @@ class SoCo(object):
     clear_queue -- Remove all tracks from queue
     get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
     get_favorite_radio_stations -- Get favorite radio stations.
-
+    get_music_service_account -- Gets the account information for a music service, typically email address
     """
 
     speakers_ip = [] # Stores the IP addresses of all the speakers in a network
@@ -886,6 +886,37 @@ class SoCo(object):
         else:
             return True
 
+    def get_music_service_account(self,music_service_name):
+        """ Get account name for a music service
+
+            Returns:
+                account name of music service. typically an email address.
+        """
+
+        music_services = {
+                'Rhapsody':'2',
+                'Pandora':'3',
+                'Last.fm':'11',
+                'Napster':'13',
+                'iHeartRadio':'1543',
+                'Auepo':'2055',
+                'Rdio':'2823',
+                'Spotify':'3079',
+                'Sticher':'3335',
+                'DAR.fm':'6151',
+                'Amazon Cloud':'6663',
+                'Songa':'7431',
+                'Murfie':'8455',
+                '7Digital':'9735',
+                'Slacker':'4359',
+                '7Digital':'9735',
+            }
+        music_service_to_find = music_services[music_service_name]
+        music_service_credentials = self.__get_music_service_settings()
+        music_service_account = music_service_credentials[music_service_to_find][0]
+        return music_service_account
+
+           
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
 
@@ -959,6 +990,31 @@ class SoCo(object):
 
         return result
 
+    def __get_music_service_settings(self):
+        """Helper method for get_music_service_account
+
+            Returns:
+            Dictionary with service number the a list of information including accountname
+            this stores two values that are currently unkown. I believe unkown 2 is a placeholder for an encrypted password
+            and may be useless
+            {'Service Nnmber': ['Account Number', 'unkown 1', 'unkown 2']}
+        """
+        response = requests.get('http://' + self.speaker_ip + ':1400/status/securesettings')
+
+        settings_dom = XML.fromstring(response.content)
+        music_login_data = settings_dom.findtext('.//Command')
+        music_login_data =  XML.fromstring(music_login_data).attrib['Value']
+
+        music_service_credentials = {}
+        for index, services_login_data in enumerate(music_login_data.split(','), start=0):
+            if index % 4 == 0:
+                dict_key = services_login_data
+                dict_value =[]  
+            else:
+                dict_value.append(services_login_data)
+            music_service_credentials[dict_key] = dict_value
+        return music_service_credentials
+        
     def __send_command(self, endpoint, action, body):
         """ Send a raw command to the Sonos speaker.
 
