@@ -100,9 +100,7 @@ class SoCo(object):
 
             response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
 
-            if (response == SET_PLAYER_NAME_RESPONSE):
-                return True
-            else:
+            if response != SET_PLAYER_NAME_RESPONSE:
                 self.__parse_error(response)
 
 
@@ -129,8 +127,6 @@ class SoCo(object):
 
         if "errorCode" in response:
             self.__parse_error(response)
-        else:
-            return True
 
     def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
@@ -177,9 +173,7 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
 
-        if (response == PLAY_RESPONSE):
-            return True
-        else:
+        if response != PLAY_RESPONSE:
             self.__parse_error(response)
 
 
@@ -219,9 +213,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, PAUSE_ACTION, PAUSE_BODY)
 
-        if (response == PAUSE_RESPONSE):
-            return True
-        else:
+        if response != PAUSE_RESPONSE:
             self.__parse_error(response)
 
     def stop(self):
@@ -235,9 +227,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, STOP_ACTION, STOP_BODY)
 
-        if (response == STOP_RESPONSE):
-            return True
-        else:
+        if response != STOP_RESPONSE:
             self.__parse_error(response)
 
     def seek(self, timestamp):
@@ -259,8 +249,6 @@ class SoCo(object):
 
         if "errorCode" in response:
             self.__parse_error(response)
-        else:
-            return True
 
     def next(self):
         """ Go to the next track.
@@ -279,9 +267,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, NEXT_ACTION, NEXT_BODY)
 
-        if (response == NEXT_RESPONSE):
-            return True
-        else:
+        if response != NEXT_RESPONSE:
             self.__parse_error(response)
 
     def previous(self):
@@ -300,9 +286,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, PREV_ACTION, PREV_BODY)
 
-        if (response == PREV_RESPONSE):
-            return True
-        else:
+        if response != PREV_RESPONSE:
             self.__parse_error(response)
 
     def mute(self, mute=None):
@@ -335,9 +319,7 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
 
-            if (response == MUTE_RESPONSE):
-                return True
-            else:
+            if response != MUTE_RESPONSE:
                 return self.parse(response)
 
     def volume(self, volume=None):
@@ -362,9 +344,7 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_VOLUME_ACTION, body)
 
-            if (response == SET_VOLUME_RESPONSE):
-                return True
-            else:
+            if response != SET_VOLUME_RESPONSE:
                 self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_VOLUME_ACTION, GET_VOLUME_BODY)
@@ -396,9 +376,7 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
 
-            if (response == SET_BASS_RESPONSE):
-                return True
-            else:
+            if response != SET_BASS_RESPONSE:
                 self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION, GET_BASS_BODY)
@@ -430,9 +408,7 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
 
-            if (response == SET_TREBLE_RESPONSE):
-                return True
-            else:
+            if response != SET_TREBLE_RESPONSE:
                 self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_TREBLE_ACTION, GET_TREBLE_BODY)
@@ -464,9 +440,7 @@ class SoCo(object):
 
         response = self.__send_command(RENDERING_ENDPOINT, SET_LOUDNESS_ACTION, body)
 
-        if (response == SET_LOUDNESS_RESPONSE):
-            return True
-        else:
+        if response != SET_LOUDNESS_RESPONSE:
             self.__parse_error(response)
 
     def partymode (self):
@@ -516,9 +490,7 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
-        if (response == JOIN_RESPONSE):
-            return True
-        else:
+        if response != JOIN_RESPONSE:
             self.__parse_error(response)
 
     def unjoin(self):
@@ -536,9 +508,7 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
 
-        if (response == UNJOIN_RESPONSE):
-            return True
-        else:
+        if response != UNJOIN_RESPONSE:
             self.__parse_error(response)
 
     def switch_to_line_in(self):
@@ -560,9 +530,7 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
-        if (response == SET_LINEIN_RESPONSE):
-            return True
-        else:
+        if response != SET_LINEIN_RESPONSE:
             self.__parse_error(response)
 
     def status_light(self, led_on):
@@ -586,9 +554,7 @@ class SoCo(object):
 
         response = self.__send_command(DEVICE_ENDPOINT, SET_LEDSTATE_ACTION, body)
 
-        if (response == SET_LEDSTATE_RESPONSE):
-            return True
-        else:
+        if response != SET_LEDSTATE_RESPONSE:
             return self.parse(response)
 
     def get_current_track_info(self):
@@ -890,8 +856,6 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, REMOVE_FROM_QUEUE_ACTION, body)
         if "errorCode" in response:
             self.__parse_error(response)
-        else:
-            return True
 
     def clear_queue(self):
         """ Removes all tracks from the queue.
@@ -906,8 +870,6 @@ class SoCo(object):
 
         if "errorCode" in response:
             self.__parse_error(response)
-        else:
-            return True
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
