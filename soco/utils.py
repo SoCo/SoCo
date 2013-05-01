@@ -1,23 +1,28 @@
 # -*- coding: utf-8 -*-
+
+""" Provides general utility functions to be used across modules """
+
 from types import StringType, UnicodeType
 
-def really_unicode(s):
+
+def really_unicode(in_string):
     """
     Ensures s is returned as a unicode string and not just a string through
-    a serries of progressively relaxed decodings
+    a series of progressively relaxed decodings
     """
-    if type(s) is StringType:
+    if type(in_string) is StringType:
         for args in (('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
-                s = s.decode(*args)
+                in_string = in_string.decode(*args)
                 break
             except UnicodeDecodeError:
                 continue
-    if type(s) is not UnicodeType:
-        raise ValueError("%s is not a string at all." % s)
-    return s
+    if type(in_string) is not UnicodeType:
+        raise ValueError('%s is not a string at all.' % in_string)
+    return in_string
 
-def really_utf8(s):
+
+def really_utf8(in_string):
     """
     First decodes s via really_unicode to ensure it can successfully be encoded as utf-8
     This is required since just calling encode on a string will often cause python to
@@ -26,4 +31,4 @@ def really_utf8(s):
     After really_unicode returns a safe unicode string, encode as 'utf-8' and return
     the utf-8 encoded string
     """
-    return really_unicode(s).encode('utf-8')
+    return really_unicode(in_string).encode('utf-8')
