@@ -740,9 +740,9 @@ class SoCo(object):
 
         zone_dict = self.topology[zone_name]
         zone_group = zone_dict['group']
-        for z, d in self.topology.iteritems():
-            if d['group'] == zone_group and d['coordinator']:
-                return d['ip']
+        for zone_value in self.topology.values():
+            if zone_value['group'] == zone_group and zone_value['coordinator']:
+                return zone_value['ip']
 
         # Not Found
         return None
@@ -765,6 +765,7 @@ class SoCo(object):
                 self.topology[player.text]['group'] = player.attrib.get('group')
                 self.topology[player.text]['uuid'] = player.attrib.get('uuid')
                 self.topology[player.text]['coordinator'] = (player.attrib.get('coordinator') == 'true')
+                # Split the IP out of the URL returned in location - e.g. return '10.1.1.1' from 'http://10.1.1.1:1400/...'
                 self.topology[player.text]['ip'] = player.attrib.get('location').split('//')[1].split(':')[0]
 
     def get_speakers_ip(self, refresh=False):
