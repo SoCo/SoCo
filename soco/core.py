@@ -6,6 +6,7 @@ import requests
 import select
 import socket
 import logging, traceback
+from soco.utils import really_utf8
 
 logger = logging.getLogger(__name__)
 
@@ -632,7 +633,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRACK_ACTION, GET_CUR_TRACK_BODY)
 
-        dom = XML.fromstring(response.encode('utf-8'))
+        dom = XML.fromstring(really_utf8(response))
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
             'position': ''}
@@ -646,7 +647,7 @@ class SoCo(object):
 
         # Duration seems to be '0:00:00' when listening to radio
         if d != '' and track['duration'] == '0:00:00':
-            metadata = XML.fromstring(d.encode('utf-8'))
+            metadata = XML.fromstring(really_utf8(d))
 
             #Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:metadata-1-0/}streamContent')
@@ -659,28 +660,28 @@ class SoCo(object):
             else:
                 logger.warning('Could not handle track info: "%s"', trackinfo)
                 logger.warning(traceback.format_exc())
-                track['title'] = trackinfo.encode('utf-8')
+                track['title'] = really_utf8(trackinfo)
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
         elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
-            metadata  = XML.fromstring(d.encode('utf-8'))
+            metadata  = XML.fromstring(really_utf8(d))
             md_title  = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
             md_artist = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
             md_album  = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
 
             track['title'] = ""
             if (md_title):
-                track['title'] = md_title.encode('utf-8')
+                track['title'] = really_utf8(md_title)
 
             track['artist'] = ""
             if (md_artist):
-                track['artist'] = md_artist.encode('utf-8')
+                track['artist'] = really_utf8(md_artist)
 
             track['album'] = ""
             if (md_album):
-                track['album'] = md_album.encode('utf-8')
+                track['album'] = really_utf8(md_album)
 
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
@@ -707,7 +708,7 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-            self.speaker_info['zone_name'] = dom.findtext('.//ZoneName').encode('utf-8')
+            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
@@ -810,7 +811,7 @@ class SoCo(object):
 
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY)
-        dom = XML.fromstring(response.encode('utf-8'))
+        dom = XML.fromstring(really_utf8(response))
 
         playstate = {
             'current_transport_status': '',
@@ -845,11 +846,11 @@ class SoCo(object):
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
         try:
-            dom = XML.fromstring(response.encode('utf-8'))
+            dom = XML.fromstring(really_utf8(response))
             resultText = dom.findtext('.//Result')
             if not resultText: return queue
 
-            resultDom  = XML.fromstring(resultText.encode('utf-8'))
+            resultDom  = XML.fromstring(really_utf8(resultText))
             for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 try:
                     item = {
@@ -987,7 +988,7 @@ class SoCo(object):
 
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
-        dom = XML.fromstring(response.encode('utf-8'))
+        dom = XML.fromstring(really_utf8(response))
 
         result = {}
         favorites = []
@@ -996,12 +997,12 @@ class SoCo(object):
 
         if d != '':
             # Favorites are returned in DIDL-Lite format
-            metadata = XML.fromstring(d.encode('utf-8'))
+            metadata = XML.fromstring(really_utf8(d))
 
             for item in metadata.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
 
-                favorite['title'] = item.findtext('.//{http://purl.org/dc/elements/1.1/}title').encode('utf-8')
+                favorite['title'] = really_utf8(item.findtext('.//{http://purl.org/dc/elements/1.1/}title'))
                 favorite['uri'] = item.findtext('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
 
                 favorites.append(favorite)
