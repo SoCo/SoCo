@@ -71,10 +71,12 @@ class SoCo(object):
     clear_queue -- Remove all tracks from queue
     get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
     get_favorite_radio_stations -- Get favorite radio stations.
-
+    get_group_coordinator -- Get the coordinator for a grouped collection of Sonos units.
+    get_speakers_ip -- Get the IP addresses of all the Sonos speakers in the network.
     """
 
-    speakers_ip = [] # Stores the IP addresses of all the speakers in a network
+    speakers_ip = []  # Stores the IP addresses of all the speakers in a network
+    topology = {}     # Stores the topology of all Zones in the network
 
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
@@ -714,6 +716,57 @@ class SoCo(object):
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
 
             return self.speaker_info
+
+    def get_group_coordinator(self, zone_name, refresh=False):
+        """ Get the IP address of the Sonos system that is coordinator for
+            the group containing zone_name
+
+        Code contributed by Aaron Daubman (daubman@gmail.com)
+
+        Arguments:
+        zone_name -- the name of the Zone to control for which you need the coordinator
+
+        refresh -- Refresh the topology cache prior to looking for coordinator
+
+        Returns:
+        The IP address of the coordinator or None of one can not be determined
+        """
+        if not self.topology or refresh:
+            self.__get_topology(refresh=True)
+
+        # The zone name must be in the topology
+        if zone_name not in self.topology:
+            return None
+
+        zone_dict = self.topology[zone_name]
+        zone_group = zone_dict['group']
+        for zone_value in self.topology.values():
+            if zone_value['group'] == zone_group and zone_value['coordinator']:
+                return zone_value['ip']
+
+        # Not Found
+        return None
+
+    def __get_topology(self, refresh=False):
+        """ Gets the topology if it is not already available or if refresh=True
+
+        Code contributed by Aaron Daubman (daubman@gmail.com)
+
+        Arguments:
+        refresh -- Refresh the topology cache
+        """
+        if not self.topology or refresh:
+            self.topology = {}
+            response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
+            dom = XML.fromstring(response.content)
+            for player in dom.find('ZonePlayers'):
+                if player.text not in self.topology:
+                    self.topology[player.text] = {}
+                self.topology[player.text]['group'] = player.attrib.get('group')
+                self.topology[player.text]['uuid'] = player.attrib.get('uuid')
+                self.topology[player.text]['coordinator'] = (player.attrib.get('coordinator') == 'true')
+                # Split the IP out of the URL returned in location - e.g. return '10.1.1.1' from 'http://10.1.1.1:1400/...'
+                self.topology[player.text]['ip'] = player.attrib.get('location').split('//')[1].split(':')[0]
 
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
