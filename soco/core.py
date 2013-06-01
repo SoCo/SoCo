@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
 
-""" SoCo (Sonos Controller) is a simple library to control Sonos speakers """
-
-# Will be parsed by setup.py to determine package metadata
-__author__ = 'Rahim Sonawalla <rsonawalla@gmail.com>'
-__version__ = '0.5'
-__website__ = 'https://github.com/rahims/SoCo'
-__license__ = 'MIT License'
-
 import xml.etree.cElementTree as XML
 
 import requests
 import select
 import socket
 import logging, traceback
+from soco.utils import really_utf8
 
 logger = logging.getLogger(__name__)
 
-__all__ = ['SonosDiscovery', 'SoCo']
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
@@ -28,7 +20,7 @@ class SonosDiscovery(object):
     """
 
     def __init__(self):
-        self._sock = socket.socket( 
+        self._sock = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
@@ -80,18 +72,20 @@ class SoCo(object):
     clear_queue -- Remove all tracks from queue
     get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
     get_favorite_radio_stations -- Get favorite radio stations.
-
+    get_group_coordinator -- Get the coordinator for a grouped collection of Sonos units.
+    get_speakers_ip -- Get the IP addresses of all the Sonos speakers in the network.
     """
 
-    speakers_ip = [] # Stores the IP addresses of all the speakers in a network
+    speakers_ip = []  # Stores the IP addresses of all the speakers in a network
+    topology = {}     # Stores the topology of all Zones in the network
 
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {} # Stores information about the current speaker
 
-   
+
     def set_player_name(self,playername=False):
-        """  Sets the name of the player 
+        """  Sets the name of the player
 
         Returns:
         True if the player name was successfully set.
@@ -103,9 +97,9 @@ class SoCo(object):
         """
         if playername is not False:
             body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
-        
+
             response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
-        
+
             if (response == SET_PLAYER_NAME_RESPONSE):
                 return True
             else:
@@ -332,7 +326,7 @@ class SoCo(object):
 
         Returns:
         True if the Sonos speaker was successfully muted or unmuted.
-        
+
         If the mute argument was not specified: returns the current mute status
         0 for unmuted, 1 for muted
 
@@ -345,17 +339,17 @@ class SoCo(object):
             response = self.__send_command(RENDERING_ENDPOINT, GET_MUTE_ACTION, GET_MUTE_BODY)
 
             dom = XML.fromstring(response)
-            
+
             muteState = dom.findtext('.//CurrentMute')
-                        
+
             return int(muteState)
         else:
             mute_value = '1' if mute else '0'
-    
+
             body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
-    
+
             response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
-    
+
             if (response == MUTE_RESPONSE):
                 return True
             else:
@@ -565,7 +559,7 @@ class SoCo(object):
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
-        
+
         if (response == UNJOIN_RESPONSE):
             return True
         else:
@@ -639,7 +633,7 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRACK_ACTION, GET_CUR_TRACK_BODY)
 
-        dom = XML.fromstring(response.encode('utf-8'))
+        dom = XML.fromstring(really_utf8(response))
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
             'position': ''}
@@ -653,7 +647,7 @@ class SoCo(object):
 
         # Duration seems to be '0:00:00' when listening to radio
         if d != '' and track['duration'] == '0:00:00':
-            metadata = XML.fromstring(d.encode('utf-8'))
+            metadata = XML.fromstring(really_utf8(d))
 
             #Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:metadata-1-0/}streamContent')
@@ -666,28 +660,28 @@ class SoCo(object):
             else:
                 logger.warning('Could not handle track info: "%s"', trackinfo)
                 logger.warning(traceback.format_exc())
-                track['title'] = trackinfo.encode('utf-8')
+                track['title'] = really_utf8(trackinfo)
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
         elif d != '' and d != 'NOT_IMPLEMENTED':
             # Track metadata is returned in DIDL-Lite format
-            metadata  = XML.fromstring(d.encode('utf-8'))
+            metadata  = XML.fromstring(really_utf8(d))
             md_title  = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
             md_artist = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}creator')
             md_album  = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
 
             track['title'] = ""
             if (md_title):
-                track['title'] = md_title.encode('utf-8')
-                
+                track['title'] = really_utf8(md_title)
+
             track['artist'] = ""
             if (md_artist):
-                track['artist'] = md_artist.encode('utf-8')
+                track['artist'] = really_utf8(md_artist)
 
             track['album'] = ""
             if (md_album):
-                track['album'] = md_album.encode('utf-8')
+                track['album'] = really_utf8(md_album)
 
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
@@ -714,7 +708,7 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-            self.speaker_info['zone_name'] = dom.findtext('.//ZoneName').encode('utf-8')
+            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
@@ -723,6 +717,57 @@ class SoCo(object):
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
 
             return self.speaker_info
+
+    def get_group_coordinator(self, zone_name, refresh=False):
+        """ Get the IP address of the Sonos system that is coordinator for
+            the group containing zone_name
+
+        Code contributed by Aaron Daubman (daubman@gmail.com)
+
+        Arguments:
+        zone_name -- the name of the Zone to control for which you need the coordinator
+
+        refresh -- Refresh the topology cache prior to looking for coordinator
+
+        Returns:
+        The IP address of the coordinator or None of one can not be determined
+        """
+        if not self.topology or refresh:
+            self.__get_topology(refresh=True)
+
+        # The zone name must be in the topology
+        if zone_name not in self.topology:
+            return None
+
+        zone_dict = self.topology[zone_name]
+        zone_group = zone_dict['group']
+        for zone_value in self.topology.values():
+            if zone_value['group'] == zone_group and zone_value['coordinator']:
+                return zone_value['ip']
+
+        # Not Found
+        return None
+
+    def __get_topology(self, refresh=False):
+        """ Gets the topology if it is not already available or if refresh=True
+
+        Code contributed by Aaron Daubman (daubman@gmail.com)
+
+        Arguments:
+        refresh -- Refresh the topology cache
+        """
+        if not self.topology or refresh:
+            self.topology = {}
+            response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
+            dom = XML.fromstring(response.content)
+            for player in dom.find('ZonePlayers'):
+                if player.text not in self.topology:
+                    self.topology[player.text] = {}
+                self.topology[player.text]['group'] = player.attrib.get('group')
+                self.topology[player.text]['uuid'] = player.attrib.get('uuid')
+                self.topology[player.text]['coordinator'] = (player.attrib.get('coordinator') == 'true')
+                # Split the IP out of the URL returned in location - e.g. return '10.1.1.1' from 'http://10.1.1.1:1400/...'
+                self.topology[player.text]['ip'] = player.attrib.get('location').split('//')[1].split(':')[0]
 
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
@@ -752,22 +797,22 @@ class SoCo(object):
                     self.speakers_ip.append(i)
 
             return self.speakers_ip
-             
+
     def get_current_transport_info(self):
-        """ Get the current playback state 
-        
+        """ Get the current playback state
+
         Returns:
         A dictionary containing the following information about the speakers playing state
         current_transport_state (PLAYING, PAUSED_PLAYBACK, STOPPED),
         current_trasnport_status (OK, ?), current_speed(1,?)
-        
-        This allows us to know if speaker is playing or not. Don't know other states of 
+
+        This allows us to know if speaker is playing or not. Don't know other states of
         CurrentTransportStatus and CurrentSpeed.
-        
+
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY) 
-        dom = XML.fromstring(response.encode('utf-8'))
-        
+        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_TRANSPORT_ACTION, GET_CUR_TRANSPORT_BODY)
+        dom = XML.fromstring(really_utf8(response))
+
         playstate = {
             'current_transport_status': '',
             'current_transport_state': '',
@@ -777,7 +822,7 @@ class SoCo(object):
         playstate['current_transport_state'] = dom.findtext('.//CurrentTransportState')
         playstate['current_transport_status'] = dom.findtext('.//CurrentTransportStatus')
         playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
-        
+
         return playstate
 
     def get_queue(self, start = 0, max_items = 100):
@@ -801,11 +846,11 @@ class SoCo(object):
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
         try:
-            dom = XML.fromstring(response.encode('utf-8'))
+            dom = XML.fromstring(really_utf8(response))
             resultText = dom.findtext('.//Result')
             if not resultText: return queue
 
-            resultDom  = XML.fromstring(resultText.encode('utf-8'))
+            resultDom  = XML.fromstring(really_utf8(resultText))
             for element in resultDom.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 try:
                     item = {
@@ -902,7 +947,7 @@ class SoCo(object):
         A list containing the total number of favorites, the number of favorites
         returned, and the actual list of favorite radio shows, represented as a
         dictionary with `title` and `uri` keys.
-        
+
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
@@ -918,7 +963,7 @@ class SoCo(object):
         A list containing the total number of favorites, the number of favorites
         returned, and the actual list of favorite radio stations, represented
         as a dictionary with `title` and `uri` keys.
-        
+
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
@@ -940,10 +985,10 @@ class SoCo(object):
             favorite_type = RADIO_STATIONS
 
         body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start, max_items)
-            
+
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT, BROWSE_ACTION, body)
 
-        dom = XML.fromstring(response.encode('utf-8'))
+        dom = XML.fromstring(really_utf8(response))
 
         result = {}
         favorites = []
@@ -952,12 +997,12 @@ class SoCo(object):
 
         if d != '':
             # Favorites are returned in DIDL-Lite format
-            metadata = XML.fromstring(d.encode('utf-8'))
+            metadata = XML.fromstring(really_utf8(d))
 
             for item in metadata.findall('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
 
-                favorite['title'] = item.findtext('.//{http://purl.org/dc/elements/1.1/}title').encode('utf-8')
+                favorite['title'] = really_utf8(item.findtext('.//{http://purl.org/dc/elements/1.1/}title'))
                 favorite['uri'] = item.findtext('.//{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
 
                 favorites.append(favorite)
@@ -1005,6 +1050,15 @@ class SoCo(object):
         else:
             # Unknown error, so just return the entire response
             return response
+
+
+    def send_command(self, endpoint, action, body):
+        # additional checks for external interface
+        return self.__send_command(endpoint, action, body)
+
+    def parse_error(self, response):
+        # additional checks for external interface
+        return self.__parse_error(response)
 
 
 # definition section

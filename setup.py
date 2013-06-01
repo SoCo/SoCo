@@ -10,7 +10,7 @@ except ImportError:
     from distutils.core import setup
     has_setuptools = False
 
-src = open('soco.py').read()
+src = open('soco/__init__.py').read()
 metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
 docstrings = re.findall('"""([^"]*)"""', src, re.MULTILINE | re.DOTALL)
 
@@ -18,6 +18,9 @@ PACKAGE = 'soco'
 
 MODULES = (
         'soco',
+        'soco.core',
+        'soco.plugins',
+        'soco.plugins.example',
 )
 
 REQUIREMENTS = list(open('requirements.txt'))
