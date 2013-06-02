@@ -37,7 +37,7 @@ if __name__ == '__main__':
             # TODO seems at least & needs to be escaped - should move this to play_uri and maybe escape other chars.
             uri = uri.replace('&', '&amp;')
 
-            metadata = meta_template.format(title='', service=tunein_service)
+            metadata = meta_template.format(title=fave['title'], service=tunein_service)
 
             print mySonos.play_uri( uri, metadata)
 
