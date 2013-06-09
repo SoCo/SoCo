@@ -17,6 +17,7 @@ PLEASE RESPECT THIS.
 
 import soco
 import unittest
+import time
 SOCO = None
 
 
@@ -65,6 +66,11 @@ def set_state(state):
     SOCO.play()
 
 
+def wait(interval=0.1):
+    """ Convinience function to adjust sleep interval for all tests """
+    time.sleep(interval)
+
+
 # Test return strings that are used a lot
 NOT_TRUE = 'The method did not return True'
 NOT_EXP = 'The method did not return the expected value'
@@ -87,8 +93,10 @@ class Volume(unittest.TestCase):
         else:
             new = old - 1
         self.assertTrue(SOCO.volume(new), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.volume(), new, NOT_EXP)
         SOCO.volume(old)
+        wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality coerces into range when given
@@ -98,8 +106,10 @@ class Volume(unittest.TestCase):
         # NOTE We don't test coerce from too large values, since that would
         # put the unit at full volume
         self.assertTrue(SOCO.volume(self.valid_values[0] - 1), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.volume(), 0, NOT_EXP)
         SOCO.volume(old)
+        wait()
 
     def test_set_0(self):
         """ Tests whether the volume can be set to 0. Regression test for:
@@ -107,8 +117,10 @@ class Volume(unittest.TestCase):
         """
         old = SOCO.volume()
         SOCO.volume(0)
+        wait()
         self.assertEqual(SOCO.volume(), 0, NOT_EXP)
         SOCO.volume(old)
+        wait()
 
 
 class Bass(unittest.TestCase):
@@ -126,8 +138,10 @@ class Bass(unittest.TestCase):
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
             self.assertTrue(SOCO.bass(value), NOT_TRUE)
+            wait()
             self.assertEqual(SOCO.bass(), value, NOT_EXP)
         SOCO.bass(old)
+        wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality produces the expected "coerce in
@@ -136,10 +150,13 @@ class Bass(unittest.TestCase):
         old = SOCO.bass()
         # Values on the boundaries of the two invalid equivalence partitions
         self.assertTrue(SOCO.bass(self.valid_values[0] - 1), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.bass(), self.valid_values[0], NOT_EXP)
         self.assertTrue(SOCO.bass(self.valid_values[-1] + 1), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.bass(), self.valid_values[-1], NOT_EXP)
         SOCO.bass(old)
+        wait()
 
 
 class Treble(unittest.TestCase):
@@ -157,8 +174,10 @@ class Treble(unittest.TestCase):
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
             self.assertTrue(SOCO.treble(value), NOT_TRUE)
+            wait()
             self.assertEqual(SOCO.treble(), value, NOT_EXP)
         SOCO.treble(old)
+        wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality produces the expected "coerce in
@@ -167,10 +186,13 @@ class Treble(unittest.TestCase):
         old = SOCO.treble()
         # Values on the boundaries of the two invalid equivalence partitions
         self.assertTrue(SOCO.treble(self.valid_values[0] - 1), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.treble(), self.valid_values[0], NOT_EXP)
         self.assertTrue(SOCO.treble(self.valid_values[-1] + 1), NOT_TRUE)
+        wait()
         self.assertEqual(SOCO.treble(), self.valid_values[-1], NOT_EXP)
         SOCO.treble(old)
+        wait()
 
 
 class GetCurrentTrackInfo(unittest.TestCase):
@@ -207,11 +229,13 @@ class AddToQueue(unittest.TestCase):
         # Add new element and check
         self.assertEqual(SOCO.add_to_queue(old_queue[-1]['uri']),
             len(old_queue) + 1, '')
+        wait()
         new_queue = SOCO.get_queue()
         self.assertEqual(len(new_queue) - 1, len(old_queue))
         self.assertEqual(new_queue[-1], new_queue[-2])
         # Clean up
         set_state(state)
+        wait()
 
 
 class GetQueue(unittest.TestCase):
@@ -305,11 +329,13 @@ class Pause(unittest.TestCase):
     def test(self):
         """ Tests if the pause method works """
         return_value = SOCO.pause()
+        wait(1)
         self.assertTrue(return_value, NOT_TRUE)
         new = SOCO.get_current_transport_info()['current_transport_state']
         self.assertEqual(new, 'PAUSED_PLAYBACK', 'State after pause is not '
             '"PAUSED_PLAYBACK"')
         SOCO.play()
+        wait(1)
 
 
 class Stop(unittest.TestCase):
@@ -319,10 +345,12 @@ class Stop(unittest.TestCase):
         """ Tests if the stop method works """
         state = get_state()
         return_value = SOCO.stop()
+        wait(1)
         self.assertTrue(return_value, NOT_TRUE)
         new = SOCO.get_current_transport_info()['current_transport_state']
         self.assertEqual(new, 'STOPPED', 'State after stop is not "STOPPED"')
-        set_state(state)  # Reset unit the way it was before test
+        set_state(state)  # Reset unit the way it was before the test
+        wait(1)
 
 
 class Play(unittest.TestCase):
@@ -331,10 +359,12 @@ class Play(unittest.TestCase):
     def test(self):
         """ Tests if the play method works """
         SOCO.pause()
+        wait(1)
         on_pause = SOCO.get_current_transport_info()['current_transport_state']
         self.assertEqual(on_pause, 'PAUSED_PLAYBACK', 'State after pause is '
             'not "PAUSED_PLAYBACK"')
         SOCO.play()
+        wait(1)
         on_play = SOCO.get_current_transport_info()['current_transport_state']
         self.assertEqual(on_play, 'PLAYING', 'State after play is not '
             '"PAUSED_PLAYBACK"')
@@ -353,6 +383,7 @@ class Mute(unittest.TestCase):
         new = SOCO.mute()
         self.assertEqual(new, 1, 'The unit did not succesfully mute')
         SOCO.mute(False)
+        wait()
 
 
 class RemoveFromQueue(unittest.TestCase):
@@ -363,6 +394,7 @@ class RemoveFromQueue(unittest.TestCase):
         old_queue = SOCO.get_queue()
         track_to_remove = old_queue[-1]
         SOCO.remove_from_queue(len(old_queue))
+        wait()
         new_queue = SOCO.get_queue()
         self.assertNotEqual(old_queue, new_queue, 'No difference between '
             'queues before and after removing the last item')
@@ -370,6 +402,7 @@ class RemoveFromQueue(unittest.TestCase):
             'queue after removing a track is not lenght before - 1')
         # Clean up
         SOCO.add_to_queue(track_to_remove['uri'])
+        wait()
         self.assertEqual(old_queue, SOCO.get_queue(), 'Clean up unsuccessful')
 
 
@@ -381,15 +414,18 @@ class Seek(unittest.TestCase):
         original_position = SOCO.get_current_track_info()['position']
         # Format 1
         SOCO.seek('0:00:00')
+        wait()
         position = SOCO.get_current_track_info()['position']
         self.assertIn(position, ['0:00:00', '0:00:01'])
         # Reset and format 2
         SOCO.seek(original_position)
         SOCO.seek('00:00:00')
+        wait()
         position = SOCO.get_current_track_info()['position']
         self.assertIn(position, ['0:00:00', '0:00:01'])
         # Clean up
         SOCO.seek(original_position)
+        wait()
 
     def test_invald(self):
         """ Tests if the seek method properly fails with invalid input """
