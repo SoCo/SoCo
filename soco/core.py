@@ -8,6 +8,8 @@ import socket
 import logging, traceback
 from soco.utils import really_utf8
 
+from .exceptions import SoCoException, UnknownSoCoException
+
 logger = logging.getLogger(__name__)
 
 
@@ -90,9 +92,7 @@ class SoCo(object):
         Returns:
         True if the player name was successfully set.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         if playername is not False:
@@ -100,10 +100,8 @@ class SoCo(object):
 
             response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
 
-            if (response == SET_PLAYER_NAME_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
+            if response != SET_PLAYER_NAME_RESPONSE:
+                self.__parse_error(response)
 
 
     def set_play_mode(self, playmode):
@@ -116,9 +114,7 @@ class SoCo(object):
         Returns:
         True if the play mode was successfully set.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         modes = ('NORMAL','SHUFFLE_NOREPEAT','SHUFFLE','REPEAT_ALL')
@@ -130,9 +126,7 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
-        else:
-            return True
+            self.__parse_error(response)
 
     def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
@@ -141,9 +135,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully started playing the track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         # Grab the speaker's information if we haven't already since we'll need
@@ -157,14 +149,14 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
         if not (response == PLAY_FROM_QUEUE_RESPONSE):
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
         # second, set the track number with a seek command
         body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index+1)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
         # finally, just play what's set
         return self.play()
@@ -175,17 +167,14 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully started playing the track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
+
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION, PLAY_BODY)
 
-        if (response == PLAY_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != PLAY_RESPONSE:
+            self.__parse_error(response)
 
 
     def play_uri(self, uri='', meta=''):
@@ -198,9 +187,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully started playing the track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
 
@@ -212,7 +199,7 @@ class SoCo(object):
             # The track is enqueued, now play it.
             return self.play()
         else:
-            return self.__parse_error(response)
+            self.__parse_error(response)
 
 
     def pause(self):
@@ -221,17 +208,13 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully paused the track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, PAUSE_ACTION, PAUSE_BODY)
 
-        if (response == PAUSE_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != PAUSE_RESPONSE:
+            self.__parse_error(response)
 
     def stop(self):
         """ Stop the currently playing track.
@@ -239,17 +222,13 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully stopped the playing track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, STOP_ACTION, STOP_BODY)
 
-        if (response == STOP_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != STOP_RESPONSE:
+            self.__parse_error(response)
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
@@ -258,9 +237,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully seeked to the timecode.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         import re
@@ -271,9 +248,7 @@ class SoCo(object):
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
-        else:
-            return True
+            self.__parse_error(response)
 
     def next(self):
         """ Go to the next track.
@@ -281,9 +256,9 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully skipped to the next track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned. Keep in mind that next() can return errors
+        Raises SoCoException (or a subclass) upon errors.
+
+        Keep in mind that next() can return errors
         for a variety of reasons. For example, if the Sonos is streaming
         Pandora and you call next() several times in quick succession an error
         code will likely be returned (since Pandora has limits on how many
@@ -292,10 +267,8 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, NEXT_ACTION, NEXT_BODY)
 
-        if (response == NEXT_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != NEXT_RESPONSE:
+            self.__parse_error(response)
 
     def previous(self):
         """ Go back to the previously played track.
@@ -303,9 +276,9 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully went to the previous track.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned. Keep in mind that previous() can return errors
+        Raises SoCoException (or a subclass) upon errors.
+
+        Keep in mind that previous() can return errors
         for a variety of reasons. For example, previous() will return an error
         code (error code 701) if the Sonos is streaming Pandora since you can't
         go back on tracks.
@@ -313,10 +286,8 @@ class SoCo(object):
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, PREV_ACTION, PREV_BODY)
 
-        if (response == PREV_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != PREV_RESPONSE:
+            self.__parse_error(response)
 
     def mute(self, mute=None):
         """ Mute or unmute the Sonos speaker.
@@ -330,9 +301,7 @@ class SoCo(object):
         If the mute argument was not specified: returns the current mute status
         0 for unmuted, 1 for muted
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         if mute is None:
@@ -350,9 +319,7 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION, body)
 
-            if (response == MUTE_RESPONSE):
-                return True
-            else:
+            if response != MUTE_RESPONSE:
                 return self.parse(response)
 
     def volume(self, volume=None):
@@ -368,9 +335,7 @@ class SoCo(object):
         If the volume argument was not specified: returns the current volume of
         the Sonos speaker.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         if volume is not None:
@@ -379,10 +344,8 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_VOLUME_ACTION, body)
 
-            if (response == SET_VOLUME_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
+            if response != SET_VOLUME_RESPONSE:
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_VOLUME_ACTION, GET_VOLUME_BODY)
 
@@ -404,9 +367,7 @@ class SoCo(object):
 
         If the bass argument was not specified: returns the current base value.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         if bass is not None:
@@ -415,10 +376,8 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION, body)
 
-            if (response == SET_BASS_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
+            if response != SET_BASS_RESPONSE:
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION, GET_BASS_BODY)
 
@@ -440,9 +399,7 @@ class SoCo(object):
 
         If the treble argument was not specified: returns the current treble value.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         if treble is not None:
@@ -451,10 +408,8 @@ class SoCo(object):
 
             response = self.__send_command(RENDERING_ENDPOINT, SET_TREBLE_ACTION, body)
 
-            if (response == SET_TREBLE_RESPONSE):
-                return True
-            else:
-                return self.__parse_error(response)
+            if response != SET_TREBLE_RESPONSE:
+                self.__parse_error(response)
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_TREBLE_ACTION, GET_TREBLE_BODY)
 
@@ -476,9 +431,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully set the loundess compensation.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         loudness_value = '1' if loudness else '0'
@@ -487,10 +440,8 @@ class SoCo(object):
 
         response = self.__send_command(RENDERING_ENDPOINT, SET_LOUDNESS_ACTION, body)
 
-        if (response == SET_LOUDNESS_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != SET_LOUDNESS_RESPONSE:
+            self.__parse_error(response)
 
     def partymode (self):
         """ Put all the speakers in the network in the same group, a.k.a Party Mode.
@@ -507,9 +458,7 @@ class SoCo(object):
 		Returns:
 		True if partymode is set
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
 		"""
         master_speaker_info = self.get_speaker_info()
@@ -534,19 +483,15 @@ class SoCo(object):
 		Returns:
 		True if this speaker has joined the master speaker
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
 		"""
         body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
-        if (response == JOIN_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != JOIN_RESPONSE:
+            self.__parse_error(response)
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -556,14 +501,15 @@ class SoCo(object):
 
 		Returns:
 		True if this speaker has left the group.
+
+        Raises SoCoException (or a subclass) upon errors.
+
         """
 
         response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION, UNJOIN_BODY)
 
-        if (response == UNJOIN_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != UNJOIN_RESPONSE:
+            self.__parse_error(response)
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
@@ -573,9 +519,9 @@ class SoCo(object):
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned. Note, an error will be returned if you try
-        to switch to line-in on a device (like the Play:3) that doesn't have
-        line-in capability.
+        speaker will be returned.
+
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         speaker_info = self.get_speaker_info()
@@ -584,10 +530,8 @@ class SoCo(object):
 
         response = self.__send_command(TRANSPORT_ENDPOINT, SET_TRANSPORT_ACTION, body)
 
-        if (response == SET_LINEIN_RESPONSE):
-            return True
-        else:
-            return self.__parse_error(response)
+        if response != SET_LINEIN_RESPONSE:
+            self.__parse_error(response)
 
     def status_light(self, led_on):
         """ Turn on (or off) the white Sonos status light.
@@ -601,9 +545,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully turned on (or off) the light.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         led_state = 'On' if led_on else 'Off'
@@ -612,9 +554,7 @@ class SoCo(object):
 
         response = self.__send_command(DEVICE_ENDPOINT, SET_LEDSTATE_ACTION, body)
 
-        if (response == SET_LEDSTATE_RESPONSE):
-            return True
-        else:
+        if response != SET_LEDSTATE_RESPONSE:
             return self.parse(response)
 
     def get_current_track_info(self):
@@ -759,7 +699,7 @@ class SoCo(object):
         if not self.topology or refresh:
             self.topology = {}
             response = requests.get('http://' + self.speaker_ip + ':1400/status/topology')
-            dom = XML.fromstring(response.content)
+            dom = XML.fromstring(really_utf8(response.content))
             for player in dom.find('ZonePlayers'):
                 if player.text not in self.topology:
                     self.topology[player.text] = {}
@@ -885,16 +825,14 @@ class SoCo(object):
         If the Sonos speaker successfully added the track, returns the queue
         position of the track added.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         body = ADD_TO_QUEUE_BODY_TEMPLATE.format(uri=uri)
 
         response = self.__send_command(TRANSPORT_ENDPOINT, ADD_TO_QUEUE_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
+            self.__parse_error(response)
         else:
             dom = XML.fromstring(response)
             qnumber = dom.findtext('.//FirstTrackNumberEnqueued')
@@ -908,9 +846,7 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker successfully removed the track
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         #TODO: what do these parameters actually do?
@@ -919,9 +855,7 @@ class SoCo(object):
         body = REMOVE_FROM_QUEUE_BODY_TEMPLATE.format(instance=instance, objid=objid, updateid=updid)
         response = self.__send_command(TRANSPORT_ENDPOINT, REMOVE_FROM_QUEUE_ACTION, body)
         if "errorCode" in response:
-            return self.__parse_error(response)
-        else:
-            return True
+            self.__parse_error(response)
 
     def clear_queue(self):
         """ Removes all tracks from the queue.
@@ -929,16 +863,13 @@ class SoCo(object):
         Returns:
         True if the Sonos speaker cleared the queue.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
+
         """
         response = self.__send_command(TRANSPORT_ENDPOINT, CLEAR_QUEUE_ACTION, CLEAR_QUEUE_BODY)
 
         if "errorCode" in response:
-            return self.__parse_error(response)
-        else:
-            return True
+            self.__parse_error(response)
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
@@ -1037,8 +968,7 @@ class SoCo(object):
         Returns:
         The UPnP error code returned by the Sonos speaker.
 
-        If we're unable to parse the error response for whatever reason, the
-        raw response sent back from the Sonos speaker will be returned.
+        Raises SoCoException (or a subclass) upon errors.
 
         """
         error = XML.fromstring(response)
@@ -1046,10 +976,10 @@ class SoCo(object):
         errorCode = error.findtext('.//{urn:schemas-upnp-org:control-1-0}errorCode')
 
         if errorCode is not None:
-            return int(errorCode)
+            raise SoCoException(int(errorCode))
         else:
             # Unknown error, so just return the entire response
-            return response
+            raise UnknownSoCoException(response)
 
 
     def send_command(self, endpoint, action, body):
