@@ -68,6 +68,15 @@ class SoCo(object):
     join -- Join this speaker to another "master" speaker.
     unjoin -- Remove this speaker from a group.
     get_queue -- Get information about the queue.
+    get_folders -- Get search folders from the music library
+    get_artists -- Get artists from the music library
+    get_album_artists -- Get album artists from the music library
+    get_albums -- Get albums from the music library
+    get_genres -- Get genres from the music library
+    get_composers -- Get composers from the music library
+    get_tracks -- Get tracks from the music library
+    get_playlists -- Get playlists from the music library
+    get_music_library_information -- Get information from the music library
     get_current_transport_info -- get speakers playing state
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
