@@ -69,6 +69,7 @@ class SoCo(object):
     unjoin -- Remove this speaker from a group.
     get_queue -- Get information about the queue.
     get_current_transport_info -- get speakers playing state
+    get_current_media_info -- get currently playing media state
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
     clear_queue -- Remove all tracks from queue
@@ -765,6 +766,34 @@ class SoCo(object):
 
         return playstate
 
+    def get_current_media_info(self):
+        """ Get the current media info
+
+        Returns:
+        A dictionary containing the following information about the media playing
+        current_media_state (PLAYING, PAUSED_PLAYBACK, STOPPED),
+        current_media_status (OK, ?), current_speed(1,?)
+
+        """
+        response = self.__send_command(TRANSPORT_ENDPOINT, GET_CUR_MEDIA_ACTION, GET_CUR_MEDIA_BODY)
+        dom = XML.fromstring(response.encode('utf-8'))
+
+        media = {
+            'current_uri': '',
+        }
+
+        media['current_uri'] = dom.findtext('.//CurrentURI')
+        media['nr_tracks'] = int(dom.findtext('.//NrTracks'))
+        media['media_duration'] = dom.findtext('.//MediaDuration')
+        media['current_uri_metadata'] = dom.findtext('.//CurrentURIMetaData')
+        media['next_uri'] = dom.findtext('.//NextURI')
+        media['next_uri_metadata'] = dom.findtext('.//NextURIMetaData')
+        media['play_medium'] = dom.findtext('.//PlayMedium')
+        media['record_medium'] = dom.findtext('.//RecordMedium')
+        media['write_status'] = dom.findtext('.//WriteStatus')
+
+        return media
+
     def get_queue(self, start = 0, max_items = 100):
         """ Get information about the queue.
 
@@ -1095,6 +1124,9 @@ GET_CUR_TRACK_BODY = '<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:A
 
 GET_CUR_TRANSPORT_ACTION = '"urn:schema-upnp-org:service:AVTransport:1#GetTransportInfo"'
 GET_CUR_TRANSPORT_BODY = '<u:GetTransportInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:GetTransportInfo></s:Body></s:Envelope>'
+
+GET_CUR_MEDIA_ACTION = '"urn:schema-upnp-org:service:AVTransport:1#GetMediaInfo"'
+GET_CUR_MEDIA_BODY = '<u:GetMediaInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID></u:GetTransportInfo></s:Body></s:Envelope>'
 
 SOAP_TEMPLATE = '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>{body}</s:Body></s:Envelope>'
 
