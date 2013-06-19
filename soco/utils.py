@@ -3,6 +3,7 @@
 """ Provides general utility functions to be used across modules """
 
 from types import StringType, UnicodeType
+import re
 
 
 def really_unicode(in_string):
@@ -32,3 +33,15 @@ def really_utf8(in_string):
     the utf-8 encoded string
     """
     return really_unicode(in_string).encode('utf-8')
+
+
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
+
+
+def camel_to_underscore(string):
+    """ Convert camelcase to lowercase and underscore
+    Recipy from http://stackoverflow.com/a/1176023
+    """
+    string = FIRST_CAP_RE.sub(r'\1_\2', string)
+    return ALL_CAP_RE.sub(r'\1_\2', string).lower()
