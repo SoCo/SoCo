@@ -6,7 +6,7 @@ import requests
 import select
 import socket
 import logging, traceback
-from soco.utils import really_utf8
+from soco.utils import really_utf8, camel_to_underscore
 
 from .exceptions import SoCoException, UnknownSoCoException
 
@@ -818,6 +818,83 @@ class SoCo(object):
 
         return queue
 
+    def get_music_library_information(self, search_type, start=0, max_items=100):
+        """ Retrieve information about the music library
+        
+        Arguments:
+        search      The kind of information to retrieve. Can be one of: 
+                    'folders', 'artists', 'album_artists', 'albums', 'genres',
+                    'composers', 'tracks' and 'playlists'
+        start       starting number of returned matches
+        max_items   maximum number of returned matches. NOTE: The maximum
+                    may be restricted by the unit, presumably due to transfer
+                    size consideration, so check the returned number against
+                    the requested.
+        
+        Returns a dictionary with metadata for the search and a item list with
+        the search results.
+        
+        Raises SoCoException (or a subclass) upon errors.
+        """
+        search_translation = {'folders': 'A:', 'artists': 'A:ARTIST',
+                              'album_artists': 'A:ALBUMARTIST',
+                              'albums': 'A:ALBUM', 'genres': 'A:GENRE',
+                              'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
+                              'playlists': 'A:PLAYLISTS'}
+        search = search_translation[search_type]
+        body = GET_MUSIC_LIB_TEMPLATE.format(search=search, start=start,
+                                             max_items=max_items)
+        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
+                                       BROWSE_ACTION, body)
+        dom = XML.fromstring(really_utf8(response))
+
+        # Get result information
+        out = {'item_list': [], 'search_type': search_type}
+        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+            out[camel_to_underscore(tag)] = int(dom.findtext('.//' + tag))
+
+        # Parse the results
+        result_xml = XML.fromstring(really_utf8(dom.findtext('.//Result')))
+        # Information for the tags to parse, [name, ns]
+        tag_info = [['title', 'dc'],['class', 'upnp']]
+        if search_type == 'tracks':
+            tag_info += [['albumArtURI', 'upnp'],['creator', 'dc'],
+                         ['album','upnp'], ['originalTrackNumber', 'upnp']]
+        for container in result_xml:
+            item = self.__parse_container(container, tag_info)
+            # Append the item to the list
+            out['item_list'].append(item)
+
+        return out
+
+    def __parse_container(self, container, tag_info):
+        """ Parse a container xml object """
+        # Get container attributes and add a few defaults
+        item = {'id': container.attrib['id'],
+                'parent_id': container.attrib['parentID'],
+                'restricted': (container.attrib['restricted'] == 'true'),
+                'res': None, 'protocol_info': None}
+
+        # Get information from tags in container
+        for name, ns in tag_info:
+            keyname = camel_to_underscore(name)
+            item[keyname] = None  # Default value
+            found_text = container.findtext('.' + NS[ns] + name)
+            if found_text is not None:
+                item[keyname] = really_utf8(found_text)                
+
+        # Turn track numbers into integers, if they are there
+        if item.get('original_track_number') is not None:
+            item['original_track_number'] = int(item['original_track_number'])
+
+        # The res tag is special and not there for folders searches
+        res = container.find('.' + NS[''] + 'res')
+        if res is not None:
+            item['res'] = really_utf8(res.text)
+            item['protocol_info'] = res.attrib['protocolInfo']
+
+        return item
+
     def add_to_queue(self, uri):
         """ Adds a given track to the queue.
 
@@ -1129,3 +1206,7 @@ SET_PLAYER_NAME_ACTION ='"urn:schemas-upnp-org:service:DeviceProperties:1#SetZon
 SET_PLAYER_NAME_BODY_TEMPLATE = '"<u:SetZoneAttributes xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredZoneName>{playername}</DesiredZoneName><DesiredIcon /><DesiredConfiguration /></u:SetZoneAttributes>"'
 SET_PLAYER_NAME_RESPONSE ='"<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetZoneAttributesResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetZoneAttributesResponse></s:Body></s:Envelope>"'
 
+GET_MUSIC_LIB_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>{search}</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{start}</StartingIndex><RequestedCount>{max_items}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
+NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
+      'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
+      '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
