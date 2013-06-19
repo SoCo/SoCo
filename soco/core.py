@@ -878,7 +878,7 @@ class SoCo(object):
 
     def get_music_library_information(self, search_type, start=0, max_items=100):
         """ Retrieve information about the music library
-        
+
         Arguments:
         search      The kind of information to retrieve. Can be one of: 
                     'folders', 'artists', 'album_artists', 'albums', 'genres',
@@ -893,6 +893,11 @@ class SoCo(object):
         the search results.
         
         Raises SoCoException (or a subclass) upon errors.
+
+        The information about the which searches can be performed and the form
+        of the query has been gathered from the Janos project:
+        http://sourceforge.net/projects/janos/ Probs to the authors of that
+        project.
         """
         search_translation = {'folders': 'A:', 'artists': 'A:ARTIST',
                               'album_artists': 'A:ALBUMARTIST',
