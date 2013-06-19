@@ -818,6 +818,64 @@ class SoCo(object):
 
         return queue
 
+    def get_folders(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('folders')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('folders', start, max_items)
+        return out
+
+    def get_artists(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('artists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('artists', start, max_items)
+        return out
+
+    def get_album_artists(self, start=0, max_items=100):
+        """ Convinience method for:
+        get_music_library_information('album_artists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('album_artists',
+                                                 start, max_items)
+        return out
+
+    def get_albums(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('albums')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('albums', start, max_items)
+        return out
+
+    def get_genres(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('genres')
+        Refer to the docstring for that method.
+        """
+        out = self.get_music_library_information('genres', start, max_items)
+        return out
+
+    def get_composers(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('composers')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('composers', start, max_items)
+        return out
+
+    def get_tracks(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('tracks')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('tracks', start, max_items)
+        return out
+
+    def get_playlists(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('playlists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('playlists', start, max_items)
+        return out
+
     def get_music_library_information(self, search_type, start=0, max_items=100):
         """ Retrieve information about the music library
         
