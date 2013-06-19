@@ -932,6 +932,8 @@ class SoCo(object):
         if search_type == 'tracks':
             tag_info += [['albumArtURI', 'upnp'],['creator', 'dc'],
                          ['album','upnp'], ['originalTrackNumber', 'upnp']]
+        elif search_type == 'albums':
+            tag_info.append(['creator', 'dc'])
         for container in result_xml:
             item = self.__parse_container(container, tag_info)
             # Append the item to the list
