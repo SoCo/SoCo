@@ -653,7 +653,7 @@ class SoCo(object):
                 logger.error('Could not retrieve ZoneName for device at ip: ' + self.speaker_ip + ', it could be a Sonos bridge...')
                 return self.speaker_info
 
-            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
+            self.speaker_info['zone_name'] = really_utf8(zone_name)
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
