@@ -19,8 +19,10 @@ PACKAGE = 'soco'
 MODULES = (
         'soco',
         'soco.core',
+        'soco.exceptions',
         'soco.plugins',
         'soco.plugins.example',
+        'soco.utils'
 )
 
 REQUIREMENTS = list(open('requirements.txt'))
