@@ -86,7 +86,7 @@ class SoCo(object):
         self.speaker_info = {} # Stores information about the current speaker
 
 
-    def set_player_name(self,playername=False):
+    def set_player_name(self, playername):
         """  Sets the name of the player
 
         Returns:
@@ -95,13 +95,12 @@ class SoCo(object):
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        if playername is not False:
-            body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
+        body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
 
-            response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
+        response = self.__send_command(DEVICE_ENDPOINT,SET_PLAYER_NAME_ACTION,body)
 
-            if response != SET_PLAYER_NAME_RESPONSE:
-                self.__parse_error(response)
+        if response != SET_PLAYER_NAME_RESPONSE:
+            self.__parse_error(response)
 
 
     def set_play_mode(self, playmode):
