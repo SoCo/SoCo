@@ -827,13 +827,6 @@ class SoCo(object):
 
         return queue
 
-    def get_folders(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('folders')
-        Refer to the docstring for that method
-        """
-        out = self.get_music_library_information('folders', start, max_items)
-        return out
-
     def get_artists(self, start=0, max_items=100):
         """ Convinience method for: get_music_library_information('artists')
         Refer to the docstring for that method
@@ -891,15 +884,23 @@ class SoCo(object):
         Arguments:
         search      The kind of information to retrieve. Can be one of: 
                     'folders', 'artists', 'album_artists', 'albums', 'genres',
-                    'composers', 'tracks' and 'playlists'
+                    'composers', 'tracks' and 'playlists', where playlists are
+                    the imported file based playlists from the music library
         start       starting number of returned matches
         max_items   maximum number of returned matches. NOTE: The maximum
                     may be restricted by the unit, presumably due to transfer
                     size consideration, so check the returned number against
                     the requested.
         
-        Returns a dictionary with metadata for the search and a item list with
-        the search results.
+        Returns a dictionary with metadata for the search, with the keys
+        'number_returned', 'update_id', 'total_matches' and an 'item' list with
+        the search results. The search results are dicts that with the 
+        following exceptions all has the following keys 'title', 'res',
+        'class', 'parent_id', 'restricted', 'id', 'protocol_info'. The
+        exceptions are; that the playlists item in the folder search has no res
+        item; the album and track items has an extra 'creator' field and the
+        track items has additional 'album', 'album_art_uri' and
+        'original_track_number' fields.
         
         Raises SoCoException (or a subclass) upon errors.
 
