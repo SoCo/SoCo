@@ -6,7 +6,7 @@ import requests
 import select
 import socket
 import logging, traceback
-from soco.utils import really_utf8
+from soco.utils import really_utf8, camel_to_underscore
 
 from .exceptions import SoCoException, UnknownSoCoException
 
@@ -68,6 +68,15 @@ class SoCo(object):
     join -- Join this speaker to another "master" speaker.
     unjoin -- Remove this speaker from a group.
     get_queue -- Get information about the queue.
+    get_folders -- Get search folders from the music library
+    get_artists -- Get artists from the music library
+    get_album_artists -- Get album artists from the music library
+    get_albums -- Get albums from the music library
+    get_genres -- Get genres from the music library
+    get_composers -- Get composers from the music library
+    get_tracks -- Get tracks from the music library
+    get_playlists -- Get playlists from the music library
+    get_music_library_information -- Get information from the music library
     get_current_transport_info -- get speakers playing state
     add_to_queue -- Add a track to the end of the queue
     remove_from_queue -- Remove a track from the queue
@@ -817,6 +826,149 @@ class SoCo(object):
 
         return queue
 
+    def get_artists(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('artists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('artists', start, max_items)
+        return out
+
+    def get_album_artists(self, start=0, max_items=100):
+        """ Convinience method for:
+        get_music_library_information('album_artists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('album_artists',
+                                                 start, max_items)
+        return out
+
+    def get_albums(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('albums')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('albums', start, max_items)
+        return out
+
+    def get_genres(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('genres')
+        Refer to the docstring for that method.
+        """
+        out = self.get_music_library_information('genres', start, max_items)
+        return out
+
+    def get_composers(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('composers')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('composers', start, max_items)
+        return out
+
+    def get_tracks(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('tracks')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('tracks', start, max_items)
+        return out
+
+    def get_playlists(self, start=0, max_items=100):
+        """ Convinience method for: get_music_library_information('playlists')
+        Refer to the docstring for that method
+        """
+        out = self.get_music_library_information('playlists', start, max_items)
+        return out
+
+    def get_music_library_information(self, search_type, start=0, max_items=100):
+        """ Retrieve information about the music library
+
+        Arguments:
+        search      The kind of information to retrieve. Can be one of: 
+                    'folders', 'artists', 'album_artists', 'albums', 'genres',
+                    'composers', 'tracks' and 'playlists', where playlists are
+                    the imported file based playlists from the music library
+        start       starting number of returned matches
+        max_items   maximum number of returned matches. NOTE: The maximum
+                    may be restricted by the unit, presumably due to transfer
+                    size consideration, so check the returned number against
+                    the requested.
+        
+        Returns a dictionary with metadata for the search, with the keys
+        'number_returned', 'update_id', 'total_matches' and an 'item' list with
+        the search results. The search results are dicts that with the 
+        following exceptions all has the following keys 'title', 'res',
+        'class', 'parent_id', 'restricted', 'id', 'protocol_info'. The
+        exceptions are; that the playlists item in the folder search has no res
+        item; the album and track items has an extra 'creator' field and the
+        track items has additional 'album', 'album_art_uri' and
+        'original_track_number' fields.
+        
+        Raises SoCoException (or a subclass) upon errors.
+
+        The information about the which searches can be performed and the form
+        of the query has been gathered from the Janos project:
+        http://sourceforge.net/projects/janos/ Probs to the authors of that
+        project.
+        """
+        search_translation = {'folders': 'A:', 'artists': 'A:ARTIST',
+                              'album_artists': 'A:ALBUMARTIST',
+                              'albums': 'A:ALBUM', 'genres': 'A:GENRE',
+                              'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
+                              'playlists': 'A:PLAYLISTS'}
+        search = search_translation[search_type]
+        body = GET_MUSIC_LIB_TEMPLATE.format(search=search, start=start,
+                                             max_items=max_items)
+        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
+                                       BROWSE_ACTION, body)
+        dom = XML.fromstring(really_utf8(response))
+
+        # Get result information
+        out = {'item_list': [], 'search_type': search_type}
+        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+            out[camel_to_underscore(tag)] = int(dom.findtext('.//' + tag))
+
+        # Parse the results
+        result_xml = XML.fromstring(really_utf8(dom.findtext('.//Result')))
+        # Information for the tags to parse, [name, ns]
+        tag_info = [['title', 'dc'],['class', 'upnp']]
+        if search_type == 'tracks':
+            tag_info += [['albumArtURI', 'upnp'],['creator', 'dc'],
+                         ['album','upnp'], ['originalTrackNumber', 'upnp']]
+        elif search_type == 'albums':
+            tag_info.append(['creator', 'dc'])
+        for container in result_xml:
+            item = self.__parse_container(container, tag_info)
+            # Append the item to the list
+            out['item_list'].append(item)
+
+        return out
+
+    def __parse_container(self, container, tag_info):
+        """ Parse a container xml object """
+        # Get container attributes and add a few defaults
+        item = {'id': container.attrib['id'],
+                'parent_id': container.attrib['parentID'],
+                'restricted': (container.attrib['restricted'] == 'true'),
+                'res': None, 'protocol_info': None}
+
+        # Get information from tags in container
+        for name, ns in tag_info:
+            keyname = camel_to_underscore(name)
+            item[keyname] = None  # Default value
+            found_text = container.findtext('.' + NS[ns] + name)
+            if found_text is not None:
+                item[keyname] = really_utf8(found_text)                
+
+        # Turn track numbers into integers, if they are there
+        if item.get('original_track_number') is not None:
+            item['original_track_number'] = int(item['original_track_number'])
+
+        # The res tag is special and not there for folders searches
+        res = container.find('.' + NS[''] + 'res')
+        if res is not None:
+            item['res'] = really_utf8(res.text)
+            item['protocol_info'] = res.attrib['protocolInfo']
+
+        return item
+
     def add_to_queue(self, uri):
         """ Adds a given track to the queue.
 
@@ -1126,4 +1278,10 @@ GET_RADIO_FAVORITES_BODY_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:ser
 
 SET_PLAYER_NAME_ACTION ='"urn:schemas-upnp-org:service:DeviceProperties:1#SetZoneAttributes"'
 SET_PLAYER_NAME_BODY_TEMPLATE = '"<u:SetZoneAttributes xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"><DesiredZoneName>{playername}</DesiredZoneName><DesiredIcon /><DesiredConfiguration /></u:SetZoneAttributes>"'
+
 SET_PLAYER_NAME_RESPONSE ='<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:SetZoneAttributesResponse xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1"></u:SetZoneAttributesResponse></s:Body></s:Envelope>'
+
+GET_MUSIC_LIB_TEMPLATE = '<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1"><ObjectID>{search}</ObjectID><BrowseFlag>BrowseDirectChildren</BrowseFlag><Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI</Filter><StartingIndex>{start}</StartingIndex><RequestedCount>{max_items}</RequestedCount><SortCriteria></SortCriteria></u:Browse>'
+NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
+      'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
+      '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
