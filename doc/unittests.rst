@@ -5,23 +5,23 @@ The unit tests written for the *SoCo* module implements elementary
 checks of whether the individual methods produce the expected
 results. Such tests are especially useful during re-factoring and to
 check that already implemented functionality continues to work past
-updates to the Sonos units internal software.
+updates to the Sonos® units internal software.
 
 Running the unit tests
 ======================
 
 To run the unit tests enter the ``unittest`` folder in the source code
 checkout and run the unit test execution script
-``execute_unittests.py`` (it is required that the `SoCo` checkout is
+``execute_unittests.py`` (it is required that the *SoCo* checkout is
 added to the Python path of your system). To run all the unit tests
-for the *SoCo* class run:
+for the *SoCo* class execute the following command:
 
 .. code-block:: sh
 
     python execute_unittests.py --modules soco --ip 192.168.0.110
 
 where the IP address should be replaced with the IP address of the
-Sonos unit you want to use for the unit tests (NOTE! At present the
+Sonos® unit you want to use for the unit tests (NOTE! At present the
 unit tests for the *SoCo* module requires your Sonos® unit to be playing
 local network music library tracks from the queue and have at least
 two such tracks in the queue). You can get a list of all the units in
@@ -73,7 +73,7 @@ case class name should be prefixed with the word ``Private``.
 Examples:
 
 ==========================  =========================
-Name of method under test   Test case class name
+Name of method under test   Name of test case class
 ==========================  =========================
 ``get_current_track_info``  ``GetCurrentTrackInfo``
 ``__parse_error``           ``PrivateParseError``
@@ -93,9 +93,9 @@ with the following command which methods that does not yet have unit tests:
     python execute_unittests.py --modules foo --coverage
 
 After having identified a method to write a unit test for, consider
-what criteria should be tested, e.g. if a correct response is returned
-on valid input, if it fails as expected on invalid input and if it
-returns the expected output. Then implement the unit test by writing a
+what criteria should be tested, e.g. if the method executes and
+returns the expected output on valid input and if it fails as expected on
+invalid input. Then implement the unit test by writing a
 class for it, following the naming convention mentioned in section
 :ref:`section_one_class_per_method`. You can read more about unit test
 classes in the `reference documentation
@@ -103,8 +103,25 @@ classes in the `reference documentation
 introduction to unit testing in `Mark Pilgrim's "Dive into Python"
 <http://www.diveintopython.net/unit_testing/index.html>`_ (though the
 aspects of test driven development, that it describes, is not a
-requirement for `SoCo` development).
+requirement for *SoCo* development).
 
+Special unit test design consideration for *SoCo*
+-------------------------------------------------
+
+*SoCo* is developed purely by volunteers in their spare time. This
+leads to some special consideration during unit test design.
+
+First of, volunteers will usually not have extra Sonos® units
+dedicated for testing. For this reason the unit tests should be developed
+in such a way that they can be run on units in use and with people
+around, so e.g it should be avoided settings the volume to max.
+
+Second, being developed in peoples spare time, the development is
+likely a recreational activity, that might just be accompanied by
+music from the same unit that should be tested. For this reason, that
+unit should be left in the same state after test as it was
+before. That means that the play list, play state, sound settings
+etc. should be restored after the testing is complete.
 
 Add a new unit test module (for a new class under test)
 =======================================================
@@ -121,29 +138,35 @@ To add unit tests for the methods in a new class follow the steps below:
 
 Then it is necessary to make the unit test execution framework aware of
 your unit test module. Do this by making the following additions to
-the file `execute_unittests.py`.:
+the file ``execute_unittests.py``.:
 
 1. Import the class under test and the unit test module in the
    beginning of the file
-2. Add an item to the `UNITTEST_MODULES` dict located right after the
-   `### MAIN SCRIPT` comment. The added item should itself be a
+2. Add an item to the ``UNITTEST_MODULES`` dict located right after the
+   ``### MAIN SCRIPT`` comment. The added item should itself be a
    dictionary with items like this::
 
     UNITTEST_MODULES = {
      'soco': {'name': 'SoCo', 'unittest_module': soco_unittest,
               'class': soco.SoCo, 'arguments': {'ip': ARGS.ip}},
-     'foo_bar': {'name': 'FooBar', 'unittest_module': foobar_unittest,
+     'foo_bar': {'name': 'FooBar', 'unittest_module': foo_bar_unittest,
                 'class': soco.FooBar,'arguments': {'ip': ARGS.ip}}
      }
 
-   where both the new imaginary `foo_bar` entry and the existing
-   `soco` entry are shown for clarity. The arguments dict is what will be
-   passed on to the `init` method, see section
+   where both the new imaginary ``foo_bar`` entry and the existing
+   ``soco`` entry are shown for clarity. The arguments dict is what will be
+   passed on to the ``init`` method, see section
    :ref:`section_init_function`. 
-3. Lastly, add the new module to the help text for the `modules`
-   command line argument, defined in the `__build_option_parser`
-   function. The name that should be added to the text is the key for
-   the unit tests in the `UNITTEST_MODULES` dict.
+3. Lastly, add the new module to the help text for the ``modules``
+   command line argument, defined in the ``__build_option_parser``
+   function::
+
+    parser.add_argument('--modules', type=str, default=None, help=''
+                        'the modules to run unit test for can be '
+                        '\'soco\', \'foo_bar\' or \'all\'')
+
+   The name that should be added to the text is the key for the unit
+   test module entry in the ``UNITTEST_MODULES`` dict.
 
 .. _section_init_function:
 
@@ -152,13 +175,13 @@ The `init` function
 
 Normally unit tests should be self-contained and therefore they should
 have all the data they will need built in. However, that does not
-apply to `SoCo`, because the IP's of the Sonos® units will be required
+apply to *SoCo*, because the IP's of the Sonos® units will be required
 and there is no way to know them in advance. Therefore, the execution
-script will call the function "init" in the unit test modules, if it
+script will call the function ``init`` in the unit test modules, if it
 exists, with a set of predefined arguments that can then be used for
 unit test initialization. Note that the function is to be named
-`init`, not `__init__` like the class initializers. The `init`
+``init`` , not ``__init__`` like the class initializers. The ``init``
 function is called with one argument, which is the dictionary defined
-under the key `arguments` in the unit test modules definition. Please
+under the key ``arguments`` in the unit test modules definition. Please
 regard this as an exception to the general unit test best practices
 guidelines and use it only if there are no other option.
