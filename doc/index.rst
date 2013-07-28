@@ -17,6 +17,7 @@ Contents
    tutorial
    plugins
    soco-mod
+   release_notes
 
 
 Indices and tables
