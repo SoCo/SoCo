@@ -18,6 +18,7 @@ Contents
    plugins
    unittests
    soco-mod
+   release_notes
 
 
 Indices and tables
