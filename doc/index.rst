@@ -16,6 +16,7 @@ Contents
 
    tutorial
    plugins
+   unittests
    soco-mod
 
 
