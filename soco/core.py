@@ -634,7 +634,11 @@ class SoCo(object):
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
             if album_art is not None:
-                track['album_art'] = 'http://' + self.speaker_ip + ':1400' + metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+		url = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+		if (url.startswith('http:') or url.startswith('https:')):
+			track['album_art'] = url
+		else:
+			track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
 
         return track
 
