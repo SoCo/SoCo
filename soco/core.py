@@ -660,7 +660,8 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
+	    if (dom.findtext('.//ZoneName') != None):
+		    self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
