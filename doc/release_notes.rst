@@ -1,8 +1,8 @@
 Release notes
 *************
 
-Version 0.5 (draft)
-===================
+Version 0.6
+===========
 
 New features
 ------------
