@@ -1,7 +1,7 @@
 Release notes
 *************
 
-Version ?.?? (draft)
+Version 0.5 (draft)
 ===================
 
 New features
