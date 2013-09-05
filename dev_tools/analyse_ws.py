@@ -7,6 +7,8 @@ import argparse
 import os
 import sys
 import re
+import codecs
+import ConfigParser
 from scapy.all import rdpcap
 from lxml import etree
 
@@ -18,6 +20,12 @@ class AnalyzeWS(object):
         self.messages = []
         self.args = args
         self.output_prefix = args.output_prefix
+        try:
+            with open('analyse_ws.ini') as file_:
+                self.config = ConfigParser.ConfigParser()
+                self.config.readfp(file_)
+        except IOError:
+            pass
 
     def add_file(self, filename):
         """ Add a file to the captured content """
@@ -57,14 +65,29 @@ class AnalyzeWS(object):
 
     def __to_file(self, index):
         """ Write a single message to file """
-        pass
+        filename = '{0}_{1}.xml'.format(self.output_prefix, index)
+        try:
+            with codecs.open(filename, mode='w', encoding='utf-8') as file_:
+                file_.write(self.messages[index].output)
+        except IOError as e:
+            print 'Unable for open the file \'{0}\' for writing. The '\
+                  'following exception was raised:'.format(filename)
+            print e
+            print 'Exiting!'
+            sys.exit(2)
+        return filename
 
     def to_browser_mode(self):
         """ To browser mode """
-        pass
+        for index in range(len(self.messages)):
+            self.__to_file(index)
+            # TODO
+            # Open file in browser with
+            # self.config.get('General', 'browser_command')
 
     def interactive_mode(self):
         """ Interactive mode """
+
         pass
 
 
@@ -139,7 +162,7 @@ def __build_option_parser():
                         help='The output filename prefix to use')
     parser.add_argument('--to-file', action='store_const', const=True,
                         help='Output xml to files', default=False)
-    parser.add_argument('--to-browser', action='store_const', const=True,
+    parser.add_argument('--to-browser', action='store_const', const=False,
                         help='Output xml to browser. Implies --to-file.',
                         default=False)
     parser.add_argument('--external-inner-xml', action='store_const',
