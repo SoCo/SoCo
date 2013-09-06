@@ -9,6 +9,8 @@ import sys
 import re
 import codecs
 import ConfigParser
+import curses
+from subprocess import call
 from scapy.all import rdpcap
 from lxml import etree
 
@@ -38,7 +40,7 @@ class AnalyzeWS(object):
                   'Exiting!'.format(filename)
             sys.exit(1)
         packets = rdpcap(filename)
-        for packet in packets[:6]:
+        for packet in packets[:10]:
             # See if there is a field called load
             try:
                 load = packet.getfieldval('load')
@@ -80,16 +82,47 @@ class AnalyzeWS(object):
     def to_browser_mode(self):
         """ To browser mode """
         for index in range(len(self.messages)):
-            self.__to_file(index)
-            # TODO
-            # Open file in browser with
-            # self.config.get('General', 'browser_command')
+            self.__to_browser(index)
+
+    def __to_browser(self, index):
+        """ Write a single message to file and open the file in a
+        browser
+        """
+        filename = self.__to_file(index)
+        command = self.config.get('General', 'browser_command').\
+            format(filename)
+        call(command, shell=True)
 
     def interactive_mode(self):
         """ Interactive mode """
+        screen = self.__curses_mode(True)
+        action = None
+        while action != ord('q'):
+            action = screen.getch()
+            if action in [curses.KEY_DOWN, curses.KEY_RIGHT]:
+                pass  # next
+            elif action in [curses.KEY_UP, curses.KEY_LEFT]:
+                pass  # previous
+            elif action == ord('f'):
+                pass  # to file
+            elif action == ord('b'):
+                pass  # to browser
+            else:
+                pass  # put current message in window
+        self.__curses_mode(False, screen)
 
-        pass
-
+    def __curses_mode(self, start, screen=None):
+        if start:
+            screen = curses.initscr()
+            curses.noecho()
+            curses.cbreak()
+            screen.keypad(1)
+            return screen
+        else:
+            curses.nocbreak()
+            screen.keypad(0)
+            curses.echo()
+            curses.endwin()
 
 class WSPart(object):
     """ This class parses and represents a single Sonos UPnP message """
@@ -162,7 +195,7 @@ def __build_option_parser():
                         help='The output filename prefix to use')
     parser.add_argument('--to-file', action='store_const', const=True,
                         help='Output xml to files', default=False)
-    parser.add_argument('--to-browser', action='store_const', const=False,
+    parser.add_argument('--to-browser', action='store_const', const=True,
                         help='Output xml to browser. Implies --to-file.',
                         default=False)
     parser.add_argument('--external-inner-xml', action='store_const',
