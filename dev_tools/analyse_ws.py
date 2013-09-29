@@ -10,22 +10,30 @@ import re
 import codecs
 import ConfigParser
 import curses
+import pygments
+from pygments.lexers import XmlLexer
 from subprocess import call
 from scapy.all import rdpcap
 from lxml import etree
+
+# Constants
+# tokens types to use for color schemes
+# Token.Comment, Token.Text, Token.Name.Attribute, Token.Name.Tag,
+# Token.Name.Entity, Token.Comment.Preproc, Token.Literal.String
 
 
 class AnalyzeWS(object):
     """ Class for analysis of WireShark dump """
 
     def __init__(self, args):
+        self.screen = None
         self.messages = []
         self.args = args
         self.output_prefix = args.output_prefix
         try:
-            with open('analyse_ws.ini') as file_:
+            with open('analyse_ws.ini') as file__:
                 self.config = ConfigParser.ConfigParser()
-                self.config.readfp(file_)
+                self.config.readfp(file__)
         except IOError:
             pass
 
@@ -69,12 +77,12 @@ class AnalyzeWS(object):
         """ Write a single message to file """
         filename = '{0}_{1}.xml'.format(self.output_prefix, index)
         try:
-            with codecs.open(filename, mode='w', encoding='utf-8') as file_:
-                file_.write(self.messages[index].output)
-        except IOError as e:
+            with codecs.open(filename, mode='w', encoding='utf-8') as file__:
+                file__.write(self.messages[index].output)
+        except IOError as excep:
             print 'Unable for open the file \'{0}\' for writing. The '\
                   'following exception was raised:'.format(filename)
-            print e
+            print excep
             print 'Exiting!'
             sys.exit(2)
         return filename
@@ -95,34 +103,61 @@ class AnalyzeWS(object):
 
     def interactive_mode(self):
         """ Interactive mode """
-        screen = self.__curses_mode(True)
+        xml_types = []
+        for val in XmlLexer().tokens.values():
+            for regexp in val:
+                if regexp[1] not in xml_types:
+                    xml_types.append(regexp[1])
+        print xml_types
+        #tokens = pygments.lex(self.messages[0].output, XmlLexer())
+        #types = []
+        #for token in tokens:
+        #    if token[0] not in types:
+        #        types.append(token[0])
+        #        print token
+        return
+        self.__curses_mode(True)
+        self.__update_window(0)
+        position = 0
         action = None
         while action != ord('q'):
-            action = screen.getch()
+            action = self.screen.getch()
             if action in [curses.KEY_DOWN, curses.KEY_RIGHT]:
-                pass  # next
+                position = max(min(len(self.messages) - 1, position + 1), 0)
             elif action in [curses.KEY_UP, curses.KEY_LEFT]:
-                pass  # previous
-            elif action == ord('f'):
-                pass  # to file
-            elif action == ord('b'):
-                pass  # to browser
-            else:
-                pass  # put current message in window
-        self.__curses_mode(False, screen)
+                position = max(min(len(self.messages) - 1, position - 1), 0)
+            self.__update_window(position)
 
-    def __curses_mode(self, start, screen=None):
+        self.__curses_mode(False)
+
+    def __curses_mode(self, start):
+        """ Convinience functionto initiate and close the curses window """
         if start:
-            screen = curses.initscr()
+            self.screen = curses.initscr()
             curses.noecho()
             curses.cbreak()
-            screen.keypad(1)
-            return screen
+            self.screen.keypad(1)
         else:
-            curses.nocbreak()
-            screen.keypad(0)
             curses.echo()
+            curses.nocbreak()
+            self.screen.keypad(0)
             curses.endwin()
+
+    def __update_window(self, position, status=''):
+        """ Update the window with the menu and the new text """
+        _, width = self.screen.getmaxyx()
+        self.screen.clear()
+        menu = 'LEFT, RIGHT | (b)rowser | to-(f)ile | {0}/{1} | {2}\n{3}\n'\
+            .format(position, len(self.messages) - 1, status, '-' * width)
+        self.screen.addstr(0, 0, menu)
+        content = self.messages[position].output.encode('utf-8')
+        
+        # Use pygemtize, lexer xml, formatter raw
+        #chunks = [content[i:i+100] for i in range(0, len(content), 100)]
+        #for chunk in chunks:
+        #    self.screen.addstr(chunk)
+        self.screen.refresh()
+
 
 class WSPart(object):
     """ This class parses and represents a single Sonos UPnP message """
