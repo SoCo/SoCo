@@ -1,32 +1,51 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# pylint: disable=E0611
 
 """ Script to analyse ws dumps """
 
 import argparse
 import os
 import sys
+PLATFORM = sys.platform.lower()
+if PLATFORM == 'win32':
+    import msvcrt
+    COLOR = False
+else:
+    import tty
+    import termios
+    COLOR = True
 import re
 import codecs
 import ConfigParser
-import curses
-import pygments
-from pygments.lexers import XmlLexer
-from subprocess import call
-from scapy.all import rdpcap
+import StringIO
+try:
+    import pygments
+    from pygments.lexers import XmlLexer
+    from pygments.formatters import TerminalFormatter
+except ImportError:
+    print 'Module "pygment" could not be imported. Please install it. Exiting!'
+    sys.exit(100)
+try:
+    STDERR = sys.stderr
+    sys.stderr = StringIO.StringIO()
+    from scapy.all import rdpcap
+    sys.stderr = STDERR
+except ImportError:
+    print 'Module "scapy" could not be imported. Please install it. Exiting!'
+    sys.exit(101)
 from lxml import etree
+import subprocess
 
-# Constants
-# tokens types to use for color schemes
-# Token.Comment, Token.Text, Token.Name.Attribute, Token.Name.Tag,
-# Token.Name.Entity, Token.Comment.Preproc, Token.Literal.String
+
+STARTS = ['<s:Envelope', '<e:propertyset']
+ENDS = ['</s:Envelope>', '</e:propertyset>']
 
 
 class AnalyzeWS(object):
-    """ Class for analysis of WireShark dump """
+    """ Class for analysis of WireShark dumps """
 
     def __init__(self, args):
-        self.screen = None
         self.messages = []
         self.args = args
         self.output_prefix = args.output_prefix
@@ -48,25 +67,34 @@ class AnalyzeWS(object):
                   'Exiting!'.format(filename)
             sys.exit(1)
         packets = rdpcap(filename)
-        for packet in packets[:10]:
+
+        for packet in packets:
             # See if there is a field called load
             try:
                 load = packet.getfieldval('load')
-                # If there is double newline it is a new message
-                if '\r\n\r\n' in load:
+                if any([start in load for start in STARTS]):
                     self.messages.append(WSPart(load, self.args))
-                elif len(self.messages) > 0:
-                    self.messages[-1].add_content(load)
+                    if any([end in load for end in ENDS]):
+                        self.messages[-1].finalize_content()
+                elif any([end in load for end in ENDS]):
+                    # If there is an open WSPart
+                    if len(self.messages) > 0 and\
+                            self.messages[-1].write_closed is False:
+                        self.messages[-1].add_content(load)
+                        self.messages[-1].finalize_content()
+                    else:
+                        pass
                 else:
-                    print 'First message skipped'
+                    # If there is an open WSPart
+                    if len(self.messages) > 0 and\
+                            self.messages[-1].write_closed is False:
+                        self.messages[-1].add_content(load)
+                    else:
+                        pass
             except AttributeError:
                 pass
-
-    def complete_file_addition(self):
-        """ Parse the body as xml for all the recieved messages """
-        for message in self.messages:
-            message.init_xml()
-            message.form_output()
+        if len(self.messages) > 0 and self.messages[-1].write_closed is False:
+            del self.messages[-1]
 
     def to_file_mode(self):
         """ To file mode """
@@ -75,7 +103,7 @@ class AnalyzeWS(object):
 
     def __to_file(self, index):
         """ Write a single message to file """
-        filename = '{0}_{1}.xml'.format(self.output_prefix, index)
+        filename = self.__create_file_name(index)
         try:
             with codecs.open(filename, mode='w', encoding='utf-8') as file__:
                 file__.write(self.messages[index].output)
@@ -87,6 +115,10 @@ class AnalyzeWS(object):
             sys.exit(2)
         return filename
 
+    def __create_file_name(self, index):
+        """ Create the filename to save to """
+        return '{0}_{1}.xml'.format(self.output_prefix, index)
+
     def to_browser_mode(self):
         """ To browser mode """
         for index in range(len(self.messages)):
@@ -97,69 +129,57 @@ class AnalyzeWS(object):
         browser
         """
         filename = self.__to_file(index)
-        command = self.config.get('General', 'browser_command').\
-            format(filename)
-        call(command, shell=True)
+        command = self.config.get('General', 'browser_command')
+        command = str(command).format(filename)
+        subprocess.call(command, shell=True, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE)
 
     def interactive_mode(self):
         """ Interactive mode """
-        xml_types = []
-        for val in XmlLexer().tokens.values():
-            for regexp in val:
-                if regexp[1] not in xml_types:
-                    xml_types.append(regexp[1])
-        print xml_types
-        #tokens = pygments.lex(self.messages[0].output, XmlLexer())
-        #types = []
-        #for token in tokens:
-        #    if token[0] not in types:
-        #        types.append(token[0])
-        #        print token
-        return
-        self.__curses_mode(True)
-        self.__update_window(0)
         position = 0
         action = None
-        while action != ord('q'):
-            action = self.screen.getch()
-            if action in [curses.KEY_DOWN, curses.KEY_RIGHT]:
-                position = max(min(len(self.messages) - 1, position + 1), 0)
-            elif action in [curses.KEY_UP, curses.KEY_LEFT]:
-                position = max(min(len(self.messages) - 1, position - 1), 0)
+        while action != 'q':
             self.__update_window(position)
-
-        self.__curses_mode(False)
-
-    def __curses_mode(self, start):
-        """ Convinience functionto initiate and close the curses window """
-        if start:
-            self.screen = curses.initscr()
-            curses.noecho()
-            curses.cbreak()
-            self.screen.keypad(1)
-        else:
-            curses.echo()
-            curses.nocbreak()
-            self.screen.keypad(0)
-            curses.endwin()
+            action = getch()
+            if action == 'n':
+                position = max(min(len(self.messages) - 1, position + 1), 0)
+            elif action == 'p':
+                position = max(min(len(self.messages) - 1, position - 1), 0)
+            elif action == 'b':
+                self.__to_browser(position)
+            elif action == 'f':
+                self.__to_file(position)
 
     def __update_window(self, position, status=''):
         """ Update the window with the menu and the new text """
-        _, width = self.screen.getmaxyx()
-        self.screen.clear()
-        menu = 'LEFT, RIGHT | (b)rowser | to-(f)ile | {0}/{1} | {2}\n{3}\n'\
-            .format(position, len(self.messages) - 1, status, '-' * width)
-        self.screen.addstr(0, 0, menu)
+        if PLATFORM == 'win32':
+            # Defaulting to 80 on windows, better ideas are welcome, but the
+            # solutions I found online are rather bulky
+            width = 80
+        else:
+            _, width = os.popen('stty size', 'r').read().split()
+            width = int(width)
+
+        file_exists = '    '
+        if os.path.exists(self.__create_file_name(position)):
+            file_exists = 'FILE'
+        # Clear the screen
+        print '\x1b[2J\x1b[H'
+        # Menu
+        menu = ('(p)revious, (n)ext | (b)rowser | to (f)ile | {0} | (q)uit | '
+                '{1}/{2} | {3}\n{4}\n').format(file_exists,
+                    position, len(self.messages) - 1, status, '-' * width
+                )
+        print menu
+        # Content
         content = self.messages[position].output.encode('utf-8')
-        
-        # Use pygemtize, lexer xml, formatter raw
-        #chunks = [content[i:i+100] for i in range(0, len(content), 100)]
-        #for chunk in chunks:
-        #    self.screen.addstr(chunk)
-        self.screen.refresh()
+        out = content
+        if self.args.color:
+            out = pygments.highlight(content, XmlLexer(), TerminalFormatter())
+        print out
 
 
-class WSPart(object):
+class WSPart(object):  # pylint: disable=R0902
     """ This class parses and represents a single Sonos UPnP message """
 
     def __init__(self, captured, args):
@@ -167,8 +187,13 @@ class WSPart(object):
         self.inner_xml = []
         self.body_formatted = u''
         self.output = u''
+        self.write_closed = False
         # Analyze initial xml part
-        raw_head, raw_body = captured.split('\r\n\r\n')
+        try:
+            raw_head, raw_body = captured.split('\r\n\r\n')
+        except ValueError:
+            raw_head = ''
+            raw_body = captured
         # Get encoding
         search = re.search(r'.*charset="(.*)"', raw_head)
         try:
@@ -183,12 +208,18 @@ class WSPart(object):
         """ Adds content to the main UPnP message """
         self.body += captured.decode(self.encoding)
 
-    def init_xml(self):
+    def finalize_content(self):
+        """ Finalize the additons """
+        self.write_closed = True
+        self._init_xml()
+        self._form_output()
+
+    def _init_xml(self):
         """ Parse the present body as xml """
         tree = etree.fromstring(self.body)
         for text in tree.xpath('.//text()[contains(., "DIDL")]'):
             item = text.getparent()
-            didl_tree = etree.fromstring(item.text.decode('utf-8'))
+            didl_tree = etree.fromstring(item.text)
             if self.external_inner_xml:
                 item.text = 'DIDL_REPLACEMENT_{0}'.format(len(self.inner_xml))
                 didl_string = etree.tostring(didl_tree, pretty_print=True)
@@ -200,7 +231,7 @@ class WSPart(object):
         self.body_formatted = etree.tostring(tree, pretty_print=True).decode(
             self.encoding)
 
-    def form_output(self):
+    def _form_output(self):
         """ Form the output """
         self.output = u''
         if self.external_inner_xml:
@@ -224,36 +255,62 @@ def __build_option_parser():
     parser.add_argument('files', metavar='FILES', type=str, nargs='+',
                         help='The files to analyze. If multiple files are '
                         'provided they will be considered part of a series.')
-#    parser.add_argument('--output-prefix', type=str, nargs=1,
-#                        help='The output filename prefix to use')
     parser.add_argument('--output-prefix', type=str,
                         help='The output filename prefix to use')
     parser.add_argument('--to-file', action='store_const', const=True,
                         help='Output xml to files', default=False)
+    parser.add_argument('--disable-color', action='store_const', const=False,
+                        help='Disable color in interactive mode',
+                        default=COLOR, dest='color')
+    parser.add_argument('--enable-color', action='store_const', const=True,
+                        help='Disable color in interactive mode',
+                        default=COLOR, dest='color')
     parser.add_argument('--to-browser', action='store_const', const=True,
                         help='Output xml to browser. Implies --to-file.',
                         default=False)
     parser.add_argument('--external-inner-xml', action='store_const',
                         const=True, help='Show the internal separately encoded'
-                        'xml externally instead in re-integrating it',
+                        'xml externally instead of re-integrating it',
                         default=False)
     return parser
 
-if __name__ == '__main__':
-    PARSER = __build_option_parser()
-    ARGS = PARSER.parse_args()
-    ANALYZE_WS = AnalyzeWS(ARGS)
-    for file_ in ARGS.files:
+
+def getch():
+    """ Read a single character non-echoed and return it. Recipy from:
+    http://code.activestate.com/recipes/
+    134892-getch-like-unbuffered-character-reading-from-stdin/
+    """
+    filedescriptor = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(filedescriptor)
+    if PLATFORM == 'win32':
+        character = msvcrt.getch()
+    else:
         try:
-            ANALYZE_WS.add_file(file_)
+            tty.setraw(sys.stdin.fileno())
+            character = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(filedescriptor, termios.TCSADRAIN, old_settings)
+    return character
+
+
+def main():
+    """ Main method of the script """
+    parser = __build_option_parser()
+    args = parser.parse_args()
+    analyze_ws = AnalyzeWS(args)
+    for file_ in args.files:
+        try:
+            analyze_ws.add_file(file_)
         except IOError:
             pass
-    ANALYZE_WS.complete_file_addition()
 
     # Start the chosen mode
-    if ARGS.to_file or ARGS.to_browser:
-        ANALYZE_WS.to_file_mode()
-        if ARGS.to_browser:
-            ANALYZE_WS.to_browser_mode()
+    if args.to_file or args.to_browser:
+        analyze_ws.to_file_mode()
+        if args.to_browser:
+            analyze_ws.to_browser_mode()
     else:
-        ANALYZE_WS.interactive_mode()
+        analyze_ws.interactive_mode()
+
+if __name__ == '__main__':
+    main()
