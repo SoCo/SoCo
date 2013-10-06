@@ -5,7 +5,9 @@ import xml.etree.cElementTree as XML
 import requests
 import select
 import socket
-import logging, traceback
+import logging
+import traceback
+import re
 from soco.utils import really_utf8, camel_to_underscore
 
 from .exceptions import SoCoException, UnknownSoCoException
@@ -36,26 +38,22 @@ class SonosDiscovery(object):
             rs, _, _ = select.select([self._sock], [], [], 1)
             if rs:
                 data, addr = self._sock.recvfrom(2048)
+                # Look for the model in parentheses in a line like this 
+                # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
+                search = re.search('SERVER.*\((.*)\)', data)
+                try:
+                    model = search.group(1)
+                except AttributeError:
+                    model = None
 
-                model = None
-
-                # Parse the return data
-                for line in data.split('\n'):
-                    if (line.startswith("SERVER:")):
-                        modelIndex = (line.rfind('('),line.rfind(')'))
-                        if (modelIndex[0] == -1 or modelIndex[1] == -1):
-                            continue
-                        model = line[modelIndex[0] + 1 : modelIndex[1]]
-
-                # BR100 =  Sonos Bridge
-                # ZPS3 = Zone Player 3
-                # ZPS5 = Zone Player 5
-                # ZP120 = Zone Player Amp 120 
-
+                # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
+                # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
+                # ZP90  = Sonos Connect
                 # If it's the bridge, then it's not a speaker and shouldn't
                 # be returned
                 if (model != None and model != "BR100"):
                     speakers.append(addr[0])
+
             else:
                 break
         return speakers
