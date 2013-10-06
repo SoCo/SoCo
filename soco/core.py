@@ -656,7 +656,12 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
+            zone_name = dom.findtext('.//ZoneName')
+            if zone_name is None:
+                logger.error('Could not retrieve ZoneName for device at ip: ' + self.speaker_ip + ', it could be a Sonos bridge...')
+                return self.speaker_info
+
+            self.speaker_info['zone_name'] = really_utf8(zone_name)
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
