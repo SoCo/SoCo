@@ -612,7 +612,7 @@ class SoCo(object):
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
-        elif d != '' and d != 'NOT_IMPLEMENTED' and d != None:
+        elif d not in ('', 'NOT_IMPLEMENTED', None):
             # Track metadata is returned in DIDL-Lite format
             metadata  = XML.fromstring(really_utf8(d))
             md_title  = metadata.findtext('.//{http://purl.org/dc/elements/1.1/}title')
@@ -635,7 +635,7 @@ class SoCo(object):
 
             if album_art is not None:
 		url = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-		if (url.startswith('http:') or url.startswith('https:')):
+		if url.startswith(('http:', 'https:')):
 			track['album_art'] = url
 		else:
 			track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
