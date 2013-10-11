@@ -34,7 +34,11 @@ try:
 except ImportError:
     print 'Module "scapy" could not be imported. Please install it. Exiting!'
     sys.exit(101)
-from lxml import etree
+try:
+    from lxml import etree
+except ImportError:
+    print 'Module "lxml" could not be imported. Please install it. Exiting!'
+    sys.exit(102)
 import subprocess
 
 
@@ -43,7 +47,10 @@ ENDS = ['</s:Envelope>', '</e:propertyset>']
 
 
 class AnalyzeWS(object):
-    """ Class for analysis of WireShark dumps """
+    """ Class for analysis of WireShark dumps. Also shows the parts of the
+    WireShark dumps syntax highlighted in the terminal and/or writes them to
+    files and shows them in a browser.
+    """
 
     def __init__(self, args):
         self.messages = []
@@ -58,7 +65,7 @@ class AnalyzeWS(object):
 
     def add_file(self, filename):
         """ Add a file to the captured content """
-        # Use the first file as prefix if none is given
+        # Use the file name as prefix if none is given
         if self.output_prefix is None:
             self.output_prefix = filename
         # Check if the file is present, since rdpcap will not do that
@@ -78,22 +85,22 @@ class AnalyzeWS(object):
                         self.messages[-1].finalize_content()
                 elif any([end in load for end in ENDS]):
                     # If there is an open WSPart
-                    if len(self.messages) > 0 and\
-                            self.messages[-1].write_closed is False:
+                    if len(self.messages) > 0 and not\
+                            self.messages[-1].write_closed:
                         self.messages[-1].add_content(load)
                         self.messages[-1].finalize_content()
                     else:
                         pass
                 else:
                     # If there is an open WSPart
-                    if len(self.messages) > 0 and\
-                            self.messages[-1].write_closed is False:
+                    if len(self.messages) > 0 and not\
+                            self.messages[-1].write_closed:
                         self.messages[-1].add_content(load)
                     else:
                         pass
             except AttributeError:
                 pass
-        if len(self.messages) > 0 and self.messages[-1].write_closed is False:
+        if len(self.messages) > 0 and not self.messages[-1].write_closed:
             del self.messages[-1]
 
     def to_file_mode(self):
@@ -160,16 +167,17 @@ class AnalyzeWS(object):
             _, width = os.popen('stty size', 'r').read().split()
             width = int(width)
 
-        file_exists = '    '
-        if os.path.exists(self.__create_file_name(position)):
-            file_exists = 'FILE'
+        file_exists_label = 'FILE'
+        if not os.path.exists(self.__create_file_name(position)):
+            file_exists_label = ' ' * len(file_exists_label)
         # Clear the screen
         print '\x1b[2J\x1b[H'
         # Menu
         menu = ('(p)revious, (n)ext | (b)rowser | to (f)ile | {0} | (q)uit | '
-                '{1}/{2} | {3}\n{4}\n').format(file_exists,
-                    position, len(self.messages) - 1, status, '-' * width
-                )
+                '{1}/{2} | {3}\n{4}\n').format(file_exists_label,
+                                               position,
+                                               len(self.messages) - 1,
+                                               status, '-' * width)
         print menu
         # Content
         content = self.messages[position].output.encode('utf-8')
@@ -248,7 +256,24 @@ class WSPart(object):  # pylint: disable=R0902
 
 def __build_option_parser():
     """ Build the option parser for this script """
-    description = ('Tool to analyze Wireshark dumps of Sonos traffic')
+    description = (
+        'Tool to analyze Wireshark dumps of Sonos traffic.\n'
+        '\n'
+        'The files that are input to this script must be in the '
+        'Wireshark/tcpdump/...-libpcap format, which can be exported from '
+        'Wireshark.'
+        '\n'
+        'To use the open in browser mode, a configuration file must be '
+        'written. It should be in the same directory as this script and have '
+        'the "name analyse_ws.ini". An example of such a file is given below:'
+        '[General]'
+        'browser_command: epiphany {0}'
+        '\n'
+        'The browser command should be any command that opens a new tab in '
+        'the program you wish to read the Wireshark dumps in.'
+        )
+    
+    # 
     parser = \
         argparse.ArgumentParser(description=description,
                                 formatter_class=argparse.RawTextHelpFormatter)
