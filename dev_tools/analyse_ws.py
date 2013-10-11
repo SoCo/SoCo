@@ -41,7 +41,7 @@ except ImportError:
     sys.exit(102)
 import subprocess
 
-
+# Text bits that starts and ends the Sonos UPnP content
 STARTS = ['<s:Envelope', '<e:propertyset']
 ENDS = ['</s:Envelope>', '</e:propertyset>']
 
@@ -61,9 +61,9 @@ class AnalyzeWS(object):
                 self.config = ConfigParser.ConfigParser()
                 self.config.readfp(file__)
         except IOError:
-            pass
+            self.config = None
 
-    def add_file(self, filename):
+    def set_file(self, filename):
         """ Add a file to the captured content """
         # Use the file name as prefix if none is given
         if self.output_prefix is None:
@@ -79,16 +79,20 @@ class AnalyzeWS(object):
             # See if there is a field called load
             try:
                 load = packet.getfieldval('load')
+                # If there is a start in load
                 if any([start in load for start in STARTS]):
                     self.messages.append(WSPart(load, self.args))
+                    # and there is also an end
                     if any([end in load for end in ENDS]):
                         self.messages[-1].finalize_content()
+                # If there is an end in load
                 elif any([end in load for end in ENDS]):
                     # If there is an open WSPart
                     if len(self.messages) > 0 and not\
                             self.messages[-1].write_closed:
                         self.messages[-1].add_content(load)
                         self.messages[-1].finalize_content()
+                    # Ignore ends before start
                     else:
                         pass
                 else:
@@ -96,6 +100,7 @@ class AnalyzeWS(object):
                     if len(self.messages) > 0 and not\
                             self.messages[-1].write_closed:
                         self.messages[-1].add_content(load)
+                    # else ignore
                     else:
                         pass
             except AttributeError:
@@ -136,10 +141,21 @@ class AnalyzeWS(object):
         browser
         """
         filename = self.__to_file(index)
-        command = self.config.get('General', 'browser_command')
+        try:
+            command = self.config.get('General', 'browser_command')
+        except (ConfigParser.NoOptionError, AttributeError):
+            print 'Incorrect or missing .ini file. See --help.'
+            sys.exit(5)
         command = str(command).format(filename)
-        subprocess.call(command, shell=True, stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE)
+        command_list = command.split(' ')
+        try:
+            subprocess.Popen(command_list, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE)
+        except OSError:
+            print 'Unable to execute the browsercommand:'
+            print command
+            print 'Exiting!'
+            sys.exit(21)
 
     def interactive_mode(self):
         """ Interactive mode """
@@ -171,7 +187,13 @@ class AnalyzeWS(object):
         if not os.path.exists(self.__create_file_name(position)):
             file_exists_label = ' ' * len(file_exists_label)
         # Clear the screen
-        print '\x1b[2J\x1b[H'
+        if PLATFORM == 'win32':
+            # Ugly hack until someone figures out a better way for Windows
+            # probably something with a cls command, but I cannot test it
+            for _ in range(50):
+                print
+        else:
+            print '\x1b[2J\x1b[H'  # Clear screen
         # Menu
         menu = ('(p)revious, (n)ext | (b)rowser | to (f)ile | {0} | (q)uit | '
                 '{1}/{2} | {3}\n{4}\n').format(file_exists_label,
@@ -225,16 +247,25 @@ class WSPart(object):  # pylint: disable=R0902
     def _init_xml(self):
         """ Parse the present body as xml """
         tree = etree.fromstring(self.body)
+        # Extract and replace inner DIDL xml in tags
         for text in tree.xpath('.//text()[contains(., "DIDL")]'):
             item = text.getparent()
             didl_tree = etree.fromstring(item.text)
             if self.external_inner_xml:
                 item.text = 'DIDL_REPLACEMENT_{0}'.format(len(self.inner_xml))
-                didl_string = etree.tostring(didl_tree, pretty_print=True)
-                self.inner_xml.append(didl_string.decode(self.encoding))
+                self.inner_xml.append(didl_tree)
             else:
                 item.text = None
                 item.append(didl_tree)
+
+        # Extract and replace inner DIDL xml in properties in inner xml
+        for inner_tree in self.inner_xml:
+            for item in inner_tree.xpath('//*[contains(@val, "DIDL")]'):
+                if self.external_inner_xml:
+                    didl_tree = etree.fromstring(item.attrib['val'])
+                    item.attrib['val'] = 'DIDL_REPLACEMENT_{0}'.\
+                        format(len(self.inner_xml))
+                    self.inner_xml.append(didl_tree)
 
         self.body_formatted = etree.tostring(tree, pretty_print=True).decode(
             self.encoding)
@@ -249,7 +280,8 @@ class WSPart(object):  # pylint: disable=R0902
 
         if self.external_inner_xml:
             for number, didl in enumerate(self.inner_xml):
-                self.output += u'\n<!-- DIDL_{0} -->\n{1}'.format(number, didl)
+                self.output += u'\n<!-- DIDL_{0} -->\n{1}'.\
+                    format(number, etree.tostring(didl, pretty_print=True))
             self.output += u'</Dummy_tag_to_create_valid_xml_on_external_'\
                            'inner_xml>'
 
@@ -260,42 +292,40 @@ def __build_option_parser():
         'Tool to analyze Wireshark dumps of Sonos traffic.\n'
         '\n'
         'The files that are input to this script must be in the '
-        'Wireshark/tcpdump/...-libpcap format, which can be exported from '
+        '"Wireshark/tcpdump/...-libpcap" format, which can be exported from '
         'Wireshark.'
         '\n'
-        'To use the open in browser mode, a configuration file must be '
+        'To use the open in browser function, a configuration file must be '
         'written. It should be in the same directory as this script and have '
-        'the "name analyse_ws.ini". An example of such a file is given below:'
-        '[General]'
-        'browser_command: epiphany {0}'
+        'the name "analyse_ws.ini". An example of such a file is given '
+        'below:\n'
+        '[General]\n'
+        'browser_command: epiphany\n'
         '\n'
         'The browser command should be any command that opens a new tab in '
-        'the program you wish to read the Wireshark dumps in.'
-        )
-    
-    # 
+        'the program you wish to read the Wireshark dumps in.')
+
     parser = \
         argparse.ArgumentParser(description=description,
                                 formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('files', metavar='FILES', type=str, nargs='+',
-                        help='The files to analyze. If multiple files are '
-                        'provided they will be considered part of a series.')
+    parser.add_argument('file_', metavar='FILE', type=str, nargs=1,
+                        help='the file to analyze')
     parser.add_argument('--output-prefix', type=str,
-                        help='The output filename prefix to use')
+                        help='the output filename prefix to use')
     parser.add_argument('--to-file', action='store_const', const=True,
-                        help='Output xml to files', default=False)
+                        help='output xml to files', default=False)
     parser.add_argument('--disable-color', action='store_const', const=False,
-                        help='Disable color in interactive mode',
+                        help='disable color in interactive mode',
                         default=COLOR, dest='color')
     parser.add_argument('--enable-color', action='store_const', const=True,
-                        help='Disable color in interactive mode',
+                        help='disable color in interactive mode',
                         default=COLOR, dest='color')
     parser.add_argument('--to-browser', action='store_const', const=True,
-                        help='Output xml to browser. Implies --to-file.',
+                        help='output xml to browser, implies --to-file',
                         default=False)
     parser.add_argument('--external-inner-xml', action='store_const',
-                        const=True, help='Show the internal separately encoded'
-                        'xml externally instead of re-integrating it',
+                        const=True, help='show the internal separately '
+                        'encoded xml externally instead of re-integrating it',
                         default=False)
     return parser
 
@@ -323,11 +353,10 @@ def main():
     parser = __build_option_parser()
     args = parser.parse_args()
     analyze_ws = AnalyzeWS(args)
-    for file_ in args.files:
-        try:
-            analyze_ws.add_file(file_)
-        except IOError:
-            pass
+    try:
+        analyze_ws.set_file(args.file_[0])
+    except IOError:
+        pass
 
     # Start the chosen mode
     if args.to_file or args.to_browser:
