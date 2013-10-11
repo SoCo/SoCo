@@ -51,7 +51,7 @@ class SonosDiscovery(object):
                 # ZP90  = Sonos Connect
                 # If it's the bridge, then it's not a speaker and shouldn't
                 # be returned
-                if (model != None and model != "BR100"):
+                if (model and model != "BR100"):
                     speakers.append(addr[0])
 
             else:
