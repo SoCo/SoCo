@@ -13,7 +13,6 @@ import logging
 import traceback
 import re
 from soco.utils import really_utf8, camel_to_underscore
-
 from .exceptions import SoCoException, UnknownSoCoException
 
 LOGGER = logging.getLogger(__name__)
@@ -35,7 +34,6 @@ class SonosDiscovery(object):  # pylint: disable=R0903
     def get_speaker_ips(self):
         """ Get a list of ips for Sonos devices that can be controlled """
         speakers = []
-
         self._sock.sendto(PLAYER_SEARCH, (MCAST_GRP, MCAST_PORT))
 
         while True:
@@ -57,7 +55,6 @@ class SonosDiscovery(object):  # pylint: disable=R0903
                 # be returned
                 if (model and model != "BR100"):
                     speakers.append(addr[0])
-
             else:
                 break
         return speakers
@@ -131,7 +128,6 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
-
         response = self.__send_command(DEVICE_ENDPOINT, SET_PLAYER_NAME_ACTION,
                                        body)
 
@@ -186,7 +182,6 @@ class SoCo(object):  # pylint: disable=R0904
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
         body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
-
         response = self.__send_command(TRANSPORT_ENDPOINT,
                                        SET_TRANSPORT_ACTION, body)
         if not (response == PLAY_FROM_QUEUE_RESPONSE):
@@ -194,8 +189,8 @@ class SoCo(object):  # pylint: disable=R0904
 
         # second, set the track number with a seek command
         body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index + 1)
-
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
+
         if "errorCode" in response:
             self.__parse_error(response)
 
@@ -233,7 +228,6 @@ class SoCo(object):  # pylint: disable=R0904
         """
 
         body = PLAY_URI_BODY_TEMPLATE.format(uri=uri, meta=meta)
-
         response = self.__send_command(TRANSPORT_ENDPOINT,
                                        SET_TRANSPORT_ACTION, body)
 
@@ -351,17 +345,12 @@ class SoCo(object):  # pylint: disable=R0904
         if mute is None:
             response = self.__send_command(RENDERING_ENDPOINT, GET_MUTE_ACTION,
                                            GET_MUTE_BODY)
-
             dom = XML.fromstring(response)
-
             mute_state = dom.findtext('.//CurrentMute')
-
             return int(mute_state)
         else:
             mute_value = '1' if mute else '0'
-
             body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
-
             response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION,
                                            body)
 
@@ -387,7 +376,6 @@ class SoCo(object):  # pylint: disable=R0904
         if volume is not None:
             volume = max(0, min(volume, 100))  # Coerce in range
             body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
-
             response = self.__send_command(RENDERING_ENDPOINT,
                                            SET_VOLUME_ACTION, body)
 
@@ -397,11 +385,8 @@ class SoCo(object):  # pylint: disable=R0904
             response = self.__send_command(RENDERING_ENDPOINT,
                                            GET_VOLUME_ACTION,
                                            GET_VOLUME_BODY)
-
             dom = XML.fromstring(response)
-
             volume = dom.findtext('.//CurrentVolume')
-
             return int(volume)
 
     def bass(self, bass=None):
@@ -422,7 +407,6 @@ class SoCo(object):  # pylint: disable=R0904
         if bass is not None:
             bass = max(-10, min(bass, 10))  # Coerce in range
             body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
-
             response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION,
                                            body)
 
@@ -431,11 +415,8 @@ class SoCo(object):  # pylint: disable=R0904
         else:
             response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION,
                                            GET_BASS_BODY)
-
             dom = XML.fromstring(response)
-
             bass = dom.findtext('.//CurrentBass')
-
             return int(bass)
 
     def treble(self, treble=None):
@@ -457,7 +438,6 @@ class SoCo(object):  # pylint: disable=R0904
         if treble is not None:
             treble = max(-10, min(treble, 10))  # Coerce in range
             body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
-
             response = self.__send_command(RENDERING_ENDPOINT,
                                            SET_TREBLE_ACTION, body)
 
@@ -466,11 +446,8 @@ class SoCo(object):  # pylint: disable=R0904
         else:
             response = self.__send_command(RENDERING_ENDPOINT,
                                            GET_TREBLE_ACTION, GET_TREBLE_BODY)
-
             dom = XML.fromstring(response)
-
             treble = dom.findtext('.//CurrentTreble')
-
             return int(treble)
 
     def set_loudness(self, loudness):
@@ -489,9 +466,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         loudness_value = '1' if loudness else '0'
-
         body = SET_LOUDNESS_BODY_TEMPLATE.format(loudness=loudness_value)
-
         response = self.__send_command(RENDERING_ENDPOINT, SET_LOUDNESS_ACTION,
                                        body)
 
@@ -543,7 +518,6 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
-
         response = self.__send_command(TRANSPORT_ENDPOINT,
                                        SET_TRANSPORT_ACTION, body)
 
@@ -584,9 +558,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         speaker_info = self.get_speaker_info()
-
         body = SET_LINEIN_BODY_TEMPLATE.format(speaker_uid=speaker_info['uid'])
-
         response = self.__send_command(TRANSPORT_ENDPOINT,
                                        SET_TRANSPORT_ACTION, body)
 
@@ -609,9 +581,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         led_state = 'On' if led_on else 'Off'
-
         body = SET_LEDSTATE_BODY_TEMPLATE.format(state=led_state)
-
         response = self.__send_command(DEVICE_ENDPOINT, SET_LEDSTATE_ACTION,
                                        body)
 
@@ -636,27 +606,22 @@ class SoCo(object):  # pylint: disable=R0904
         response = self.__send_command(TRANSPORT_ENDPOINT,
                                        GET_CUR_TRACK_ACTION,
                                        GET_CUR_TRACK_BODY)
-
         dom = XML.fromstring(really_utf8(response))
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
                  'position': ''}
-
         track['playlist_position'] = dom.findtext('.//Track')
         track['duration'] = dom.findtext('.//TrackDuration')
         track['uri'] = dom.findtext('.//TrackURI')
         track['position'] = dom.findtext('.//RelTime')
 
         metadata = dom.findtext('.//TrackMetaData')
-
         # Duration seems to be '0:00:00' when listening to radio
         if metadata != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(really_utf8(metadata))
-
             # Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:'
                                           'metadata-1-0/}streamContent')
-
             index = trackinfo.find(' - ')
 
             if index > -1:
@@ -682,18 +647,15 @@ class SoCo(object):  # pylint: disable=R0904
             track['title'] = ""
             if (md_title):
                 track['title'] = really_utf8(md_title)
-
             track['artist'] = ""
             if (md_artist):
                 track['artist'] = really_utf8(md_artist)
-
             track['album'] = ""
             if (md_album):
                 track['album'] = really_utf8(md_album)
 
             album_art = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-
             if album_art is not None:
                 url = metadata.findtext(
                     './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
@@ -818,7 +780,6 @@ class SoCo(object):  # pylint: disable=R0904
 
             for i in grp:
                 response = requests.get('http://' + i + ':1400/status')
-
                 if response.status_code == 200:
                     self.speakers_ip.append(i)
 
@@ -873,9 +834,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         queue = []
-
         body = GET_QUEUE_BODY_TEMPLATE.format(start, max_items)
-
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
                                        BROWSE_ACTION, body)
 
@@ -1082,7 +1041,6 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         body = ADD_TO_QUEUE_BODY_TEMPLATE.format(uri=uri)
-
         response = self.__send_command(TRANSPORT_ENDPOINT, ADD_TO_QUEUE_ACTION,
                                        body)
         if "errorCode" in response:
@@ -1175,15 +1133,12 @@ class SoCo(object):  # pylint: disable=R0904
 
         body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start,
                                                         max_items)
-
         response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
                                        BROWSE_ACTION, body)
-
         dom = XML.fromstring(really_utf8(response))
 
         result = {}
         favorites = []
-
         results_xml = dom.findtext('.//Result')
 
         if results_xml != '':
@@ -1193,12 +1148,10 @@ class SoCo(object):  # pylint: disable=R0904
             for item in metadata.findall(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
-
                 favorite['title'] = really_utf8(item.findtext(
                     './/{http://purl.org/dc/elements/1.1/}title'))
                 favorite['uri'] = item.findtext(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
-
                 favorites.append(favorite)
 
         result['total'] = dom.findtext('.//TotalMatches', 0)
@@ -1220,7 +1173,6 @@ class SoCo(object):  # pylint: disable=R0904
         }
 
         soap = SOAP_TEMPLATE.format(body=body)
-
         request = requests.post('http://' + self.speaker_ip + ':1400' +
                                 endpoint, data=soap, headers=headers)
 
@@ -1237,7 +1189,6 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         error = XML.fromstring(response)
-
         error_code = error.findtext(
             './/{urn:schemas-upnp-org:control-1-0}errorCode')
 
