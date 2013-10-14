@@ -681,7 +681,8 @@ class SoCo(object):  # pylint: disable=R0904
         if self.speaker_info and refresh is False:
             return self.speaker_info
         else:
-            response = requests.get('http://' + self.speaker_ip + ':1400/status/zp')
+            response = requests.get('http://' + self.speaker_ip +
+                                    ':1400/status/zp')
             dom = XML.fromstring(response.content)
 
         if dom.findtext('.//ZoneName') is not None:
