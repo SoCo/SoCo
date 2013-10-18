@@ -117,7 +117,8 @@ class AnalyzeWS(object):
         """ Write a single message to file """
         filename = self.__create_file_name(index)
         try:
-            with codecs.open(filename, mode='w', encoding='utf-8') as file__:
+            with codecs.open(filename, mode='w',
+                             encoding=self.messages[index].encoding) as file__:
                 file__.write(self.messages[index].output)
         except IOError as excep:
             print 'Unable for open the file \'{0}\' for writing. The '\
@@ -159,10 +160,18 @@ class AnalyzeWS(object):
 
     def interactive_mode(self):
         """ Interactive mode """
+        if PLATFORM == 'win32':
+            # Defaulting to 80 on windows, better ideas are welcome, but the
+            # solutions I found online are rather bulky
+            width = 80
+        else:
+            _, width = os.popen('stty size', 'r').read().split()
+            width = int(width)
+
         position = 0
         action = None
         while action != 'q':
-            self.__update_window(position)
+            self.__update_window(position, width)
             action = getch()
             if action == 'n':
                 position = max(min(len(self.messages) - 1, position + 1), 0)
@@ -173,19 +182,12 @@ class AnalyzeWS(object):
             elif action == 'f':
                 self.__to_file(position)
 
-    def __update_window(self, position, status=''):
+    def __update_window(self, position, width):
         """ Update the window with the menu and the new text """
-        if PLATFORM == 'win32':
-            # Defaulting to 80 on windows, better ideas are welcome, but the
-            # solutions I found online are rather bulky
-            width = 80
-        else:
-            _, width = os.popen('stty size', 'r').read().split()
-            width = int(width)
-
         file_exists_label = 'FILE'
         if not os.path.exists(self.__create_file_name(position)):
             file_exists_label = ' ' * len(file_exists_label)
+
         # Clear the screen
         if PLATFORM == 'win32':
             # Ugly hack until someone figures out a better way for Windows
@@ -196,10 +198,8 @@ class AnalyzeWS(object):
             print '\x1b[2J\x1b[H'  # Clear screen
         # Menu
         menu = ('(p)revious, (n)ext | (b)rowser | to (f)ile | {0} | (q)uit | '
-                '{1}/{2} | {3}\n{4}\n').format(file_exists_label,
-                                               position,
-                                               len(self.messages) - 1,
-                                               status, '-' * width)
+                '{1}/{2} |\n{3}\n').format(file_exists_label, position,
+                                           len(self.messages) - 1, '-' * width)
         print menu
         # Content
         content = self.messages[position].output.encode('utf-8')
@@ -209,7 +209,7 @@ class AnalyzeWS(object):
         print out
 
 
-class WSPart(object):  # pylint: disable=R0902
+class WSPart(object):
     """ This class parses and represents a single Sonos UPnP message """
 
     def __init__(self, captured, args):
@@ -220,33 +220,31 @@ class WSPart(object):  # pylint: disable=R0902
         self.write_closed = False
         # Analyze initial xml part
         try:
-            raw_head, raw_body = captured.split('\r\n\r\n')
+            raw_head, self.raw_body = captured.split('\r\n\r\n')
         except ValueError:
             raw_head = ''
-            raw_body = captured
+            self.raw_body = captured
         # Get encoding
         search = re.search(r'.*charset="(.*)"', raw_head)
         try:
             self.encoding = search.group(1)
         except AttributeError:
             self.encoding = 'utf-8'
-        # Decode the body
-        self.head = raw_head.decode(self.encoding)
-        self.body = raw_body.decode(self.encoding)
 
     def add_content(self, captured):
         """ Adds content to the main UPnP message """
-        self.body += captured.decode(self.encoding)
+        self.raw_body += captured
 
     def finalize_content(self):
         """ Finalize the additons """
         self.write_closed = True
-        self._init_xml()
+        body = self.raw_body.decode(self.encoding)
+        self._init_xml(body)
         self._form_output()
 
-    def _init_xml(self):
+    def _init_xml(self, body):
         """ Parse the present body as xml """
-        tree = etree.fromstring(self.body)
+        tree = etree.fromstring(body.encode(self.encoding))
         # Extract and replace inner DIDL xml in tags
         for text in tree.xpath('.//text()[contains(., "DIDL")]'):
             item = text.getparent()
