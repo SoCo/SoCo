@@ -50,6 +50,18 @@ class AnalyzeWS(object):
     """ Class for analysis of WireShark dumps. Also shows the parts of the
     WireShark dumps syntax highlighted in the terminal and/or writes them to
     files and shows them in a browser.
+
+    The order of processing a file with this class is the following. The
+    class is initialized purely with options. All the content is added with
+    the set_file method. This method will load the ws file with rdpcap. For
+    each part in the ws file that has a load, it will look for Sonos
+    content. If such content is present one of three things will happen. If
+    it is the beginning of a Sonos message, it will initialize a WSPart. If
+    it is the middle part, it will add it to the content of the current
+    WSPart with WSPart.add_content. If it is the end, it will finalize the
+    WSPart with WSPart.finalize_content. Finalizing the WSPart will, apart
+    from closing it for writing also decode the body and parse the XML.
+
     """
 
     def __init__(self, args):
@@ -64,7 +76,7 @@ class AnalyzeWS(object):
             self.config = None
 
     def set_file(self, filename):
-        """ Add a file to the captured content """
+        """ Analyse the file with the captured content """
         # Use the file name as prefix if none is given
         if self.output_prefix is None:
             self.output_prefix = filename
@@ -109,7 +121,7 @@ class AnalyzeWS(object):
             del self.messages[-1]
 
     def to_file_mode(self):
-        """ To file mode """
+        """ Write all the messages to files """
         for index in range(len(self.messages)):
             self.__to_file(index)
 
@@ -133,7 +145,7 @@ class AnalyzeWS(object):
         return '{0}_{1}.xml'.format(self.output_prefix, index)
 
     def to_browser_mode(self):
-        """ To browser mode """
+        """ Write all the messages til files and open them in the browser """
         for index in range(len(self.messages)):
             self.__to_browser(index)
 
@@ -202,7 +214,7 @@ class AnalyzeWS(object):
                                            len(self.messages) - 1, '-' * width)
         print menu
         # Content
-        content = self.messages[position].output.encode('utf-8')
+        content = self.messages[position].output
         out = content
         if self.args.color:
             out = pygments.highlight(content, XmlLexer(), TerminalFormatter())
