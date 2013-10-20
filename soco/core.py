@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
-import xml.etree.cElementTree as XML
+from .utils import PY2, PY3
+
+if PY2:
+    import xml.etree.cElementTree as XML
+else:
+    import xml.etree.ElementTree as XML
 
 import requests
 import select
@@ -8,12 +14,11 @@ import socket
 import logging
 import traceback
 import re
-from soco.utils import really_utf8, camel_to_underscore
 
+from .utils import really_unicode, really_utf8, camel_to_underscore
 from .exceptions import SoCoException, UnknownSoCoException
 
 logger = logging.getLogger(__name__)
-
 
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
@@ -32,7 +37,7 @@ class SonosDiscovery(object):
     def get_speaker_ips(self):
         speakers = []
 
-        self._sock.sendto(PLAYER_SEARCH, (MCAST_GRP, MCAST_PORT))
+        self._sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
         while True:
             rs, _, _ = select.select([self._sock], [], [], 1)
@@ -40,9 +45,9 @@ class SonosDiscovery(object):
                 data, addr = self._sock.recvfrom(2048)
                 # Look for the model in parentheses in a line like this 
                 # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-                search = re.search('SERVER.*\((.*)\)', data)
+                search = re.search(b'SERVER.*\((.*)\)', data)
                 try:
-                    model = search.group(1)
+                    model = really_unicode(search.group(1))
                 except AttributeError:
                     model = None
 
@@ -144,7 +149,8 @@ class SoCo(object):
         """
         modes = ('NORMAL','SHUFFLE_NOREPEAT','SHUFFLE','REPEAT_ALL')
         playmode = playmode.upper()
-        if not playmode in modes: raise KeyError, "invalid play mode"
+        if not playmode in modes:
+            raise KeyError("invalid play mode")
 
         action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
         body = '<u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1"><InstanceID>0</InstanceID><NewPlayMode>'+playmode+'</NewPlayMode></u:SetPlayMode>'
@@ -267,7 +273,7 @@ class SoCo(object):
         """
         import re
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$',timestamp):
-            raise ValueError, "invalid timestamp, use HH:MM:SS format"
+            raise ValueError("invalid timestamp, use HH:MM:SS format")
 
         body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
         response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
@@ -651,11 +657,11 @@ class SoCo(object):
             album_art = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
 
             if album_art is not None:
-		url = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-		if url.startswith(('http:', 'https:')):
-			track['album_art'] = url
-		else:
-			track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
+                url = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
+                if url.startswith(('http:', 'https:')):
+                	track['album_art'] = url
+                else:
+                	track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
 
         return track
 
@@ -677,8 +683,8 @@ class SoCo(object):
 
             dom = XML.fromstring(response.content)
 
-	    if (dom.findtext('.//ZoneName') != None):
-		    self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
+        if (dom.findtext('.//ZoneName') != None):
+            self.speaker_info['zone_name'] = really_utf8(dom.findtext('.//ZoneName'))
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = dom.findtext('.//SerialNumber')
@@ -1133,7 +1139,7 @@ class SoCo(object):
 
         r = requests.post('http://' + self.speaker_ip + ':1400' + endpoint, data=soap, headers=headers)
 
-        return r.content
+        return r.text
 
     def __parse_error(self, response):
         """ Parse an error returned from the Sonos speaker.

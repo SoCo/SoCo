@@ -1,10 +1,19 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 """ Provides general utility functions to be used across modules """
 
-from types import StringType, UnicodeType
+import sys
 import re
 
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+if PY2:
+    from types import StringType, UnicodeType
+else:
+    StringType = bytes
+    UnicodeType = str
 
 def really_unicode(in_string):
     """

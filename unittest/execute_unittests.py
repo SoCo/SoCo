@@ -110,8 +110,8 @@ def __coverages(modules_to_run, args):
 
         # Check is there are unused tests in the unit test module
         for class_ in list(set(classes.keys()) - set(methods.keys())):
-            print 'WARNING: The unit test {0} is no longer used'\
-                .format(classes[class_])
+            print('WARNING: The unit test {0} is no longer used'\
+                .format(classes[class_]))
 
         percentage = float(len(classes)) / len(methods) * 100
         string = '\n{0:.1f}% methods covered\n'.format(percentage)
