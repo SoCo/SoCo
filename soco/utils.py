@@ -15,6 +15,7 @@ else:
     StringType = bytes
     UnicodeType = str
 
+
 def really_unicode(in_string):
     """
     Ensures s is returned as a unicode string and not just a string through

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from .utils import PY2, PY3
+from .utils import PY2
 
 if PY2:
     import xml.etree.cElementTree as XML
@@ -20,6 +20,7 @@ from .exceptions import SoCoException, UnknownSoCoException
 
 logger = logging.getLogger(__name__)
 
+
 class SonosDiscovery(object):
     """A simple class for discovering Sonos speakers.
 
@@ -30,9 +31,8 @@ class SonosDiscovery(object):
 
     def __init__(self):
         self._sock = socket.socket(
-                socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
-
 
     def get_speaker_ips(self):
         speakers = []
@@ -659,9 +659,9 @@ class SoCo(object):
             if album_art is not None:
                 url = metadata.findtext('.//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
                 if url.startswith(('http:', 'https:')):
-                	track['album_art'] = url
+                    track['album_art'] = url
                 else:
-                	track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
+                    track['album_art'] = 'http://' + self.speaker_ip + ':1400' + url
 
         return track
 
