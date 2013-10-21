@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from .utils import PY2
-
-if PY2:
+try:
     import xml.etree.cElementTree as XML
-else:
+except ImportError:
     import xml.etree.ElementTree as XML
 
 import requests
