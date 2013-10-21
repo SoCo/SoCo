@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals, print_function
 
 from ..plugins import SoCoPlugin
 
@@ -22,7 +23,7 @@ class ExamplePlugin(SoCoPlugin):
 
     @property
     def name(self):
-        return u'Example Plugin for {name}'.format(name=self.username)
+        return 'Example Plugin for {name}'.format(name=self.username)
 
     def music_plugin_play(self):
         """ Play some music
@@ -30,7 +31,7 @@ class ExamplePlugin(SoCoPlugin):
         This is just a reimplementation of the ordinary play function, to show
         how we can use the general upnp methods from soco """
 
-        print 'Hi,', self.username
+        print('Hi,', self.username)
 
         response = self.soco.send_command(
             TRANSPORT_ENDPOINT, PLUGIN_PLAY_ACTION, PLUGIN_PLAY_BODY)
@@ -46,7 +47,7 @@ class ExamplePlugin(SoCoPlugin):
         This methods shows how, if we need it, we can use the soco
         functionality from inside the plugins """
 
-        print 'Bye,', self.username
+        print('Bye,', self.username)
         self.soco.stop()
 
 
