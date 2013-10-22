@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 """ SoCo (Sonos Controller) is a simple library to control Sonos speakers """
 
@@ -9,6 +10,6 @@ __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
 
-from core import SonosDiscovery, SoCo, SoCoException, UnknownSoCoException
+from .core import SonosDiscovery, SoCo, SoCoException, UnknownSoCoException
 
 __all__ = ['SonosDiscovery', 'SoCo', 'SoCoException', 'UnknownSoCoException']

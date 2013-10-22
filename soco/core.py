@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0302
+from __future__ import unicode_literals
 
 """ The core module contains SonosDiscovery and SoCo classes that implement
 the main entry to the SoCo functionality
 """
 
-import xml.etree.cElementTree as XML
+try:
+    import xml.etree.cElementTree as XML
+except ImportError:
+    import xml.etree.ElementTree as XML
+
 import requests
 import select
 import socket
 import logging
 import traceback
 import re
-from soco.utils import really_utf8, camel_to_underscore
+
+from .utils import really_unicode, really_utf8, camel_to_underscore
 from .exceptions import SoCoException, UnknownSoCoException
 
 LOGGER = logging.getLogger(__name__)
@@ -34,7 +40,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
     def get_speaker_ips(self):
         """ Get a list of ips for Sonos devices that can be controlled """
         speakers = []
-        self._sock.sendto(PLAYER_SEARCH, (MCAST_GRP, MCAST_PORT))
+        self._sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
         while True:
             response, _, _ = select.select([self._sock], [], [], 1)
@@ -42,9 +48,9 @@ class SonosDiscovery(object):  # pylint: disable=R0903
                 data, addr = self._sock.recvfrom(2048)
                 # Look for the model in parentheses in a line like this
                 # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-                search = re.search(r'SERVER.*\((.*)\)', data)
+                search = re.search(rb'SERVER.*\((.*)\)', data)
                 try:
-                    model = search.group(1)
+                    model = really_unicode(search.group(1))
                 except AttributeError:
                     model = None
 
@@ -1174,10 +1180,10 @@ class SoCo(object):  # pylint: disable=R0904
         }
 
         soap = SOAP_TEMPLATE.format(body=body)
-        request = requests.post('http://' + self.speaker_ip + ':1400' +
+        response = requests.post('http://' + self.speaker_ip + ':1400' +
                                 endpoint, data=soap, headers=headers)
 
-        return request.content
+        return response.text
 
     @staticmethod
     def __parse_error(response):
