@@ -6,12 +6,10 @@ from __future__ import unicode_literals
 import sys
 import re
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
-
-if PY2:
+try:
     from types import StringType, UnicodeType
-else:
+
+except ImportError:
     StringType = bytes
     UnicodeType = str
 
