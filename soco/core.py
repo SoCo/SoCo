@@ -48,7 +48,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
                 data, addr = self._sock.recvfrom(2048)
                 # Look for the model in parentheses in a line like this
                 # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-                search = re.search(rb'SERVER.*\((.*)\)', data)
+                search = re.search(br'SERVER.*\((.*)\)', data)
                 try:
                     model = really_unicode(search.group(1))
                 except AttributeError:
