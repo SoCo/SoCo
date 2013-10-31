@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# pylint: disable=E0611
+# pylint: disable=E0611,R0913
 
 """ Script to analyse ws dumps """
 
 import argparse
 import os
 import sys
+import math
 PLATFORM = sys.platform.lower()
 if PLATFORM == 'win32':
     import msvcrt
@@ -74,6 +75,7 @@ class AnalyzeWS(object):
                 self.config.readfp(file__)
         except IOError:
             self.config = None
+        self.pages = {}
 
     def set_file(self, filename):
         """ Analyse the file with the captured content """
@@ -175,30 +177,39 @@ class AnalyzeWS(object):
         if PLATFORM == 'win32':
             # Defaulting to 80 on windows, better ideas are welcome, but the
             # solutions I found online are rather bulky
+            height = 20
             width = 80
         else:
-            _, width = os.popen('stty size', 'r').read().split()
+            height, width = os.popen('stty size', 'r').read().split()
             width = int(width)
+            height = int(height)
 
         position = 0
+        page = 0
         action = None
         while action != 'q':
-            self.__update_window(position, width)
+            page = self.__update_window(width, height, position, page)
             action = getch()
-            if action == 'n':
+            if action == 's':
                 position = max(min(len(self.messages) - 1, position + 1), 0)
-            elif action == 'p':
+                page = 0
+            elif action == 'w':
                 position = max(min(len(self.messages) - 1, position - 1), 0)
+                page = 0
+            elif action == 'a':
+                page -= 1
+            elif action == 'd':
+                page += 1
             elif action == 'b':
                 self.__to_browser(position)
             elif action == 'f':
                 self.__to_file(position)
 
-    def __update_window(self, position, width):
+    def __update_window(self, width, height, position, page):
         """ Update the window with the menu and the new text """
-        file_exists_label = 'FILE'
+        file_exists_label = '-F-ILE'
         if not os.path.exists(self.__create_file_name(position)):
-            file_exists_label = ' ' * len(file_exists_label)
+            file_exists_label = '(f)ile'
 
         # Clear the screen
         if PLATFORM == 'win32':
@@ -207,18 +218,78 @@ class AnalyzeWS(object):
             for _ in range(50):
                 print
         else:
-            print '\x1b[2J\x1b[H'  # Clear screen
-        # Menu
-        menu = ('(p)revious, (n)ext | (b)rowser | to (f)ile | {0} | (q)uit | '
-                '{1}/{2} |\n{3}\n').format(file_exists_label, position,
-                                           len(self.messages) - 1, '-' * width)
-        print menu
+            sys.stdout.write('\x1b[2J\x1b[H')  # Clear screen
+
         # Content
-        content = self.messages[position].output
+        content = self.messages[position].output.rstrip('\n')
         out = content
         if self.args.color:
             out = pygments.highlight(content, XmlLexer(), TerminalFormatter())
-        print out
+
+        # Paging functionality
+        if position not in self.pages:
+            self._form_pages(position, content, out, height, width)
+        page = max(min(len(self.pages[position]) - 1, page), 0)
+        page_content = self.pages[position][page]
+
+        # Menu
+        max_position = str(len(self.messages) - 1)
+        position_string = u'{{0: >{0}}}/{{1: <{0}}}'.format(len(max_position))
+        position_string = position_string.format(position, max_position)
+        # Assume less than 100 pages
+        current_max_page = len(self.pages[position]) - 1
+        pages_string = u'{0: >2}/{1: <2}'.format(page, current_max_page)
+        menu = (u'(b)rowser | {0} | Message {1} \u2193 (s)\u2191 (w) | '
+                u'Page {2} \u2190 (a)\u2192 (d) | (q)uit\n{3}').\
+            format(file_exists_label, position_string, pages_string,
+                   '-' * width)
+
+        print menu
+        print page_content
+        return page
+
+    def _form_pages(self, position, content, out, height, width):
+        """ Form the pages """
+        self.pages[position] = []
+        page_height = height - 4  # 2-3 for menu, 1 for cursor
+        outline = u''
+        no_lines_page = 0
+        for original, formatted in zip(content.split('\n'), out.split('\n')):
+            no_lines_original = int(math.ceil(len(original) / float(width)))
+
+            # Blank line
+            if len(original) == 0:
+                if no_lines_page + 1 <= page_height:
+                    outline += u'\n'
+                    no_lines_page += 1
+                else:
+                    self.pages[position].append(outline)
+                    outline = u'\n'
+                    no_lines_page = 1
+                original = formatted = u'\n'
+            # Too large line
+            elif no_lines_original > page_height:
+                if len(outline) > 0:
+                    self.pages[position].append(outline)
+                    outline = u''
+                    no_lines_page = 0
+                self.pages[position].append(formatted)
+            # The line(s) can be added to the current page
+            elif no_lines_page + no_lines_original <= page_height:
+                if len(outline) > 0:
+                    outline += u'\n'
+                outline += formatted
+                no_lines_page += no_lines_original
+            # End the page and start a new
+            else:
+                self.pages[position].append(outline)
+                outline = formatted
+                no_lines_page = no_lines_original
+        # Add the remainder
+        if len(outline) > 0:
+            self.pages[position].append(outline)
+        if len(self.pages[position]) == 0:
+            self.pages[position].append(u'')
 
 
 class WSPart(object):
