@@ -93,34 +93,51 @@ class AnalyzeWS(object):
             # See if there is a field called load
             try:
                 load = packet.getfieldval('load')
+                self._debug(load, load=True)
                 # If there is a start in load
                 if any([start in load for start in STARTS]):
                     self.messages.append(WSPart(load, self.args))
+                    self._debug('START')
                     # and there is also an end
                     if any([end in load for end in ENDS]):
                         self.messages[-1].finalize_content()
+                        self._debug('AND END')
                 # If there is an end in load
                 elif any([end in load for end in ENDS]):
+                    self._debug('END')
                     # If there is an open WSPart
                     if len(self.messages) > 0 and not\
                             self.messages[-1].write_closed:
+                        self._debug('ON OPEN FILE')
                         self.messages[-1].add_content(load)
                         self.messages[-1].finalize_content()
                     # Ignore ends before start
                     else:
-                        pass
+                        self._debug('NO OPEN FILE')
                 else:
                     # If there is an open WSPart
                     if len(self.messages) > 0 and not\
                             self.messages[-1].write_closed:
+                        self._debug('ADD TO OPEN FILE')
                         self.messages[-1].add_content(load)
                     # else ignore
                     else:
-                        pass
+                        self._debug('NOTHING TO DO')
             except AttributeError:
                 pass
         if len(self.messages) > 0 and not self.messages[-1].write_closed:
+            self._debug('DELETE LAST OPEN FILE')
             del self.messages[-1]
+
+        if self.args.debug_analysis:
+            sys.exit(0)
+
+    def _debug(self, message, load=False):
+        """ Output debug information """
+        if self.args.debug_analysis:
+            if load:
+                message = '\n{0}\n{1}\n{0}'.format('#' * 78, message)
+            print message
 
     def to_file_mode(self):
         """ Write all the messages to files """
@@ -395,6 +412,9 @@ def __build_option_parser():
                         help='the output filename prefix to use')
     parser.add_argument('--to-file', action='store_const', const=True,
                         help='output xml to files', default=False)
+    parser.add_argument('--debug-analysis', action='store_const', const=True,
+                        help='writes debug information to file.debug',
+                        default=False)
     parser.add_argument('--disable-color', action='store_const', const=False,
                         help='disable color in interactive mode',
                         default=COLOR, dest='color')
