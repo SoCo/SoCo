@@ -6,10 +6,10 @@ from soco import SoCo
 from soco import SonosDiscovery
 
 if __name__ == '__main__':
-    if (len(sys.argv) != 3):
+    if (len(sys.argv) > 4 or len(sys.argv) < 3):
         print "Usage: sonoshell.py [speaker's IP|all] [cmd]"
         print ""
-        print "Valid commands (with IP): info, play, pause, stop, next, previous, current, and partymode"
+        print "Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode"
         print "Valid commands (with 'all'): list_ips"
         sys.exit()
 
@@ -43,6 +43,18 @@ if __name__ == '__main__':
         elif (cmd == 'current'):
             track = sonos.get_current_track_info()
             print 'Current track: ' + track['artist'] + ' - ' + track['title'] + '. From album ' + track['album'] + '. This is track number ' + track['playlist_position'] + ' in the playlist. It is ' + track['duration'] + ' minutes long.'
+        elif (cmd == 'volume'):
+            if (len(sys.argv) > 3):
+                operator = sys.argv[3].lower()
+                volume = sonos.volume()
+                if (operator == '+'):
+                    print sonos.volume(volume + 1)
+                elif (operator == '-'):
+                    print sonos.volume(volume - 1)
+                else:
+                    print "Valid operators for volume are + and -"
+            else:
+                print sonos.volume()
         else:
             print "Valid commands (with IP): info, play, pause, stop, next, previous, current, and partymode"
 
