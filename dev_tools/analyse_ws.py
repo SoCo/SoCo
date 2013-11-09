@@ -25,9 +25,12 @@ try:
     from pygments.lexers import XmlLexer
     from pygments.formatters import TerminalFormatter
 except ImportError:
-    print 'Module "pygment" could not be imported. Please install it. Exiting!'
+    print 'Module "pygments" could not be imported. Please install it. '\
+        'Exiting!'
     sys.exit(100)
 try:
+    # Temporarily re-directing stderr to StringIO to prevent start-up message
+    # from rdpcap import
     STDERR = sys.stderr
     sys.stderr = StringIO.StringIO()
     from scapy.all import rdpcap
@@ -37,6 +40,7 @@ except ImportError:
     sys.exit(101)
 try:
     from lxml import etree
+    PARSER = etree.XMLParser(remove_blank_text=True)
 except ImportError:
     print 'Module "lxml" could not be imported. Please install it. Exiting!'
     sys.exit(102)
@@ -70,7 +74,8 @@ class AnalyzeWS(object):
         self.args = args
         self.output_prefix = args.output_prefix
         try:
-            with open('analyse_ws.ini') as file__:
+            this_dir = os.path.dirname(os.path.abspath(__file__))
+            with open(os.path.join(this_dir, 'analyse_ws.ini')) as file__:
                 self.config = ConfigParser.ConfigParser()
                 self.config.readfp(file__)
         except IOError:
@@ -81,7 +86,7 @@ class AnalyzeWS(object):
         """ Analyse the file with the captured content """
         # Use the file name as prefix if none is given
         if self.output_prefix is None:
-            self.output_prefix = filename
+            _, self.output_prefix = os.path.split(filename)
         # Check if the file is present, since rdpcap will not do that
         if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
             print 'The file \'{0}\' is either not present or not readable. '\
@@ -89,42 +94,20 @@ class AnalyzeWS(object):
             sys.exit(1)
         packets = rdpcap(filename)
 
-        for packet in packets:
+        for number, packet in enumerate(packets):
             # See if there is a field called load
+            self._debug('\nNUMBER {0}'.format(number), no_prefix=True)
             try:
-                load = packet.getfieldval('load')
+                # Will cause AttributeError if there is no load
+                packet.getfieldval('load')
+                # Get the full load
+                load = packet.sprintf('%TCP.payload%')
+                self._debug('PAYLOAD LENGTH {0}'.format(len(load)),
+                            no_prefix=True)
                 self._debug(load, load=True)
-                # If there is a start in load
-                if any([start in load for start in STARTS]):
-                    self.messages.append(WSPart(load, self.args))
-                    self._debug('START')
-                    # and there is also an end
-                    if any([end in load for end in ENDS]):
-                        self.messages[-1].finalize_content()
-                        self._debug('AND END')
-                # If there is an end in load
-                elif any([end in load for end in ENDS]):
-                    self._debug('END')
-                    # If there is an open WSPart
-                    if len(self.messages) > 0 and not\
-                            self.messages[-1].write_closed:
-                        self._debug('ON OPEN FILE')
-                        self.messages[-1].add_content(load)
-                        self.messages[-1].finalize_content()
-                    # Ignore ends before start
-                    else:
-                        self._debug('NO OPEN FILE')
-                else:
-                    # If there is an open WSPart
-                    if len(self.messages) > 0 and not\
-                            self.messages[-1].write_closed:
-                        self._debug('ADD TO OPEN FILE')
-                        self.messages[-1].add_content(load)
-                    # else ignore
-                    else:
-                        self._debug('NOTHING TO DO')
+                self._parse_load(load)
             except AttributeError:
-                pass
+                self._debug('LOAD EXCEPTION', no_prefix=True)
         if len(self.messages) > 0 and not self.messages[-1].write_closed:
             self._debug('DELETE LAST OPEN FILE')
             del self.messages[-1]
@@ -132,25 +115,69 @@ class AnalyzeWS(object):
         if self.args.debug_analysis:
             sys.exit(0)
 
-    def _debug(self, message, load=False):
+    def _parse_load(self, load):
+        """ Parse the load from a single packet """
+        # If the load is ??
+        if load in ['??']:
+            self._debug('IGNORING')
+        # If there is a start in load
+        elif any([start in load for start in STARTS]):
+            self._debug('START')
+            self.messages.append(WSPart(load, self.args))
+            # and there is also an end
+            if any([end in load for end in ENDS]):
+                self.messages[-1].finalize_content()
+                self._debug('AND END')
+        # If there is an end in load
+        elif any([end in load for end in ENDS]):
+            # If there is an open WSPart
+            if len(self.messages) > 0 and not\
+                    self.messages[-1].write_closed:
+                self._debug('END ON OPEN FILE')
+                self.messages[-1].add_content(load)
+                self.messages[-1].finalize_content()
+            # Ignore ends before start
+            else:
+                self._debug('END BUT NO OPEN FILE')
+        else:
+            # If there is an open WSPart
+            if len(self.messages) > 0 and not\
+                    self.messages[-1].write_closed:
+                self._debug('ADD TO OPEN FILE')
+                self.messages[-1].add_content(load)
+            # else ignore
+            else:
+                self._debug('NOTHING TO DO')
+
+    def _debug(self, message, load=False, no_prefix=False):
         """ Output debug information """
         if self.args.debug_analysis:
             if load:
-                message = '\n{0}\n{1}\n{0}'.format('#' * 78, message)
-            print message
+                message = '\r\n'.join(
+                    ['# ' + line for line in message.strip().split('\r\n')]
+                )
+                print '{0}\n{1}\n{0}'.format('#' * 78, message)
+            else:
+                # If open message and no_prefix is False
+                if (len(self.messages) > 0 and not
+                        self.messages[-1].write_closed) and not no_prefix:
+                    print '--OPEN--> {0}'.format(message)
+                else:
+                    print message
 
     def to_file_mode(self):
         """ Write all the messages to files """
-        for index in range(len(self.messages)):
-            self.__to_file(index)
+        for message_no in range(len(self.messages)):
+            self.__to_file(message_no)
 
-    def __to_file(self, index):
+    def __to_file(self, message_no):
         """ Write a single message to file """
-        filename = self.__create_file_name(index)
+        filename = self.__create_file_name(message_no)
         try:
             with codecs.open(filename, mode='w',
-                             encoding=self.messages[index].encoding) as file__:
-                file__.write(self.messages[index].output)
+                             encoding=self.messages[message_no].encoding)\
+                    as file__:
+                file__.write(self.messages[message_no].output)
         except IOError as excep:
             print 'Unable for open the file \'{0}\' for writing. The '\
                   'following exception was raised:'.format(filename)
@@ -159,20 +186,23 @@ class AnalyzeWS(object):
             sys.exit(2)
         return filename
 
-    def __create_file_name(self, index):
+    def __create_file_name(self, message_no):
         """ Create the filename to save to """
-        return '{0}_{1}.xml'.format(self.output_prefix, index)
+        cwd = os.getcwd()
+        filename = '{0}_{1}.xml'.format(self.output_prefix, message_no)
+        return os.path.join(cwd, filename)
 
     def to_browser_mode(self):
-        """ Write all the messages til files and open them in the browser """
-        for index in range(len(self.messages)):
-            self.__to_browser(index)
+        """ Write all the messages to files and open them in the browser """
+        for message_no in range(len(self.messages)):
+            self.__to_browser(message_no)
 
-    def __to_browser(self, index):
+    def __to_browser(self, message_no):
         """ Write a single message to file and open the file in a
         browser
+
         """
-        filename = self.__to_file(index)
+        filename = self.__to_file(message_no)
         try:
             command = self.config.get('General', 'browser_command')
         except (ConfigParser.NoOptionError, AttributeError):
@@ -201,31 +231,35 @@ class AnalyzeWS(object):
             width = int(width)
             height = int(height)
 
-        position = 0
-        page = 0
+        message_no = 0
+        page_no = 0
         action = None
         while action != 'q':
-            page = self.__update_window(width, height, position, page)
+            page_no = self.__update_window(width, height, message_no, page_no)
             action = getch()
             if action == 's':
-                position = max(min(len(self.messages) - 1, position + 1), 0)
-                page = 0
+                # Coerce in range
+                message_no = \
+                    max(min(len(self.messages) - 1, message_no + 1), 0)
+                page_no = 0
             elif action == 'w':
-                position = max(min(len(self.messages) - 1, position - 1), 0)
-                page = 0
+                # Coerce in range
+                message_no = \
+                    max(min(len(self.messages) - 1, message_no - 1), 0)
+                page_no = 0
             elif action == 'a':
-                page -= 1
+                page_no -= 1
             elif action == 'd':
-                page += 1
+                page_no += 1
             elif action == 'b':
-                self.__to_browser(position)
+                self.__to_browser(message_no)
             elif action == 'f':
-                self.__to_file(position)
+                self.__to_file(message_no)
 
-    def __update_window(self, width, height, position, page):
+    def __update_window(self, width, height, message_no, page_no):
         """ Update the window with the menu and the new text """
         file_exists_label = '-F-ILE'
-        if not os.path.exists(self.__create_file_name(position)):
+        if not os.path.exists(self.__create_file_name(message_no)):
             file_exists_label = '(f)ile'
 
         # Clear the screen
@@ -238,24 +272,25 @@ class AnalyzeWS(object):
             sys.stdout.write('\x1b[2J\x1b[H')  # Clear screen
 
         # Content
-        content = self.messages[position].output.rstrip('\n')
+        content = self.messages[message_no].output.rstrip('\n')
         out = content
         if self.args.color:
             out = pygments.highlight(content, XmlLexer(), TerminalFormatter())
 
         # Paging functionality
-        if position not in self.pages:
-            self._form_pages(position, content, out, height, width)
-        page = max(min(len(self.pages[position]) - 1, page), 0)
-        page_content = self.pages[position][page]
+        if message_no not in self.pages:
+            self._form_pages(message_no, content, out, height, width)
+        # Coerce in range
+        page_no = max(min(len(self.pages[message_no]) - 1, page_no), 0)
+        page_content = self.pages[message_no][page_no]
 
         # Menu
-        max_position = str(len(self.messages) - 1)
-        position_string = u'{{0: >{0}}}/{{1: <{0}}}'.format(len(max_position))
-        position_string = position_string.format(position, max_position)
+        max_message = str(len(self.messages) - 1)
+        position_string = u'{{0: >{0}}}/{{1: <{0}}}'.format(len(max_message))
+        position_string = position_string.format(message_no, max_message)
         # Assume less than 100 pages
-        current_max_page = len(self.pages[position]) - 1
-        pages_string = u'{0: >2}/{1: <2}'.format(page, current_max_page)
+        current_max_page = len(self.pages[message_no]) - 1
+        pages_string = u'{0: >2}/{1: <2}'.format(page_no, current_max_page)
         menu = (u'(b)rowser | {0} | Message {1} \u2193 (s)\u2191 (w) | '
                 u'Page {2} \u2190 (a)\u2192 (d) | (q)uit\n{3}').\
             format(file_exists_label, position_string, pages_string,
@@ -263,11 +298,11 @@ class AnalyzeWS(object):
 
         print menu
         print page_content
-        return page
+        return page_no
 
-    def _form_pages(self, position, content, out, height, width):
+    def _form_pages(self, message_no, content, out, height, width):
         """ Form the pages """
-        self.pages[position] = []
+        self.pages[message_no] = []
         page_height = height - 4  # 2-3 for menu, 1 for cursor
         outline = u''
         no_lines_page = 0
@@ -280,17 +315,17 @@ class AnalyzeWS(object):
                     outline += u'\n'
                     no_lines_page += 1
                 else:
-                    self.pages[position].append(outline)
+                    self.pages[message_no].append(outline)
                     outline = u'\n'
                     no_lines_page = 1
                 original = formatted = u'\n'
             # Too large line
             elif no_lines_original > page_height:
                 if len(outline) > 0:
-                    self.pages[position].append(outline)
+                    self.pages[message_no].append(outline)
                     outline = u''
                     no_lines_page = 0
-                self.pages[position].append(formatted)
+                self.pages[message_no].append(formatted)
             # The line(s) can be added to the current page
             elif no_lines_page + no_lines_original <= page_height:
                 if len(outline) > 0:
@@ -299,14 +334,14 @@ class AnalyzeWS(object):
                 no_lines_page += no_lines_original
             # End the page and start a new
             else:
-                self.pages[position].append(outline)
+                self.pages[message_no].append(outline)
                 outline = formatted
                 no_lines_page = no_lines_original
         # Add the remainder
         if len(outline) > 0:
-            self.pages[position].append(outline)
-        if len(self.pages[position]) == 0:
-            self.pages[position].append(u'')
+            self.pages[message_no].append(outline)
+        if len(self.pages[message_no]) == 0:
+            self.pages[message_no].append(u'')
 
 
 class WSPart(object):
@@ -344,7 +379,7 @@ class WSPart(object):
 
     def _init_xml(self, body):
         """ Parse the present body as xml """
-        tree = etree.fromstring(body.encode(self.encoding))
+        tree = etree.fromstring(body.encode(self.encoding), PARSER)
         # Extract and replace inner DIDL xml in tags
         for text in tree.xpath('.//text()[contains(., "DIDL")]'):
             item = text.getparent()
@@ -367,6 +402,9 @@ class WSPart(object):
 
         self.body_formatted = etree.tostring(tree, pretty_print=True).decode(
             self.encoding)
+        #print tree
+        #print repr(self.body_formatted)
+        #sys.exit(1)
 
     def _form_output(self):
         """ Form the output """
@@ -396,35 +434,44 @@ def __build_option_parser():
         'To use the open in browser function, a configuration file must be '
         'written. It should be in the same directory as this script and have '
         'the name "analyse_ws.ini". An example of such a file is given '
-        'below:\n'
+        'below ({0} indicates the file):\n'
         '[General]\n'
-        'browser_command: epiphany\n'
+        'browser_command: epiphany {0}\n'
         '\n'
         'The browser command should be any command that opens a new tab in '
-        'the program you wish to read the Wireshark dumps in.')
+        'the program you wish to read the Wireshark dumps in.'
+        '\n'
+        'Separating Sonos traffic out from the rest of the network traffic is '
+        'tricky. Therefore, it will in all likelyhood increase the succes of '
+        'this tool, if the traffic is filtered in Wireshark to only show '
+        'traffic to and from the Sonos unit. Still, if the analysis fails, '
+        'then use the debug mode. This will show you the analysis of the '
+        'traffic packet by packet and give you packet numbers so you can find '
+        'and analyze problematic packets in Wireshark.')
 
     parser = \
         argparse.ArgumentParser(description=description,
                                 formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('file_', metavar='FILE', type=str, nargs=1,
                         help='the file to analyze')
-    parser.add_argument('--output-prefix', type=str,
+    parser.add_argument('-o', '--output-prefix', type=str,
                         help='the output filename prefix to use')
-    parser.add_argument('--to-file', action='store_const', const=True,
+    parser.add_argument('-f', '--to-file', action='store_const', const=True,
                         help='output xml to files', default=False)
-    parser.add_argument('--debug-analysis', action='store_const', const=True,
+    parser.add_argument('-d', '--debug-analysis', action='store_const',
+                        const=True,
                         help='writes debug information to file.debug',
                         default=False)
-    parser.add_argument('--disable-color', action='store_const', const=False,
-                        help='disable color in interactive mode',
+    parser.add_argument('-m', '--disable-color', action='store_const',
+                        const=False, help='disable color in interactive mode',
                         default=COLOR, dest='color')
-    parser.add_argument('--enable-color', action='store_const', const=True,
-                        help='disable color in interactive mode',
+    parser.add_argument('-c', '--enable-color', action='store_const',
+                        const=True, help='disable color in interactive mode',
                         default=COLOR, dest='color')
-    parser.add_argument('--to-browser', action='store_const', const=True,
+    parser.add_argument('-b', '--to-browser', action='store_const', const=True,
                         help='output xml to browser, implies --to-file',
                         default=False)
-    parser.add_argument('--external-inner-xml', action='store_const',
+    parser.add_argument('-e', '--external-inner-xml', action='store_const',
                         const=True, help='show the internal separately '
                         'encoded xml externally instead of re-integrating it',
                         default=False)
