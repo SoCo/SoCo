@@ -232,12 +232,15 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
+        self.AVTransport.Play([
+            ('InstanceID', 0),
+            ('Speed', 1)
+        ])
+        #response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION,
+        #                               PLAY_BODY)
 
-        response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION,
-                                       PLAY_BODY)
-
-        if response != PLAY_RESPONSE:
-            self.__parse_error(response)
+        #if response != PLAY_RESPONSE:
+        #    self.__parse_error(response)
 
     def play_uri(self, uri='', meta=''):
         """ Play a given stream. Pauses the queue.
