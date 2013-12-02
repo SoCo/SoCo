@@ -1,5 +1,26 @@
 # -*- coding: utf-8 -*-
+"""
+Classes representing Sonos UPnP services.
 
+>>> s = SoCo('192.168.1.102')
+>>> print s.RenderingControl.GetMute([('InstanceID', 0),
+...     ('Channel', 'Master')])
+
+>>> r = s.ContentDirectory.Browse([
+...    ('ObjectID', 'Q:0'),
+...    ('BrowseFlag', 'BrowseDirectChildren'),
+...    ('Filter', '*'),
+...    ('StartingIndex', '0'),
+...    ('RequestedCount', '100'),
+...    ('SortCriteria', '')
+...    ])
+
+>>> print prettify(r['Result'])
+
+>>> for action, in_args, out_args in s.QPlay.iter_actions():
+...    print action, in_args, out_args
+
+"""
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
 from types import MethodType
@@ -43,7 +64,8 @@ class Service(object):
     """ An class representing a UPnP service.
 
     This class has a dynamic method dispatcher. Calls to methods which are not
-    explicitly defined here are dispatched ?????????
+    explicitly defined here are dispatched automatically to the service action
+    with the same name.
 
     """
     soap_body_template = "".join([
@@ -125,8 +147,9 @@ class Service(object):
         can be a string or something with a string representation. The
         arguments are escaped and wrapped in <name> and <value> tags.
 
-
-        >>> s = Service(SoCo)
+        >>> from soco import SoCo
+        >>> device = SoCo('192.168.1.101')
+        >>> s = Service(device)
         >>> s.wrap_arguments([('InstanceID', 0), ('Speed', 1)])
         u'<InstanceID>0</InstanceID><Speed>1</Speed>'
 
@@ -225,6 +248,7 @@ class Service(object):
         """ Send a command to a Sonos device.
 
         headers and body are the headers and body returned by build_command
+
         """
 
         headers, body = self.build_command(action, args)
@@ -477,46 +501,3 @@ class GroupRenderingControl(Service):
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
-
-#
-#
-#
-
-
-class SoCo(object):
-
-    def __init__(self, speaker_ip):
-        self.speaker_ip = speaker_ip
-        # These are the services used by SONOS
-        self.AlarmClock = AlarmClock(self)
-        self.MusicServices = MusicServices(self)
-        self.DeviceProperties = DeviceProperties(self)
-        self.SystemProperties = SystemProperties(self)
-        self.ZoneGroupTopology = ZoneGroupTopology(self)
-        self.GroupManagement = GroupManagement(self)
-        self.QPlay = QPlay(self)
-        self.ContentDirectory = ContentDirectory(self)
-        self.MS_ConnectionManager = MS_ConnectionManager(self)
-        self.RenderingControl = RenderingControl(self)
-        self.MR_ConnectionManager = MR_ConnectionManager(self)
-        self.AVTransport = AVTransport(self)
-        self.Queue = Queue(self)
-        self.GroupRenderingControl = GroupRenderingControl(self)
-
-
-s = SoCo('192.168.1.102')
-print s.RenderingControl.GetMute([('InstanceID', 0), ('Channel', 'Master')])
-
-r = s.ContentDirectory.Browse([
-    ('ObjectID', 'Q:0'),
-    ('BrowseFlag', 'BrowseDirectChildren'),
-    ('Filter', '*'),
-    ('StartingIndex', '0'),
-    ('RequestedCount', '100'),
-    ('SortCriteria', '')
-    ])
-
-print prettify(r['Result'])
-
-for action, in_args, out_args in s.QPlay.iter_actions():
-    print action, in_args, out_args

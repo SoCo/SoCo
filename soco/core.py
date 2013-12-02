@@ -18,6 +18,12 @@ import logging
 import traceback
 import re
 
+from .services import AlarmClock, MusicServices, DeviceProperties
+from .services import SystemProperties, ZoneGroupTopology, GroupManagement
+from .services import QPlay, ContentDirectory, MS_ConnectionManager
+from .services import RenderingControl, MR_ConnectionManager, AVTransport
+from .services import Queue, GroupRenderingControl
+
 from .utils import really_unicode, really_utf8, camel_to_underscore
 from .exceptions import SoCoException, UnknownSoCoException
 
@@ -123,6 +129,20 @@ class SoCo(object):  # pylint: disable=R0904
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {}  # Stores information about the current speaker
+        self.AlarmClock = AlarmClock(self)
+        self.MusicServices = MusicServices(self)
+        self.DeviceProperties = DeviceProperties(self)
+        self.SystemProperties = SystemProperties(self)
+        self.ZoneGroupTopology = ZoneGroupTopology(self)
+        self.GroupManagement = GroupManagement(self)
+        self.QPlay = QPlay(self)
+        self.ContentDirectory = ContentDirectory(self)
+        self.MS_ConnectionManager = MS_ConnectionManager(self)
+        self.RenderingControl = RenderingControl(self)
+        self.MR_ConnectionManager = MR_ConnectionManager(self)
+        self.AVTransport = AVTransport(self)
+        self.Queue = Queue(self)
+        self.GroupRenderingControl = GroupRenderingControl(self)
 
     def set_player_name(self, playername):
         """  Sets the name of the player
