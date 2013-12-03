@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 """
 Classes representing Sonos UPnP services.
 
@@ -69,7 +71,7 @@ class Service(object):
 
     """
     soap_body_template = "".join([
-        u'<?xml version="1.0"?>',
+        '<?xml version="1.0"?>',
         '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"',
         ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">',
             '<s:Body>',
@@ -151,15 +153,14 @@ class Service(object):
         >>> device = SoCo('192.168.1.101')
         >>> s = Service(device)
         >>> s.wrap_arguments([('InstanceID', 0), ('Speed', 1)])
-        u'<InstanceID>0</InstanceID><Speed>1</Speed>'
+        <InstanceID>0</InstanceID><Speed>1</Speed>'
 
         """
         if not args:
             args = []
-        xml = u""
-        l = [u"<{name}>{value}</{name}>".format(
-            name=name, value=escape(str(value))) for name, value in args]
-        xml = u"".join(l)
+        l = ["<{name}>{value}</{name}>".format(
+            name=name, value=escape(unicode(value))) for name, value in args]
+        xml = "".join(l)
         return xml
 
     def unwrap_arguments(self, xml_response):
@@ -192,7 +193,9 @@ class Service(object):
         #   </s:Body>
         # </s:Envelope>
 
-        # Get all tags in order
+        # Get all tags in order. Elementree (in python 2.x) seems to prefer to
+        # be fed bytes, rather than unicode
+        xml_response = xml_response.encode('utf-8')
         tree = ET.fromstring(xml_response)
         # Get the first chiled of the <Body> tag which will be
         # <{actionNameResponse}> (depends on what actionName is). Turn the
@@ -236,7 +239,7 @@ class Service(object):
         arguments = self.wrap_arguments(args)
         body = self.soap_body_template.format(**locals())
         soap_action_template = \
-            u"urn:schemas-upnp-org:service:{service_type}:{version}#{action}"
+            "urn:schemas-upnp-org:service:{service_type}:{version}#{action}"
         soap_action = soap_action_template.format(
             service_type=self.service_type, version=self.version,
             action=action)
@@ -270,8 +273,11 @@ class Service(object):
             # Internal server error. UPnP requires this to be returned if the
             # device does not like the action for some reason. The returned
             # content will be a SOAP Fault. Parse it and raise an error.
-
-            self.handle_upnp_error(response.content)
+            try:
+                self.handle_upnp_error(response.content)
+            except Exception as e:
+                log.exception(e.message)
+                raise
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
@@ -321,14 +327,11 @@ class Service(object):
             './/{urn:schemas-upnp-org:control-1-0}errorCode')
         if error_code is not None:
             description = self.UPNP_ERRORS.get(int(error_code), '')
-            log.error(
-                "UPNP Error: %s, %s from %s", error_code, description,
-                self.soco.speaker_ip)
-            raise Exception('Error {} received: {}'.format(
-                error_code, description))
+            raise Exception('UPnP Error {} received: {} from {}'.format(
+                error_code, description, self.soco.speaker_ip))
         else:
             # Unknown error, so just return the entire response
-            log.error("Unknown error from %s", self.soco.speaker_ip)
+            log.error("Unknown error received from %s", self.soco.speaker_ip)
             raise Exception(xml_error)
 
     def iter_actions(self):
