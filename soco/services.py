@@ -153,7 +153,7 @@ class Service(object):
         >>> device = SoCo('192.168.1.101')
         >>> s = Service(device)
         >>> s.wrap_arguments([('InstanceID', 0), ('Speed', 1)])
-        <InstanceID>0</InstanceID><Speed>1</Speed>'
+        u'<InstanceID>0</InstanceID><Speed>1</Speed>'
 
         """
         if not args:
@@ -250,7 +250,11 @@ class Service(object):
     def send_command(self, action, args):
         """ Send a command to a Sonos device.
 
-        headers and body are the headers and body returned by build_command
+        Given the name of an action (a string as specified in the service
+        description XML file) to be sent, and the relevant arguments as a list
+        of (name, value) tuples, send the command to the Sonos device. Return
+        a dict of {argument_name, value)} items or True on success. Raise
+        an exception on failure.
 
         """
 
