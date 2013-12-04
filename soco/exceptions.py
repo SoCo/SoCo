@@ -11,10 +11,11 @@ class UnknownSoCoException(SoCoException):
     The exception object will contain the raw response sent back from the
     speaker """
 
+
 class SoCoUPnPException(SoCoException):
     """ encapsulates UPnP Fault Codes raised in response to actions sent over
     the network """
-    
+
     def __init__(self, message, error_code, error_xml, error_description=""):
         self.message = message
         self.error_code = error_code

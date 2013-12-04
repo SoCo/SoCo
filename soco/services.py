@@ -33,7 +33,7 @@ from __future__ import unicode_literals
 # receiving) for us, provided that we specify the correct encoding headers
 # (which, hopefully, we do).
 #
-# But since ElementTree seems to prefer being fed bytes to unicode, at leasst
+# But since ElementTree seems to prefer being fed bytes to unicode, at least
 # for Python 2.x, we have to encode strings specifically before using it. see
 # http://bugs.python.org/issue11033 TODO: Keep an eye on this when it comes to
 # Python 3 compatibility
@@ -44,9 +44,9 @@ from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
 try:
-    import xml.etree.cElementTree as ET
+    import xml.etree.cElementTree as XML
 except ImportError:
-    import xml.etree.ElementTree as ET
+    import xml.etree.ElementTree as XML
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
@@ -67,13 +67,6 @@ def prettify(unicode_text):
     import xml.dom.minidom
     reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
     return reparsed.toprettyxml(indent="  ", newl="\n")
-
-
-# An object to contain info about UPnP Services. There is other information
-# we could record, but this will do for the moment.
-# Info about a Sonos device is available at
-#   <IP_address>/xml/device_description.xml
-# in the <service> tags
 
 
 class Service(object):
@@ -101,7 +94,10 @@ class Service(object):
     def __init__(self, soco):
         self.soco = soco
         # Some defaults. Some or all these will need to be overridden
-        # specifically in a sub-class.
+        # specifically in a sub-class. There is other information we could
+        # record, but this will do for the moment. Info about a Sonos device is
+        # available at <IP_address>/xml/device_description.xml in the
+        # <service> tags
         self.service_type = self.__class__.__name__
         self.version = 1
         self.service_id = self.service_type
@@ -210,7 +206,7 @@ class Service(object):
         # Get all tags in order. Elementree (in python 2.x) seems to prefer to
         # be fed bytes, rather than unicode
         xml_response = xml_response.encode('utf-8')
-        tree = ET.fromstring(xml_response)
+        tree = XML.fromstring(xml_response)
         # Get the first chiled of the <Body> tag which will be
         # <{actionNameResponse}> (depends on what actionName is). Turn the
         # children of this into a {tagname, content} dict
@@ -341,7 +337,7 @@ class Service(object):
 
         # NB need to encode unicode strings before passing to ElementTree
         xml_error = xml_error.encode('utf-8')
-        error = ET.fromstring(xml_error)
+        error = XML.fromstring(xml_error)
         log.debug("Error %s", xml_error)
         error_code = error.findtext(
             './/{urn:schemas-upnp-org:control-1-0}errorCode')
@@ -376,7 +372,7 @@ class Service(object):
         # default value
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).content
-        tree = ET.fromstring(scpd_body).encode('utf-8')
+        tree = XML.fromstring(scpd_body).encode('utf-8')
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
