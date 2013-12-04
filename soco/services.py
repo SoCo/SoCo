@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 """
 Classes representing Sonos UPnP services.
@@ -24,6 +23,21 @@ Classes representing Sonos UPnP services.
 
 """
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
+
+from __future__ import unicode_literals
+
+# UNICODE NOTE
+# UPnP requires all XML to be transmitted/received with utf-8 encoding. All
+# strings used in this module are unicode. The Requests library should take
+# care of all of the necessary encoding (on sending) and decoding (on
+# receiving) for us, provided that we specify the correct encoding headers
+# (which, hopefully, we do).
+#
+# But since ElementTree seems to prefer being fed bytes to unicode, at leasst
+# for Python 2.x, we have to encode strings specifically before using it. see
+# http://bugs.python.org/issue11033 TODO: Keep an eye on this when it comes to
+# Python 3 compatibility
+
 
 from types import MethodType
 from collections import namedtuple
@@ -290,8 +304,8 @@ class Service(object):
     def handle_upnp_error(self, xml_error):
         """ Disect a UPnP error, and raise an appropriate exception
 
-        xml_error is a string containing the body of the UPnP/SOAP Fault
-        response. Raises an exception containing the error code
+        xml_error is a unicode string containing the body of the UPnP/SOAP
+        Fault response. Raises an exception containing the error code
 
         """
 
@@ -325,6 +339,8 @@ class Service(object):
         # All that matters for our purposes is the errorCode.
         # errorDescription is not required, and Sonos does not seem to use it.
 
+        # NB need to encode unicode strings before passing to ElementTree
+        xml_error = xml_error.encode('utf-8')
         error = ET.fromstring(xml_error)
         log.debug("Error %s", xml_error)
         error_code = error.findtext(
@@ -355,7 +371,7 @@ class Service(object):
         # default value
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).content
-        tree = ET.fromstring(scpd_body)
+        tree = ET.fromstring(scpd_body).encode('utf-8')
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
