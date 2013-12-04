@@ -74,7 +74,7 @@ class Service(object):
         ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">',
             '<s:Body>',
                 '<u:{action} xmlns:u="urn:schemas-upnp-org:service:',
-                    '{self.service_type}:{self.version}">',
+                    '{service_type}:{version}">',
                     '{arguments}',
                 '</u:{action}>',
             '</s:Body>',
@@ -238,7 +238,9 @@ class Service(object):
         # </s:Envelope>
 
         arguments = self.wrap_arguments(args)
-        body = self.soap_body_template.format(**locals())
+        body = self.soap_body_template.format(
+            arguments=arguments, action=action, service_type=self.service_type,
+            version=self.version)
         soap_action_template = \
             "urn:schemas-upnp-org:service:{service_type}:{version}#{action}"
         soap_action = soap_action_template.format(
