@@ -50,6 +50,7 @@ except ImportError:
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
+from .utils import prettify
 
 log = logging.getLogger(__name__)
 #logging.basicConfig()
@@ -57,16 +58,6 @@ log = logging.getLogger(__name__)
 
 Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
-
-
-def prettify(unicode_text):
-    """Return a pretty-printed version of a unicode XML string. Useful for
-    debugging.
-
-    """
-    import xml.dom.minidom
-    reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
-    return reparsed.toprettyxml(indent="  ", newl="\n")
 
 
 class Service(object):
