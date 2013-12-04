@@ -61,7 +61,8 @@ Argument = namedtuple('Argument', 'name, vartype')
 
 
 class Service(object):
-    """ An class representing a UPnP service.
+    """ An class representing a UPnP service. The base class for all Sonos
+    Service classes
 
     This class has a dynamic method dispatcher. Calls to methods which are not
     explicitly defined here are dispatched automatically to the service action
@@ -79,8 +80,6 @@ class Service(object):
                 '</u:{action}>',
             '</s:Body>',
         '</s:Envelope>'])  # noqa PEP8
-
-    """ The base class for all Sonos Service classes"""
 
     def __init__(self, soco):
         self.soco = soco
@@ -132,14 +131,34 @@ class Service(object):
         }
 
     def __getattr__(self, action):
+        """ A Python magic method which is called whenever an undefined method
+        is invoked on the instance.
 
+        The name of the unknown method called is passed as a parameter, and the
+        return value is the callable to be invoked.
+
+        """
+
+        # Define a function to be invoked as the method, which calls
+        # send_command
         def _dispatcher(self, args):
             return self.send_command(action, args)
 
+        # rename the function so it appears to be the called method. We
+        # probably don't need this, but it doesn't harm
         _dispatcher.__name__ = action
+
+        # _dispatcher is now an unbound menthod, but we need a bound method.
+        # This turns an unbound method into a bound method (i.e. one that
+        # takes self - an instance of the class - as the first parameter)
         method = MethodType(_dispatcher, self, self.__class__)
+
+        # Now we have a bound method, we cache it on this instance, so that
+        # next time we don't have to go through this again
         setattr(self, action, method)
         log.debug("Dispatching method %s", action)
+
+        # return our new bound method, which will be called by Python
         return method
 
     def wrap_arguments(self, args=None):
@@ -365,7 +384,7 @@ class Service(object):
         # default value
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).content
-        tree = XML.fromstring(scpd_body).encode('utf-8')
+        tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
