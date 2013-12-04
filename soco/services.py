@@ -49,7 +49,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 import requests
-
+from .exceptions import SoCoUPnPException, UnknownSoCoException
 
 log = logging.getLogger(__name__)
 #logging.basicConfig()
@@ -347,12 +347,17 @@ class Service(object):
             './/{urn:schemas-upnp-org:control-1-0}errorCode')
         if error_code is not None:
             description = self.UPNP_ERRORS.get(int(error_code), '')
-            raise Exception('UPnP Error {} received: {} from {}'.format(
-                error_code, description, self.soco.speaker_ip))
+            raise SoCoUPnPException(
+                message='UPnP Error {} received: {} from {}'.format(
+                    error_code, description, self.soco.speaker_ip),
+                error_code=error_code,
+                error_description=description,
+                error_xml=xml_error
+                )
         else:
             # Unknown error, so just return the entire response
             log.error("Unknown error received from %s", self.soco.speaker_ip)
-            raise Exception(xml_error)
+            raise UnknownSoCoException(xml_error)
 
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
