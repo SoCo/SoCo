@@ -295,13 +295,13 @@ class Service(object):
         log.debug("Sending %s, %s", headers, prettify(body))
         response = requests.post(
             self.base_url + self.control_url, headers=headers, data=body)
-        log.debug("Received %s, %s", response.headers, response.content)
+        log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
-            result = self.unwrap_arguments(response.content) or True
+            result = self.unwrap_arguments(response.text) or True
             log.info(
                 "Received status %s from %s", status, self.soco.speaker_ip)
             return result
