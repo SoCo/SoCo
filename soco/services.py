@@ -140,8 +140,17 @@ class Service(object):
         """
 
         # Define a function to be invoked as the method, which calls
-        # send_command
-        def _dispatcher(self, args):
+        # send_command. It should take 0 or one args
+        def _dispatcher(self, *args):
+            arg_number = len(args)
+            if arg_number > 1:
+                raise TypeError(
+                    "TypeError: {} takes 0 or 1 argument(s) ({} given)"
+                    .format(action, arg_number))
+            elif arg_number == 0:
+                args = None
+            else:
+                args = args[0]
             return self.send_command(action, args)
 
         # rename the function so it appears to be the called method. We
@@ -176,7 +185,7 @@ class Service(object):
         u'<InstanceID>0</InstanceID><Speed>1</Speed>'
 
         """
-        if not args:
+        if args is None:
             args = []
         l = ["<{name}>{value}</{name}>".format(
             name=name, value=escape(unicode(value))) for name, value in args]
@@ -224,7 +233,7 @@ class Service(object):
             ".//{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
         return {i.tag: i.text for i in action_response}
 
-    def build_command(self, action, args):
+    def build_command(self, action, args=None):
         """ Build a SOAP request.
 
         Given the name of an action (a string as specified in the service
@@ -269,12 +278,13 @@ class Service(object):
                    'SOAPACTION': soap_action}
         return (headers, body)
 
-    def send_command(self, action, args):
+    def send_command(self, action, args=None):
         """ Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
-        of (name, value) tuples, send the command to the Sonos device. Return
+        of (name, value) tuples, send the command to the Sonos device. args
+        can be emptyReturn
         a dict of {argument_name, value)} items or True on success. Raise
         an exception on failure.
 
