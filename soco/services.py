@@ -295,13 +295,13 @@ class Service(object):
         log.debug("Sending %s, %s", headers, prettify(body))
         response = requests.post(
             self.base_url + self.control_url, headers=headers, data=body)
-        log.debug("Received %s, %s", response.headers, response.content)
+        log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
-            result = self.unwrap_arguments(response.content) or True
+            result = self.unwrap_arguments(response.text) or True
             log.info(
                 "Received status %s from %s", status, self.soco.speaker_ip)
             return result
@@ -310,13 +310,14 @@ class Service(object):
             # device does not like the action for some reason. The returned
             # content will be a SOAP Fault. Parse it and raise an error.
             try:
-                self.handle_upnp_error(response.content)
+                self.handle_upnp_error(response.text)
             except Exception as e:
                 log.exception(e.message)
                 raise
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
+            #raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
@@ -393,7 +394,7 @@ class Service(object):
         # TODO: Provide for Allowed value list, Allowed value range,
         # default value
         ns = '{urn:schemas-upnp-org:service-1-0}'
-        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
