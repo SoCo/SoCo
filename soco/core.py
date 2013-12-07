@@ -530,7 +530,7 @@ class SoCo(object):  # pylint: disable=R0904
         """
         self.AVTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{master_uid}'.format(master_uid)),
+            ('CurrentURI', 'x-rincon:{0}'.format(master_uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -570,7 +570,7 @@ class SoCo(object):  # pylint: disable=R0904
         speaker_uid = speaker_info['uid']
         self.AVTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{speaker_uid}'.format(speaker_uid)),
+            ('CurrentURI', 'x-rincon:{0}'.format(speaker_uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -850,6 +850,7 @@ class SoCo(object):  # pylint: disable=R0904
             ('SortCriteria', '')
             ])
         result = response['Result']
+
         if not result:
             return queue
         try:
@@ -998,7 +999,7 @@ class SoCo(object):  # pylint: disable=R0904
         for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
             out[camel_to_underscore(tag)] = response[tag]
         # Parse the results
-        result_xml = response['Result']
+        result_xml = XML.fromstring(really_utf8(response['Result']))
         # Information for the tags to parse, [name, ns]
         tag_info = [['title', 'dc'], ['class', 'upnp']]
         if search_type == 'tracks':
