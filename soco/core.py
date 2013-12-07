@@ -199,7 +199,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
-        self.AVTransport.PlayFromQueue([
+        self.AVTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', '')
@@ -809,8 +809,6 @@ class SoCo(object):  # pylint: disable=R0904
             ('InstanceID', 0),
             ])
 
-        dom = XML.fromstring(really_utf8(response))
-
         playstate = {
             'current_transport_status': '',
             'current_transport_state': '',
@@ -818,10 +816,11 @@ class SoCo(object):  # pylint: disable=R0904
         }
 
         playstate['current_transport_state'] = \
-            dom.findtext('.//CurrentTransportState')
+            response['CurrentTransportState']
         playstate['current_transport_status'] = \
-            dom.findtext('.//CurrentTransportStatus')
-        playstate['current_transport_speed'] = dom.findtext('.//CurrentSpeed')
+            response['CurrentTransportStatus']
+        playstate['current_transport_speed'] = \
+            response['CurrentSpeed']
 
         return playstate
 
