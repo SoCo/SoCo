@@ -41,7 +41,7 @@ from __future__ import unicode_literals
 
 from types import MethodType
 from collections import namedtuple
-from xml.sax.saxutils import escape
+from xml.sax.saxutils import escape, unescape
 import logging
 try:
     import xml.etree.cElementTree as XML
@@ -188,7 +188,7 @@ class Service(object):
         if args is None:
             args = []
         l = ["<{name}>{value}</{name}>".format(
-            name=name, value=escape(unicode(value))) for name, value in args]
+            name=name, value=escape(unicode(value), {'"': '&quot;'})) for name, value in args]
         xml = "".join(l)
         return xml
 
@@ -228,10 +228,15 @@ class Service(object):
         tree = XML.fromstring(xml_response)
         # Get the first chiled of the <Body> tag which will be
         # <{actionNameResponse}> (depends on what actionName is). Turn the
-        # children of this into a {tagname, content} dict
+        # children of this into a {tagname, content} dict. XML unescaping
+        # is not quite good enough. We need to make sure that double quotes
+        # are also escaped. We also need to make sure that ampersands are
+        # re-escaped, so that subsequent XML parsing of values which are
+        # supposed to be XML does not break.
         action_response = tree.find(
             ".//{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
-        return {i.tag: i.text for i in action_response}
+        return {i.tag: unescape(i.text, {"&quot;": '"'}).replace("&", "&amp;")
+            for i in action_response}
 
     def build_command(self, action, args=None):
         """ Build a SOAP request.
