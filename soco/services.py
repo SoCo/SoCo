@@ -401,7 +401,6 @@ class Service(object):
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
-        tree = ET.fromstring(scpd_body).encode('utf-8')
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
@@ -425,46 +424,58 @@ class Service(object):
                         in_args.append(Argument(arg_name, vartype))
                     else:
                         out_args.append(Argument(arg_name, vartype))
-                    yield Action(action_name, in_args, out_args)
+                yield Action(action_name, in_args, out_args)
 
 
 class AlarmClock(Service):
+    """ Sonos alarm service, for setting and getting time and alarms. """
     def __init__(self, soco):
         super(AlarmClock, self).__init__(soco)
 
 
 class MusicServices(Service):
+    """ Sonos music services service, for functions related to 3rd party
+    music services. """
     def __init__(self, soco):
         super(MusicServices, self).__init__(soco)
 
 
 class DeviceProperties(Service):
+    """ Sonos device properties service, for functions relating to zones,
+    LED state, stereo pairs etc. """
     def __init__(self, soco):
         super(DeviceProperties, self).__init__(soco)
 
 
 class SystemProperties(Service):
+    """ Sonos system properties service, for functions relating to
+    authentication etc """
     def __init__(self, soco):
         super(SystemProperties, self).__init__(soco)
 
 
 class ZoneGroupTopology(Service):
+    """ Sonos zone group topology service, for functions relating to network
+    topology, diagnostics and updates. """
     def __init__(self, soco):
         super(ZoneGroupTopology, self).__init__(soco)
 
 
 class GroupManagement(Service):
+    """ Sonos group management service, for services relating to groups. """
     def __init__(self, soco):
         super(GroupManagement, self).__init__(soco)
 
 
 class QPlay(Service):
-    """ Tencent QPlay """
+    """ Sonos Tencent QPlay service (a Chinese music service) """
     def __init__(self, soco):
         super(QPlay, self).__init__(soco)
 
 
 class ContentDirectory(Service):
+    """ UPnP standard Content Directory service, for functions relating to
+    browsing, searching and listing available music. """
     def __init__(self, soco):
         super(ContentDirectory, self).__init__(soco)
         self.control_url = "/MediaServer/ContentDirectory/Control"
@@ -494,6 +505,7 @@ class ContentDirectory(Service):
 
 
 class MS_ConnectionManager(Service):
+    """ UPnP standard connection manager service for the media server."""
     def __init__(self, soco):
         super(MS_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
@@ -501,12 +513,15 @@ class MS_ConnectionManager(Service):
 
 
 class RenderingControl(Service):
+    """ UPnP standard redering control service, for functions relating to
+    playback rendering, eg bass, treble, volume and EQ. """
     def __init__(self, soco):
         super(RenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
 
 
 class MR_ConnectionManager(Service):
+    """ UPnP standard connection manager service for the media renderer."""
     def __init__(self, soco):
         super(MR_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
@@ -514,6 +529,8 @@ class MR_ConnectionManager(Service):
 
 
 class AVTransport(Service):
+    """ UPnP standard AV Transport service, for functions relating to
+    transport management, eg play, stop, seek, playlists etc. """
     def __init__(self, soco):
         super(AVTransport, self).__init__(soco)
         self.control_url = "/MediaRenderer/AVTransport/Control"
@@ -545,12 +562,15 @@ class AVTransport(Service):
 
 
 class Queue(Service):
+    """ """
     def __init__(self, soco):
         super(Queue, self).__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
 
 
 class GroupRenderingControl(Service):
+    """ Sonos group rendering control service, for functions relating to
+    group volume etc. """
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
