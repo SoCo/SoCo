@@ -19,11 +19,8 @@ import re
 
 import requests
 
-from .services import AlarmClock, MusicServices, DeviceProperties
-from .services import SystemProperties, ZoneGroupTopology, GroupManagement
-from .services import QPlay, ContentDirectory, MS_ConnectionManager
-from .services import RenderingControl, MR_ConnectionManager, AVTransport
-from .services import Queue, GroupRenderingControl
+from .services import DeviceProperties, ContentDirectory
+from .services import RenderingControl, AVTransport
 
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
@@ -129,20 +126,10 @@ class SoCo(object):  # pylint: disable=R0904
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {}  # Stores information about the current speaker
-        self.AlarmClock = AlarmClock(self)
-        self.MusicServices = MusicServices(self)
-        self.DeviceProperties = DeviceProperties(self)
-        self.SystemProperties = SystemProperties(self)
-        self.ZoneGroupTopology = ZoneGroupTopology(self)
-        self.GroupManagement = GroupManagement(self)
-        self.QPlay = QPlay(self)
-        self.ContentDirectory = ContentDirectory(self)
-        self.MS_ConnectionManager = MS_ConnectionManager(self)
-        self.RenderingControl = RenderingControl(self)
-        self.MR_ConnectionManager = MR_ConnectionManager(self)
-        self.AVTransport = AVTransport(self)
-        self.Queue = Queue(self)
-        self.GroupRenderingControl = GroupRenderingControl(self)
+        self.deviceProperties = DeviceProperties(self)
+        self.contentDirectory = ContentDirectory(self)
+        self.renderingControl = RenderingControl(self)
+        self.avTransport = AVTransport(self)
 
     def set_player_name(self, playername):
         """  Sets the name of the player
@@ -153,11 +140,11 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.DeviceProperties.SetZoneAtrributes([
+        self.deviceProperties.SetZoneAtrributes([
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')
-        ])
+            ])
 
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
@@ -177,7 +164,7 @@ class SoCo(object):  # pylint: disable=R0904
         if not playmode in modes:
             raise KeyError('invalid play mode')
 
-        self.AVTransport.SetPlayMode([
+        self.avTransport.SetPlayMode([
             ('InstanceID', 0),
             ('NewPlayMode', playmode)
             ])
@@ -199,14 +186,14 @@ class SoCo(object):  # pylint: disable=R0904
 
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
-        self.AVTransport.SetAVTransportURI([
+        self.avTransport.SetavTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', '')
             ])
 
         # second, set the track number with a seek command
-        self.AVTransport.Seek([
+        self.avTransport.Seek([
             ('InstanceID', 0),
             ('Unit', 'TRACK_NR'),
             ('Target', queue_index + 1)
@@ -224,15 +211,10 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.AVTransport.Play([
+        self.avTransport.Play([
             ('InstanceID', 0),
             ('Speed', 1)
-        ])
-        #response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION,
-        #                               PLAY_BODY)
-
-        #if response != PLAY_RESPONSE:
-        #    self.__parse_error(response)
+            ])
 
     def play_uri(self, uri='', meta=''):
         """ Play a given stream. Pauses the queue.
@@ -248,7 +230,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-        self.AVTransport.SetAVTransportURI([
+        self.avTransport.SetavTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
@@ -265,7 +247,7 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.AVTransport.Pause([
+        self.avTransport.Pause([
             ('InstanceID', 0),
             ('Speed', 1)
             ])
@@ -279,7 +261,7 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.AVTransport.Stop([
+        self.avTransport.Stop([
             ('InstanceID', 0),
             ('Speed', 1)
             ])
@@ -297,7 +279,7 @@ class SoCo(object):  # pylint: disable=R0904
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
             raise ValueError('invalid timestamp, use HH:MM:SS format')
 
-        self.AVTransport.Seek([
+        self.avTransport.Seek([
             ('InstanceID', 0),
             ('Unit', 'REL_TIME'),
             ('Target', timestamp)
@@ -318,7 +300,7 @@ class SoCo(object):  # pylint: disable=R0904
         songs can be skipped).
 
         """
-        self.AVTransport.Next([
+        self.avTransport.Next([
             ('InstanceID', 0),
             ('Speed', 1)
             ])
@@ -337,7 +319,7 @@ class SoCo(object):  # pylint: disable=R0904
         go back on tracks.
 
         """
-        self.AVTransport.Previous([
+        self.avTransport.Previous([
             ('InstanceID', 0),
             ('Speed', 1)
             ])
@@ -358,7 +340,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         if mute is None:
-            response = self.RenderingControl.GetMute([
+            response = self.renderingControl.GetMute([
                 ('InstanceID', 0),
                 ('Channel', 'Master')
                 ])
@@ -366,7 +348,7 @@ class SoCo(object):  # pylint: disable=R0904
             return int(mute_state)
         else:
             mute_value = '1' if mute else '0'
-            self.RenderingControl.SetMute([
+            self.renderingControl.SetMute([
                 ('InstanceID', 0),
                 ('Channel', 'Master'),
                 ('DesiredMute', mute_value)
@@ -390,13 +372,13 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if volume is not None:
             volume = max(0, min(volume, 100))  # Coerce in range
-            self.RenderingControl.SetVolume([
+            self.renderingControl.SetVolume([
                 ('InstanceID', 0),
                 ('Channel', 'Master'),
                 ('DesiredVolume', volume)
                 ])
         else:
-            response = self.RenderingControl.GetVolume([
+            response = self.renderingControl.GetVolume([
                 ('InstanceID', 0),
                 ('Channel', 'Master'),
                 ])
@@ -420,12 +402,12 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if bass is not None:
             bass = max(-10, min(bass, 10))  # Coerce in range
-            self.RenderingControl.SetBass([
+            self.renderingControl.SetBass([
                 ('InstanceID', 0),
                 ('DesiredBass', bass)
                 ])
         else:
-            response = self.RenderingControl.GetBass([
+            response = self.renderingControl.GetBass([
                 ('InstanceID', 0),
                 ('Channel', 'Master'),
                 ])
@@ -450,12 +432,12 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if treble is not None:
             treble = max(-10, min(treble, 10))  # Coerce in range
-            self.RenderingControl.SetTreble([
+            self.renderingControl.SetTreble([
                 ('InstanceID', 0),
                 ('DesiredTreble', treble)
                 ])
         else:
-            response = self.RenderingControl.GetTreble([
+            response = self.renderingControl.GetTreble([
                 ('InstanceID', 0),
                 ('Channel', 'Master'),
                 ])
@@ -478,7 +460,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         loudness_value = '1' if loudness else '0'
-        self.RenderingControl.SetLoudness([
+        self.renderingControl.SetLoudness([
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
@@ -528,7 +510,7 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.AVTransport.SetAVTransportURI([
+        self.avTransport.SetavTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon:{0}'.format(master_uid)),
             ('CurrentURIMetaData', '')
@@ -548,7 +530,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-        self.AVTransport.BecomeCoordinatorOfStandaloneGroup([
+        self.avTransport.BecomeCoordinatorOfStandaloneGroup([
             ('InstanceID', 0),
             ('Speed', '1')
             ])
@@ -568,7 +550,7 @@ class SoCo(object):  # pylint: disable=R0904
         """
         speaker_info = self.get_speaker_info()
         speaker_uid = speaker_info['uid']
-        self.AVTransport.SetAVTransportURI([
+        self.avTransport.SetavTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon:{0}'.format(speaker_uid)),
             ('CurrentURIMetaData', '')
@@ -590,7 +572,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         led_state = 'On' if led_on else 'Off'
-        self.DeviceProperties.SetLEDState([
+        self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
             ])
 
@@ -609,7 +591,7 @@ class SoCo(object):  # pylint: disable=R0904
         string.
 
         """
-        response = self.AVTransport.GetPositionInfo([
+        response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
             ])
@@ -805,7 +787,7 @@ class SoCo(object):  # pylint: disable=R0904
         states of CurrentTransportStatus and CurrentSpeed.
 
         """
-        response = self.AVTransport.GetTransportInfo([
+        response = self.avTransport.GetTransportInfo([
             ('InstanceID', 0),
             ])
 
@@ -841,7 +823,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         queue = []
-        response = self.ContentDirectory.Browse([
+        response = self.contentDirectory.Browse([
             ('ObjectID', 'Q:0'),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
@@ -873,7 +855,6 @@ class SoCo(object):  # pylint: disable=R0904
                         '{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
                     item['album_art'] = element.findtext(
                         '{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-                    # TODO: unencode XML escaping
                     item['uri'] = element.findtext(
                         '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
 
@@ -985,7 +966,7 @@ class SoCo(object):  # pylint: disable=R0904
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
                               'playlists': 'A:PLAYLISTS'}
         search = search_translation[search_type]
-        response = self.ContentDirectory.Browse([
+        response = self.contentDirectory.Browse([
             ('ObjectID', search),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
@@ -1053,7 +1034,7 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        response = self.AVTransport.AddURIToQueue([
+        response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
             ('EnqueuedURI', uri),
             ('EnqueuedURIMetaData', ''),
@@ -1077,7 +1058,7 @@ class SoCo(object):  # pylint: disable=R0904
         # TODO: what do these parameters actually do?
         updid = '0'
         objid = 'Q:0/' + str(index)
-        self.AVTransport.RemoveTrackFromQueue([
+        self.avTransport.RemoveTrackFromQueue([
             ('InstanceID', 0),
             ('ObjectID', objid),
             ('UpdateID', updid),
@@ -1092,7 +1073,7 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.AVTransport.RemoveAllTracksFromQueue([
+        self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
             ])
 
@@ -1141,7 +1122,7 @@ class SoCo(object):  # pylint: disable=R0904
         if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
             favorite_type = RADIO_STATIONS
 
-        response = self.ContentDirectory.Browse([
+        response = self.contentDirectory.Browse([
             ('ObjectID', 'R:0/{}'.format(favorite_type)),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
