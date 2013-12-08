@@ -10,6 +10,7 @@ __website__ = 'https://github.com/rahims/SoCo'
 __license__ = 'MIT License'
 
 
-from .core import SonosDiscovery, SoCo, SoCoException, UnknownSoCoException
+from .core import SonosDiscovery, SoCo
+from .exceptions import SoCoException, UnknownSoCoException
 
 __all__ = ['SonosDiscovery', 'SoCo', 'SoCoException', 'UnknownSoCoException']
