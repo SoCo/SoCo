@@ -562,7 +562,8 @@ class AVTransport(Service):
 
 
 class Queue(Service):
-    """ """
+    """ Sonos queue service, for functions relating to queue management, saving
+    queues etc. """
     def __init__(self, soco):
         super(Queue, self).__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
