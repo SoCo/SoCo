@@ -186,7 +186,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
-        self.avTransport.SetavTransportURI([
+        self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', '')
@@ -230,7 +230,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-        self.avTransport.SetavTransportURI([
+        self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
@@ -510,9 +510,9 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        self.avTransport.SetavTransportURI([
+        self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{master_uid}'.format(master_uid)),
+            ('CurrentURI', 'x-rincon:{}'.format(master_uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -550,9 +550,9 @@ class SoCo(object):  # pylint: disable=R0904
         """
         speaker_info = self.get_speaker_info()
         speaker_uid = speaker_info['uid']
-        self.avTransport.SetavTransportURI([
+        self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{speaker_uid}'.format(speaker_uid)),
+            ('CurrentURI', 'x-rincon-stream:{}'.format(speaker_uid)),
             ('CurrentURIMetaData', '')
             ])
 
