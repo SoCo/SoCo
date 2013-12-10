@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0302
-from __future__ import unicode_literals
-
 """ The core module contains SonosDiscovery and SoCo classes that implement
 the main entry to the SoCo functionality
 """
+
+from __future__ import unicode_literals
 
 try:
     import xml.etree.cElementTree as XML
 except ImportError:
     import xml.etree.ElementTree as XML
 
-import requests
 import select
 import socket
 import logging
 import traceback
 import re
 
+import requests
+
+from .services import DeviceProperties, ContentDirectory
+from .services import RenderingControl, AVTransport
+
 from .utils import really_unicode, really_utf8, camel_to_underscore
-from .exceptions import SoCoException, UnknownSoCoException
 
 LOGGER = logging.getLogger(__name__)
 
@@ -123,6 +126,10 @@ class SoCo(object):  # pylint: disable=R0904
     def __init__(self, speaker_ip):
         self.speaker_ip = speaker_ip
         self.speaker_info = {}  # Stores information about the current speaker
+        self.deviceProperties = DeviceProperties(self)
+        self.contentDirectory = ContentDirectory(self)
+        self.renderingControl = RenderingControl(self)
+        self.avTransport = AVTransport(self)
 
     def set_player_name(self, playername):
         """  Sets the name of the player
@@ -133,12 +140,11 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        body = SET_PLAYER_NAME_BODY_TEMPLATE.format(playername=playername)
-        response = self.__send_command(DEVICE_ENDPOINT, SET_PLAYER_NAME_ACTION,
-                                       body)
-
-        if response != SET_PLAYER_NAME_RESPONSE:
-            self.__parse_error(response)
+        self.deviceProperties.SetZoneAtrributes([
+            ('DesiredZoneName', playername),
+            ('DesiredIcon', ''),
+            ('DesiredConfiguration', '')
+            ])
 
     def set_play_mode(self, playmode):
         """ Sets the play mode for the queue. Case-insensitive options are:
@@ -158,17 +164,10 @@ class SoCo(object):  # pylint: disable=R0904
         if not playmode in modes:
             raise KeyError('invalid play mode')
 
-        action = '"urn:schemas-upnp-org:service:AVTransport:1#SetPlayMode"'
-        body = '''
-        <u:SetPlayMode xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-          <InstanceID>0</InstanceID>
-          <NewPlayMode>{0}</NewPlayMode>
-         </u:SetPlayMode>
-        '''.format(playmode)
-        response = self.__send_command(TRANSPORT_ENDPOINT, action, body)
-
-        if "errorCode" in response:
-            self.__parse_error(response)
+        self.avTransport.SetPlayMode([
+            ('InstanceID', 0),
+            ('NewPlayMode', playmode)
+            ])
 
     def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
@@ -187,18 +186,18 @@ class SoCo(object):  # pylint: disable=R0904
 
         # first, set the queue itself as the source URI
         uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
-        body = PLAY_FROM_QUEUE_BODY_TEMPLATE.format(uri=uri)
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       SET_TRANSPORT_ACTION, body)
-        if not (response == PLAY_FROM_QUEUE_RESPONSE):
-            self.__parse_error(response)
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', '')
+            ])
 
         # second, set the track number with a seek command
-        body = SEEK_TRACK_BODY_TEMPLATE.format(track=queue_index + 1)
-        response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
-
-        if "errorCode" in response:
-            self.__parse_error(response)
+        self.avTransport.Seek([
+            ('InstanceID', 0),
+            ('Unit', 'TRACK_NR'),
+            ('Target', queue_index + 1)
+            ])
 
         # finally, just play what's set
         return self.play()
@@ -212,12 +211,10 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-
-        response = self.__send_command(TRANSPORT_ENDPOINT, PLAY_ACTION,
-                                       PLAY_BODY)
-
-        if response != PLAY_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.Play([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def play_uri(self, uri='', meta=''):
         """ Play a given stream. Pauses the queue.
@@ -233,15 +230,13 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-        body = PLAY_URI_BODY_TEMPLATE.format(uri=uri, meta=meta)
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       SET_TRANSPORT_ACTION, body)
-
-        if (response == ENQUEUE_RESPONSE):
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', meta)
+            ])
             # The track is enqueued, now play it.
-            return self.play()
-        else:
-            self.__parse_error(response)
+        return self.play()
 
     def pause(self):
         """ Pause the currently playing track.
@@ -252,11 +247,10 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, PAUSE_ACTION,
-                                       PAUSE_BODY)
-
-        if response != PAUSE_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.Pause([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def stop(self):
         """ Stop the currently playing track.
@@ -267,11 +261,10 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, STOP_ACTION,
-                                       STOP_BODY)
-
-        if response != STOP_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.Stop([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
@@ -286,11 +279,11 @@ class SoCo(object):  # pylint: disable=R0904
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
             raise ValueError('invalid timestamp, use HH:MM:SS format')
 
-        body = SEEK_TIMESTAMP_BODY_TEMPLATE.format(timestamp=timestamp)
-        response = self.__send_command(TRANSPORT_ENDPOINT, SEEK_ACTION, body)
-
-        if "errorCode" in response:
-            self.__parse_error(response)
+        self.avTransport.Seek([
+            ('InstanceID', 0),
+            ('Unit', 'REL_TIME'),
+            ('Target', timestamp)
+            ])
 
     def next(self):
         """ Go to the next track.
@@ -307,11 +300,10 @@ class SoCo(object):  # pylint: disable=R0904
         songs can be skipped).
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, NEXT_ACTION,
-                                       NEXT_BODY)
-
-        if response != NEXT_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.Next([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def previous(self):
         """ Go back to the previously played track.
@@ -327,11 +319,10 @@ class SoCo(object):  # pylint: disable=R0904
         go back on tracks.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, PREV_ACTION,
-                                       PREV_BODY)
-
-        if response != PREV_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.Previous([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def mute(self, mute=None):
         """ Mute or unmute the Sonos speaker.
@@ -349,19 +340,19 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         if mute is None:
-            response = self.__send_command(RENDERING_ENDPOINT, GET_MUTE_ACTION,
-                                           GET_MUTE_BODY)
-            dom = XML.fromstring(response)
-            mute_state = dom.findtext('.//CurrentMute')
+            response = self.renderingControl.GetMute([
+                ('InstanceID', 0),
+                ('Channel', 'Master')
+                ])
+            mute_state = response['CurrentMute']
             return int(mute_state)
         else:
             mute_value = '1' if mute else '0'
-            body = MUTE_BODY_TEMPLATE.format(mute=mute_value)
-            response = self.__send_command(RENDERING_ENDPOINT, MUTE_ACTION,
-                                           body)
-
-            if response != MUTE_RESPONSE:
-                return self.__parse_error(response)
+            self.renderingControl.SetMute([
+                ('InstanceID', 0),
+                ('Channel', 'Master'),
+                ('DesiredMute', mute_value)
+                ])
 
     def volume(self, volume=None):
         """ Get or set the Sonos speaker volume.
@@ -381,18 +372,17 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if volume is not None:
             volume = max(0, min(volume, 100))  # Coerce in range
-            body = SET_VOLUME_BODY_TEMPLATE.format(volume=volume)
-            response = self.__send_command(RENDERING_ENDPOINT,
-                                           SET_VOLUME_ACTION, body)
-
-            if response != SET_VOLUME_RESPONSE:
-                self.__parse_error(response)
+            self.renderingControl.SetVolume([
+                ('InstanceID', 0),
+                ('Channel', 'Master'),
+                ('DesiredVolume', volume)
+                ])
         else:
-            response = self.__send_command(RENDERING_ENDPOINT,
-                                           GET_VOLUME_ACTION,
-                                           GET_VOLUME_BODY)
-            dom = XML.fromstring(response)
-            volume = dom.findtext('.//CurrentVolume')
+            response = self.renderingControl.GetVolume([
+                ('InstanceID', 0),
+                ('Channel', 'Master'),
+                ])
+            volume = response['CurrentVolume']
             return int(volume)
 
     def bass(self, bass=None):
@@ -412,17 +402,16 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if bass is not None:
             bass = max(-10, min(bass, 10))  # Coerce in range
-            body = SET_BASS_BODY_TEMPLATE.format(bass=bass)
-            response = self.__send_command(RENDERING_ENDPOINT, SET_BASS_ACTION,
-                                           body)
-
-            if response != SET_BASS_RESPONSE:
-                self.__parse_error(response)
+            self.renderingControl.SetBass([
+                ('InstanceID', 0),
+                ('DesiredBass', bass)
+                ])
         else:
-            response = self.__send_command(RENDERING_ENDPOINT, GET_BASS_ACTION,
-                                           GET_BASS_BODY)
-            dom = XML.fromstring(response)
-            bass = dom.findtext('.//CurrentBass')
+            response = self.renderingControl.GetBass([
+                ('InstanceID', 0),
+                ('Channel', 'Master'),
+                ])
+            bass = response['CurrentBass']
             return int(bass)
 
     def treble(self, treble=None):
@@ -443,17 +432,16 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if treble is not None:
             treble = max(-10, min(treble, 10))  # Coerce in range
-            body = SET_TREBLE_BODY_TEMPLATE.format(treble=treble)
-            response = self.__send_command(RENDERING_ENDPOINT,
-                                           SET_TREBLE_ACTION, body)
-
-            if response != SET_TREBLE_RESPONSE:
-                self.__parse_error(response)
+            self.renderingControl.SetTreble([
+                ('InstanceID', 0),
+                ('DesiredTreble', treble)
+                ])
         else:
-            response = self.__send_command(RENDERING_ENDPOINT,
-                                           GET_TREBLE_ACTION, GET_TREBLE_BODY)
-            dom = XML.fromstring(response)
-            treble = dom.findtext('.//CurrentTreble')
+            response = self.renderingControl.GetTreble([
+                ('InstanceID', 0),
+                ('Channel', 'Master'),
+                ])
+            treble = response['CurrentTreble']
             return int(treble)
 
     def set_loudness(self, loudness):
@@ -472,12 +460,11 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         loudness_value = '1' if loudness else '0'
-        body = SET_LOUDNESS_BODY_TEMPLATE.format(loudness=loudness_value)
-        response = self.__send_command(RENDERING_ENDPOINT, SET_LOUDNESS_ACTION,
-                                       body)
-
-        if response != SET_LOUDNESS_RESPONSE:
-            self.__parse_error(response)
+        self.renderingControl.SetLoudness([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ('DesiredLoudness', loudness_value)
+            ])
 
     def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party
@@ -523,12 +510,11 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        body = JOIN_BODY_TEMPLATE.format(master_uid=master_uid)
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       SET_TRANSPORT_ACTION, body)
-
-        if response != JOIN_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', 'x-rincon:{}'.format(master_uid)),
+            ('CurrentURIMetaData', '')
+            ])
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -544,11 +530,10 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-        response = self.__send_command(TRANSPORT_ENDPOINT, UNJOIN_ACTION,
-                                       UNJOIN_BODY)
-
-        if response != UNJOIN_RESPONSE:
-            self.__parse_error(response)
+        self.avTransport.BecomeCoordinatorOfStandaloneGroup([
+            ('InstanceID', 0),
+            ('Speed', '1')
+            ])
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
@@ -564,12 +549,12 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         speaker_info = self.get_speaker_info()
-        body = SET_LINEIN_BODY_TEMPLATE.format(speaker_uid=speaker_info['uid'])
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       SET_TRANSPORT_ACTION, body)
-
-        if response != SET_LINEIN_RESPONSE:
-            self.__parse_error(response)
+        speaker_uid = speaker_info['uid']
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', 'x-rincon-stream:{}'.format(speaker_uid)),
+            ('CurrentURIMetaData', '')
+            ])
 
     def status_light(self, led_on):
         """ Turn on (or off) the white Sonos status light.
@@ -587,12 +572,9 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         led_state = 'On' if led_on else 'Off'
-        body = SET_LEDSTATE_BODY_TEMPLATE.format(state=led_state)
-        response = self.__send_command(DEVICE_ENDPOINT, SET_LEDSTATE_ACTION,
-                                       body)
-
-        if response != SET_LEDSTATE_RESPONSE:
-            return self.__parse_error(response)
+        self.deviceProperties.SetLEDState([
+            ('DesiredLEDState', led_state),
+            ])
 
     def get_current_track_info(self):
         """ Get information about the currently playing track.
@@ -609,19 +591,19 @@ class SoCo(object):  # pylint: disable=R0904
         string.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       GET_CUR_TRACK_ACTION,
-                                       GET_CUR_TRACK_BODY)
-        dom = XML.fromstring(really_utf8(response))
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+            ])
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
                  'position': ''}
-        track['playlist_position'] = dom.findtext('.//Track')
-        track['duration'] = dom.findtext('.//TrackDuration')
-        track['uri'] = dom.findtext('.//TrackURI')
-        track['position'] = dom.findtext('.//RelTime')
+        track['playlist_position'] = response['Track']
+        track['duration'] = response['TrackDuration']
+        track['uri'] = response['TrackURI']
+        track['position'] = response['RelTime']
 
-        metadata = dom.findtext('.//TrackMetaData')
+        metadata = response['TrackMetaData']
         # Duration seems to be '0:00:00' when listening to radio
         if metadata != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(really_utf8(metadata))
@@ -805,9 +787,10 @@ class SoCo(object):  # pylint: disable=R0904
         states of CurrentTransportStatus and CurrentSpeed.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       GET_CUR_TRANSPORT_ACTION,
-                                       GET_CUR_TRANSPORT_BODY)
+        response = self.avTransport.GetTransportInfo([
+            ('InstanceID', 0),
+            ])
+
         dom = XML.fromstring(really_utf8(response))
 
         playstate = {
@@ -841,17 +824,19 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         queue = []
-        body = GET_QUEUE_BODY_TEMPLATE.format(start, max_items)
-        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
-                                       BROWSE_ACTION, body)
-
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', start),
+            ('RequestedCount', max_items),
+            ('SortCriteria', '')
+            ])
+        result = response['Result']
+        if not result:
+            return queue
         try:
-            dom = XML.fromstring(really_utf8(response))
-            result_text = dom.findtext('.//Result')
-            if not result_text:
-                return queue
-
-            result_dom = XML.fromstring(really_utf8(result_text))
+            result_dom = XML.fromstring(really_utf8(result))
             for element in result_dom.findall(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 try:
@@ -981,19 +966,21 @@ class SoCo(object):  # pylint: disable=R0904
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
                               'playlists': 'A:PLAYLISTS'}
         search = search_translation[search_type]
-        body = GET_MUSIC_LIB_TEMPLATE.format(search=search, start=start,
-                                             max_items=max_items)
-        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
-                                       BROWSE_ACTION, body)
-        dom = XML.fromstring(really_utf8(response))
+        response = self.contentDirectory.Browse([
+            ('ObjectID', search),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', start),
+            ('RequestedCount', max_items),
+            ('SortCriteria', '')
+            ])
 
         # Get result information
         out = {'item_list': [], 'search_type': search_type}
         for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
-            out[camel_to_underscore(tag)] = int(dom.findtext('.//' + tag))
-
+            out[camel_to_underscore(tag)] = response[tag]
         # Parse the results
-        result_xml = XML.fromstring(really_utf8(dom.findtext('.//Result')))
+        result_xml = XML.fromstring(really_utf8(response['Result']))
         # Information for the tags to parse, [name, ns]
         tag_info = [['title', 'dc'], ['class', 'upnp']]
         if search_type == 'tracks':
@@ -1047,15 +1034,15 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        body = ADD_TO_QUEUE_BODY_TEMPLATE.format(uri=uri)
-        response = self.__send_command(TRANSPORT_ENDPOINT, ADD_TO_QUEUE_ACTION,
-                                       body)
-        if "errorCode" in response:
-            self.__parse_error(response)
-        else:
-            dom = XML.fromstring(response)
-            qnumber = dom.findtext('.//FirstTrackNumberEnqueued')
-            return int(qnumber)
+        response = self.avTransport.AddURIToQueue([
+            ('InstanceID', 0),
+            ('EnqueuedURI', uri),
+            ('EnqueuedURIMetaData', ''),
+            ('DesiredFirstTrackNumberEnqueued', 0),
+            ('EnqueueAsNext', 1)
+            ])
+        qnumber = response['FirstTrackNumberEnqueued']
+        return int(qnumber)
 
     def remove_from_queue(self, index):
         """ Removes a track from the queue.
@@ -1069,15 +1056,13 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
         # TODO: what do these parameters actually do?
-        instance = updid = '0'
+        updid = '0'
         objid = 'Q:0/' + str(index)
-        body = REMOVE_FROM_QUEUE_BODY_TEMPLATE.format(instance=instance,
-                                                      objid=objid,
-                                                      updateid=updid)
-        response = self.__send_command(TRANSPORT_ENDPOINT,
-                                       REMOVE_FROM_QUEUE_ACTION, body)
-        if "errorCode" in response:
-            self.__parse_error(response)
+        self.avTransport.RemoveTrackFromQueue([
+            ('InstanceID', 0),
+            ('ObjectID', objid),
+            ('UpdateID', updid),
+            ])
 
     def clear_queue(self):
         """ Removes all tracks from the queue.
@@ -1088,11 +1073,9 @@ class SoCo(object):  # pylint: disable=R0904
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        response = self.__send_command(TRANSPORT_ENDPOINT, CLEAR_QUEUE_ACTION,
-                                       CLEAR_QUEUE_BODY)
-
-        if "errorCode" in response:
-            self.__parse_error(response)
+        self.avTransport.RemoveAllTracksFromQueue([
+            ('InstanceID', 0),
+            ])
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
@@ -1108,6 +1091,7 @@ class SoCo(object):  # pylint: disable=R0904
         get the entire list of favorites.
 
         """
+
         return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
@@ -1138,15 +1122,17 @@ class SoCo(object):  # pylint: disable=R0904
         if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
             favorite_type = RADIO_STATIONS
 
-        body = GET_RADIO_FAVORITES_BODY_TEMPLATE.format(favorite_type, start,
-                                                        max_items)
-        response = self.__send_command(CONTENT_DIRECTORY_ENDPOINT,
-                                       BROWSE_ACTION, body)
-        dom = XML.fromstring(really_utf8(response))
-
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'R:0/{}'.format(favorite_type)),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', start),
+            ('RequestedCount', max_items),
+            ('SortCriteria', '')
+            ])
         result = {}
         favorites = []
-        results_xml = dom.findtext('.//Result')
+        results_xml = response['Result']
 
         if results_xml != '':
             # Favorites are returned in DIDL-Lite format
@@ -1161,59 +1147,11 @@ class SoCo(object):  # pylint: disable=R0904
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
                 favorites.append(favorite)
 
-        result['total'] = dom.findtext('.//TotalMatches', 0)
+        result['total'] = response['TotalMatches']
         result['returned'] = len(favorites)
         result['favorites'] = favorites
 
         return result
-
-    def __send_command(self, endpoint, action, body):
-        """ Send a raw command to the Sonos speaker.
-
-        Returns:
-        The raw response body returned by the Sonos speaker.
-
-        """
-        headers = {
-            'Content-Type': 'text/xml',
-            'SOAPACTION': action
-        }
-
-        soap = SOAP_TEMPLATE.format(body=body)
-        response = requests.post('http://' + self.speaker_ip + ':1400' +
-                                endpoint, data=soap, headers=headers)
-
-        return response.text
-
-    @staticmethod
-    def __parse_error(response):
-        """ Parse an error returned from the Sonos speaker.
-
-        Returns:
-        The UPnP error code returned by the Sonos speaker.
-
-        Raises SoCoException (or a subclass) upon errors.
-
-        """
-        error = XML.fromstring(response)
-        error_code = error.findtext(
-            './/{urn:schemas-upnp-org:control-1-0}errorCode')
-
-        if error_code is not None:
-            raise SoCoException(int(error_code))
-        else:
-            # Unknown error, so just return the entire response
-            raise UnknownSoCoException(response)
-
-    def send_command(self, endpoint, action, body):
-        """ Public version of __send_command """
-        # additional checks for external interface
-        return self.__send_command(endpoint, action, body)
-
-    def parse_error(self, response):
-        """ Public version of __parse_error """
-        # additional checks for external interface
-        return self.__parse_error(response)
 
 
 # definition section
@@ -1230,457 +1168,6 @@ MCAST_PORT = 1900
 RADIO_STATIONS = 0
 RADIO_SHOWS = 1
 
-TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
-RENDERING_ENDPOINT = '/MediaRenderer/RenderingControl/Control'
-DEVICE_ENDPOINT = '/DeviceProperties/Control'
-CONTENT_DIRECTORY_ENDPOINT = '/MediaServer/ContentDirectory/Control'
-
-ENQUEUE_BODY_TEMPLATE = '''
-<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <CurrentURI>{uri}</CurrentURI>
-    <CurrentURIMetaData></CurrentURIMetaData>
-</u:SetAVTransportURI>
-'''
-ENQUEUE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetAVTransportURIResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:SetAVTransportURIResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
-PLAY_BODY = '''
-<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Speed>1</Speed>
-</u:Play>
-'''
-PLAY_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:PlayResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-PLAY_FROM_QUEUE_BODY_TEMPLATE = '''
-<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <CurrentURI>{uri}</CurrentURI>
-    <CurrentURIMetaData></CurrentURIMetaData>
-</u:SetAVTransportURI>
-'''
-PLAY_FROM_QUEUE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetAVTransportURIResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:SetAVTransportURIResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-PAUSE_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Pause"'
-PAUSE_BODY = '''
-<u:Pause xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Speed>1</Speed>
-</u:Pause>
-'''
-PAUSE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body><u:PauseResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:PauseResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-STOP_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Stop"'
-STOP_BODY = '''
-<u:Stop xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Speed>1</Speed>
-</u:Stop>
-'''
-STOP_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body><u:StopResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:StopResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-NEXT_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Next"'
-NEXT_BODY = '''
-<u:Next xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Speed>1</Speed>
-</u:Next>
-'''
-NEXT_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:NextResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:NextResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-PREV_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Previous"'
-PREV_BODY = '''
-<u:Previous xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Speed>1</Speed>
-</u:Previous>
-'''
-PREV_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:PreviousResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:PreviousResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-MUTE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetMute"'
-MUTE_BODY_TEMPLATE = '''
-<u:SetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-    <DesiredMute>{mute}</DesiredMute>
-</u:SetMute>
-'''
-MUTE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetMuteResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-     '</u:SetMuteResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_MUTE_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetMute"'
-GET_MUTE_BODY = '''
-<u:GetMute xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-</u:GetMute>
-'''
-
-SET_VOLUME_ACTION = \
-    '"urn:schemas-upnp-org:service:RenderingControl:1#SetVolume"'
-SET_VOLUME_BODY_TEMPLATE = '''
-<u:SetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-    <DesiredVolume>{volume}</DesiredVolume>
-</u:SetVolume>
-'''
-SET_VOLUME_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetVolumeResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-     '</u:SetVolumeResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_VOLUME_ACTION = \
-    '"urn:schemas-upnp-org:service:RenderingControl:1#GetVolume"'
-GET_VOLUME_BODY = '''
-<u:GetVolume xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-</u:GetVolume>
-'''
-
-SET_BASS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#SetBass"'
-SET_BASS_BODY_TEMPLATE = '''
-<u:SetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <DesiredBass>{bass}</DesiredBass>
-</u:SetBass>
-'''
-SET_BASS_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetBassResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-     '</u:SetBassResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_BASS_ACTION = '"urn:schemas-upnp-org:service:RenderingControl:1#GetBass"'
-GET_BASS_BODY = '''
-<u:GetBass xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-</u:GetBass>
-'''
-
-SET_TREBLE_ACTION = \
-    '"urn:schemas-upnp-org:service:RenderingControl:1#SetTreble"'
-SET_TREBLE_BODY_TEMPLATE = '''
-<u:SetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <DesiredTreble>{treble}</DesiredTreble>
-</u:SetTreble>
-'''
-SET_TREBLE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body><u:SetTrebleResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-     '</u:SetTrebleResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_TREBLE_ACTION = \
-    '"urn:schemas-upnp-org:service:RenderingControl:1#GetTreble"'
-GET_TREBLE_BODY = '''
-<u:GetTreble xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-</u:GetTreble>
-'''
-
-SET_LOUDNESS_ACTION = \
-    '"urn:schemas-upnp-org:service:RenderingControl:1#SetLoudness"'
-SET_LOUDNESS_BODY_TEMPLATE = '''
-<u:SetLoudness xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-    <DesiredLoudness>{loudness}</DesiredLoudness>
-</u:SetLoudness>
-'''
-SET_LOUDNESS_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetLoudnessResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:RenderingControl:1">'
-     '</u:SetLoudnessResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-SET_TRANSPORT_ACTION = \
-    '"urn:schemas-upnp-org:service:AVTransport:1#SetAVTransportURI"'
-
-JOIN_BODY_TEMPLATE = '''
-<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <CurrentURI>x-rincon:{master_uid}</CurrentURI>
-    <CurrentURIMetaData></CurrentURIMetaData>
-</u:SetAVTransportURI>
-'''
-JOIN_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body><u:SetAVTransportURIResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:SetAVTransportURIResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-UNJOIN_ACTION = ('"urn:schemas-upnp-org:service:AVTransport:1#'
-                 'BecomeCoordinatorOfStandaloneGroup"')
-UNJOIN_BODY = \
-    ('<u:BecomeCoordinatorOfStandaloneGroup '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '<InstanceID>0</InstanceID>'
-     '<Speed>1</Speed>'
-     '</u:BecomeCoordinatorOfStandaloneGroup>')
-UNJOIN_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:BecomeCoordinatorOfStandaloneGroupResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:BecomeCoordinatorOfStandaloneGroupResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-SET_LINEIN_BODY_TEMPLATE = '''
-<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <CurrentURI>x-rincon-stream:{speaker_uid}</CurrentURI>
-    <CurrentURIMetaData></CurrentURIMetaData>
-</u:SetAVTransportURI>
-'''
-SET_LINEIN_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetAVTransportURIResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '</u:SetAVTransportURIResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-SET_LEDSTATE_ACTION = \
-    '"urn:schemas-upnp-org:service:DeviceProperties:1#SetLEDState"'
-SET_LEDSTATE_BODY_TEMPLATE = '''
-<u:SetLEDState xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1">
-    <DesiredLEDState>{state}</DesiredLEDState>
-'''  # FIXME Something missing here?
-SET_LEDSTATE_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetLEDStateResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1">'
-     '</u:SetLEDStateResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_CUR_TRACK_ACTION = \
-    '"urn:schemas-upnp-org:service:AVTransport:1#GetPositionInfo"'
-GET_CUR_TRACK_BODY = '''
-<u:GetPositionInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Channel>Master</Channel>
-</u:GetPositionInfo>
-'''
-
-GET_CUR_TRANSPORT_ACTION = \
-    '"urn:schema-upnp-org:service:AVTransport:1#GetTransportInfo"'
-GET_CUR_TRANSPORT_BODY = '''
-<u:GetTransportInfo xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    </u:GetTransportInfo>
-    </s:Body>
-</s:Envelope>
-'''  # FIXME Mismatching tags
-
-SOAP_TEMPLATE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>{body}</s:Body>'
-     '</s:Envelope>')
-
-SEEK_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Seek"'
-SEEK_TRACK_BODY_TEMPLATE = '''
-<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Unit>TRACK_NR</Unit>
-    <Target>{track}</Target>
-</u:Seek>
-'''
-
-SEEK_TIMESTAMP_BODY_TEMPLATE = '''
-<u:Seek xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <Unit>REL_TIME</Unit>
-    <Target>{timestamp}</Target>
-</u:Seek>
-'''
-
-PLAY_URI_BODY_TEMPLATE = '''
-<u:SetAVTransportURI xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <CurrentURI>{uri}</CurrentURI>
-    <CurrentURIMetaData>{meta}</CurrentURIMetaData>
-</u:SetAVTransportURI>
-'''
-
-GET_QUEUE_BODY_TEMPLATE = '''
-<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
-     <ObjectID>Q:0</ObjectID>
-     <BrowseFlag>BrowseDirectChildren</BrowseFlag>
-     <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI
-     </Filter>
-     <StartingIndex>{0}</StartingIndex>
-     <RequestedCount>{1}</RequestedCount>
-     <SortCriteria></SortCriteria>
-</u:Browse>
-'''
-
-ADD_TO_QUEUE_ACTION = \
-    'urn:schemas-upnp-org:service:AVTransport:1#AddURIToQueue'
-ADD_TO_QUEUE_BODY_TEMPLATE = '''
-<u:AddURIToQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>0</InstanceID>
-    <EnqueuedURI>{uri}</EnqueuedURI>
-    <EnqueuedURIMetaData></EnqueuedURIMetaData>
-    <DesiredFirstTrackNumberEnqueued>0</DesiredFirstTrackNumberEnqueued>
-    <EnqueueAsNext>1</EnqueueAsNext>
-</u:AddURIToQueue>
-'''
-
-REMOVE_FROM_QUEUE_ACTION = \
-    'urn:schemas-upnp-org:service:AVTransport:1#RemoveTrackFromQueue'
-REMOVE_FROM_QUEUE_BODY_TEMPLATE = '''
-<u:RemoveTrackFromQueue xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    <InstanceID>{instance}</InstanceID>
-    <ObjectID>{objid}</ObjectID>
-    <UpdateID>{updateid}</UpdateID>
-</u:RemoveTrackFromQueue>
-'''
-
-CLEAR_QUEUE_ACTION = \
-    '"urn:schemas-upnp-org:service:AVTransport:1#RemoveAllTracksFromQueue"'
-CLEAR_QUEUE_BODY = \
-    ('<u:RemoveAllTracksFromQueue '
-     'xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">'
-     '<InstanceID>0</InstanceID>'
-     '</u:RemoveAllTracksFromQueue>')
-
-BROWSE_ACTION = '"urn:schemas-upnp-org:service:ContentDirectory:1#Browse"'
-GET_RADIO_FAVORITES_BODY_TEMPLATE = '''
-<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
-    <ObjectID>R:0/{0}</ObjectID>
-    <BrowseFlag>BrowseDirectChildren</BrowseFlag>
-    <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI
-    </Filter>
-    <StartingIndex>{1}</StartingIndex>
-    <RequestedCount>{2}</RequestedCount>
-    <SortCriteria/>
-</u:Browse>
-'''
-
-SET_PLAYER_NAME_ACTION = \
-    '"urn:schemas-upnp-org:service:DeviceProperties:1#SetZoneAttributes"'
-SET_PLAYER_NAME_BODY_TEMPLATE = \
-    ('"<u:SetZoneAttributes '
-     'xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1">'
-     '<DesiredZoneName>{playername}</DesiredZoneName>'
-     '<DesiredIcon />'
-     '<DesiredConfiguration />'
-     '</u:SetZoneAttributes>"')  # FIXME Inner "" here?
-
-SET_PLAYER_NAME_RESPONSE = \
-    ('<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" '
-     's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-     '<s:Body>'
-     '<u:SetZoneAttributesResponse '
-     'xmlns:u="urn:schemas-upnp-org:service:DeviceProperties:1">'
-     '</u:SetZoneAttributesResponse>'
-     '</s:Body>'
-     '</s:Envelope>')
-
-GET_MUSIC_LIB_TEMPLATE = '''
-<u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
-    <ObjectID>{search}</ObjectID>
-    <BrowseFlag>BrowseDirectChildren</BrowseFlag>
-    <Filter>dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI
-    </Filter>
-    <StartingIndex>{start}</StartingIndex>
-    <RequestedCount>{max_items}</RequestedCount>
-    <SortCriteria></SortCriteria>
-</u:Browse>
-'''
 NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
       '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
