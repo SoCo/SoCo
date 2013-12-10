@@ -152,7 +152,7 @@ def test_send_command(service):
     """ Calling a command should result in a http request """
     with mock.patch('requests.post') as fake_post:
         response = fake_post()
-        response.headers = {}        
+        response.headers = {}
         response.status_code = 200
         response.text = DUMMY_VALID_RESPONSE
         result = service.send_command('SetAVTransportURI', [
@@ -171,7 +171,8 @@ def test_handle_upnp_error(service):
     """ Check errors are extracted properly """
     with pytest.raises(SoCoUPnPException) as E:
         service.handle_upnp_error(DUMMY_ERROR)
-    assert "UPnP Error 607" in E.value.message
+    assert "UPnP Error 607 received: Signature Failure from 192.168.1.101" \
+        == E.value.message
     assert E.value.error_code == '607'
     assert E.value.error_description == 'Signature Failure'
     # TODO: Try this with a None Error Code
