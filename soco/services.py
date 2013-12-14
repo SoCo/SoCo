@@ -40,7 +40,7 @@ from __future__ import unicode_literals
 
 from types import MethodType
 from collections import namedtuple
-from xml.sax.saxutils import escape, unescape
+from xml.sax.saxutils import escape
 import logging
 try:
     import xml.etree.cElementTree as XML
@@ -188,7 +188,8 @@ class Service(object):
         if args is None:
             args = []
         l = ["<{name}>{value}</{name}>".format(
-            name=name, value=escape(unicode(value), {'"': '&quot;'})) for name, value in args]
+            name=name, value=escape(unicode(value), {'"': "&quot;"}))
+            for name, value in args]
         xml = "".join(l)
         return xml
 
@@ -226,17 +227,14 @@ class Service(object):
         # be fed bytes, rather than unicode
         xml_response = xml_response.encode('utf-8')
         tree = XML.fromstring(xml_response)
-        # Get the first chiled of the <Body> tag which will be
+
+        # Get the first child of the <Body> tag which will be
         # <{actionNameResponse}> (depends on what actionName is). Turn the
         # children of this into a {tagname, content} dict. XML unescaping
-        # is not quite good enough. We need to make sure that double quotes
-        # are also escaped. We also need to make sure that ampersands are
-        # re-escaped, so that subsequent XML parsing of values which are
-        # supposed to be XML does not break.
+        # is carried out for us by elementree.
         action_response = tree.find(
             ".//{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
-        return {i.tag: unescape(i.text, {"&quot;": '"'}).replace("&", "&amp;")
-            for i in action_response}
+        return {i.tag: i.text or "" for i in action_response}
 
     def build_command(self, action, args=None):
         """ Build a SOAP request.
@@ -410,21 +408,21 @@ class Service(object):
         # find all the actions
         actions = tree.iterfind('.//{}action'.format(ns))
         for i in actions:
-                action_name = i.findtext('{}name'.format(ns))
-                args_iter = i.iterfind('.//{}argument'.format(ns))
-                in_args = []
-                out_args = []
-                for a in args_iter:
-                    arg_name = a.findtext('{}name'.format(ns))
-                    direction = a.findtext('{}direction'.format(ns))
-                    related_variable = a.findtext(
-                        '{}relatedStateVariable'.format(ns))
-                    vartype = vartypes[related_variable]
-                    if direction == "in":
-                        in_args.append(Argument(arg_name, vartype))
-                    else:
-                        out_args.append(Argument(arg_name, vartype))
-                yield Action(action_name, in_args, out_args)
+            action_name = i.findtext('{}name'.format(ns))
+            args_iter = i.iterfind('.//{}argument'.format(ns))
+            in_args = []
+            out_args = []
+            for a in args_iter:
+                arg_name = a.findtext('{}name'.format(ns))
+                direction = a.findtext('{}direction'.format(ns))
+                related_variable = a.findtext(
+                    '{}relatedStateVariable'.format(ns))
+                vartype = vartypes[related_variable]
+                if direction == "in":
+                    in_args.append(Argument(arg_name, vartype))
+                else:
+                    out_args.append(Argument(arg_name, vartype))
+            yield Action(action_name, in_args, out_args)
 
 
 class AlarmClock(Service):
