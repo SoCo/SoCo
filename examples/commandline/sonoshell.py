@@ -47,18 +47,18 @@ if __name__ == '__main__':
             if (len(sys.argv) > 3):
                 operator = sys.argv[3].lower()
                 volume = sonos.volume()
-                x = 1
+                factor = 1
                 if len(operator) > 1:
-                    x = int(''.join(n for n in operator if n.isdigit()))
+                    factor = int(''.join(n for n in operator if n.isdigit()))
                 if (operator.find('+') != -1):
-                    if (volume + x) > 100:
-                        x = 1
-                    print sonos.volume(volume + x)
+                    if (volume + factor) > 100:
+                        factor = 1
+                    print sonos.volume(volume + factor)
                     print sonos.volume()
                 elif (operator.find('-') != -1):
-                    if (volume -x) < 0:
-                        x = 1
-                    print sonos.volume(volume - x)
+                    if (volume - factor) < 0:
+                        factor = 1
+                    print sonos.volume(volume - factor)
                     print sonos.volume()
                 else:
                     print "Valid operators for volume are + and -"
