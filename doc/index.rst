@@ -15,9 +15,10 @@ Contents
    :maxdepth: 2
 
    tutorial
+   soco-mod
    plugins
    unittests
-   soco-mod
+   data-structures-mod
    release_notes
 
 
