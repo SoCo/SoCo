@@ -8,7 +8,6 @@ from soco import SonosDiscovery
 
 def adjust_volume(sonos, operator):
     """ Adjust the volume up or down with a factor from 1 to 100 """
-    volume = sonos.volume()
     factor = get_volume_adjustment_factor(operator)
     volume = sonos.volume()
 
