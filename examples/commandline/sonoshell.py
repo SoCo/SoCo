@@ -10,14 +10,17 @@ from soco import SonosDiscovery
 def adjust_volume(sonos, operator):
     """ Adjust the volume up or down with a factor from 1 to 100 """
     factor = get_volume_adjustment_factor(operator)
+    if not factor:
+        return False
+
     volume = sonos.volume()
 
-    if (operator.find('+') != -1):
+    if (operator[0] == '+'):
         if (volume + factor) > 100:
             factor = 1
         print(sonos.volume(volume + factor))
         print(sonos.volume())
-    elif (operator.find('-') != -1):
+    elif (operator[0] == '-'):
         if (volume - factor) < 0:
             factor = 1
         print(sonos.volume(volume - factor))
@@ -30,7 +33,11 @@ def get_volume_adjustment_factor(operator):
     """ get the factor to adjust the volume with """
     factor = 1
     if len(operator) > 1:
-        factor = int(''.join(n for n in operator if n.isdigit()))
+        try:
+            factor = int(filter(str.isdigit, operator))
+        except ValueError:
+            print("Adjustment factor for volume has to be a int.")
+            return False
     return factor
 
 
