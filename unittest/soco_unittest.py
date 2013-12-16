@@ -14,12 +14,15 @@ to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
 PLEASE RESPECT THIS.
 """
+from __future__ import unicode_literals
 
-import soco
 import unittest
 import time
-SOCO = None
+import pytest
+import soco
 
+SOCO = None
+pytestmark = pytest.mark.integration
 
 class SoCoUnitTestInitError(Exception):
     """ Exception for incomplete unit test initialization """
@@ -76,6 +79,22 @@ NOT_TRUE = 'The method did not return True'
 NOT_EXP = 'The method did not return the expected value'
 NOT_TYPE = 'The return value of the method did not have the expected type: {0}'
 NOT_IN_RANGE = 'The returned value is not in the expected range'
+
+
+# functions for running via pytest
+def setup_module(module):
+    ip = pytest.config.option.IP
+    if ip is None:
+        raise SoCoUnitTestInitError(
+            "No ip address specified. Use the --ip option.")
+    init(ip=ip)
+    state = get_state()
+    module.state = state
+
+def teardown_module(module):
+    state = module.state
+    set_state(state)
+
 
 
 class Volume(unittest.TestCase):
