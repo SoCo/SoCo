@@ -34,7 +34,7 @@ def get_volume_adjustment_factor(operator):
     factor = 1
     if len(operator) > 1:
         try:
-            factor = int(filter(str.isdigit, operator))
+            factor = int(operator[1:])
         except ValueError:
             print("Adjustment factor for volume has to be a int.")
             return False
