@@ -1,17 +1,44 @@
-Unit tests
-**********
+Unit and integration tests
+**************************
 
-The unit tests written for the *SoCo* module implements elementary
-checks of whether the individual methods produce the expected
-results. Such tests are especially useful during re-factoring and to
-check that already implemented functionality continues to work past
-updates to the Sonos® units internal software.
+There are two sorts of tests written for the ``SoCo`` package. Unit tests
+implement elementary checks of whether the individual methods produce the
+expected results. Integration tests check that the package as a whole is able to
+interface propertly with the Sonos hardware. Such tests are especially useful
+during re-factoring and to check that already implemented functionality
+continues to work past updates to the Sonos units' internal software.
+
+Setting up your environment
+===========================
+
+To run the unit tests, you will need to have the `py.test <http://pytest.org>`_
+testing tool installed. You will also need a copy of `Mock <http://http://www.voidspace.org.uk/python/mock/>`_
+
+Mock comes with Python >=3.3, but has been backported for Python 2.7
+
+You can install them and other development dependencies using the
+`requirements-dev.txt` file like this:
+
+.. code-block:: sh
+
+	pip install -r requirements-dev.txt
 
 Running the unit tests
 ======================
 
-To run the unit tests enter the ``unittest`` folder in the source code
-checkout and run the unit test execution script
+There are different ways of running the unit tests. The easiest is to use ``py.test's`` automatic test discovery.  Just change to the root directory of the ``SoCo`` package and type:
+
+.. code-block:: sh
+
+	py.test
+	
+For others, see the `py.test documentation <http://pytest.org/latest/usage.html>`_
+
+Running the integration tests
+=============================
+
+At the moment, the integration tests cannot be run under the control of ``py.test``. To run them, enter the ``unittest`` folder in the source code
+checkout and run the test execution script
 ``execute_unittests.py`` (it is required that the *SoCo* checkout is
 added to the Python path of your system). To run all the unit tests
 for the *SoCo* class execute the following command:
