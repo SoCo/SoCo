@@ -85,8 +85,7 @@ NOT_IN_RANGE = 'The returned value is not in the expected range'
 def setup_module(module):
     ip = pytest.config.option.IP
     if ip is None:
-        raise SoCoUnitTestInitError(
-            "No ip address specified. Use the --ip option.")
+        pytest.fail("No ip address specified. Use the --ip option.")
     init(ip=ip)
     state = get_state()
     module.state = state
