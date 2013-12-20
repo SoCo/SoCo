@@ -1,6 +1,40 @@
+# Python/DVCS files
+*.py[cod]
+*~
+*.orig
+*.rej
+
+# OSX
 .DS_Store
-*.pyc
-build
-dist
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+
+# Build/setup
+build/
+develop-eggs/
+dist/
+sdist/
+eggs/
+sdist/
 *.egg-info/
+*.egg
+MANIFEST
+
+# Sphinx
 doc/_build
+
+# Tests
+.tox/
+.coverage
+.cache
+coverage.xml
+
+# Mercurial
+/.hg/*
+*/.hg/*
+.hgignore
+
+# Installer logs
+pip-log.txt
