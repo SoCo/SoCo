@@ -449,7 +449,7 @@ class SoCo(object):  # pylint: disable=R0904
         Mode.
 
         This blog shows the initial research responsible for this:
-        http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
+        http://blog.travelmarx.com/2010/06/exploring-sonos-via-upnp.html
 
         The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
@@ -929,7 +929,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         The information about the which searches can be performed and the form
         of the query has been gathered from the Janos project:
-        http://sourceforge.net/projects/janos/ Probs to the authors of that
+        http://sourceforge.net/projects/janos/ Props to the authors of that
         project.
 
         """
