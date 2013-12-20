@@ -13,18 +13,18 @@ def adjust_volume(sonos, operator):
     if not factor:
         return False
 
-    volume = sonos.volume()
+    volume = sonos.volume
 
     if (operator[0] == '+'):
         if (volume + factor) > 100:
             factor = 1
-        print(sonos.volume(volume + factor))
-        print(sonos.volume())
+        sonos.volume = (volume + factor)
+        print(sonos.volume)
     elif (operator[0] == '-'):
         if (volume - factor) < 0:
             factor = 1
-        print(sonos.volume(volume - factor))
-        print(sonos.volume())
+        sonos.volume = (volume - factor)
+        print(sonos.volume)
     else:
         print("Valid operators for volume are + and -")
 
@@ -84,6 +84,6 @@ if __name__ == '__main__':
                 operator = sys.argv[3].lower()
                 adjust_volume(sonos, operator)
             else:
-                print(sonos.volume())
+                print(sonos.volume)
         else:
             print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode")
