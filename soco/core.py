@@ -650,7 +650,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         if dom.findtext('.//ZoneName') is not None:
             self.speaker_info['zone_name'] = \
-                really_utf8(dom.findtext('.//ZoneName'))
+                dom.findtext('.//ZoneName')
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = \
