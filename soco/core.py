@@ -145,7 +145,7 @@ class SoCo(object):  # pylint: disable=R0904
     @property
     def player_name(self):
         """  The speaker's name. A string. """
-        result = self.deviceProperties.GetZoneAtrributes()
+        result = self.deviceProperties.GetZoneAttributes()
         return result["CurrentZoneName"]
 
     @player_name.setter
