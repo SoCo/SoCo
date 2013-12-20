@@ -14,15 +14,11 @@ src = open('soco/__init__.py').read()
 metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
 docstrings = re.findall('"""([^"]*)"""', src, re.MULTILINE | re.DOTALL)
 
-PACKAGE = 'soco'
+NAME = 'soco'
 
-MODULES = (
+PACKAGES = (
         'soco',
-        'soco.core',
-        'soco.exceptions',
         'soco.plugins',
-        'soco.plugins.example',
-        'soco.utils'
 )
 
 REQUIREMENTS = list(open('requirements.txt'))
@@ -46,13 +42,13 @@ DESCRIPTION = docstrings[0]
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
-setup(name=PACKAGE,
+setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,
       author=AUTHOR,
       author_email=EMAIL,
       license=LICENSE,
       url=WEBSITE,
-      py_modules=MODULES,
+      packages=PACKAGES,
       **OPTIONS
 )
