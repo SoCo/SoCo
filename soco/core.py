@@ -593,7 +593,7 @@ class SoCo(object):  # pylint: disable=R0904
             else:
                 LOGGER.warning('Could not handle track info: "%s"', trackinfo)
                 LOGGER.warning(traceback.format_exc())
-                track['title'] = really_utf8(trackinfo)
+                track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
@@ -609,13 +609,13 @@ class SoCo(object):  # pylint: disable=R0904
 
             track['title'] = ""
             if (md_title):
-                track['title'] = really_utf8(md_title)
+                track['title'] = md_title
             track['artist'] = ""
             if (md_artist):
-                track['artist'] = really_utf8(md_artist)
+                track['artist'] = md_artist
             track['album'] = ""
             if (md_album):
-                track['album'] = really_utf8(md_album)
+                track['album'] = md_album
 
             album_art = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
@@ -983,7 +983,7 @@ class SoCo(object):  # pylint: disable=R0904
             item[keyname] = None  # Default value
             found_text = container.findtext('.' + NS[namespace] + name)
             if found_text is not None:
-                item[keyname] = really_utf8(found_text)
+                item[keyname] = found_text
 
         # Turn track numbers into integers, if they are there
         if item.get('original_track_number') is not None:
@@ -992,7 +992,7 @@ class SoCo(object):  # pylint: disable=R0904
         # The res tag is special and not there for folders searches
         res = container.find('.' + NS[''] + 'res')
         if res is not None:
-            item['res'] = really_utf8(res.text)
+            item['res'] = res.text
             item['protocol_info'] = res.attrib['protocolInfo']
 
         return item
@@ -1114,8 +1114,8 @@ class SoCo(object):  # pylint: disable=R0904
             for item in metadata.findall(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
-                favorite['title'] = really_utf8(item.findtext(
-                    './/{http://purl.org/dc/elements/1.1/}title'))
+                favorite['title'] = item.findtext(
+                    './/{http://purl.org/dc/elements/1.1/}title')
                 favorite['uri'] = item.findtext(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
                 favorites.append(favorite)
