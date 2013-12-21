@@ -59,7 +59,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
 
                 # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
                 # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
-                # ZP90  = Sonos Connect
+                # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
                 # If it's the bridge, then it's not a speaker and shouldn't
                 # be returned
                 if (model and model != "BR100"):
