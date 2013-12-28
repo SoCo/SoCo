@@ -82,8 +82,8 @@ if __name__ == '__main__':
     if (len(sys.argv) > 6 or len(sys.argv) < 3):
         print("Usage: sonoshell.py [speaker's IP|all] [cmd]")
         print("")
-        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode")
-        print("Valid commands (with 'all'): list_ips")
+        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume, fade and partymode")
+        print("Valid commands (with 'all'): list_ips, list")
         sys.exit()
 
     speaker_spec = sys.argv[1]
