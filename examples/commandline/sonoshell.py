@@ -41,7 +41,7 @@ def get_volume_adjustment_factor(operator):
     return factor
 
 
-def get_current_track_info():
+def print_current_track_info():
     track = sonos.get_current_track_info()
     print(
         "Current track: %s - %s. From album %s. This is track number"
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         elif (cmd == 'previous'):
             print(sonos.previous())
         elif (cmd == 'current'):
-            get_current_track_info()
+            print_current_track_info()
         elif (cmd == 'volume'):
             if (len(sys.argv) > 3):
                 operator = sys.argv[3].lower()
