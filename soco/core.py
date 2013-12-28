@@ -83,6 +83,7 @@ class SoCo(object):  # pylint: disable=R0904
         next -- Go to the next track.
         previous -- Go back to the previous track.
         switch_to_line_in -- Switch the speaker's input to line-in.
+        switch_to_tv -- Switch the speaker's input to TV.
         get_current_track_info -- Get information about the currently playing
                                   track.
         get_speaker_info -- Get information about the Sonos speaker.
@@ -531,6 +532,27 @@ class SoCo(object):  # pylint: disable=R0904
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon-stream:{}'.format(speaker_uid)),
+            ('CurrentURIMetaData', '')
+            ])
+
+    def switch_to_tv(self):
+        """ Switch the speaker's input to TV.
+
+        Returns:
+        True if the Sonos speaker successfully switched to TV.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
+
+        Raises SoCoException (or a subclass) upon errors.
+
+        """
+        speaker_info = self.get_speaker_info()
+        speaker_uid = speaker_info['uid']
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', 'x-sonos-htastream:{}:spdif'.format(speaker_uid)),
             ('CurrentURIMetaData', '')
             ])
 
