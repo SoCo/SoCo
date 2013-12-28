@@ -56,6 +56,11 @@ if __name__ == '__main__':
         sonos = SonosDiscovery()
         if (cmd == 'list_ips'):
             print('\n'.join(sonos.get_speaker_ips()))
+        elif (cmd == 'list'):
+            for speaker_spec in sonos.get_speaker_ips():
+                speaker = SoCo(speaker_spec)
+                info = speaker.get_speaker_info()
+                print("%16s %s" % ( speaker_spec, info['zone_name']))
         else:
             print("Valid commands (with 'all'): list_ips")
     else:
