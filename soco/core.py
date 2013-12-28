@@ -681,7 +681,7 @@ class SoCo(object):  # pylint: disable=R0904
                 self.speaker_info['model'] = MODEL_TRANS_TABLE[self.speaker_info['model_code']]
             except KeyError:
                 self.speaker_info['model'] = self.speaker_info['model_code']
-                LOGGING.debug("unable to lookup model name for %s" % self.spekaer_info['model_code'])
+                LOGGING.debug("unable to lookup model name for %s" % self.speaker_info['model_code'])
                 pass
         except KeyError:
             LOGGING.debug("no server header in response from device")
