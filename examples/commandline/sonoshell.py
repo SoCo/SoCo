@@ -2,9 +2,46 @@
 
 from __future__ import print_function
 import sys
+import time
 
 from soco import SoCo
 from soco import SonosDiscovery
+
+
+def fade_volume(sonos, start, target, duration):
+    """ fade the volume (up or down) from start to target over duration seconds """
+    if (start > 100):
+        start = 100
+    elif (start < 0):
+        start = 0
+
+    if (target > 100):
+        target = 100
+    elif (target < 0):
+        target = 0
+
+    if (start > target):
+        adj_range = reversed(xrange(target, start + 1))
+    elif (target > start):
+        adj_range = xrange(start, target + 1)
+    elif (start == target):
+        print("start of %d == target of %d, nothing to do" % (start, target))
+        return False
+
+    adj_range = list(adj_range)
+
+    step = float(duration) / (float(len(adj_range)) - 1)
+
+    print("fading volume from %d to %d in %d steps over %d seconds (%.4fs per step)" % (start, target, len(adj_range), int(duration), step))
+    for adjustment in adj_range:
+        start = time.time()
+        sonos.volume = adjustment
+        sleep = step - (time.time() - start)
+        if sleep <= 0:
+            print("set volume to %d, timer overrun by %.4f seconds" % (adjustment, sleep * -1))
+        else:
+            print("set volume to %d, sleeping for %.4fs" % (adjustment, sleep))
+            time.sleep(sleep)
 
 
 def adjust_volume(sonos, operator):
@@ -56,11 +93,11 @@ def print_current_track_info():
 
 
 if __name__ == '__main__':
-    if (len(sys.argv) > 4 or len(sys.argv) < 3):
+    if (len(sys.argv) > 6 or len(sys.argv) < 3):
         print("Usage: sonoshell.py [speaker's IP|all] [cmd]")
         print("")
-        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode")
-        print("Valid commands (with 'all'): list_ips")
+        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume, fade and partymode")
+        print("Valid commands (with 'all'): list_ips, list")
         sys.exit()
 
     speaker_spec = sys.argv[1]
@@ -70,6 +107,11 @@ if __name__ == '__main__':
         sonos = SonosDiscovery()
         if (cmd == 'list_ips'):
             print('\n'.join(sonos.get_speaker_ips()))
+        elif (cmd == 'list'):
+            for speaker_spec in sonos.get_speaker_ips():
+                speaker = SoCo(speaker_spec)
+                info = speaker.get_speaker_info()
+                print("%16s %10s %s" % ( speaker_spec, info['model'], info['zone_name']))
         else:
             print("Valid commands (with 'all'): list_ips")
     else:
@@ -98,5 +140,24 @@ if __name__ == '__main__':
                 adjust_volume(sonos, operator)
             else:
                 print(sonos.volume)
+        elif (cmd == 'fade'):
+            if (len(sys.argv) == 5):
+                adjustment = sys.argv[3]
+                start = sonos.volume
+                if adjustment[0] == "+":
+                    target = start + int(adjustment[1:])
+                elif adjustment[0] == "-":
+                    target = start - int(adjustment[1:])
+                else:
+                    print("usage: fade <start> <target> <duration>")
+                    print("usage: fade [+-]<adjustment> <duration>")
+                    sys.exit(1)
+                fade_volume(sonos = sonos, start = sonos.volume, target = target, duration = sys.argv[4])
+            elif (len(sys.argv) == 6):
+                fade_volume(sonos = sonos, start = int(sys.argv[3]), target = int(sys.argv[4]), duration = sys.argv[5])
+            else:
+                print("usage: fade <start> <target> <duration>")
+                print("usage: fade [+-]<adjustment> <duration>")
+
         else:
             print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode")

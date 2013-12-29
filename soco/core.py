@@ -26,6 +26,16 @@ from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
 
+MODEL_TRANS_TABLE = {
+    'BR100': 'BRIDGE',
+    'ZPS3': 'PLAY:3',
+    'ZPS5': 'PLAY:5',
+    'ZPS1': 'PLAY:1',
+    'ZP80': 'CONNECT',
+    'ZP90': 'CONNECT',
+    'ZP120': 'CONNECT:AMP'
+}
+
 
 class SonosDiscovery(object):  # pylint: disable=R0903
     """A simple class for discovering Sonos speakers.
@@ -41,6 +51,11 @@ class SonosDiscovery(object):  # pylint: disable=R0903
         self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
     def get_speaker_ips(self):
+        # If it's the bridge, then it's not a speaker and shouldn't
+        # be returned
+        return self.get_device_ips(bridge = False)
+
+    def get_device_ips(self, bridge = True):
         """ Get a list of ips for Sonos devices that can be controlled """
         speakers = []
         self._sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
@@ -60,9 +75,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
                 # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
                 # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
                 # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
-                # If it's the bridge, then it's not a speaker and shouldn't
-                # be returned
-                if (model and model != "BR100"):
+                if (bridge is False and model and model != "BR100"):
                     speakers.append(addr[0])
             else:
                 break
@@ -660,8 +673,20 @@ class SoCo(object):  # pylint: disable=R0904
             self.speaker_info['hardware_version'] = \
                 dom.findtext('.//HardwareVersion')
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
-
-            return self.speaker_info
+        try:
+            server = response.headers['server']
+            re_r = re.search("\((?P<model>[^)]+)\)", server)
+            self.speaker_info['model_code'] = re_r.group("model")
+            try:
+                self.speaker_info['model'] = MODEL_TRANS_TABLE[self.speaker_info['model_code']]
+            except KeyError:
+                self.speaker_info['model'] = self.speaker_info['model_code']
+                LOGGING.debug("unable to lookup model name for %s" % self.speaker_info['model_code'])
+                pass
+        except KeyError:
+            LOGGING.debug("no server header in response from device")
+            pass
+        return self.speaker_info
 
     def get_group_coordinator(self, zone_name, refresh=False):
         """ Get the IP address of the Sonos system that is coordinator for
