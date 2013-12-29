@@ -41,6 +41,20 @@ def get_volume_adjustment_factor(operator):
     return factor
 
 
+def print_current_track_info():
+    track = sonos.get_current_track_info()
+    print(
+        "Current track: %s - %s. From album %s. This is track number"
+        " %s in the playlist. It is %s minutes long." % (
+            track['artist'],
+            track['title'],
+            track['album'],
+            track['playlist_position'],
+            track['duration']
+        )
+    )
+
+
 if __name__ == '__main__':
     if (len(sys.argv) > 4 or len(sys.argv) < 3):
         print("Usage: sonoshell.py [speaker's IP|all] [cmd]")
@@ -77,8 +91,7 @@ if __name__ == '__main__':
         elif (cmd == 'previous'):
             print(sonos.previous())
         elif (cmd == 'current'):
-            track = sonos.get_current_track_info()
-            print('Current track: ' + track['artist'] + ' - ' + track['title'] + '. From album ' + track['album'] + '. This is track number ' + track['playlist_position'] + ' in the playlist. It is ' + track['duration'] + ' minutes long.')
+            print_current_track_info()
         elif (cmd == 'volume'):
             if (len(sys.argv) > 3):
                 operator = sys.argv[3].lower()
