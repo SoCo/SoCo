@@ -55,11 +55,24 @@ def print_current_track_info():
     )
 
 
+def print_queue():
+    queue = sonos.get_queue()
+    for idx, track in enumerate(queue):
+        print(
+            "%d: %s - %s. From album %s." % (
+                idx,
+                track['artist'],
+                track['title'],
+                track['album']
+            )
+        )
+
+
 if __name__ == '__main__':
     if (len(sys.argv) > 4 or len(sys.argv) < 3):
         print("Usage: sonoshell.py [speaker's IP|all] [cmd]")
         print("")
-        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, volume and partymode")
+        print("Valid commands (with IP): info, play, pause, stop, next, previous, current, queue, volume and partymode")
         print("Valid commands (with 'all'): list_ips")
         sys.exit()
 
@@ -92,6 +105,8 @@ if __name__ == '__main__':
             print(sonos.previous())
         elif (cmd == 'current'):
             print_current_track_info()
+        elif (cmd == 'queue'):
+            print_queue()
         elif (cmd == 'volume'):
             if (len(sys.argv) > 3):
                 operator = sys.argv[3].lower()
