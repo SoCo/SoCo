@@ -26,7 +26,7 @@ from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
 
-MODEL_TRANS_TABLE = {
+MODEL_NAMES = {
     'BR100': 'BRIDGE',
     'ZPS3': 'PLAY:3',
     'ZPS5': 'PLAY:5',
@@ -678,7 +678,7 @@ class SoCo(object):  # pylint: disable=R0904
             re_r = re.search("\((?P<model>[^)]+)\)", server)
             self.speaker_info['model_code'] = re_r.group("model")
             try:
-                self.speaker_info['model'] = MODEL_TRANS_TABLE[self.speaker_info['model_code']]
+                self.speaker_info['model'] = MODEL_NAMES[self.speaker_info['model_code']]
             except KeyError:
                 self.speaker_info['model'] = self.speaker_info['model_code']
                 LOGGING.debug("unable to lookup model name for %s" % self.speaker_info['model_code'])
