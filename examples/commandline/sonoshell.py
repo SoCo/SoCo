@@ -57,9 +57,17 @@ def print_current_track_info():
 
 def print_queue():
     queue = sonos.get_queue()
+    current = int(sonos.get_current_track_info()['playlist_position'])
+
     for idx, track in enumerate(queue, 1):
+        if (idx == current):
+            color = '\033[1m'
+        else:
+            color = '\033[0m'
+
         print(
-            "%d: %s - %s. From album %s." % (
+            "%s%d: %s - %s. From album %s." % (
+                color,
                 idx,
                 track['artist'],
                 track['title'],
