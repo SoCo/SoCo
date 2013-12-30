@@ -57,7 +57,7 @@ def print_current_track_info():
 
 def print_queue():
     queue = sonos.get_queue()
-    for idx, track in enumerate(queue):
+    for idx, track in enumerate(queue, 1):
         print(
             "%d: %s - %s. From album %s." % (
                 idx,
