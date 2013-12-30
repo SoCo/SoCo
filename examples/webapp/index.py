@@ -20,6 +20,12 @@ def gen_sig():
     return hashlib.md5(app.config['ROVI_API_KEY'] + app.config['ROVI_SHARED_SECRET'] + repr(int(time.time()))).hexdigest()
 
 def get_track_image(artist, album):
+    if 'ROVI_SHARED_SECRET' not in app.config:
+        return None
+    elif 'ROVI_API_KEY' not in app.config:
+        return None
+
+
     headers = {
         "Accept-Encoding": "gzip"
     }
