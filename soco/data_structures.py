@@ -149,6 +149,7 @@ class MusicLibraryItem(QueueableItem):
 
         """
         QueueableItem.__init__(self)
+        self._parent_id = None
 
         if translation is not None:
             self._translation = translation
@@ -184,7 +185,7 @@ class MusicLibraryItem(QueueableItem):
                     self._content[key] = really_unicode(result.text)
 
     @property
-    def id(self):  # pylint: disable=C0103
+    def item_id(self):  # pylint: disable=C0103
         """Returns the id.
 
         The id is extracted as the part of the URI after the first # character.
@@ -197,25 +198,21 @@ class MusicLibraryItem(QueueableItem):
             out = out[out.index('#') + 1:]
         return out
 
-    def get_didl_metadata(self, parent_id):
+    @property
+    def didl_metadata(self):
         """Produce the DIDL metadata XML.
 
-        :param parent_id: The DIDL Lite parent ID for this item as a string.
-
         This method depends, as a minimum, on the
-        :py:attr:`~.MusicLibraryItem.id_info` attribute (and via that the
-        ``uri`` value from
-        :py:attr:`~soco.data_structures.PlayableItem.content` attribute). The
-        values for ``class`` and ``title`` in the
-        :py:attr:`~soco.data_structures.PlayableItem.content` attribute will
-        also be used if present, but may not be necessary. The metadata will be
-        on the form:
+        :py:attr:`~.MusicLibraryItem.item_id` attribute (and via that the
+        :py:attr:`~.MusicLibraryItem.uri` attribute. The values for ``class``
+        and ``title`` will also be used if present, but may not be necessary.
+        The metadata will be on the form:
 
         .. code :: xml
 
          <DIDL-Lite ..NS_INFO..>
-           <item id="...self.id_info..."
-             parentID="...parent_id..." restricted="true">
+           <item id="...self.item_id..."
+             parentID="...self._parent_id..." restricted="true">
              <dc:title>...self.title...</dc:title>
              <upnp:class>...self.class_info...</upnp:class>
              <desc id="cdudn"
@@ -225,12 +222,9 @@ class MusicLibraryItem(QueueableItem):
            </item>
          </DIDL-Lite>
 
-        This method is called from all child classes with the appropriate
-        parent_id.
-
         """
         # Check the id_info method and via that, the self.content['uri'] value
-        if self.id is None:
+        if self.item_id is None:
             raise CannotCreateDIDLMetadata(
                 'DIDL Metadata cannot be created when if_info returns None '
                 '(most likely because uri is not set)')
@@ -239,7 +233,8 @@ class MusicLibraryItem(QueueableItem):
         xml = XML.Element('DIDL-Lite')
         # Item sub element
         item_attrib = \
-            {'parentID': parent_id, 'restricted': 'true', 'id': self.id}
+            {'parentID': self._parent_id, 'restricted': 'true',
+             'id': self.item_id}
         item = XML.SubElement(xml, 'item', item_attrib)
         # Add content from self._content to item
         for key in ['title', 'class']:
@@ -326,39 +321,10 @@ class MLTrack(MusicLibraryItem):
             'class': ('upnp', 'class')
         }
         MusicLibraryItem.__init__(self, translation, xml, content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="...self.id_info..." parentID="A:TRACKS" restricted="true">
-             <dc:title>...TITLE...</dc:title>
-             <upnp:class>...CLASS...</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN</desc>
-           </item>
-         </DIDL-Lite>
-
-
-         <DIDL-Lite ...NS_INFO..>
-           <item id="...self.id_info..." parentID="A:TRACKS" restricted="true">
-             <dc:title>...self.content.title...</dc:title>
-             <upnp:class>...self.content.class_info...</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-                 RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLTrack, self).get_didl_metadata(parent_id='A:TRACKS')
+        self._parent_id = 'A:TRACKS'
 
     @property
-    def id(self):  # pylint: disable=C0103
+    def item_id(self):  # pylint: disable=C0103
         """Returns the id."""
         out = self._content.get('uri')
         if out is not None:
@@ -447,25 +413,7 @@ class MLAlbum(MusicLibraryItem):
             'class': ('upnp', 'class')
         }
         MusicLibraryItem.__init__(self, self._translation, xml, content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="A:ALBUM/...ALBUM..." parentID="A:ALBUM" restricted="true">
-             <dc:title>...ALBUM...</dc:title>
-             <upnp:class>object.container.album.musicAlbum</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLAlbum, self).get_didl_metadata('A:ALBUM')
+        self._parent_id = 'A:ALBUM'
 
     @property
     def creator(self):
@@ -517,26 +465,7 @@ class MLArtist(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="A:ARTIST/...ARTIST..." parentID="A:ARTIST"
-             restricted="true">
-             <dc:title>...ARTIST...</dc:title>
-             <upnp:class>object.container.person.musicArtist</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLArtist, self).get_didl_metadata('A:ARTIST')
+        self._parent_id = 'A:ARTIST'
 
 
 class MLAlbumArtist(MusicLibraryItem):
@@ -571,26 +500,7 @@ class MLAlbumArtist(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="A:ALBUMARTIST/...ALBUMARTIST..." parentID="A:ALBUMARTIST"
-               restricted="true">
-             <dc:title>...ALBUMARTIST...</dc:title>
-             <upnp:class>object.container.person.musicArtist</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLAlbumArtist, self).get_didl_metadata('A:ALBUMARTIST')
+        self._parent_id = 'A:ALBUMARTIST'
 
 
 class MLGenre(MusicLibraryItem):
@@ -623,25 +533,7 @@ class MLGenre(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ..NS_INFO..>
-           <item id="A:GENRE/..GENRE.." parentID="A:GENRE" restricted="true">
-             <dc:title>..GENRE..</dc:title>
-             <upnp:class>object.container.genre.musicGenre</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLGenre, self).get_didl_metadata('A:GENRE')
+        self._parent_id = 'A:GENRE'
 
 
 class MLComposer(MusicLibraryItem):
@@ -675,26 +567,7 @@ class MLComposer(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="A:COMPOSER/...COMPOSER..." parentID="A:COMPOSER"
-               restricted="true">
-             <dc:title>...COMPOSER...</dc:title>
-             <upnp:class>object.container.person.composer</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLComposer, self).get_didl_metadata('A:COMPOSER')
+        self._parent_id = 'A:COMPOSER'
 
 
 class MLPlaylist(MusicLibraryItem):
@@ -729,71 +602,15 @@ class MLPlaylist(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite ...NS_INFO...>
-           <item id="S://...PLAYLIST_PATH..." parentID="A:PLAYLISTS"
-               restricted="true">
-             <dc:title>...PLAYLIST...</dc:title>
-             <upnp:class>object.container.playlistContainer</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        return super(MLPlaylist, self).get_didl_metadata('A:PLAYLISTS')
+        self._parent_id = 'A:PLAYLISTS'
 
     @property
-    def id(self):  # pylint: disable=C0103
+    def item_id(self):  # pylint: disable=C0103
         """ Getter method for the id """
         out = self._content.get('uri')
         if out is not None:
             out = out.replace('x-file-cifs', 'S')
         return out
-
-
-class MLFolder(MusicLibraryItem):
-    """Class that represents a music library folder."""
-
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
-
-        MLFolder must be instantiated with EITHER an xml or a content argument.
-
-        MLFolder uses the default content-key-to-xml-tag-and-namespace-
-        translation:
-
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.container'
-
-        """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-
-    def get_didl_metadata(self):
-        """ Returns None. Metadata cannot be created for this class """
-        return None
 
 
 class MLShare(MusicLibraryItem):
@@ -826,29 +643,10 @@ class MLShare(MusicLibraryItem):
 
         """
         MusicLibraryItem.__init__(self, xml=xml, content=content)
-
-    def get_didl_metadata(self):  # pylint: disable=W0221
-        """Produce the DIDL metadata XML. The final result is on the form:
-
-        .. code-block:: xml
-
-          <DIDL-Lite ...NS_INFO...>
-            <item id="S://...SHARE..." parentID="S:" restricted="true">
-              <dc:title>//...SHARE...</dc:title>
-              <upnp:class>object.container</upnp:class>
-              <desc id="cdudn"
-                nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-                RINCON_AssociatedZPUDN
-              </desc>
-            </item>
-          </DIDL-Lite>
-
-        """
-        return super(MLShare, self).get_didl_metadata('S:')
+        self._parent_id = 'S:'
 
 
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
-                      'A:PLAYLISTS': MLPlaylist, 'A:': MLFolder,
-                      'S:': MLShare}
+                      'A:PLAYLISTS': MLPlaylist, 'S:': MLShare}

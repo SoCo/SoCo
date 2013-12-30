@@ -932,10 +932,9 @@ class SoCo(object):  # pylint: disable=R0904
 
         Arguments:
         search      The kind of information to retrieve. Can be one of:
-                    'folders', 'artists', 'album_artists', 'albums', 'genres',
-                    'composers', 'tracks', 'share' and 'playlists', where
-                    playlists are the imported file based playlists from the
-                    music library
+                    'artists', 'album_artists', 'albums', 'genres', 'composers'
+                    'tracks', 'share' and 'playlists', where playlists are the
+                    imported file based playlists from the music library
         start       starting number of returned matches
         max_items   maximum number of returned matches. NOTE: The maximum
                     may be restricted by the unit, presumably due to transfer
@@ -956,7 +955,7 @@ class SoCo(object):  # pylint: disable=R0904
         project.
 
         """
-        search_translation = {'folders': 'A:', 'artists': 'A:ARTIST',
+        search_translation = {'artists': 'A:ARTIST',
                               'album_artists': 'A:ALBUMARTIST',
                               'albums': 'A:ALBUM', 'genres': 'A:GENRE',
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
