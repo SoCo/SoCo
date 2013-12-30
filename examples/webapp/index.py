@@ -32,6 +32,9 @@ def get_track_image(artist, album):
 
     r = requests.get('http://api.rovicorp.com/recognition/v2.1/music/match/album?apikey=' + app.config['ROVI_API_KEY'] + '&sig=' + gen_sig() + '&name= ' + album + '&performername=' + artist + '&include=images&size=1', headers=headers)
 
+    if r.status_code != requests.codes.ok:
+        return None
+
     d = json.loads(r.content)
 
     image = url_for('static', filename='img/blank.jpg')
