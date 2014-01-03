@@ -62,6 +62,9 @@ def print_current_track_info():
 def print_queue():
     queue = sonos.get_queue()
 
+    ANSI_BOLD = '\033[1m'
+    ANSI_RESET = '\033[0m'
+
     # colorama.init() takes over stdout/stderr to give cross-platform colors
     if colorama:
         colorama.init()
@@ -70,9 +73,9 @@ def print_queue():
 
     for idx, track in enumerate(queue, 1):
         if (idx == current):
-            color = '\033[1m'
+            color = ANSI_BOLD
         else:
-            color = '\033[0m'
+            color = ANSI_RESET
 
         print(
             "%s%d: %s - %s. From album %s." % (
