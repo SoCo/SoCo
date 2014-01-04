@@ -21,6 +21,7 @@ import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport
+from .services import ZoneGroupTopology
 
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
@@ -141,6 +142,7 @@ class SoCo(object):  # pylint: disable=R0904
         self.contentDirectory = ContentDirectory(self)
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
+        self.zoneGroupTopology = ZoneGroupTopology(self)
 
     @property
     def player_name(self):
@@ -706,10 +708,9 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if not self.topology or refresh:
             self.topology = {}
-            response = requests.get('http://' + self.speaker_ip +
-                                    ':1400/status/topology')
-            dom = XML.fromstring(really_utf8(response.content))
-            for player in dom.find('ZonePlayers'):
+            zg_state = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+            state = XML.fromstring(really_utf8(zg_state))
+            for player in state.iter(dom.find('ZonePlayers')):
                 if player.text not in self.topology:
                     self.topology[player.text] = {}
                 self.topology[player.text]['group'] = \
