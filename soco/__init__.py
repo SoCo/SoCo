@@ -14,3 +14,8 @@ from .core import SonosDiscovery, SoCo
 from .exceptions import SoCoException, UnknownSoCoException
 
 __all__ = ['SonosDiscovery', 'SoCo', 'SoCoException', 'UnknownSoCoException']
+
+# http://docs.python.org/2/howto/logging.html#library-config
+# Avoids spurious error messages if no logger is configured by the user
+import logging
+logging.getLogger(__name__).addHandler(logging.NullHandler())
