@@ -2,6 +2,10 @@
 
 from __future__ import print_function
 import sys
+try:
+    import colorama
+except:
+    colorama = False
 
 from soco import SoCo
 from soco import SonosDiscovery
@@ -57,15 +61,35 @@ def print_current_track_info():
 
 def print_queue():
     queue = sonos.get_queue()
+
+    ANSI_BOLD = '\033[1m'
+    ANSI_RESET = '\033[0m'
+
+    # colorama.init() takes over stdout/stderr to give cross-platform colors
+    if colorama:
+        colorama.init()
+
+    current = int(sonos.get_current_track_info()['playlist_position'])
+
     for idx, track in enumerate(queue, 1):
+        if (idx == current):
+            color = ANSI_BOLD
+        else:
+            color = ANSI_RESET
+
         print(
-            "%d: %s - %s. From album %s." % (
+            "%s%d: %s - %s. From album %s." % (
+                color,
                 idx,
                 track['artist'],
                 track['title'],
                 track['album']
             )
         )
+
+    # Release stdout/stderr from colorama
+    if colorama:
+        colorama.deinit()
 
 
 if __name__ == '__main__':
