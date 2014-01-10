@@ -180,6 +180,12 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     topology = {}
 
     def __init__(self, ip_address):
+        # Check if ip_address is a valid IPv4 representation.
+        # Sonos does not (yet) support IPv6
+        try:
+            socket.inet_aton(ip_address)
+        except socket.error:
+            raise ValueError("Not a valid IP address string")
         #: The speaker's ip address
         self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
