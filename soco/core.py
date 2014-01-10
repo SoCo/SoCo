@@ -33,6 +33,17 @@ def discover():
     Return an iterator providing SoCo instances for each zone found.
 
     """
+    PLAYER_SEARCH = "\n".join([
+        'M-SEARCH * HTTP/1.1',
+        'HOST: 239.255.255.250:reservedSSDPport',
+        'MAN: ssdp:discover',
+        'MX: 1',
+        'ST: urn:schemas-upnp-org:device:ZonePlayer:1',
+        ])  # noqa PEP8
+    print PLAYER_SEARCH
+    MCAST_GRP = "239.255.255.250"
+    MCAST_PORT = 1900
+
     _sock = socket.socket(
         socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
@@ -65,7 +76,7 @@ def discover():
 class SonosDiscovery(object):  # pylint: disable=R0903
     """Retained for backward compatibility only. Will be removed in future
     releases
-    
+
     .. deprecated:: 0.7
        Use :func:`discover` instead.
 
@@ -207,6 +218,9 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.contentDirectory = ContentDirectory(self)
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
+
+    def __repr__(self):
+        return "SoCo object at ip {}".format(self.ip_address)
 
     @property
     def player_name(self):
@@ -1215,15 +1229,6 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
 
 # definition section
-
-PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
-HOST: 239.255.255.250:reservedSSDPport
-MAN: ssdp:discover
-MX: 1
-ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
-
-MCAST_GRP = "239.255.255.250"
-MCAST_PORT = 1900
 
 RADIO_STATIONS = 0
 RADIO_SHOWS = 1
