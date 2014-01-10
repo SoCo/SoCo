@@ -38,6 +38,7 @@ from __future__ import unicode_literals
 # Python 3 compatibility
 
 
+
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
@@ -89,7 +90,7 @@ class Service(object):
         self.service_type = self.__class__.__name__
         self.version = 1
         self.service_id = self.service_type
-        self.base_url = 'http://{}:1400'.format(self.soco.speaker_ip)
+        self.base_url = 'http://{}:1400'.format(self.soco.ip_address)
         self.control_url = '/{}/Control'.format(self.service_type)
         # Service control protocol description
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
@@ -187,7 +188,7 @@ class Service(object):
             args = []
         l = ["<{name}>{value}</{name}>".format(
             name=name, value=escape("%s" % value, {'"': "&quot;"}))
-            for name, value in args]  # % converts to unicode because we are
+            for name, value in args] # % converts to unicode because we are 
             # using unicode literals. Avoids use of 'unicode' function which
             # does not exist in python 3
         xml = "".join(l)
@@ -294,7 +295,7 @@ class Service(object):
         """
 
         headers, body = self.build_command(action, args)
-        log.info("Sending %s %s to %s", action, args, self.soco.speaker_ip)
+        log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
         response = requests.post(
             self.base_url + self.control_url, headers=headers, data=body)
@@ -306,7 +307,7 @@ class Service(object):
             # params are returned.
             result = self.unwrap_arguments(response.text) or True
             log.info(
-                "Received status %s from %s", status, self.soco.speaker_ip)
+                "Received status %s from %s", status, self.soco.ip_address)
             return result
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
@@ -371,14 +372,14 @@ class Service(object):
             description = self.UPNP_ERRORS.get(int(error_code), '')
             raise SoCoUPnPException(
                 message='UPnP Error {} received: {} from {}'.format(
-                    error_code, description, self.soco.speaker_ip),
+                    error_code, description, self.soco.ip_address),
                 error_code=error_code,
                 error_description=description,
                 error_xml=xml_error
                 )
         else:
             # Unknown error, so just return the entire response
-            log.error("Unknown error received from %s", self.soco.speaker_ip)
+            log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
     def iter_actions(self):

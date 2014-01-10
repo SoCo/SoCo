@@ -69,8 +69,53 @@ class SonosDiscovery(object):  # pylint: disable=R0903
         return speakers
 
 
-class SoCo(object):  # pylint: disable=R0904
-    """A simple class for controlling a Sonos speaker
+class _ArgsSingleton(type):
+    """ A metaclass which permits only a single instance of each derived class
+    to exist for any given set of postional arguments.
+    
+    Attempts to instantiate a second instance of a derived class will return
+    the existing instance.
+    
+    For example:
+    
+    >>> class ArgsSingletonBase(object):
+    ...     __metaclass__ = _ArgsSingleton
+    ...
+    >>> class First(ArgsSingletonBase):
+    ...     def __init__(self, param):
+    ...         pass
+    ...
+    >>> assert First('hi') == First('hi')
+    >>> assert First('hi') == First('bye')
+    AssertionError
+     """
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = {}
+        if args not in cls._instances[cls]:
+            cls._instances[cls][args] = super(_ArgsSingleton, cls).__call__(
+                *args, **kwargs)
+        return cls._instances[cls][args]
+
+
+class _SocoSingletonBase(_ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})): 
+    """ The base class for the SoCo class. 
+    
+    Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg, 
+    here: http://www.artima.com/weblogs/viewpost.jsp?thread=236234 and
+    here: http://mikewatkins.ca/2008/11/29/python-2-and-3-metaclasses/
+    
+    """
+    pass
+
+
+class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
+    """A simple class for controlling a Sonos speaker.
+    
+    For any given set of arguments to __init__, only one instance of this class
+    may be created. Subsequent attempts to create an instance with the same 
+    arguments will return the previously created instance.
 
     Public functions::
 
@@ -134,9 +179,9 @@ class SoCo(object):  # pylint: disable=R0904
     # Stores the topology of all Zones in the network
     topology = {}
 
-    def __init__(self, speaker_ip):
+    def __init__(self, ip_address):
         #: The speaker's ip address
-        self.speaker_ip = speaker_ip
+        self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
         self.deviceProperties = DeviceProperties(self)
         self.contentDirectory = ContentDirectory(self)
@@ -470,7 +515,7 @@ class SoCo(object):  # pylint: disable=R0904
         return_status = True
         # loop through all IP's in topology and make them join this master
         for ip in ips:  # pylint: disable=C0103
-            if not (ip == self.speaker_ip):
+            if not (ip == self.ip_address):
                 slave = SoCo(ip)
                 ret = slave.join(master_speaker_info["uid"])
                 if ret is False:
@@ -647,7 +692,7 @@ class SoCo(object):  # pylint: disable=R0904
                 if url.startswith(('http:', 'https:')):
                     track['album_art'] = url
                 else:
-                    track['album_art'] = 'http://' + self.speaker_ip + ':1400'\
+                    track['album_art'] = 'http://' + self.ip_address + ':1400'\
                         + url
 
         return track
@@ -666,7 +711,7 @@ class SoCo(object):  # pylint: disable=R0904
         if self.speaker_info and refresh is False:
             return self.speaker_info
         else:
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/zp')
             dom = XML.fromstring(response.content)
 
@@ -728,7 +773,7 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if not self.topology or refresh:
             self.topology = {}
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/topology')
             dom = XML.fromstring(really_utf8(response.content))
             for player in dom.find('ZonePlayers'):
@@ -759,7 +804,7 @@ class SoCo(object):  # pylint: disable=R0904
         if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/topology')
             text = response.text
             grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)

@@ -72,7 +72,7 @@ def service():
     """ A mock Service, for use as a test fixture """
 
     mock_soco = mock.MagicMock()
-    mock_soco.speaker_ip = "192.168.1.101"
+    mock_soco.ip_address = "192.168.1.101"
     return Service(mock_soco)
 
 
