@@ -27,57 +27,69 @@ from .utils import really_unicode, really_utf8, camel_to_underscore
 LOGGER = logging.getLogger(__name__)
 
 
-class SonosDiscovery(object):  # pylint: disable=R0903
-    """A simple class for discovering Sonos speakers.
+def discover():
+    """ Discover Sonos zones on the local network.
 
-    Public functions:
-    get_speaker_ips -- Get a list of IPs of all zoneplayers.
+    Return an iterator providing SoCo instances for each zone found.
+
+    """
+    _sock = socket.socket(
+        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+
+    while True:
+        response, _, _ = select.select([_sock], [], [], 1)
+        if response:
+            data, addr = _sock.recvfrom(2048)
+            # Look for the model in parentheses in a line like this
+            # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
+            search = re.search(br'SERVER.*\((.*)\)', data)
+            try:
+                model = really_unicode(search.group(1))
+            except AttributeError:
+                model = None
+
+            # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
+            # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
+            # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
+            # If it's the bridge, then it's not a speaker and shouldn't
+            # be returned
+            if (model and model != "BR100"):
+                soco = SoCo(addr[0])
+                yield soco
+        else:
+            break
+
+
+class SonosDiscovery(object):  # pylint: disable=R0903
+    """Retained for backward compatibility only. Will be removed in future
+    releases
+    
+    .. deprecated:: 0.7
+       Use :func:`discover` instead.
 
     """
 
     def __init__(self):
-        self._sock = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+        import warnings
+        warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
 
     def get_speaker_ips(self):
-        """ Get a list of ips for Sonos devices that can be controlled """
-        speakers = []
-        self._sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-
-        while True:
-            response, _, _ = select.select([self._sock], [], [], 1)
-            if response:
-                data, addr = self._sock.recvfrom(2048)
-                # Look for the model in parentheses in a line like this
-                # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-                search = re.search(br'SERVER.*\((.*)\)', data)
-                try:
-                    model = really_unicode(search.group(1))
-                except AttributeError:
-                    model = None
-
-                # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
-                # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
-                # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
-                # If it's the bridge, then it's not a speaker and shouldn't
-                # be returned
-                if (model and model != "BR100"):
-                    speakers.append(addr[0])
-            else:
-                break
-        return speakers
+        import warnings
+        warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
+        return [i.ip_address for i in discover()]
 
 
 class _ArgsSingleton(type):
     """ A metaclass which permits only a single instance of each derived class
     to exist for any given set of postional arguments.
-    
+
     Attempts to instantiate a second instance of a derived class will return
     the existing instance.
-    
+
     For example:
-    
+
     >>> class ArgsSingletonBase(object):
     ...     __metaclass__ = _ArgsSingleton
     ...
@@ -90,6 +102,7 @@ class _ArgsSingleton(type):
     AssertionError
      """
     _instances = {}
+
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = {}
@@ -99,22 +112,23 @@ class _ArgsSingleton(type):
         return cls._instances[cls][args]
 
 
-class _SocoSingletonBase(_ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})): 
-    """ The base class for the SoCo class. 
-    
-    Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg, 
+class _SocoSingletonBase(_ArgsSingleton(str('ArgsSingletonMeta'),
+                        (object,), {})):
+    """ The base class for the SoCo class.
+
+    Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
     here: http://www.artima.com/weblogs/viewpost.jsp?thread=236234 and
     here: http://mikewatkins.ca/2008/11/29/python-2-and-3-metaclasses/
-    
+
     """
     pass
 
 
 class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     """A simple class for controlling a Sonos speaker.
-    
+
     For any given set of arguments to __init__, only one instance of this class
-    may be created. Subsequent attempts to create an instance with the same 
+    may be created. Subsequent attempts to create an instance with the same
     arguments will return the previously created instance.
 
     Public functions::
