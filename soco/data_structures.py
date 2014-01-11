@@ -46,20 +46,20 @@ class PlayableItem(object):
 
     def __init__(self):
         """Initialize the content as an empty dict."""
-        self._content = {}
+        self.content = {}
 
     def __eq__(self, playable_item):
         """Return the equals comparison result to another ``playable_item``."""
-        return self._content == playable_item.content
+        return self.content == playable_item.content
 
     def __hash__(self):
         """Return the hash value of the item.
 
-        Calculated as the hash of the :py:attr:`._content` dictionary and the
+        Calculated as the hash of the :py:attr:`.content` dictionary and the
         ``__class__``.
 
         """
-        hashitems = self._content.items() + [('__class__', self.__class__)]
+        hashitems = self.content.items() + [('__class__', self.__class__)]
         return hash(frozenset(hashitems))
 
     def __repr__(self):
@@ -69,17 +69,17 @@ class PlayableItem(object):
 
           <class_name 'middle_part[0:40]' at id_in_hex>
 
-        where middle_part is either the title item in _content, if it is set,
+        where middle_part is either the title item in content, if it is set,
         or ``str(content)``. The output is also cleared of non-ascii
         characters.
 
         """
         # 40 originates from terminal width (78) - (15) for address part and
         # (19) for the longest class name and a little left for buffer
-        if self._content.get('title') is not None:
-            middle = self._content['title'].encode('ascii', 'replace')[0:40]
+        if self.content.get('title') is not None:
+            middle = self.content['title'].encode('ascii', 'replace')[0:40]
         else:
-            middle = str(self._content).encode('ascii', 'replace')[0:40]
+            middle = str(self.content).encode('ascii', 'replace')[0:40]
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
                                              middle,
                                              hex(id(self)))
@@ -94,20 +94,6 @@ class PlayableItem(object):
 
         """
         return self.__repr__()
-
-    @property
-    def content(self):
-        """Get and set the content dict.
-
-        If set, the dict must contain values for the keys mentioned in the
-        docstring for the __init__ method.
-
-        """
-        return self._content
-
-    @content.setter
-    def content(self, content):  # pylint: disable=C0111
-        self._content = content
 
 
 class QueueableItem(PlayableItem):
@@ -164,26 +150,12 @@ class MusicLibraryItem(QueueableItem):
         arguments.update(kwargs)
         for key, value in arguments.items():
             if key in self.translation:
-                self._content[key] = value
+                self.content[key] = value
             else:
                 raise ValueError(
                     'The key \'{0}\' is not allowed as an argument. Only '
                     'these keys are allowed: {1}'.
                     format(key, str(self.translation.keys())))
-
-    @classmethod
-    def from_dict(cls, content):
-        """Return an instance of this class, created from a dict with
-        parameters.
-
-        :param content: Dict with MusicLirabryItem information. Required and
-            valid arguments are the same as for the __init__ method
-
-        """
-        # Make a copy since this method will modify the input dict
-        content_in = content.copy()
-        args = [content_in.pop(arg) for arg in ['uri', 'title', 'item_class']]
-        return cls(*args, **content_in)
 
     @classmethod
     def from_xml(cls, xml):
@@ -207,6 +179,25 @@ class MusicLibraryItem(QueueableItem):
         args = [content.pop(arg) for arg in ['uri', 'title', 'item_class']]
         return cls(*args, **content)
 
+    @classmethod
+    def from_dict(cls, content):
+        """Return an instance of this class, created from a dict with
+        parameters.
+
+        :param content: Dict with MusicLirabryItem information. Required and
+            valid arguments are the same as for the __init__ method
+
+        """
+        # Make a copy since this method will modify the input dict
+        content_in = content.copy()
+        args = [content_in.pop(arg) for arg in ['uri', 'title', 'item_class']]
+        return cls(*args, **content_in)
+
+    @property
+    def to_dict(self):
+        """Get the dict representation of the ``MusicLibraryItem``."""
+        return self.content
+
     @property
     def item_id(self):  # pylint: disable=C0103
         """Return the id.
@@ -215,7 +206,7 @@ class MusicLibraryItem(QueueableItem):
         For the few music library types where that is not correct, this method
         should be overwritten.
         """
-        out = self._content['uri']
+        out = self.content['uri']
         try:
             out = out[out.index('#') + 1:]
         except ValueError:
@@ -247,7 +238,7 @@ class MusicLibraryItem(QueueableItem):
          </DIDL-Lite>
 
         """
-        # Check the id_info method and via that, the self.content['uri'] value
+        # Check the id_info method and via that, the self.to_dict['uri'] value
         if self.item_id is None:
             raise CannotCreateDIDLMetadata(
                 'DIDL Metadata cannot be created when item_id returns None '
@@ -260,11 +251,11 @@ class MusicLibraryItem(QueueableItem):
             {'parentID': self.parent_id, 'restricted': 'true',
              'id': self.item_id}
         item = XML.SubElement(xml, 'item', item_attrib)
-        # Add content from self._content to item
+        # Add content from self.content to item
         for key in ['title', 'item_class']:
             element = XML.SubElement(
                 item, ns_tag(*self.translation[key]))
-            element.text = self._content[key]
+            element.text = self.content[key]
         # Add the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
                        'urn:schemas-rinconnetworks-com:metadata-1-0/'}
@@ -275,29 +266,29 @@ class MusicLibraryItem(QueueableItem):
     @property
     def title(self):
         """Get and set the title as an unicode object."""
-        return self._content['title']
+        return self.content['title']
 
     @title.setter
     def title(self, title):  # pylint: disable=C0111
-        self._content['title'] = title
+        self.content['title'] = title
 
     @property
     def uri(self):
         """Get and set the URI as an unicode object."""
-        return self._content['uri']
+        return self.content['uri']
 
     @uri.setter
     def uri(self, uri):  # pylint: disable=C0111
-        self._content['uri'] = uri
+        self.content['uri'] = uri
 
     @property
     def item_class(self):
         """Get and set the UPnP object class as an unicode object."""
-        return self._content['item_class']
+        return self.content['item_class']
 
     @item_class.setter
     def item_class(self, item_class):  # pylint: disable=C0111
-        self._content['item_class'] = item_class
+        self.content['item_class'] = item_class
 
 
 class MLTrack(MusicLibraryItem):
@@ -353,7 +344,7 @@ class MLTrack(MusicLibraryItem):
     @property
     def item_id(self):  # pylint: disable=C0103
         """Return the id."""
-        out = self._content['uri']
+        out = self.content['uri']
         if 'x-file-cifs' in out:
             out = out.replace('x-file-cifs', 'S')
         else:
@@ -363,39 +354,39 @@ class MLTrack(MusicLibraryItem):
     @property
     def creator(self):
         """Get and set the creator as an unicode object."""
-        return self._content.get('creator')
+        return self.content.get('creator')
 
     @creator.setter
     def creator(self, creator):  # pylint: disable=C0111
-        self._content['creator'] = creator
+        self.content['creator'] = creator
 
     @property
     def album(self):
         """Get and set the album as an unicode object."""
-        return self._content.get('album')
+        return self.content.get('album')
 
     @album.setter
     def album(self, album):  # pylint: disable=C0111
-        self._content['album'] = album
+        self.content['album'] = album
 
     @property
     def album_art_uri(self):
         """Get and set the album art URI as an unicode object."""
-        return self._content.get('album_art_uri')
+        return self.content.get('album_art_uri')
 
     @album_art_uri.setter
     def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
-        self._content['album_art_uri'] = album_art_uri
+        self.content['album_art_uri'] = album_art_uri
 
     @property
     def original_track_number(self):
         """Get and set the original track number as an integer."""
-        return self._content.get('original_track_number')
+        return self.content.get('original_track_number')
 
     @original_track_number.setter
     # pylint: disable=C0111
     def original_track_number(self, original_track_number):
-        self._content['original_track_number'] = original_track_number
+        self.content['original_track_number'] = original_track_number
 
 
 class MLAlbum(MusicLibraryItem):
@@ -446,20 +437,20 @@ class MLAlbum(MusicLibraryItem):
     @property
     def creator(self):
         """Get and set the creator as an unicode object."""
-        return self._content['creator']
+        return self.content['creator']
 
     @creator.setter
     def creator(self, creator):  # pylint: disable=C0111
-        self._content['creator'] = creator
+        self.content['creator'] = creator
 
     @property
     def album_art_uri(self):
         """Get and set the album art URI as an unicode object."""
-        return self._content['album_art_uri']
+        return self.content['album_art_uri']
 
     @album_art_uri.setter
     def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
-        self._content['album_art_uri'] = album_art_uri
+        self.content['album_art_uri'] = album_art_uri
 
 
 class MLArtist(MusicLibraryItem):
@@ -592,7 +583,7 @@ class MLPlaylist(MusicLibraryItem):
     @property
     def item_id(self):  # pylint: disable=C0103
         """Returns the id."""
-        out = self._content['uri']
+        out = self.content['uri']
         if 'x-file-cifs' in out:
             out = out.replace('x-file-cifs', 'S')
         else:
