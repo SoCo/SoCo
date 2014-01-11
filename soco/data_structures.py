@@ -52,16 +52,6 @@ class PlayableItem(object):
         """Return the equals comparison result to another ``playable_item``."""
         return self.content == playable_item.content
 
-    def __hash__(self):
-        """Return the hash value of the item.
-
-        Calculated as the hash of the :py:attr:`.content` dictionary and the
-        ``__class__``.
-
-        """
-        hashitems = self.content.items() + [('__class__', self.__class__)]
-        return hash(frozenset(hashitems))
-
     def __repr__(self):
         """Return the repr value for the item.
 
