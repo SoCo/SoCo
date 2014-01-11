@@ -38,7 +38,7 @@ def get_ml_item(xml):
 
     """
     cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
-    return cls(xml=xml)
+    return cls.from_xml(xml=xml)
 
 
 class PlayableItem(object):
@@ -120,82 +120,102 @@ class QueueableItem(PlayableItem):
 
 
 class MusicLibraryItem(QueueableItem):
-    """Abstract class for a queueable item from the music library."""
+    """Abstract class for a queueable item from the music library.
 
-    def __init__(self, translation=None, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.QueueableItem` and
-        initialize the internal variables for translation and content.
+    :param parent_id: The parent ID for the music library item is None, since
+        it is a abstract class and it should be overwritten in the sub
+        classes
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MusicLibraryItems from XML. The
+        default value is shown below. This default value applies to most sub
+        classes. The rest should overwrite it.
 
-        MusicLibraryItem must be instantiated with EITHER an xml or content
-        argument.
+        .. code-block:: python
 
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described in
-            translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys in translation.
-        :param translation: A
-            dictionary-key-to-xml-tag-and-namespace-translation. Defaults to:
+            # key: (ns, tag)
+            translation = {
+                'title': ('dc', 'title'),
+                'uri': ('', 'res'),
+                'item_class': ('upnp', 'class')
+            }
+    """
+    parent_id = None
+    # key: (ns, tag)
+    translation = {'title': ('dc', 'title'),
+                   'uri': ('', 'res'),
+                   'item_class': ('upnp', 'class')}
 
-            .. code-block:: python
+    def __init__(self, uri, title, item_class, **kwargs):
+        """Initialize the MusicLibraryItem from the keyword arguments.
 
-                # key: (ns, tag)
-                translation = {
-                    'title': ('dc', 'title'),
-                    'uri': ('', 'res'),
-                    'class': ('upnp', 'class')
-                }
-
+        :param uri: The URI for the item
+        :param title: The title for the item
+        :param item_class: The UPnP class for the item
+        :param **kwargs: Extra information items to form the music library
+            item from. Valid keys 'album', 'album_art_uri', 'creator',
+            'original_track_number'. 'original_track_number' is an int, all
+            other values are unicode objects.
         """
         QueueableItem.__init__(self)
-        self._parent_id = None
 
-        if translation is not None:
-            self._translation = translation
-        else:
-            self._translation = {'title': ('dc', 'title'),
-                                 'uri': ('', 'res'),
-                                 'class': ('upnp', 'class')}
+        # Parse the input arguments
+        arguments = {'uri': uri, 'title': title, 'item_class': item_class}
+        arguments.update(kwargs)
+        for key, value in arguments.items():
+            if key in self.translation:
+                self._content[key] = value
+            else:
+                raise ValueError(
+                    'The key \'{0}\' is not allowed as an argument. Only '
+                    'these keys are allowed: {1}'.
+                    format(key, str(self.translation.keys())))
 
-        # Should be called with EITHER a xml or content argument
-        if not ((xml is None) ^ (content is None)):
-            raise ValueError('MusicLibraryItem  and subclasses must be '
-                             'instantiated with either an xml or a content '
-                             'argument')
+    @classmethod
+    def from_dict(cls, content):
+        """Return an instanse of this class, created from a content dict.
 
-        # Instantiate from content
-        if content is not None:
-            for key in content.keys():
-                # Do not accept value for keys that are not in translation
-                if key not in self._translation.keys():
-                    raise ValueError(
-                        'The key \'{0}\' is not allowed in the content dict. '
-                        'Only these keys are allowed: {1}'.
-                        format(key, str(self._translation.keys())))
-            self._content = content
-        # Instantiate from xml
-        else:
-            for key, value in self._translation.items():
-                result = xml.find(ns_tag(*value))
-                if result is None:
-                    self._content[key] = None
-                else:
-                    # The xml objects should contain utf-8 internally
-                    self._content[key] = really_unicode(result.text)
+        :param content: Dict with MusicLirabryItem information. Required and
+            valid arguments are the same as for the __init__ method
+        """
+        # Make a copy since this method will modify the input dict
+        content_in = content.copy()
+        args = [content_in.pop(arg) for arg in ['uri', 'title', 'item_class']]
+        return cls(*args, **content_in)
+
+    @classmethod
+    def from_xml(cls, xml):
+        """Return an instanse of this class, created from xml.
+
+        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
+            top element usually is a DIDL-LITE item (NS['']) element. Inside
+            the item element should be  the (namespace, tag_name) elements
+            in the dictionary-key-to-xml-tag-and-namespace-translation
+            described in __init__.
+        """
+        content = {}
+        for key, value in cls.translation.items():
+            result = xml.find(ns_tag(*value))
+            if result is None:
+                content[key] = None
+            else:
+                # The xml objects should contain utf-8 internally
+                content[key] = really_unicode(result.text)
+        args = [content.pop(arg) for arg in ['uri', 'title', 'item_class']]
+        return cls(*args, **content)
 
     @property
     def item_id(self):  # pylint: disable=C0103
         """Returns the id.
 
         The id is extracted as the part of the URI after the first # character.
-        For the few data types where that is not correct, this method should
-        be overwritten.
-
+        For the few music library types where that is not correct, this method
+        should be overwritten.
         """
-        out = self._content.get('uri')
-        if out is not None:
+        out = self._content['uri']
+        try:
             out = out[out.index('#') + 1:]
+        except ValueError:
+            out = None
         return out
 
     @property
@@ -204,17 +224,17 @@ class MusicLibraryItem(QueueableItem):
 
         This method depends, as a minimum, on the
         :py:attr:`~.MusicLibraryItem.item_id` attribute (and via that the
-        :py:attr:`~.MusicLibraryItem.uri` attribute. The values for ``class``
-        and ``title`` will also be used if present, but may not be necessary.
-        The metadata will be on the form:
+        :py:attr:`~.MusicLibraryItem.uri` attribute. The values for
+        ``item_class`` and ``title`` will also be used if present, but may not
+        be necessary. The metadata will be on the form:
 
         .. code :: xml
 
          <DIDL-Lite ..NS_INFO..>
            <item id="...self.item_id..."
-             parentID="...self._parent_id..." restricted="true">
+             parentID="...self.parent_id..." restricted="true">
              <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.class_info...</upnp:class>
+             <upnp:class>...self.item_class...</upnp:class>
              <desc id="cdudn"
                nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
                RINCON_AssociatedZPUDN
@@ -226,20 +246,20 @@ class MusicLibraryItem(QueueableItem):
         # Check the id_info method and via that, the self.content['uri'] value
         if self.item_id is None:
             raise CannotCreateDIDLMetadata(
-                'DIDL Metadata cannot be created when if_info returns None '
+                'DIDL Metadata cannot be created when item_id returns None '
                 '(most likely because uri is not set)')
 
         # Main element
         xml = XML.Element('DIDL-Lite')
         # Item sub element
         item_attrib = \
-            {'parentID': self._parent_id, 'restricted': 'true',
+            {'parentID': self.parent_id, 'restricted': 'true',
              'id': self.item_id}
         item = XML.SubElement(xml, 'item', item_attrib)
         # Add content from self._content to item
-        for key in ['title', 'class']:
+        for key in ['title', 'item_class']:
             element = XML.SubElement(
-                item, ns_tag(self._translation[key][0], key))
+                item, ns_tag(*self.translation[key]))
             element.text = self._content[key]
         # Add the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
@@ -267,26 +287,22 @@ class MusicLibraryItem(QueueableItem):
         self._content['uri'] = uri
 
     @property
-    def upnp_class(self):
+    def item_class(self):
         """Get and set the UPnP object class as an unicode object."""
-        return self._content['class']
+        return self._content['item_class']
 
-    @upnp_class.setter
-    def upnp_class(self, upnp_class):  # pylint: disable=C0111
-        self._content['class'] = upnp_class
+    @item_class.setter
+    def item_class(self, item_class):  # pylint: disable=C0111
+        self._content['item_class'] = item_class
 
 
 class MLTrack(MusicLibraryItem):
-    """Class that represents a music library track."""
+    """Class that represents a music library track.
 
-    def __init__(self, xml=None, content=None):
-        """Initialize translation dict and call the ``__init__`` method from
-        :py:class:`.MusicLibraryItem`.
-
-        MLTrack must be instantiated with EITHER an xml or a content argument.
-
-        MLTrack uses the following content-key-to-xml-tag-and-namespace-
-        translation:
+    :param parent_id: The parent ID for the MLTrack is 'A:TRACKS'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLTrack from XML. The value is
+        shown below
 
         .. code-block:: python
 
@@ -298,43 +314,51 @@ class MLTrack(MusicLibraryItem):
                 'album_art_uri': ('upnp', 'albumArtURI'),
                 'uri': ('', 'res'),
                 'original_track_number': ('upnp', 'originalTrackNumber'),
-                'class': ('upnp', 'class')
+                'item_class': ('upnp', 'class')
             }
+    """
 
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']) element.
-            Inside the item element are the (namespace, tag_name) elements
-            described above in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.item.audioItem.musicTrack'
+    parent_id = 'A:TRACKS'
+    # name: (ns, tag)
+    translation = {
+        'title': ('dc', 'title'),
+        'creator': ('dc', 'creator'),
+        'album': ('upnp', 'album'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res'),
+        'original_track_number': ('upnp', 'originalTrackNumber'),
+        'item_class': ('upnp', 'class')
+    }
 
+    def __init__(self, uri, title,
+                 item_class='object.item.audioItem.musicTrack', **kwargs):
+        """Instantiate the MLTrack item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
+
+        :param uri: The URI for the track
+        :param title: The title of the track
+        :param item_class: The UPnP class for the track. The default value is:
+            'object.item.audioItem.musicTrack'
+        :param kwargs: Optional extra information items, valid keys are:
+            'album', 'album_art_uri', 'creator', 'original_track_number'. All
+            value should be unicode objects.
         """
-        # name: (ns, tag)
-        translation = {
-            'title': ('dc', 'title'),
-            'creator': ('dc', 'creator'),
-            'album': ('upnp', 'album'),
-            'album_art_uri': ('upnp', 'albumArtURI'),
-            'uri': ('', 'res'),
-            'original_track_number': ('upnp', 'originalTrackNumber'),
-            'class': ('upnp', 'class')
-        }
-        MusicLibraryItem.__init__(self, translation, xml, content)
-        self._parent_id = 'A:TRACKS'
+        MusicLibraryItem.__init__(self, uri, title, item_class, **kwargs)
 
     @property
     def item_id(self):  # pylint: disable=C0103
         """Returns the id."""
-        out = self._content.get('uri')
-        if out is not None:
+        out = self._content['uri']
+        if 'x-file-cifs' in out:
             out = out.replace('x-file-cifs', 'S')
+        else:
+            out = None
         return out
 
     @property
     def creator(self):
         """Get and set the creator as an unicode object."""
-        return self._content['creator']
+        return self._content.get('creator')
 
     @creator.setter
     def creator(self, creator):  # pylint: disable=C0111
@@ -343,7 +367,7 @@ class MLTrack(MusicLibraryItem):
     @property
     def album(self):
         """Get and set the method as an unicode object."""
-        return self._content['album']
+        return self._content.get('album')
 
     @album.setter
     def album(self, album):  # pylint: disable=C0111
@@ -352,7 +376,7 @@ class MLTrack(MusicLibraryItem):
     @property
     def album_art_uri(self):
         """Get and set the album art URI as an unicode object."""
-        return self._content['album_art_uri']
+        return self._content.get('album_art_uri')
 
     @album_art_uri.setter
     def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
@@ -361,10 +385,7 @@ class MLTrack(MusicLibraryItem):
     @property
     def original_track_number(self):
         """Get and set the original track number as an integer."""
-        if self._content.get('original_track_number') is not None:
-            return int(self._content['original_track_number'])
-        else:
-            return None
+        return self._content.get('original_track_number')
 
     @original_track_number.setter
     # pylint: disable=C0111
@@ -373,16 +394,12 @@ class MLTrack(MusicLibraryItem):
 
 
 class MLAlbum(MusicLibraryItem):
-    """Class that represents a music library album."""
+    """Class that represents a music library album.
 
-    def __init__(self, xml=None, content=None):
-        """Initialize translation dict and call the ``__init__`` method from
-        :py:class:`.MusicLibraryItem`.
-
-        MLAlbum must be instantiated with EITHER an xml or a content argument.
-
-        MLAlbum uses the following content-key-to-xml-tag-and-namespace-
-        translation:
+    :param parent_id: The parent ID for the MLTrack is 'A:ALBUM'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLAlbum from XML. The value is
+        shown below
 
         .. code-block :: python
 
@@ -392,28 +409,33 @@ class MLAlbum(MusicLibraryItem):
                 'creator': ('dc', 'creator'),
                 'album_art_uri': ('upnp', 'albumArtURI'),
                 'uri': ('', 'res'),
-                'class': ('upnp', 'class')
+                'item_class': ('upnp', 'class')
             }
+    """
 
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.container.album.musicAlbum'
+    parent_id = 'A:ALBUM'
+    # name: (ns, tag)
+    translation = {
+        'title': ('dc', 'title'),
+        'creator': ('dc', 'creator'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res'),
+        'item_class': ('upnp', 'class')
+    }
 
+    def __init__(self, uri, title,
+                 item_class='object.container.album.musicAlbum', **kwargs):
+        """Instantiate the MLAlbum item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
+
+        :param uri: The URI for the alum
+        :param title: The title of the album
+        :param item_class: The UPnP class for the album. The default value is:
+            'object.container.album.musicAlbum'
+        :param kwargs: Optional extra information items, valid keys are:
+            'album_art_uri' and 'creator'. All value should be unicode objects.
         """
-        # name: (ns, tag)
-        self._translation = {
-            'title': ('dc', 'title'),
-            'creator': ('dc', 'creator'),
-            'album_art_uri': ('upnp', 'albumArtURI'),
-            'uri': ('', 'res'),
-            'class': ('upnp', 'class')
-        }
-        MusicLibraryItem.__init__(self, self._translation, xml, content)
-        self._parent_id = 'A:ALBUM'
+        MusicLibraryItem.__init__(self, uri, title, item_class, **kwargs)
 
     @property
     def creator(self):
@@ -435,215 +457,156 @@ class MLAlbum(MusicLibraryItem):
 
 
 class MLArtist(MusicLibraryItem):
-    """Class that represents a music library artist."""
+    """Class that represents a music library artist.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLArtist is 'A:ARTIST'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLArtist from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLArtist must be instantiated with EITHER an xml or a content argument.
+    parent_id = 'A:ARTIST'
 
-        MLArtist uses the default content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title,
+                 item_class='object.container.person.musicArtist'):
+        """Instantiate the MLArtist item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is
+        :param uri: The URI for the artist
+        :param title: The title of the artist
+        :param item_class: The UPnP class for the artist. The default value is:
             'object.container.person.musicArtist'
-
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'A:ARTIST'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
 class MLAlbumArtist(MusicLibraryItem):
-    """Class that represents a music library album artist."""
+    """Class that represents a music library album artist.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLAlbumArtist is 'A:ALBUMARTIST'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLAlbumArtist from XML is
+        inherited from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLAlbumArtist must be instantiated with EITHER an xml or a content
-        argument.
+    parent_id = 'A:ALBUMARTIST'
 
-        MLAlbumArtist uses the default content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title,
+                 item_class='object.container.person.musicArtist'):
+        """Instantiate the MLAlbumArtist item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is
-            'object.container.person.musicArtist'
-
+        :param uri: The URI for the alum artist
+        :param title: The title of the album artist
+        :param item_class: The UPnP class for the album artist. The default
+            value is: 'object.container.person.musicArtist'
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'A:ALBUMARTIST'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
 class MLGenre(MusicLibraryItem):
-    """Class that represents a music library genre."""
+    """Class that represents a music library genre.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLGenre is 'A:GENRE'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLGenre from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLGenre must be instantiated with EITHER an xml or a content argument.
+    parent_id = 'A:GENRE'
 
-        MLGenre uses the default content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title,
+                 item_class='object.container.genre.musicGenre'):
+        """Instantiate the MLGenre item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.container.genre.musicGenre'
-
+        :param uri: The URI for the genre
+        :param title: The title of the genre
+        :param item_class: The UPnP class for the genre. The default value is:
+            'object.container.genre.musicGenre'
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'A:GENRE'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
 class MLComposer(MusicLibraryItem):
-    """Class that represents a music library composer."""
+    """Class that represents a music library composer.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLComposer is 'A:COMPOSER'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLComposer from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLComposer must be instantiated with EITHER an xml or a content
-        argument.
+    parent_id = 'A:COMPOSER'
 
-        MLComposer uses the default content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title,
+                 item_class='object.container.person.composer'):
+        """Instantiate the MLComposer item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.container.person.composer'
-
+        :param uri: The URI for the composer
+        :param title: The title of the composer
+        :param item_class: The UPnP class for the composer. The default value
+            is: 'object.container.person.composer'
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'A:COMPOSER'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
 class MLPlaylist(MusicLibraryItem):
-    """Class that represents a music library play list"""
+    """Class that represents a music library play list.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLPlaylist is 'A:PLAYLIST'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLPlaylist from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLPlaylist must be instantiated with EITHER an xml or a content
-        argument.
+    parent_id = 'A:PLAYLISTS'
 
-        MLPlaylist uses default following content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title,
+                 item_class='object.container.playlistContainer'):
+        """Instantiate the MLPlaylist item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is
-            'object.container.playlistContainer'
-
+        :param uri: The URI for the playlist
+        :param title: The title of the playlist
+        :param item_class: The UPnP class for the playlist. The default value
+            is: 'object.container.playlistContainer'
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'A:PLAYLISTS'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
     @property
     def item_id(self):  # pylint: disable=C0103
-        """ Getter method for the id """
-        out = self._content.get('uri')
-        if out is not None:
+        """Returns the id."""
+        out = self._content['uri']
+        if 'x-file-cifs' in out:
             out = out.replace('x-file-cifs', 'S')
+        else:
+            out = None
         return out
 
 
 class MLShare(MusicLibraryItem):
-    """Class that represents a music library share."""
+    """Class that represents a music library share.
 
-    def __init__(self, xml=None, content=None):
-        """Call the ``__init__`` method from :py:class:`.MusicLibraryItem`.
+    :param parent_id: The parent ID for the MLShare is 'S:'
+    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLShare from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+    """
 
-        MLShare must be instantiated with EITHER an xml or a content argument.
+    parent_id = 'S:'
 
-        MLShare uses the default content-key-to-xml-tag-and-namespace-
-        translation:
+    def __init__(self, uri, title, item_class='object.container'):
+        """Instantiate the MLShare item by passing the arguments to the
+        super class :py:method:`.MusicLibraryItem.__init__`.
 
-        .. code-block :: python
-
-            # key: (ns, tag)
-            translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'class': ('upnp', 'class')
-            }
-
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (com.NS['']). Inside the
-            item element are the (namespace, tag_name) elements described above
-            in translation.
-        :param content: A dictionary describing the track. This dictionary can
-            only contain values for the keys described above in translation.
-            The standard value for class is 'object.container'
-
+        :param uri: The URI for the share
+        :param title: The title of the share
+        :param item_class: The UPnP class for the share. The default value is:
+            'object.container'
         """
-        MusicLibraryItem.__init__(self, xml=xml, content=content)
-        self._parent_id = 'S:'
+        MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
