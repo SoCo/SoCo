@@ -33,13 +33,10 @@ class ExamplePlugin(SoCoPlugin):
 
         print('Hi,', self.username)
 
-        response = self.soco.send_command(
-            TRANSPORT_ENDPOINT, PLUGIN_PLAY_ACTION, PLUGIN_PLAY_BODY)
-
-        if (response == PLUGIN_PLAY_RESPONSE):
-            return True
-        else:
-            return self.soco.parse_error(response)
+        self.soco.avTransport.Play([
+            ('InstanceID', 0),
+            ('Speed', 1)
+            ])
 
     def music_plugin_stop(self):
         """ Stop the music
@@ -50,20 +47,3 @@ class ExamplePlugin(SoCoPlugin):
         print('Bye,', self.username)
         self.soco.stop()
 
-
-TRANSPORT_ENDPOINT = '/MediaRenderer/AVTransport/Control'
-PLUGIN_PLAY_ACTION = '"urn:schemas-upnp-org:service:AVTransport:1#Play"'
-PLUGIN_PLAY_BODY = '''
-<u:Play xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-  <InstanceID>0</InstanceID>
-  <Speed>1</Speed>
-</u:Play>
-'''
-PLUGIN_PLAY_RESPONSE = '''
-<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"
- s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
-  <s:Body>
-    <u:PlayResponse xmlns:u="urn:schemas-upnp-org:service:AVTransport:1">
-    </u:PlayResponse>
-  </s:Body>
-</s:Envelope>'''

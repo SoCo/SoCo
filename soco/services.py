@@ -38,7 +38,6 @@ from __future__ import unicode_literals
 # Python 3 compatibility
 
 
-from types import MethodType
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
@@ -160,8 +159,7 @@ class Service(object):
         # _dispatcher is now an unbound menthod, but we need a bound method.
         # This turns an unbound method into a bound method (i.e. one that
         # takes self - an instance of the class - as the first parameter)
-        method = MethodType(_dispatcher, self, self.__class__)
-
+        method = _dispatcher.__get__(self, self.__class__)
         # Now we have a bound method, we cache it on this instance, so that
         # next time we don't have to go through this again
         setattr(self, action, method)
@@ -188,8 +186,10 @@ class Service(object):
         if args is None:
             args = []
         l = ["<{name}>{value}</{name}>".format(
-            name=name, value=escape(unicode(value), {'"': "&quot;"}))
-            for name, value in args]
+            name=name, value=escape("%s" % value, {'"': "&quot;"}))
+            for name, value in args]  # % converts to unicode because we are
+            # using unicode literals. Avoids use of 'unicode' function which
+            # does not exist in python 3
         xml = "".join(l)
         return xml
 

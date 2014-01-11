@@ -22,7 +22,7 @@ import requests
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import ns_tag, get_ml_item, QueueableItem
+from .data_structures import get_ml_item, QueueableItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
 
                 # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
                 # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
-                # ZP90  = Sonos Connect
+                # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
                 # If it's the bridge, then it's not a speaker and shouldn't
                 # be returned
                 if (model and model != "BR100"):
@@ -71,52 +71,63 @@ class SonosDiscovery(object):  # pylint: disable=R0903
 
 
 class SoCo(object):  # pylint: disable=R0904
-    """A simple class for controlling a Sonos speaker.
+    """A simple class for controlling a Sonos speaker
 
-    Public functions:
-    play -- Plays the current item.
-    play_uri -- Plays a track or a music stream by URI.
-    play_from_queue -- Plays an item in the queue.
-    pause -- Pause the currently playing track.
-    stop -- Stop the currently playing track.
-    seek -- Move the currently playing track a given elapsed time.
-    next -- Go to the next track.
-    previous -- Go back to the previous track.
-    mute -- Get or Set Mute (or unmute) the speaker.
-    volume -- Get or set the volume of the speaker.
-    bass -- Get or set the speaker's bass EQ.
-    set_player_name  -- set the name of the Sonos Speaker
-    treble -- Set the speaker's treble EQ.
-    set_play_mode -- Change repeat and shuffle settings on the queue.
-    set_loudness -- Turn on (or off) the speaker's loudness compensation.
-    switch_to_line_in -- Switch the speaker's input to line-in.
-    status_light -- Turn on (or off) the Sonos status light.
-    get_current_track_info -- Get information about the currently playing
-                              track.
-    get_speaker_info -- Get information about the Sonos speaker.
-    partymode -- Put all the speakers in the network in the same group.
-    join -- Join this speaker to another "master" speaker.
-    unjoin -- Remove this speaker from a group.
-    get_queue -- Get information about the queue.
-    get_folders -- Get search folders from the music library
-    get_artists -- Get artists from the music library
-    get_album_artists -- Get album artists from the music library
-    get_albums -- Get albums from the music library
-    get_genres -- Get genres from the music library
-    get_composers -- Get composers from the music library
-    get_tracks -- Get tracks from the music library
-    get_playlists -- Get playlists from the music library
-    get_music_library_information -- Get information from the music library
-    get_current_transport_info -- get speakers playing state
-    add_to_queue -- Add a track to the end of the queue
-    remove_from_queue -- Remove a track from the queue
-    clear_queue -- Remove all tracks from queue
-    get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
-    get_favorite_radio_stations -- Get favorite radio stations.
-    get_group_coordinator -- Get the coordinator for a grouped collection of
-                             Sonos units.
-    get_speakers_ip -- Get the IP addresses of all the Sonos speakers in the
-                       network.
+    Public functions::
+
+        play -- Plays the current item.
+        play_uri -- Plays a track or a music stream by URI.
+        play_from_queue -- Plays an item in the queue.
+        pause -- Pause the currently playing track.
+        stop -- Stop the currently playing track.
+        seek -- Move the currently playing track a given elapsed time.
+        next -- Go to the next track.
+        previous -- Go back to the previous track.
+        switch_to_line_in -- Switch the speaker's input to line-in.
+        switch_to_tv -- Switch the speaker's input to TV.
+        get_current_track_info -- Get information about the currently playing
+                                  track.
+        get_speaker_info -- Get information about the Sonos speaker.
+        partymode -- Put all the speakers in the network in the same group.
+        join -- Join this speaker to another "master" speaker.
+        unjoin -- Remove this speaker from a group.
+        get_queue -- Get information about the queue.
+        get_folders -- Get search folders from the music library
+        get_artists -- Get artists from the music library
+        get_album_artists -- Get album artists from the music library
+        get_albums -- Get albums from the music library
+        get_genres -- Get genres from the music library
+        get_composers -- Get composers from the music library
+        get_tracks -- Get tracks from the music library
+        get_playlists -- Get playlists from the music library
+        get_music_library_information -- Get information from the music library
+        get_current_transport_info -- get speakers playing state
+        add_to_queue -- Add a track to the end of the queue
+        remove_from_queue -- Remove a track from the queue
+        clear_queue -- Remove all tracks from queue
+        get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
+        get_favorite_radio_stations -- Get favorite radio stations.
+        get_group_coordinator -- Get the coordinator for a grouped collection of
+                                 Sonos units.
+        get_speakers_ip -- Get the IP addresses of all the Sonos speakers in the
+                           network.
+
+    Properties::
+
+        mute -- The speaker's mute status.
+        volume -- The speaker's volume.
+        bass -- The speaker's bass EQ.
+        treble -- The speaker's treble EQ.
+        loudness -- The status of the speaker's loudness compensation.
+        status_light -- The state of the Sonos status light.
+        player_name  -- The speaker's name.
+        play_mode -- The queue's repeat/shuffle settings.
+
+    .. warning::
+
+        These properties are not cached and will obtain information over the
+        network, so may take longer than expected to set or return a value. It
+        may be a good idea for you to cache the value in your own code.
 
     """
     # Stores the IP addresses of all the speakers in a network
@@ -125,6 +136,7 @@ class SoCo(object):  # pylint: disable=R0904
     topology = {}
 
     def __init__(self, speaker_ip):
+        #: The speaker's ip address
         self.speaker_ip = speaker_ip
         self.speaker_info = {}  # Stores information about the current speaker
         self.deviceProperties = DeviceProperties(self)
@@ -132,34 +144,37 @@ class SoCo(object):  # pylint: disable=R0904
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
 
-    def set_player_name(self, playername):
-        """  Sets the name of the player
+    @property
+    def player_name(self):
+        """  The speaker's name. A string. """
+        result = self.deviceProperties.GetZoneAttributes()
+        return result["CurrentZoneName"]
 
-        Returns:
-        True if the player name was successfully set.
-
-        Raises SoCoException (or a subclass) upon errors.
-
-        """
+    @player_name.setter
+    def player_name(self, playername):
         self.deviceProperties.SetZoneAtrributes([
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')
             ])
 
-    def set_play_mode(self, playmode):
-        """ Sets the play mode for the queue. Case-insensitive options are:
+    @property
+    def play_mode(self):
+        """ The queue's play mode. Case-insensitive options are::
+
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
         SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.)
         SHUFFLE_NOREPEAT -- Turns on shuffle and turns off repeat.
 
-        Returns:
-        True if the play mode was successfully set.
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
+        result = self.avTransport.GetTransportSettings([
+            ('InstanceID', 0),
+            ])
+        return result['PlayMode']
+
+    @play_mode.setter
+    def play_mode(self, playmode):
         modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
         if not playmode in modes:
@@ -325,141 +340,105 @@ class SoCo(object):  # pylint: disable=R0904
             ('Speed', 1)
             ])
 
-    def mute(self, mute=None):
-        """ Mute or unmute the Sonos speaker.
+    @property
+    def mute(self):
+        """ The speaker's mute state. True if muted, False otherwise """
 
-        Arguments:
-        mute -- True to mute. False to unmute.
+        response = self.renderingControl.GetMute([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+            ])
+        mute_state = response['CurrentMute']
+        return True if int(mute_state) else False
 
-        Returns:
-        True if the Sonos speaker was successfully muted or unmuted.
+    @mute.setter
+    def mute(self, mute):
+        mute_value = '1' if mute else '0'
+        self.renderingControl.SetMute([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ('DesiredMute', mute_value)
+            ])
 
-        If the mute argument was not specified: returns the current mute status
-        0 for unmuted, 1 for muted
+    @property
+    def volume(self):
+        """ The speaker's volume. An integer between 0 and 100. """
 
-        Raises SoCoException (or a subclass) upon errors.
+        response = self.renderingControl.GetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ])
+        volume = response['CurrentVolume']
+        return int(volume)
 
-        """
-        if mute is None:
-            response = self.renderingControl.GetMute([
-                ('InstanceID', 0),
-                ('Channel', 'Master')
-                ])
-            mute_state = response['CurrentMute']
-            return int(mute_state)
-        else:
-            mute_value = '1' if mute else '0'
-            self.renderingControl.SetMute([
-                ('InstanceID', 0),
-                ('Channel', 'Master'),
-                ('DesiredMute', mute_value)
-                ])
+    @volume.setter
+    def volume(self, volume):
+        volume = int(volume)
+        volume = max(0, min(volume, 100))  # Coerce in range
+        self.renderingControl.SetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ('DesiredVolume', volume)
+            ])
 
-    def volume(self, volume=None):
-        """ Get or set the Sonos speaker volume.
+    @property
+    def bass(self):
+        """ The speaker's bass EQ. An integer between -10 and 10. """
 
-        Arguments:
-        volume -- A value between 0 and 100.
+        response = self.renderingControl.GetBass([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ])
+        bass = response['CurrentBass']
+        return int(bass)
 
-        Returns:
-        If the volume argument was specified: returns true if the Sonos speaker
-        successfully set the volume.
+    @bass.setter
+    def bass(self, bass):
+        bass = int(bass)
+        bass = max(-10, min(bass, 10))  # Coerce in range
+        self.renderingControl.SetBass([
+            ('InstanceID', 0),
+            ('DesiredBass', bass)
+            ])
 
-        If the volume argument was not specified: returns the current volume of
-        the Sonos speaker.
+    @property
+    def treble(self):
+        """ The speaker's treble EQ. An integer between -10 and 10. """
 
-        Raises SoCoException (or a subclass) upon errors.
+        response = self.renderingControl.GetTreble([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ])
+        treble = response['CurrentTreble']
+        return int(treble)
 
-        """
-        if volume is not None:
-            volume = max(0, min(volume, 100))  # Coerce in range
-            self.renderingControl.SetVolume([
-                ('InstanceID', 0),
-                ('Channel', 'Master'),
-                ('DesiredVolume', volume)
-                ])
-        else:
-            response = self.renderingControl.GetVolume([
-                ('InstanceID', 0),
-                ('Channel', 'Master'),
-                ])
-            volume = response['CurrentVolume']
-            return int(volume)
+    @treble.setter
+    def treble(self, treble):
+        treble = int(treble)
+        treble = max(-10, min(treble, 10))  # Coerce in range
+        self.renderingControl.SetTreble([
+            ('InstanceID', 0),
+            ('DesiredTreble', treble)
+            ])
 
-    def bass(self, bass=None):
-        """ Get or set the Sonos speaker's bass EQ.
-
-        Arguments:
-        bass -- A value between -10 and 10.
-
-        Returns:
-        If the bass argument was specified: returns true if the Sonos speaker
-        successfully set the bass EQ.
-
-        If the bass argument was not specified: returns the current base value.
-
-        Raises SoCoException (or a subclass) upon errors.
-
-        """
-        if bass is not None:
-            bass = max(-10, min(bass, 10))  # Coerce in range
-            self.renderingControl.SetBass([
-                ('InstanceID', 0),
-                ('DesiredBass', bass)
-                ])
-        else:
-            response = self.renderingControl.GetBass([
-                ('InstanceID', 0),
-                ('Channel', 'Master'),
-                ])
-            bass = response['CurrentBass']
-            return int(bass)
-
-    def treble(self, treble=None):
-        """ Get or set the Sonos speaker's treble EQ.
-
-        Arguments:
-        treble -- A value between -10 and 10.
-
-        Returns:
-        If the treble argument was specified: returns true if the Sonos speaker
-        successfully set the treble EQ.
-
-        If the treble argument was not specified: returns the current treble
-        value.
-
-        Raises SoCoException (or a subclass) upon errors.
-
-        """
-        if treble is not None:
-            treble = max(-10, min(treble, 10))  # Coerce in range
-            self.renderingControl.SetTreble([
-                ('InstanceID', 0),
-                ('DesiredTreble', treble)
-                ])
-        else:
-            response = self.renderingControl.GetTreble([
-                ('InstanceID', 0),
-                ('Channel', 'Master'),
-                ])
-            treble = response['CurrentTreble']
-            return int(treble)
-
-    def set_loudness(self, loudness):
-        """ Set the Sonos speaker's loudness compensation.
+    @property
+    def loudness(self):
+        """ The Sonos speaker's loudness compensation. True if on, otherwise
+        False.
 
         Loudness is a complicated topic. You can find a nice summary about this
         feature here: http://forums.sonos.com/showthread.php?p=4698#post4698
 
-        Arguments:
-        loudness -- True to turn on loudness compensation. False to disable it.
-
-        Returns:
-        True if the Sonos speaker successfully set the loundess compensation.
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
+        response = self.renderingControl.GetLoudness([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ])
+        loudness = response["CurrentLoudness"]
+        return True if int(loudness) else False
+
+    @loudness.setter
+    def loudness(self, loudness):
         loudness_value = '1' if loudness else '0'
         self.renderingControl.SetLoudness([
             ('InstanceID', 0),
@@ -472,7 +451,7 @@ class SoCo(object):  # pylint: disable=R0904
         Mode.
 
         This blog shows the initial research responsible for this:
-        http://travelmarx.blogspot.dk/2010/06/exploring-sonos-via-upnp.html
+        http://blog.travelmarx.com/2010/06/exploring-sonos-via-upnp.html
 
         The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
@@ -557,21 +536,39 @@ class SoCo(object):  # pylint: disable=R0904
             ('CurrentURIMetaData', '')
             ])
 
-    def status_light(self, led_on):
-        """ Turn on (or off) the white Sonos status light.
-
-        Turns on or off the little white light on the Sonos speaker. (It's
-        between the mute button and the volume up button on the speaker.)
-
-        Arguments:
-        led_on -- True to turn on the light. False to turn off the light.
+    def switch_to_tv(self):
+        """ Switch the speaker's input to TV.
 
         Returns:
-        True if the Sonos speaker successfully turned on (or off) the light.
+        True if the Sonos speaker successfully switched to TV.
+
+        If an error occurs, we'll attempt to parse the error and return a UPnP
+        error code. If that fails, the raw response sent back from the Sonos
+        speaker will be returned.
 
         Raises SoCoException (or a subclass) upon errors.
 
         """
+        speaker_info = self.get_speaker_info()
+        speaker_uid = speaker_info['uid']
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', 'x-sonos-htastream:{}:spdif'.format(speaker_uid)),
+            ('CurrentURIMetaData', '')
+            ])
+
+    @property
+    def status_light(self):
+        """ The white Sonos status light between the mute button and the volume
+        up button on the speaker. True if on, otherwise False.
+
+        """
+        result = self.deviceProperties.GetLEDState()
+        LEDState = result["CurrentLEDState"]
+        return True if LEDState == "On" else False
+
+    @status_light.setter
+    def status_light(self, led_on):
         led_state = 'On' if led_on else 'Off'
         self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
@@ -619,7 +616,7 @@ class SoCo(object):  # pylint: disable=R0904
             else:
                 LOGGER.warning('Could not handle track info: "%s"', trackinfo)
                 LOGGER.warning(traceback.format_exc())
-                track['title'] = really_utf8(trackinfo)
+                track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
@@ -635,13 +632,13 @@ class SoCo(object):  # pylint: disable=R0904
 
             track['title'] = ""
             if (md_title):
-                track['title'] = really_utf8(md_title)
+                track['title'] = md_title
             track['artist'] = ""
             if (md_artist):
-                track['artist'] = really_utf8(md_artist)
+                track['artist'] = md_artist
             track['album'] = ""
             if (md_album):
-                track['album'] = really_utf8(md_album)
+                track['album'] = md_album
 
             album_art = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
@@ -676,7 +673,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         if dom.findtext('.//ZoneName') is not None:
             self.speaker_info['zone_name'] = \
-                really_utf8(dom.findtext('.//ZoneName'))
+                dom.findtext('.//ZoneName')
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
             self.speaker_info['uid'] = dom.findtext('.//LocalUID')
             self.speaker_info['serial_number'] = \
@@ -951,7 +948,7 @@ class SoCo(object):  # pylint: disable=R0904
 
         The information about the which searches can be performed and the form
         of the query has been gathered from the Janos project:
-        http://sourceforge.net/projects/janos/ Probs to the authors of that
+        http://sourceforge.net/projects/janos/ Props to the authors of that
         project.
 
         """
@@ -978,7 +975,6 @@ class SoCo(object):  # pylint: disable=R0904
             out[camel_to_underscore(tag)] = int(response[tag])
 
         # Parse the results
-        #result_xml = XML.fromstring(really_utf8(dom.findtext('.//Result')))
         for container in dom:
             item = get_ml_item(container)
             # Append the item to the list
@@ -991,9 +987,8 @@ class SoCo(object):  # pylint: disable=R0904
         if not isinstance(queueable_item, QueueableItem):
             raise TypeError('queueable_item must be an instance of '
                             'QueueableItem or sub classes')
-
         try:
-            metadata = XML.tostring(queueable_item.get_didl_metadata())
+            metadata = XML.tostring(queueable_item.didl_metadata)
         except CannotCreateDIDLMetadata as exception:
             message = ('The queueable item could not be enqueued, because it '
                        'raised a CannotCreateDIDLMetadata exception with the '
@@ -1108,8 +1103,8 @@ class SoCo(object):  # pylint: disable=R0904
             for item in metadata.findall(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
-                favorite['title'] = really_utf8(item.findtext(
-                    './/{http://purl.org/dc/elements/1.1/}title'))
+                favorite['title'] = item.findtext(
+                    './/{http://purl.org/dc/elements/1.1/}title')
                 favorite['uri'] = item.findtext(
                     './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
                 favorites.append(favorite)

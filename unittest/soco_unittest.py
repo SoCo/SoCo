@@ -14,12 +14,15 @@ to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
 PLEASE RESPECT THIS.
 """
+from __future__ import unicode_literals
 
-import soco
 import unittest
 import time
-SOCO = None
+import pytest
+import soco
 
+SOCO = None
+pytestmark = pytest.mark.integration
 
 class SoCoUnitTestInitError(Exception):
     """ Exception for incomplete unit test initialization """
@@ -78,6 +81,21 @@ NOT_TYPE = 'The return value of the method did not have the expected type: {0}'
 NOT_IN_RANGE = 'The returned value is not in the expected range'
 
 
+# functions for running via pytest
+def setup_module(module):
+    ip = pytest.config.option.IP
+    if ip is None:
+        pytest.fail("No ip address specified. Use the --ip option.")
+    init(ip=ip)
+    state = get_state()
+    module.state = state
+
+def teardown_module(module):
+    state = module.state
+    set_state(state)
+
+
+
 class Volume(unittest.TestCase):
     """ Unit tests for the volume method """
 
@@ -86,40 +104,40 @@ class Volume(unittest.TestCase):
 
     def test_get_and_set(self):
         """ Tests if the set functionlity works when given valid arguments """
-        old = SOCO.volume()
+        old = SOCO.volume
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         if old == self.valid_values[0]:
             new = old + 1
         else:
             new = old - 1
-        SOCO.volume(new)
+        SOCO.volume = new
         wait()
-        self.assertEqual(SOCO.volume(), new, NOT_EXP)
-        SOCO.volume(old)
+        self.assertEqual(SOCO.volume, new, NOT_EXP)
+        SOCO.volume = old
         wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality coerces into range when given
         integers outside of allowed range
         """
-        old = SOCO.volume()
+        old = SOCO.volume
         # NOTE We don't test coerce from too large values, since that would
         # put the unit at full volume
-        SOCO.volume(self.valid_values[0] - 1)
+        SOCO.volume = self.valid_values[0] - 1
         wait()
-        self.assertEqual(SOCO.volume(), 0, NOT_EXP)
-        SOCO.volume(old)
+        self.assertEqual(SOCO.volume, 0, NOT_EXP)
+        SOCO.volume = old
         wait()
 
     def test_set_0(self):
         """ Tests whether the volume can be set to 0. Regression test for:
         https://github.com/rahims/SoCo/issues/29
         """
-        old = SOCO.volume()
-        SOCO.volume(0)
+        old = SOCO.volume
+        SOCO.volume = 0
         wait()
-        self.assertEqual(SOCO.volume(), 0, NOT_EXP)
-        SOCO.volume(old)
+        self.assertEqual(SOCO.volume, 0, NOT_EXP)
+        SOCO.volume = old
         wait()
 
 
@@ -133,29 +151,29 @@ class Bass(unittest.TestCase):
 
     def test_get_and_set(self):
         """ Tests if the set functionlity works when given valid arguments """
-        old = SOCO.bass()
+        old = SOCO.bass
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
-            SOCO.bass(value)
+            SOCO.bass = value
             wait()
-            self.assertEqual(SOCO.bass(), value, NOT_EXP)
-        SOCO.bass(old)
+            self.assertEqual(SOCO.bass, value, NOT_EXP)
+        SOCO.bass = old
         wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality produces the expected "coerce in
         range" functionality when given a value outside of its range
         """
-        old = SOCO.bass()
+        old = SOCO.bass
         # Values on the boundaries of the two invalid equivalence partitions
-        SOCO.bass(self.valid_values[0] - 1)
+        SOCO.bass = self.valid_values[0] - 1
         wait()
-        self.assertEqual(SOCO.bass(), self.valid_values[0], NOT_EXP)
-        SOCO.bass(self.valid_values[-1] + 1)
+        self.assertEqual(SOCO.bass, self.valid_values[0], NOT_EXP)
+        SOCO.bass = self.valid_values[-1] + 1
         wait()
-        self.assertEqual(SOCO.bass(), self.valid_values[-1], NOT_EXP)
-        SOCO.bass(old)
+        self.assertEqual(SOCO.bass, self.valid_values[-1], NOT_EXP)
+        SOCO.bass = old
         wait()
 
 
@@ -169,29 +187,29 @@ class Treble(unittest.TestCase):
 
     def test_get_and_set(self):
         """ Tests if the set functionlity works when given valid arguments """
-        old = SOCO.treble()
+        old = SOCO.treble
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
-            SOCO.treble(value)
+            SOCO.treble = value
             wait()
-            self.assertEqual(SOCO.treble(), value, NOT_EXP)
-        SOCO.treble(old)
+            self.assertEqual(SOCO.treble, value, NOT_EXP)
+        SOCO.treble = old
         wait()
 
     def test_invalid_arguments(self):
         """ Tests if the set functionality produces the expected "coerce in
         range" functionality when given a value outside its range
         """
-        old = SOCO.treble()
+        old = SOCO.treble
         # Values on the boundaries of the two invalid equivalence partitions
-        SOCO.treble(self.valid_values[0] - 1)
+        SOCO.treble = self.valid_values[0] - 1
         wait()
-        self.assertEqual(SOCO.treble(), self.valid_values[0], NOT_EXP)
-        SOCO.treble(self.valid_values[-1] + 1)
+        self.assertEqual(SOCO.treble, self.valid_values[0], NOT_EXP)
+        SOCO.treble = self.valid_values[-1] + 1
         wait()
-        self.assertEqual(SOCO.treble(), self.valid_values[-1], NOT_EXP)
-        SOCO.treble(old)
+        self.assertEqual(SOCO.treble, self.valid_values[-1], NOT_EXP)
+        SOCO.treble = old
         wait()
 
 
@@ -378,14 +396,14 @@ class Mute(unittest.TestCase):
 
     def test(self):
         """ Tests of the mute method works """
-        old = SOCO.mute()
+        old = SOCO.mute
         self.assertEqual(old, 0, 'The unit should not be muted when running '
                          'the unit tests')
-        SOCO.mute(True)
+        SOCO.mute = True
         wait()
-        new = SOCO.mute()
+        new = SOCO.mute
         self.assertEqual(new, 1, 'The unit did not succesfully mute')
-        SOCO.mute(False)
+        SOCO.mute = False
         wait()
 
 
