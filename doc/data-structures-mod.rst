@@ -31,10 +31,10 @@ functionality. This has been implemented by means of inheritance, in
 such a way that common functionality is always pulled up the
 inheritance hierarchy to the highest point that have this
 functionality in common. The hierarchy is illustrated in figure
-:ref:`the figure below <figure-inheritance>`, where red boxes represent items that are
-not yet implemented, green boxes are abstract items and blue are real
-items. The black lines are the lines of inheritance, going from the
-top down.
+:ref:`the figure below <figure-inheritance>`, where red boxes
+represent items that are not yet implemented, green boxes are abstract
+items and blue are real items. The black lines are the lines of
+inheritance, going from the top down.
 
 .. _figure-inheritance:
 .. image:: graphics/data_structures.png
@@ -46,39 +46,38 @@ items <.QueueableItem>` are all the "real" :py:class:`music library
 items <.MusicLibraryItem>` and music service items such as tracks,
 albums and playlists.
 
-There are 9 types of :py:class:`music library items
-<.MusicLibraryItem>`, represented by the 9 classes that inherit from
+There are 8 types of :py:class:`music library items
+<.MusicLibraryItem>`, represented by the 8 classes that inherit from
 it. From these classes all information items are available as named
 properties. All of these items contains a :py:attr:`title
 <.MusicLibraryItem.title>`, a :py:attr:`URI <.MusicLibraryItem.uri>`
-and a :py:attr:`UPnP class <.MusicLibraryItem.upnp_class>`, so these
+and a :py:attr:`UPnP class <.MusicLibraryItem.item_class>`, so these
 items are defined in the :py:class:`.MusicLibraryItem` class and
-inherited by them all. For most items the ``id`` can be extracted from
+inherited by them all. For most items the ``ID`` can be extracted from
 the URI in the same way, so therefore it is defined in
-:py:attr:`.MusicLibraryItem.id` and the few classes
-(:py:class:`.MLTrack`, :py:class:`.MLPlaylist`) that extract the id
+:py:attr:`.MusicLibraryItem.item_id` and the few classes
+(:py:class:`.MLTrack`, :py:class:`.MLPlaylist`) that extract the ID
 differently from the URI then overrides this property. Besides the
 information items that they all share, :py:class:`.MLTrack` and
 :py:class:`.MLAlbum` define some extra fields such as :py:attr:`album
 <.MLTrack.album>`, :py:attr:`album_art_uri <.MLTrack.album_art_uri>`
 and :py:attr:`creator <.MLTrack.creator>`.
 
-Some of the more important methods are the ``get_didl_metadata``
-methods. These are used to produce the metadata that is sent to the
-Sonos® units. This metadata is created in a almost identical way,
-which is the reason that the main functionality for it is implemented
-in :py:meth:`.MusicLibraryItem.get_didl_metadata` and all the
-``get_didl_metadata`` methods in the 9 sub classes overrides and calls
-this method with a single parameter. This could obviously have been
-implemented in a way where the common method would do **all** the
-work, and therefore remove the need for the independent methods. It
-has however been implemented in this way so the methods on the sub
-classes could have a specific example of what the output will look
-like.
+One of the more important attributes is :py:attr:`didl_metadata
+<.MusicLibraryItem.didl_metadata>`. It is used to produce the metadata
+that is sent to the Sonos® units. This metadata is created in an
+almost identical way, which is the reason that it is implemented in
+:py:class:`.MusicLibraryItem`. It uses the URI (through the ID), the
+UPnP class and the title that the items are instantiated with and the
+two class variables ``parent_id`` and ``_translation``. ``parent_id``
+must be over written in each of the sub classes, whereas that is only
+necessary for ``_translation`` if the information fields are different
+from the default.
 
 Functions
 =========
 
+.. autofunction:: soco.data_structures.ns_tag
 .. autofunction:: soco.data_structures.get_ml_item
 
 PlayableItem
@@ -90,7 +89,6 @@ PlayableItem
 
    .. automethod:: soco.data_structures.PlayableItem.__init__
    .. automethod:: soco.data_structures.PlayableItem.__eq__
-   .. automethod:: soco.data_structures.PlayableItem.__hash__
    .. automethod:: soco.data_structures.PlayableItem.__repr__
    .. automethod:: soco.data_structures.PlayableItem.__str__
 
@@ -167,14 +165,6 @@ MLPlaylist
    :special-members:
    :show-inheritance:
 
-MLFolder
-========
-
-.. autoclass:: soco.data_structures.MLFolder
-   :members:
-   :special-members:
-   :show-inheritance:
-
 MLShare
 =======
 
@@ -182,5 +172,3 @@ MLShare
    :members:
    :special-members:
    :show-inheritance:
-
-   .. automethod:: soco.data_structures.MLShare.__init__
