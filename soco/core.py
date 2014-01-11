@@ -40,7 +40,6 @@ def discover():
         'MX: 1',
         'ST: urn:schemas-upnp-org:device:ZonePlayer:1',
         ])  # noqa PEP8
-    print PLAYER_SEARCH
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
@@ -94,7 +93,7 @@ class SonosDiscovery(object):  # pylint: disable=R0903
 
 class _ArgsSingleton(type):
     """ A metaclass which permits only a single instance of each derived class
-    to exist for any given set of postional arguments.
+    to exist for any given set of positional arguments.
 
     Attempts to instantiate a second instance of a derived class will return
     the existing instance.
@@ -111,6 +110,7 @@ class _ArgsSingleton(type):
     >>> assert First('hi') == First('hi')
     >>> assert First('hi') == First('bye')
     AssertionError
+
      """
     _instances = {}
 

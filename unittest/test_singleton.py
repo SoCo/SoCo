@@ -14,7 +14,7 @@ class AnotherSingleton(ASingleton):
     pass
 
 
-def test_singelton():
+def test_singleton():
     """ Check basic functionality. For a given arg, there is only one instance"""
     assert ASingleton('aa') == ASingleton('aa')
     assert ASingleton('aa') != ASingleton('bb')
