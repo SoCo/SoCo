@@ -110,7 +110,7 @@ class MusicLibraryItem(QueueableItem):
     :param parent_id: The parent ID for the music library item is None, since
         it is a abstract class and it should be overwritten in the sub
         classes
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MusicLibraryItems from XML. The
         default value is shown below. This default value applies to most sub
         classes and the rest should overwrite it.
@@ -118,7 +118,7 @@ class MusicLibraryItem(QueueableItem):
         .. code-block:: python
 
             # key: (ns, tag)
-            translation = {
+            _translation = {
                 'title': ('dc', 'title'),
                 'uri': ('', 'res'),
                 'item_class': ('upnp', 'class')
@@ -127,9 +127,11 @@ class MusicLibraryItem(QueueableItem):
     """
     parent_id = None
     # key: (ns, tag)
-    translation = {'title': ('dc', 'title'),
-                   'uri': ('', 'res'),
-                   'item_class': ('upnp', 'class')}
+    _translation = {
+        'title': ('dc', 'title'),
+        'uri': ('', 'res'),
+        'item_class': ('upnp', 'class')
+    }
 
     def __init__(self, uri, title, item_class, **kwargs):
         """Initialize the MusicLibraryItem from parameter arguments.
@@ -149,13 +151,13 @@ class MusicLibraryItem(QueueableItem):
         arguments = {'uri': uri, 'title': title, 'item_class': item_class}
         arguments.update(kwargs)
         for key, value in arguments.items():
-            if key in self.translation:
+            if key in self._translation:
                 self.content[key] = value
             else:
                 raise ValueError(
                     'The key \'{0}\' is not allowed as an argument. Only '
                     'these keys are allowed: {1}'.
-                    format(key, str(self.translation.keys())))
+                    format(key, str(self._translation.keys())))
 
     @classmethod
     def from_xml(cls, xml):
@@ -169,7 +171,7 @@ class MusicLibraryItem(QueueableItem):
 
         """
         content = {}
-        for key, value in cls.translation.items():
+        for key, value in cls._translation.items():
             result = xml.find(ns_tag(*value))
             if result is None:
                 content[key] = None
@@ -254,7 +256,7 @@ class MusicLibraryItem(QueueableItem):
         # Add content from self.content to item
         for key in ['title', 'item_class']:
             element = XML.SubElement(
-                item, ns_tag(*self.translation[key]))
+                item, ns_tag(*self._translation[key]))
             element.text = self.content[key]
         # Add the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
@@ -295,14 +297,14 @@ class MLTrack(MusicLibraryItem):
     """Class that represents a music library track.
 
     :param parent_id: The parent ID for the MLTrack is 'A:TRACKS'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLTrack from XML. The value is
         shown below
 
         .. code-block:: python
 
             # key: (ns, tag)
-            translation = {
+            _translation = {
                 'title': ('dc', 'title'),
                 'creator': ('dc', 'creator'),
                 'album': ('upnp', 'album'),
@@ -316,7 +318,7 @@ class MLTrack(MusicLibraryItem):
 
     parent_id = 'A:TRACKS'
     # name: (ns, tag)
-    translation = {
+    _translation = {
         'title': ('dc', 'title'),
         'creator': ('dc', 'creator'),
         'album': ('upnp', 'album'),
@@ -346,6 +348,9 @@ class MLTrack(MusicLibraryItem):
         """Return the id."""
         out = self.content['uri']
         if 'x-file-cifs' in out:
+            # URI's for MusicTracks starts with x-file-cifs, where cifs most
+            # likely refer to Common Internet File System. For unknown reasons
+            # that part must be replaces with an S to form the item_id
             out = out.replace('x-file-cifs', 'S')
         else:
             out = None
@@ -393,14 +398,14 @@ class MLAlbum(MusicLibraryItem):
     """Class that represents a music library album.
 
     :param parent_id: The parent ID for the MLTrack is 'A:ALBUM'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLAlbum from XML. The value is
         shown below
 
         .. code-block :: python
 
             # key: (ns, tag)
-            translation = {
+            _translation = {
                 'title': ('dc', 'title'),
                 'creator': ('dc', 'creator'),
                 'album_art_uri': ('upnp', 'albumArtURI'),
@@ -412,7 +417,7 @@ class MLAlbum(MusicLibraryItem):
 
     parent_id = 'A:ALBUM'
     # name: (ns, tag)
-    translation = {
+    _translation = {
         'title': ('dc', 'title'),
         'creator': ('dc', 'creator'),
         'album_art_uri': ('upnp', 'albumArtURI'),
@@ -457,7 +462,7 @@ class MLArtist(MusicLibraryItem):
     """Class that represents a music library artist.
 
     :param parent_id: The parent ID for the MLArtist is 'A:ARTIST'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLArtist from XML is inherited
         from :py:class:`.MusicLibraryItem`.
     """
@@ -481,7 +486,7 @@ class MLAlbumArtist(MusicLibraryItem):
     """Class that represents a music library album artist.
 
     :param parent_id: The parent ID for the MLAlbumArtist is 'A:ALBUMARTIST'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLAlbumArtist from XML is
         inherited from :py:class:`.MusicLibraryItem`.
 
@@ -507,7 +512,7 @@ class MLGenre(MusicLibraryItem):
     """Class that represents a music library genre.
 
     :param parent_id: The parent ID for the MLGenre is 'A:GENRE'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLGenre from XML is inherited
         from :py:class:`.MusicLibraryItem`.
 
@@ -533,7 +538,7 @@ class MLComposer(MusicLibraryItem):
     """Class that represents a music library composer.
 
     :param parent_id: The parent ID for the MLComposer is 'A:COMPOSER'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLComposer from XML is inherited
         from :py:class:`.MusicLibraryItem`.
 
@@ -559,7 +564,7 @@ class MLPlaylist(MusicLibraryItem):
     """Class that represents a music library play list.
 
     :param parent_id: The parent ID for the MLPlaylist is 'A:PLAYLIST'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLPlaylist from XML is inherited
         from :py:class:`.MusicLibraryItem`.
 
@@ -595,7 +600,7 @@ class MLShare(MusicLibraryItem):
     """Class that represents a music library share.
 
     :param parent_id: The parent ID for the MLShare is 'S:'
-    :param translation: The dictionary-key-to-xml-tag-and-namespace-
+    :param _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLShare from XML is inherited
         from :py:class:`.MusicLibraryItem`.
 
