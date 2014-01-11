@@ -16,7 +16,7 @@ import socket
 import logging
 import traceback
 import re
-import cgi
+import xml.sax.saxutils
 import requests
 
 from .services import DeviceProperties, ContentDirectory
@@ -999,7 +999,7 @@ class SoCo(object):  # pylint: disable=R0904
                        'raised a CannotCreateDIDLMetadata exception with the '
                        'following message:\n{0}').format(exception.message)
             raise ValueError(message)
-        metadata = cgi.escape(metadata).encode('utf-8')
+        metadata = xml.sax.saxutils.escape(metadata).encode('utf-8')
 
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
