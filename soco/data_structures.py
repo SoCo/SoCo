@@ -15,9 +15,6 @@ NS = {
     'dc': 'http://purl.org/dc/elements/1.1/',
     'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
     '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-    'r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-    's': 'http://schemas.xmlsoap.org/soap/envelope/',
-    'u': 'urn:schemas-upnp-org:service:ContentDirectory:1'
 }
 # Register all name spaces within the XML module
 for key_, value_ in NS.items():
@@ -133,9 +130,9 @@ class MusicLibraryItem(QueueableItem):
         :param title: The title for the item
         :param item_class: The UPnP class for the item
         :param \*\*kwargs: Extra information items to form the music library
-            item from. Valid keys are ``album``, ``album_art_uri``, 
-            ``creator`` and ``original_track_number``. 
-            ``original_track_number`` is an int, all other values are 
+            item from. Valid keys are ``album``, ``album_art_uri``,
+            ``creator`` and ``original_track_number``.
+            ``original_track_number`` is an int, all other values are
             unicode objects.
 
         """
@@ -173,6 +170,9 @@ class MusicLibraryItem(QueueableItem):
                 # The xml objects should contain utf-8 internally
                 content[key] = really_unicode(result.text)
         args = [content.pop(arg) for arg in ['uri', 'title', 'item_class']]
+        if content.get('original_track_number') is not None:
+            content['original_track_number'] = \
+                int(content['original_track_number'])
         return cls(*args, **content)
 
     @classmethod
@@ -180,8 +180,8 @@ class MusicLibraryItem(QueueableItem):
         """Return an instance of this class, created from a dict with
         parameters.
 
-        :param content: Dict with information for the music library item. 
-            Required and valid arguments are the same as for the 
+        :param content: Dict with information for the music library item.
+            Required and valid arguments are the same as for the
             ``__init__`` method.
 
         """
@@ -439,7 +439,7 @@ class MLAlbum(MusicLibraryItem):
     @property
     def creator(self):
         """Get and set the creator as an unicode object."""
-        return self.content['creator']
+        return self.content.get('creator')
 
     @creator.setter
     def creator(self, creator):  # pylint: disable=C0111
@@ -448,7 +448,7 @@ class MLAlbum(MusicLibraryItem):
     @property
     def album_art_uri(self):
         """Get and set the album art URI as an unicode object."""
-        return self.content['album_art_uri']
+        return self.content.get('album_art_uri')
 
     @album_art_uri.setter
     def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
