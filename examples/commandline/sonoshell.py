@@ -80,10 +80,10 @@ def print_queue():
         else:
             color = ANSI_RESET
 
+        idx = str(idx).rjust(index_padding)
         print(
-            "%s%0*d: %s - %s. From album %s." % (
+            "%s%s: %s - %s. From album %s." % (
                 color,
-                index_padding,
                 idx,
                 track['artist'],
                 track['title'],
