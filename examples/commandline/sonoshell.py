@@ -91,6 +91,19 @@ def print_queue():
     if colorama:
         colorama.deinit()
 
+def play_index(index):
+    queue_length = len(sonos.get_queue())
+    try:
+        index = int(index) -1
+        if index >= 0 and index < queue_length:
+            current = int(sonos.get_current_track_info()['playlist_position']) - 1
+            if (index == current):
+                return None
+            return sonos.play_from_queue(index)
+        else:
+            raise ValueError()
+    except ValueError:
+        return "Index has to be a integer within the range 1 - %d" % queue_length
 
 if __name__ == '__main__':
     if (len(sys.argv) > 4 or len(sys.argv) < 3):
@@ -118,7 +131,10 @@ if __name__ == '__main__':
             for item in all_info:
                 print("%s: %s" % (item, all_info[item]))
         elif (cmd == 'play'):
-            print(sonos.play())
+            if (len(sys.argv) > 3):
+                print(play_index(sys.argv[3]))
+            else:
+                print(sonos.play())
         elif (cmd == 'pause'):
             print(sonos.pause())
         elif (cmd == 'stop'):
