@@ -71,14 +71,18 @@ def print_queue():
 
     current = int(sonos.get_current_track_info()['playlist_position'])
 
+    queue_length = len(queue)
+    index_padding = len(str(queue_length))
+
     for idx, track in enumerate(queue, 1):
         if (idx == current):
             color = ANSI_BOLD
         else:
             color = ANSI_RESET
 
+        idx = str(idx).rjust(index_padding)
         print(
-            "%s%d: %s - %s. From album %s." % (
+            "%s%s: %s - %s. From album %s." % (
                 color,
                 idx,
                 track['artist'],
