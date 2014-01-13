@@ -984,9 +984,13 @@ class SoCo(object):  # pylint: disable=R0904
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
-        if not isinstance(queueable_item, QueueableItem):
-            raise TypeError('queueable_item must be an instance of '
-                            'QueueableItem or sub classes')
+        # Check if teh required attributes are there
+        for attribute in ['didl_metadata', 'uri']:
+            if not hasattr(queueable_item, attribute):
+                message = 'queueable_item has no attribute {}'.\
+                    format(attribute)
+                raise AttributeError(message)
+        # Get the metadata
         try:
             metadata = XML.tostring(queueable_item.didl_metadata)
         except CannotCreateDIDLMetadata as exception:
