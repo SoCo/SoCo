@@ -917,7 +917,9 @@ class SoCo(object):  # pylint: disable=R0904
 
     def get_playlists(self, start=0, max_items=100):
         """ Convinience method for: get_music_library_information('playlists')
-        Refer to the docstring for that method
+        Refer to the docstring for that method. NOTE: The playlists that are
+        referred to here are the playlist (files) imported from the music
+        library, they are not the Sonos playlists.
 
         """
         out = self.get_music_library_information('playlists', start, max_items)
@@ -943,6 +945,10 @@ class SoCo(object):  # pylint: disable=R0904
         the search results. The search results are instances of one of the
         subclasses of MusicLibraryItem depending on the search class. See the
         docs for those class for the details on the available information.
+
+        NOTE: The playlists that are returned with the 'playlists' search, are
+        the playlists imported from (files in) the music library, they are not
+        the Sonos playlists.
 
         Raises SoCoException (or a subclass) upon errors.
 
