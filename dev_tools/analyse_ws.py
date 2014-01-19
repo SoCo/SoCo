@@ -8,6 +8,7 @@ import argparse
 import os
 import sys
 import math
+import textwrap
 PLATFORM = sys.platform.lower()
 if PLATFORM == 'win32':
     import msvcrt
@@ -92,7 +93,15 @@ class AnalyzeWS(object):
             print 'The file \'{0}\' is either not present or not readable. '\
                   'Exiting!'.format(filename)
             sys.exit(1)
-        packets = rdpcap(filename)
+        try:
+            packets = rdpcap(filename)
+        except NameError:
+            # Due probably to a bug in rdpcap, this kind of error raises a
+            # NameError, because the exception that is tried to raise, is not
+            # defined
+            print 'The file \'{}\' is not a pcap capture file. Exiting!'\
+                .format(filename)
+            sys.exit(2)
 
         for number, packet in enumerate(packets):
             # See if there is a field called load
@@ -424,30 +433,32 @@ class WSPart(object):
 
 def __build_option_parser():
     """ Build the option parser for this script """
-    description = (
-        'Tool to analyze Wireshark dumps of Sonos traffic.\n'
-        '\n'
-        'The files that are input to this script must be in the '
-        '"Wireshark/tcpdump/...-libpcap" format, which can be exported from '
-        'Wireshark.'
-        '\n'
-        'To use the open in browser function, a configuration file must be '
-        'written. It should be in the same directory as this script and have '
-        'the name "analyse_ws.ini". An example of such a file is given '
-        'below ({0} indicates the file):\n'
-        '[General]\n'
-        'browser_command: epiphany {0}\n'
-        '\n'
-        'The browser command should be any command that opens a new tab in '
-        'the program you wish to read the Wireshark dumps in.'
-        '\n'
-        'Separating Sonos traffic out from the rest of the network traffic is '
-        'tricky. Therefore, it will in all likelyhood increase the succes of '
-        'this tool, if the traffic is filtered in Wireshark to only show '
-        'traffic to and from the Sonos unit. Still, if the analysis fails, '
-        'then use the debug mode. This will show you the analysis of the '
-        'traffic packet by packet and give you packet numbers so you can find '
-        'and analyze problematic packets in Wireshark.')
+    description = """
+    Tool to analyze Wireshark dumps of Sonos traffic.
+
+    The files that are input to this script must be in the
+    "Wireshark/tcpdump/...-libpcap" format, which can be exported from
+    Wireshark.
+
+    To use the open in browser function, a configuration file must be
+    written. It should be in the same directory as this script and have the
+    name "analyse_ws.ini". An example of such a file is given below ({0}
+    indicates the file):
+    [General]
+    browser_command: epiphany {0}
+
+    The browser command should be any command that opens a new tab in
+    the program you wish to read the Wireshark dumps in.
+
+    Separating Sonos traffic out from the rest of the network traffic is
+    tricky. Therefore, it will in all likelyhood increase the succes of
+    this tool, if the traffic is filtered in Wireshark to only show
+    traffic to and from the Sonos unit. Still, if the analysis fails,
+    then use the debug mode. This will show you the analysis of the
+    traffic packet by packet and give you packet numbers so you can find
+    and analyze problematic packets in Wireshark.
+    """
+    description = textwrap.dedent(description).strip()
 
     parser = \
         argparse.ArgumentParser(description=description,
@@ -504,7 +515,8 @@ def main():
     try:
         analyze_ws.set_file(args.file_[0])
     except IOError:
-        pass
+        print 'IOError raised while reading file. Exiting!'
+        sys.exit(3)
 
     # Start the chosen mode
     if args.to_file or args.to_browser:
