@@ -24,3 +24,10 @@ class SoCoUPnPException(SoCoException):
         
     def __str__(self):
         return self.message
+
+
+class CannotCreateDIDLMetadata(SoCoException):
+    """ Raised if a data container class cannot create the DIDL metadata due to
+    missing information
+
+    """

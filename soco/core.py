@@ -16,12 +16,13 @@ import socket
 import logging
 import traceback
 import re
-
+import xml.sax.saxutils
 import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport
-
+from .exceptions import CannotCreateDIDLMetadata
+from .data_structures import get_ml_item, QueueableItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
@@ -916,7 +917,9 @@ class SoCo(object):  # pylint: disable=R0904
 
     def get_playlists(self, start=0, max_items=100):
         """ Convinience method for: get_music_library_information('playlists')
-        Refer to the docstring for that method
+        Refer to the docstring for that method. NOTE: The playlists that are
+        referred to here are the playlist (files) imported from the music
+        library, they are not the Sonos playlists.
 
         """
         out = self.get_music_library_information('playlists', start, max_items)
@@ -928,9 +931,9 @@ class SoCo(object):  # pylint: disable=R0904
 
         Arguments:
         search      The kind of information to retrieve. Can be one of:
-                    'folders', 'artists', 'album_artists', 'albums', 'genres',
-                    'composers', 'tracks' and 'playlists', where playlists are
-                    the imported file based playlists from the music library
+                    'artists', 'album_artists', 'albums', 'genres', 'composers'
+                    'tracks', 'share' and 'playlists', where playlists are the
+                    imported file based playlists from the music library
         start       starting number of returned matches
         max_items   maximum number of returned matches. NOTE: The maximum
                     may be restricted by the unit, presumably due to transfer
@@ -939,13 +942,13 @@ class SoCo(object):  # pylint: disable=R0904
 
         Returns a dictionary with metadata for the search, with the keys
         'number_returned', 'update_id', 'total_matches' and an 'item' list with
-        the search results. The search results are dicts that with the
-        following exceptions all has the following keys 'title', 'res',
-        'class', 'parent_id', 'restricted', 'id', 'protocol_info'. The
-        exceptions are; that the playlists item in the folder search has no res
-        item; the album and track items has an extra 'creator' field and the
-        track items has additional 'album', 'album_art_uri' and
-        'original_track_number' fields.
+        the search results. The search results are instances of one of the
+        subclasses of MusicLibraryItem depending on the search class. See the
+        docs for those class for the details on the available information.
+
+        NOTE: The playlists that are returned with the 'playlists' search, are
+        the playlists imported from (files in) the music library, they are not
+        the Sonos playlists.
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -955,11 +958,11 @@ class SoCo(object):  # pylint: disable=R0904
         project.
 
         """
-        search_translation = {'folders': 'A:', 'artists': 'A:ARTIST',
+        search_translation = {'artists': 'A:ARTIST',
                               'album_artists': 'A:ALBUMARTIST',
                               'albums': 'A:ALBUM', 'genres': 'A:GENRE',
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
-                              'playlists': 'A:PLAYLISTS'}
+                              'playlists': 'A:PLAYLISTS', 'share': 'S:'}
         search = search_translation[search_type]
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
@@ -970,69 +973,43 @@ class SoCo(object):  # pylint: disable=R0904
             ('SortCriteria', '')
             ])
 
+        dom = XML.fromstring(really_utf8(response['Result']))
+
         # Get result information
         out = {'item_list': [], 'search_type': search_type}
         for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
-            out[camel_to_underscore(tag)] = response[tag]
+            out[camel_to_underscore(tag)] = int(response[tag])
+
         # Parse the results
-        result_xml = XML.fromstring(really_utf8(response['Result']))
-        # Information for the tags to parse, [name, ns]
-        tag_info = [['title', 'dc'], ['class', 'upnp']]
-        if search_type == 'tracks':
-            tag_info += [['albumArtURI', 'upnp'], ['creator', 'dc'],
-                         ['album', 'upnp'], ['originalTrackNumber', 'upnp']]
-        elif search_type == 'albums':
-            tag_info.append(['creator', 'dc'])
-        for container in result_xml:
-            item = self.__parse_container(container, tag_info)
+        for container in dom:
+            item = get_ml_item(container)
             # Append the item to the list
             out['item_list'].append(item)
 
         return out
 
-    @staticmethod
-    def __parse_container(container, tag_info):
-        """ Parse a container xml object """
-        # Get container attributes and add a few defaults
-        item = {'id': container.attrib['id'],
-                'parent_id': container.attrib['parentID'],
-                'restricted': (container.attrib['restricted'] == 'true'),
-                'res': None, 'protocol_info': None}
+    def add_to_queue(self, queueable_item):
+        """ Adds a queueable item to the queue """
+        # Check if teh required attributes are there
+        for attribute in ['didl_metadata', 'uri']:
+            if not hasattr(queueable_item, attribute):
+                message = 'queueable_item has no attribute {}'.\
+                    format(attribute)
+                raise AttributeError(message)
+        # Get the metadata
+        try:
+            metadata = XML.tostring(queueable_item.didl_metadata)
+        except CannotCreateDIDLMetadata as exception:
+            message = ('The queueable item could not be enqueued, because it '
+                       'raised a CannotCreateDIDLMetadata exception with the '
+                       'following message:\n{0}').format(exception.message)
+            raise ValueError(message)
+        metadata = xml.sax.saxutils.escape(metadata).encode('utf-8')
 
-        # Get information from tags in container
-        for name, namespace in tag_info:
-            keyname = camel_to_underscore(name)
-            item[keyname] = None  # Default value
-            found_text = container.findtext('.' + NS[namespace] + name)
-            if found_text is not None:
-                item[keyname] = found_text
-
-        # Turn track numbers into integers, if they are there
-        if item.get('original_track_number') is not None:
-            item['original_track_number'] = int(item['original_track_number'])
-
-        # The res tag is special and not there for folders searches
-        res = container.find('.' + NS[''] + 'res')
-        if res is not None:
-            item['res'] = res.text
-            item['protocol_info'] = res.attrib['protocolInfo']
-
-        return item
-
-    def add_to_queue(self, uri):
-        """ Adds a given track to the queue.
-
-        Returns:
-        If the Sonos speaker successfully added the track, returns the queue
-        position of the track added.
-
-        Raises SoCoException (or a subclass) upon errors.
-
-        """
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
-            ('EnqueuedURI', uri),
-            ('EnqueuedURIMetaData', ''),
+            ('EnqueuedURI', queueable_item.uri),
+            ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 1)
             ])

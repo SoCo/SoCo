@@ -1,0 +1,1273 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1052.36"
+   height="1300"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="data_structures.svg"
+   inkscape:export-filename="/media/deepspace9/shared_files/code/soco/SoCo/doc/graphics/data_structures.png"
+   inkscape:export-xdpi="55.589344"
+   inkscape:export-ydpi="55.589344">
+  <defs
+     id="defs4">
+    <filter
+       id="filter3248"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-0"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-0"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-4"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-2"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-7"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-3"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-57"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-3"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-8"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-77"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-0"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-6"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-56"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-54"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-5"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-4"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-07"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-68"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-7"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-8"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-9"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-6"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-1"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-9"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-2"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-6"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-96"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-9"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-73"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-0"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-9"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-3"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-2"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-5"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-1"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-8"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-96"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-9"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-4"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-8"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-5"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-7"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-0"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-2"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-1"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-56"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-9"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-1"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-5"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-1"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-5"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-3"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-92"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-76"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-4"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-90"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-46"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-6"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-8"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-6"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-3"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-7"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-0"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-9"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-90"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-2"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-9-7"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-3-9"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-2-4"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-5-1"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-1-6"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-8-8"
+         in2="result0"
+         operator="atop" />
+    </filter>
+    <filter
+       id="filter3248-5-9-5-91"
+       inkscape:label="Matte jelly"
+       x="0"
+       y="0"
+       width="1"
+       height="1"
+       inkscape:menu="ABCs"
+       inkscape:menu-tooltip="Bulging, matte jelly covering"
+       color-interpolation-filters="sRGB">
+      <feColorMatrix
+         id="feColorMatrix3250-5-2-9-6"
+         values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.85 0"
+         result="result0"
+         in="SourceGraphic" />
+      <feGaussianBlur
+         id="feGaussianBlur3252-0-2-3-8"
+         in="SourceAlpha"
+         stdDeviation="7" />
+      <feSpecularLighting
+         id="feSpecularLighting3254-7-6-9-32"
+         surfaceScale="5"
+         specularConstant="0.89999998"
+         specularExponent="25"
+         result="result1">
+        <feDistantLight
+           id="feDistantLight3256-3-8-6-6"
+           elevation="60"
+           azimuth="225" />
+      </feSpecularLighting>
+      <feComposite
+         id="feComposite3258-8-4-3-61"
+         in2="result0"
+         operator="atop" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.78490252"
+     inkscape:cx="312.23753"
+     inkscape:cy="721.55811"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1215"
+     inkscape:window-height="1000"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,247.63783)">
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.39723,371.01309 40.498796,0"
+       id="path5937"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.465829,519.83927 40.135626,0"
+       id="path5939"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.597635,595.93475 43.211425,0"
+       id="path5941"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.685826,667.05522 39.789233,0"
+       id="path5943"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.459983,739.49274 40.147319,0"
+       id="path5945"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.423364,810.61317 39.675022,0"
+       id="path5949"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 51.411361,896.41667 41.787575,0"
+       id="path5951"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 52.152353,979.4872 39.760056,0.1598"
+       id="path5955"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3268"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(0,406.2677)"><flowRegion
+         id="flowRegion3270"><rect
+           id="rect3272"
+           width="163.07791"
+           height="126.13058"
+           x="419.16119"
+           y="68.849983" /></flowRegion><flowPara
+         id="flowPara3274" /></flowRoot>    <rect
+       style="fill:#00d455;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248)"
+       id="rect2985-1-2"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.88642698,0,0,0.54712679,139.68657,-412.93481)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(94.548092,-257.37658)"><flowRegion
+         id="flowRegion3262"><rect
+           id="rect3264"
+           width="163.07791"
+           height="31.851156"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266">PlayableItem</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(91.872311,-257.37658)"><flowRegion
+         id="flowRegion3278"><rect
+           id="rect3280"
+           width="152.88554"
+           height="44.591618"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:16px" /></flowRegion><flowPara
+         style="font-style:italic;-inkscape-font-specification:Sans Italic"
+         id="flowPara3282">Special methods</flowPara><flowPara
+         id="flowPara3284" /></flowRoot>    <rect
+       style="fill:#00d455;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-0)"
+       id="rect2985-1-2-2"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(1.0017365,0,0,0.38972666,-153.867,-233.77279)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-9"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-152.98712,-125.13906)"><flowRegion
+         id="flowRegion3262-4"><rect
+           id="rect3264-2"
+           width="193.65501"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-9">QueueableItem</flowPara></flowRoot>    <rect
+       style="fill:#00d455;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5)"
+       id="rect2985-1-2-1"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(1.1817513,0,0,1.8487607,-446.27515,-596.0284)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-374.03602,-10.09016)"><flowRegion
+         id="flowRegion3262-0"><rect
+           id="rect3264-4"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7">MusicLibraryItem</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans"
+       transform="translate(-376.7118,-10.09016)"><flowRegion
+         id="flowRegion3278-6"><rect
+           id="rect3280-7"
+           width="224.23215"
+           height="203.34892"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:16px;font-style:normal;-inkscape-font-specification:Sans" /></flowRegion><flowPara
+         id="flowPara3282-6"
+         style="font-style:italic;-inkscape-font-specification:Sans Italic">Parse input</flowPara><flowPara
+         style="font-style:normal;font-weight:bold;-inkscape-font-specification:Sans Bold"
+         id="flowPara3297">parent_id</flowPara><flowPara
+         id="flowPara3284-21">from_xml</flowPara><flowPara
+         id="flowPara3299">from_dict</flowPara><flowPara
+         id="flowPara3301">to_dict</flowPara><flowPara
+         id="flowPara3838">item_id</flowPara><flowPara
+         id="flowPara3307">didl_metadata</flowPara><flowPara
+         id="flowPara3842">title</flowPara><flowPara
+         id="flowPara3844">uri</flowPara><flowPara
+         id="flowPara3311">item_class</flowPara><flowPara
+         id="flowPara3313" /></flowRoot>    <rect
+       style="fill:#ff7f2a;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9)"
+       id="rect2985-1-2-1-5"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(1.1384341,0,0,0.57342472,-132.66178,-178.46781)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-77.36619,-9.67265)"><flowRegion
+         id="flowRegion3262-0-4"><rect
+           id="rect3264-4-2"
+           width="224.23213"
+           height="30.49111"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4">MusicServiceItem</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-80.04197,-9.67265)"><flowRegion
+         id="flowRegion3278-6-3"><rect
+           id="rect3280-7-9"
+           width="217.42079"
+           height="20.884792"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:16px" /></flowRegion><flowPara
+         id="flowPara3284-21-0">...</flowPara></flowRoot>    <rect
+       style="fill:#ff7f2a;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-56)"
+       id="rect2985-1-2-9"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(1.02426,0,0,0.38054277,301.2931,-230.00566)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-64"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(311.16495,-124.41311)"><flowRegion
+         id="flowRegion3262-8"><rect
+           id="rect3264-8"
+           width="192.38098"
+           height="31.851156"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-0">SinglePlayItem</flowPara></flowRoot>    <rect
+       style="fill:#ff7f2a;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-7)"
+       id="rect2985-1-2-98"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.88601251,0,0,0.57399327,483.9737,-179.01192)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-93"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(438.58408,-10.09016)"><flowRegion
+         id="flowRegion3262-3"><rect
+           id="rect3264-3"
+           width="163.07791"
+           height="31.851156"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-52">URIItem</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-1"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(435.9083,-10.09016)"><flowRegion
+         id="flowRegion3278-37"><rect
+           id="rect3280-21"
+           width="154.20259"
+           height="23.518885"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:16px" /></flowRegion><flowPara
+         id="flowPara3284-0">...</flowPara></flowRoot>    <rect
+       style="fill:#ff7f2a;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-2)"
+       id="rect2985-1-2-3"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.88601251,0,0,0.57399327,257.12921,-179.01192)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-0"
+       style="font-size:22px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(211.77483,-10.09016)"><flowRegion
+         id="flowRegion3262-7"><rect
+           id="rect3264-1"
+           width="163.07791"
+           height="31.851156"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:22px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-1">RadioStation</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-9"
+       style="font-size:16px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(209.09905,-10.09016)"><flowRegion
+         id="flowRegion3278-5"><rect
+           id="rect3280-27"
+           width="168.69009"
+           height="24.83593"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:16px" /></flowRegion><flowPara
+         id="flowPara3284-01">...</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5)"
+       id="rect2985-1-2-1-5-3"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87797246,0,0,0.39757528,-257.37272,437.63268)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,542.92682)"><flowRegion
+         id="flowRegion3262-0-4-4"><rect
+           id="rect3264-4-2-8"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2">MLArtist</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,528.92682)"><flowRegion
+         id="flowRegion3278-6-3-8"><rect
+           id="rect3280-7-9-7"
+           width="214.7867"
+           height="22.860361"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8"
+         style="font-weight:bold">parent_id</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-9)"
+       id="rect2985-1-2-1-5-3-6"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87797246,0,0,0.39757528,-257.37272,509.38525)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-4"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83818,614.6709)"><flowRegion
+         id="flowRegion3262-0-4-4-8"><rect
+           id="rect3264-4-2-8-3"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-4">MLAlbumArtist</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-1"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51396,600.6709)"><flowRegion
+         id="flowRegion3278-6-3-8-3"><rect
+           id="rect3280-7-9-7-1"
+           width="214.7867"
+           height="22.860361"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-8"
+         style="font-weight:bold">parent_id</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-96)"
+       id="rect2985-1-2-1-5-3-1"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87797246,0,0,0.39757528,-257.37272,581.13781)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-7"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,686.41525)"><flowRegion
+         id="flowRegion3262-0-4-4-3"><rect
+           id="rect3264-4-2-8-1"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-0">MLGenre</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-6"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,672.41525)"><flowRegion
+         id="flowRegion3278-6-3-8-9"><rect
+           id="rect3280-7-9-7-9"
+           width="214.7867"
+           height="22.860361"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-6"
+         style="font-weight:bold">parent_id</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-0)"
+       id="rect2985-1-2-1-5-3-0"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87797246,0,0,0.39757528,-257.37272,652.89037)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-9"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,758.15958)"><flowRegion
+         id="flowRegion3262-0-4-4-4"><rect
+           id="rect3264-4-2-8-6"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-2">MLComposer</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-0"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,744.15958)"><flowRegion
+         id="flowRegion3278-6-3-8-7"><rect
+           id="rect3280-7-9-7-2"
+           width="214.7867"
+           height="22.860361"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-1"
+         style="font-weight:bold">parent_id</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-5)"
+       id="rect2985-1-2-1-5-3-7"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87749034,0,0,0.55473382,-257.12702,675.03115)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-0"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,833.90346)"><flowRegion
+         id="flowRegion3262-0-4-4-84"><rect
+           id="rect3264-4-2-8-0"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-7">MLPlaylist</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-2"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,819.90346)"><flowRegion
+         id="flowRegion3278-6-3-8-0"><rect
+           id="rect3280-7-9-7-23"
+           width="154.90665"
+           height="40.696972"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-88"
+         style="font-weight:bold">parent_id</flowPara><flowPara
+         id="flowPara3608">id_info</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-3)"
+       id="rect2985-1-2-1-5-3-2"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87797246,0,0,0.39757528,-257.37272,821.03764)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-47"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,926.28351)"><flowRegion
+         id="flowRegion3262-0-4-4-0"><rect
+           id="rect3264-4-2-8-22"
+           width="224.23213"
+           height="33.125202"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-1">MLShare</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-4"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,912.28351)"><flowRegion
+         id="flowRegion3278-6-3-8-8"><rect
+           id="rect3280-7-9-7-70"
+           width="214.7867"
+           height="22.860361"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-85"
+         style="font-weight:bold">parent_id</flowPara></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-91)"
+       id="rect2985-1-2-1-5-3-78"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87641267,0,0,1.1063052,-256.57783,-73.84766)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-5"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83814,271.31692)"><flowRegion
+         id="flowRegion3262-0-4-4-92"><rect
+           id="rect3264-4-2-8-5"
+           width="163.64803"
+           height="27.857019"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-9">MLTrack</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-69"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51392,257.31692)"><flowRegion
+         id="flowRegion3278-6-3-8-1"><rect
+           id="rect3280-7-9-7-0"
+           width="161.39954"
+           height="106.83642"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara3284-21-0-8-7"
+         style="font-weight:bold">parent_id</flowPara><flowPara
+         id="flowPara4312">item_id</flowPara><flowPara
+         id="flowPara4300">album</flowPara><flowPara
+         id="flowPara4304">album_art_uri</flowPara><flowPara
+         id="flowPara4308">creator</flowPara><flowPara
+         id="flowPara4310">original_track_number</flowPara><flowPara
+         id="flowPara4302" /></flowRoot>    <rect
+       style="fill:#87cdde;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3248-5-9-5-9-7)"
+       id="rect2985-1-2-1-5-3-6-0"
+       width="221.68404"
+       height="145.24127"
+       x="398.77646"
+       y="327.42987"
+       transform="matrix(0.87744032,0,0,0.62084509,-257.10153,260.06646)" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3260-5-1-0-4-2"
+       style="font-size:18px;font-style:normal;font-weight:bold;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Bold"
+       transform="translate(-303.83817,438.39049)"><flowRegion
+         id="flowRegion3262-0-4-4-8-7"><rect
+           id="rect3264-4-2-8-3-8"
+           width="159.69688"
+           height="30.49111"
+           x="414.06503"
+           y="34.450733"
+           style="font-size:18px;font-weight:bold;-inkscape-font-specification:Sans Bold" /></flowRegion><flowPara
+         id="flowPara3266-7-4-2-4-9">MLAlbum</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3276-6-8-3-1-7"
+       style="font-size:14px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(-308.51395,424.39049)"><flowRegion
+         id="flowRegion3278-6-3-8-3-2"><rect
+           id="rect3280-7-9-7-1-0"
+           width="158.76546"
+           height="70.516037"
+           x="417.88718"
+           y="68.849983"
+           style="font-size:14px" /></flowRegion><flowPara
+         id="flowPara4324"
+         style="font-weight:bold">parent_id</flowPara><flowPara
+         id="flowPara4326">album_art_uri</flowPara><flowPara
+         id="flowPara4328">creator</flowPara></flowRoot>    <flowRoot
+       xml:space="preserve"
+       id="flowRoot4316"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       transform="translate(0,98.002182)"><flowRegion
+         id="flowRegion4318"><rect
+           id="rect4320"
+           width="189.98357"
+           height="154.59448"
+           x="750.6214"
+           y="407.90591" /></flowRegion><flowPara
+         id="flowPara4322" /></flowRoot>    <path
+       style="fill:none;stroke:#000000;stroke-width:3.80442762;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 52.152353,277.58935 0,703.66905"
+       id="path5935"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 511.13949,-154.32377 -97.31367,48.15913"
+       id="path3255"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-2"
+       inkscape:connection-end-point="d4" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 670.64365,-154.32377 97.53316,48.91918"
+       id="path3257"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-9"
+       inkscape:connection-end-point="d4" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 798.60294,-50.134074 745.87164,8.9306221"
+       id="path3259"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2-9"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-3"
+       inkscape:connection-end-point="d4" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 847.43239,-50.134074 899.06403,8.9306221"
+       id="path3261"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2-9"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-98"
+       inkscape:connection-end-point="d4" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 330.98797,-49.560244 277.63668,9.3110768"
+       id="path3263"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2-2"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-1"
+       inkscape:connection-end-point="d4" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="M 376.60474,-49.560244 418.12488,9.2885719"
+       id="path3267"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect2985-1-2-2"
+       inkscape:connection-start-point="d4"
+       inkscape:connection-end="#rect2985-1-2-1-5"
+       inkscape:connection-end-point="d4" />
+  </g>
+</svg>
