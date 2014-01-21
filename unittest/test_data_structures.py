@@ -8,6 +8,7 @@ try:
     import xml.etree.cElementTree as XML
 except ImportError:
     import xml.etree.ElementTree as XML
+import textwrap
 
 from soco import data_structures
 
@@ -15,15 +16,18 @@ TITLE = 'Dummy title with non ascii chars æøå'
 ALBUM = '«Album title with fancy characters»'
 ART_URI = 'http://fake_address.jpg'
 CREATOR = 'Creative Ŋ Ħ̛ Þ dummy'
-XML_TEMPLATE = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '\
-               'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'\
-               '<item id="{item_id}" parentID="{parent_id}" '\
-               'restricted="true">'\
-               '<dc:title>{title}</dc:title>'\
-               '<upnp:class>{item_class}</upnp:class>'\
-               '<desc id="cdudn" '\
-               'nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'\
-               'RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>'
+XML_TEMPLATE = """
+    <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+     xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+    <item id="{item_id}" parentID="{parent_id}"
+     restricted="true">
+    <dc:title>{title}</dc:title>
+    <upnp:class>{item_class}</upnp:class>
+    <desc id="cdudn"
+     nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+    RINCON_AssociatedZPUDN</desc></item></DIDL-Lite>
+    """
+XML_TEMPLATE = textwrap.dedent(XML_TEMPLATE).replace('\n', '').strip()
 
 # Example XML and the content dict to compare with
 TRACK_XML = """
