@@ -618,6 +618,195 @@ class MLShare(MusicLibraryItem):
         MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
+class QueueItem(QueueableItem):
+    """Class that represents a queue item.
+
+    :ivar parent_id: The parent ID for the QueueItem is 'Q:0'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a QueueItem from XML. The value is
+        shown below
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+            _translation = {
+                'title': ('dc', 'title'),
+                'creator': ('dc', 'creator'),
+                'album': ('upnp', 'album'),
+                'album_art_uri': ('upnp', 'albumArtURI'),
+                'uri': ('', 'res'),
+                'original_track_number': ('upnp', 'originalTrackNumber'),
+                'item_class': ('upnp', 'class')
+            }
+
+    """
+
+    parent_id = 'Q:0'
+    _translation = {
+        'title': ('dc', 'title'),
+        'creator': ('dc', 'creator'),
+        'album': ('upnp', 'album'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res'),
+        'original_track_number': ('upnp', 'originalTrackNumber'),
+        'item_class': ('upnp', 'class')
+    }
+
+    def __init__(self, uri, title,
+                 item_class="object.item.audioItem.musicTrack", **kwargs):
+        """Instantiate the QueueItem by passing the arguments to the super
+        class :py:meth:`.QueueableItem.__init__`.
+
+        :param uri: The URI for the queue item
+        :param title: The title of the queue item
+        :param item_class: The UPnP class for the queue item. The default value
+            is: ``object.item.audioItem.musicTrack``
+        :param \*\*kwargs: Optional extra information items, valid keys are:
+            ``album``, ``album_art_uri``, ``creator``, 
+            ``original_track_number``. ``original_track_number`` is an ``int``. 
+            All other values are unicode objects.
+        """
+        QueueableItem.__init__(self)
+
+        # Parse the input arguments
+        arguments = {'uri': uri, 'title': title, 'item_class': item_class}
+        arguments.update(kwargs)
+        for key, value in arguments.items():
+            if key in self._translation:
+                self.content[key] = value
+            else:
+                raise ValueError(
+                    'The key \'{0}\' is not allowed as an argument. Only '
+                    'these keys are allowed: {1}'.
+                    format(key, str(self._translation.keys())))
+
+    @classmethod
+    def from_xml(cls, xml):
+        """Return an instance of this class, created from xml.
+
+        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
+            top element usually is a DIDL-LITE item (NS['']) element. Inside
+            the item element should be the (namespace, tag_name) elements
+            in the dictionary-key-to-xml-tag-and-namespace-translation
+            described in the class docstring.
+
+        """
+        from test import print_xml
+        print_xml(xml)
+
+        content = {}
+        for key, value in cls._translation.items():
+            result = xml.find(ns_tag(*value))
+            if result is None:
+                content[key] = None
+            else:
+                # The xml objects should contain utf-8 internally
+                content[key] = really_unicode(result.text)
+
+        args = [content.pop(arg) for arg in ['uri', 'title', 'item_class']]
+
+        if content.get('original_track_number') is not None:
+            content['original_track_number'] = \
+                int(content['original_track_number'])
+        return cls(*args, **content)
+
+    @classmethod
+    def from_dict(cls, content):
+        """Return an instance of this class, created from a dict with
+        parameters.
+
+        :param content: Dict with information for the music library item.
+            Required and valid arguments are the same as for the
+            ``__init__`` method.
+
+        """
+        # Make a copy since this method will modify the input dict
+        content_in = content.copy()
+        args = [content_in.pop(arg) for arg in ['uri', 'title', 'item_class']]
+        return cls(*args, **content_in)
+
+    @property
+    def to_dict(self):
+        """Get the dict representation of the instance."""
+        return self.content
+
+    @property
+    def item_id(self):  # pylint: disable=C0103
+        """Return the id
+        """
+        return self._item_id
+
+    @property
+    def didl_metadata(self):
+        """Produce the DIDL metadata XML. CURRENTLY DISABLED."""
+        message = 'Queueitems cannot not yet form didl_metadata'
+        raise NotImplementedError(message)
+
+    @property
+    def title(self):
+        """Get and set the title as an unicode object."""
+        return self.content['title']
+
+    @title.setter
+    def title(self, title):  # pylint: disable=C0111
+        self.content['title'] = title
+
+    @property
+    def uri(self):
+        """Get and set the URI as an unicode object."""
+        return self.content['uri']
+
+    @uri.setter
+    def uri(self, uri):  # pylint: disable=C0111
+        self.content['uri'] = uri
+
+    @property
+    def item_class(self):
+        """Get and set the UPnP object class as an unicode object."""
+        return self.content['item_class']
+
+    @item_class.setter
+    def item_class(self, item_class):  # pylint: disable=C0111
+        self.content['item_class'] = item_class
+
+    @property
+    def creator(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('creator')
+
+    @creator.setter
+    def creator(self, creator):  # pylint: disable=C0111
+        self.content['creator'] = creator
+
+    @property
+    def album(self):
+        """Get and set the album as an unicode object."""
+        return self.content.get('album')
+
+    @album.setter
+    def album(self, album):  # pylint: disable=C0111
+        self.content['album'] = album
+
+    @property
+    def album_art_uri(self):
+        """Get and set the album art URI as an unicode object."""
+        return self.content.get('album_art_uri')
+
+    @album_art_uri.setter
+    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
+        self.content['album_art_uri'] = album_art_uri
+
+    @property
+    def original_track_number(self):
+        """Get and set the original track number as an ``int``."""
+        return self.content.get('original_track_number')
+
+    @original_track_number.setter
+    # pylint: disable=C0111
+    def original_track_number(self, original_track_number):
+        self.content['original_track_number'] = original_track_number
+
+
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
