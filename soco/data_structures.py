@@ -691,9 +691,6 @@ class QueueItem(QueueableItem):
             described in the class docstring.
 
         """
-        from test import print_xml
-        print_xml(xml)
-
         content = {}
         for key, value in cls._translation.items():
             result = xml.find(ns_tag(*value))
