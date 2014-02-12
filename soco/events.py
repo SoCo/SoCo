@@ -4,6 +4,7 @@ import socket
 import requests
 from gevent import pywsgi
 
+
 class Events(object):
     AVTRANSPORT_ENDPOINT = 'http://{0}:1400/MediaRenderer/AVTransport/Event'
 
