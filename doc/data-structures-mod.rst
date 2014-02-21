@@ -37,7 +37,9 @@ items and blue are real items. The black lines are the lines of
 inheritance, going from the top down.
 
 .. _figure-inheritance:
-.. image:: graphics/data_structures.png
+.. inheritance-diagram:: soco.data_structures 
+
+;;.. image:: graphics/data_structures.png
 
 All data structures are :py:class:`playable items
 <.PlayableItem>`. They are then split up into :py:class:`queueable
@@ -169,6 +171,14 @@ MLShare
 =======
 
 .. autoclass:: soco.data_structures.MLShare
+   :members:
+   :special-members:
+   :show-inheritance:
+
+QueueItem
+=========
+
+.. autoclass:: soco.data_structures.QueueItem
    :members:
    :special-members:
    :show-inheritance:

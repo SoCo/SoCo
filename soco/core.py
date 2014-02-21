@@ -22,7 +22,7 @@ import requests
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueableItem
+from .data_structures import get_ml_item, QueueableItem, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
@@ -831,37 +831,12 @@ class SoCo(object):  # pylint: disable=R0904
         result = response['Result']
         if not result:
             return queue
-        try:
-            result_dom = XML.fromstring(really_utf8(result))
-            for element in result_dom.findall(
-                    './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-                try:
-                    item = {'title': None,
-                            'artist': None,
-                            'album': None,
-                            'album_art': None,
-                            'uri': None
-                            }
 
-                    item['title'] = element.findtext(
-                        '{http://purl.org/dc/elements/1.1/}title')
-                    item['artist'] = element.findtext(
-                        '{http://purl.org/dc/elements/1.1/}creator')
-                    item['album'] = element.findtext(
-                        '{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
-                    item['album_art'] = element.findtext(
-                        '{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-                    item['uri'] = element.findtext(
-                        '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
-
-                    queue.append(item)
-                except:  # pylint: disable=W0702
-                    LOGGER.warning('Could not handle item: %s', element)
-                    LOGGER.error(traceback.format_exc())
-
-        except:  # pylint: disable=W0702
-            LOGGER.error('Could not handle result from Sonos')
-            LOGGER.error(traceback.format_exc())
+        result_dom = XML.fromstring(really_utf8(result))
+        for element in result_dom.findall(
+                './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                item = QueueItem.from_xml(element)
+                queue.append(item)
 
         return queue
 
