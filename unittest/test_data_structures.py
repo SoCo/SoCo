@@ -9,6 +9,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as XML
 import textwrap
+from xml.sax.saxutils import escape
 
 from soco import data_structures
 
@@ -17,7 +18,8 @@ ALBUM = '«Album title with fancy characters»'
 ART_URI = 'http://fake_address.jpg'
 CREATOR = 'Creative Ŋ Ħ̛ Þ dummy'
 XML_TEMPLATE = """
-    <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+    <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/"
      xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
     <item id="{item_id}" parentID="{parent_id}"
      restricted="true">
@@ -293,9 +295,12 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
     assert instance.item_id == item_id
 
     # Test didl_metadata
-    xml = XML_TEMPLATE.format(parent_id=parent_id, item_id=item_id, **content)
-    etree = XML.fromstring(xml.encode('utf8'))
-    assert XML.tostring(instance.didl_metadata) == XML.tostring(etree)
+    content1 = content.copy()
+    content1.pop('title')
+    title = 'Dummy title with non ascii chars &#230;&#248;&#229;'
+    xml = XML_TEMPLATE.format(parent_id=parent_id, item_id=item_id,
+                              title=title, **content1)
+    assert XML.tostring(instance.didl_metadata) == xml
 
     # Test common attributes
     for key in ['uri', 'title', 'item_class']:
