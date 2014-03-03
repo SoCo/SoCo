@@ -9,7 +9,6 @@ try:
 except ImportError:
     import xml.etree.ElementTree as XML
 import textwrap
-from xml.sax.saxutils import escape
 
 from soco import data_structures
 
@@ -211,13 +210,13 @@ x-sonos-mms:AnyArtistTrack%3a126778459?sid=50&amp;flags=32</res>
   <upnp:album>Almost Gracefully</upnp:album>
 </item>"""
 QUEUE_XML1 = QUEUE_XML1.replace('\n', '')
-QUEUE_DICT1  = {
+QUEUE_DICT1 = {
     'album': 'Almost Gracefully',
     'creator': 'Randi Laubek',
     'title': 'Airworthy',
     'uri': 'x-sonos-mms:AnyArtistTrack%3a126778459?sid=50&flags=32',
-    'album_art_uri': '/getaa?s=1&u=x-sonos-mms%3aAnyArtistTrack%253a126778459'\
-        '%3fsid%3d50%26flags%3d32',
+    'album_art_uri': '/getaa?s=1&u=x-sonos-mms%3aAnyArtistTrack%253a126778459'
+    '%3fsid%3d50%26flags%3d32',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': None
 }
@@ -245,14 +244,15 @@ QUEUE_DICT2 = {
     'album': 'Philharmonics',
     'creator': 'Agnes Obel',
     'title': 'Falling, Catching',
-    'uri': 'x-file-cifs://TLE-SERVER/share/flac/Agnes%20Obel%20-%20'\
-        'Philharmonics/1%20-%20Falling,%20Catching.flac',
-    'album_art_uri': '/getaa?u=x-file-cifs%3a%2f%2fTLE-SERVER%2fshare%2fflac'\
-        '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-%2520Falling,'\
-        '%2520Catching.flac&v=2',
+    'uri': 'x-file-cifs://TLE-SERVER/share/flac/Agnes%20Obel%20-%20'
+    'Philharmonics/1%20-%20Falling,%20Catching.flac',
+    'album_art_uri': '/getaa?u=x-file-cifs%3a%2f%2fTLE-SERVER%2fshare%2fflac'
+    '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-%2520Falling,'
+    '%2520Catching.flac&v=2',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': 1
 }
+
 
 # Helper test functions
 def set_and_get_test(instance, content, key):
@@ -300,7 +300,7 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
     title = 'Dummy title with non ascii chars &#230;&#248;&#229;'
     xml = XML_TEMPLATE.format(parent_id=parent_id, item_id=item_id,
                               title=title, **content1)
-    assert XML.tostring(instance.didl_metadata) == xml
+    assert XML.tostring(instance.didl_metadata).decode() == xml
 
     # Test common attributes
     for key in ['uri', 'title', 'item_class']:
@@ -326,7 +326,7 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
 
 
 def common_tests_queue(parent_id, instance, content, item_xml,
-        item_dict):
+                       item_dict):
     """Test all the common methods inherited from MusicLibraryItem
 
     :param parent_id: The parent ID of the class

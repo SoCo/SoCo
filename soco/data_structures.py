@@ -56,7 +56,7 @@ def tags_with_text(xml, tags=None):
     return tags
 
 
-class InfoItem(object):
+class MusicInfoItem(object):
     """Abstract class for all data structure classes"""
 
     def __init__(self):
@@ -101,25 +101,10 @@ class InfoItem(object):
         return self.__repr__()
 
 
-class PlayableItem(InfoItem):
-    """Abstract class for all playable items."""
-
-    def __init__(self):
-        super(PlayableItem, self).__init__()
-
-
-class QueueableItem(PlayableItem):
-    """Abstract class for a playable item that can be queued."""
-
-    def __init__(self):
-        """Run __init__ from :py:class:`.PlayableItem`."""
-        PlayableItem.__init__(self)
-
-
 ###############################################################################
 # MUSIC LIBRARY                                                               #
 ###############################################################################
-class MusicLibraryItem(QueueableItem):
+class MusicLibraryItem(MusicInfoItem):
     """Abstract class for a queueable item from the music library.
 
     :ivar parent_id: The parent ID for the music library item is ``None``,
@@ -161,7 +146,7 @@ class MusicLibraryItem(QueueableItem):
             unicode objects.
 
         """
-        QueueableItem.__init__(self)
+        super(MusicLibraryItem, self).__init__()
 
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'item_class': item_class}
@@ -650,7 +635,7 @@ class MLShare(MusicLibraryItem):
 ###############################################################################
 # QUEUE                                                                       #
 ###############################################################################
-class QueueItem(QueueableItem):
+class QueueItem(MusicInfoItem):
     """Class that represents a queue item.
 
     :ivar parent_id: The parent ID for the QueueItem is 'Q:0'
@@ -687,7 +672,7 @@ class QueueItem(QueueableItem):
     def __init__(self, uri, title,
                  item_class="object.item.audioItem.musicTrack", **kwargs):
         """Instantiate the QueueItem by passing the arguments to the super
-        class :py:meth:`.QueueableItem.__init__`.
+        class :py:meth:`.MusicInfoItem.__init__`.
 
         :param uri: The URI for the queue item
         :param title: The title of the queue item
@@ -698,7 +683,7 @@ class QueueItem(QueueableItem):
             ``original_track_number``. ``original_track_number`` is an ``int``.
             All other values are unicode objects.
         """
-        QueueableItem.__init__(self)
+        super(QueueItem, self).__init__()
 
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'item_class': item_class}
@@ -839,114 +824,7 @@ class QueueItem(QueueableItem):
 ###############################################################################
 # MUSIC LIBRARY                                                               #
 ###############################################################################
-
-
-class MusicServiceInfoItem(InfoItem):
-    """Class that represents a music service item"""
-
-    # These fields must be overwritten in the sub classes
-    valid_fields = None
-    required_fields = None
-
-    def __init__(self, **kwargs):
-        super(MusicServiceInfoItem, self).__init__()
-        self.content = kwargs
-
-    @classmethod
-    def from_xml(cls, xml, service):
-        """Return a Music Service item generated from xml
-
-        :param xml: Object XML. All items containing text are added to the
-            content of the item. The class variable ``valid_fields`` of each of
-            the classes list the valid fields (after translating the camel
-            case to underscore notation). Required fields are liste in the
-            class variable by that name (where 'id' has been renamed to
-            'item_id').
-        :type xml: :py:class:`xml.etree.ElementTree.Element`
-        :param service: The music service instance that retrieved the element
-        :type service: :class:`soco.services.MusicServices`
-
-        For a track the XML can e.g. be on the following form:
-
-        .. code :: xml
-         <mediaCollection readOnly="true"
-                xmlns="http://www.sonos.com/Services/1.1">
-           <id>artistid_3694795</id>
-           <itemType>artist</itemType>
-           <title>Agnes Obel</title>
-           <artist>Agnes Obel</artist>
-           <canAddToFavorites>true</canAddToFavorites>
-           <albumArtURI>http://varnish01.music.aspiro.com/im/im?h=42&amp;
-                w=64&amp;artistid=3694795
-           </albumArtURI>
-         </mediaCollection>
-        """
-        # Extract values from the XML
-        all_text_elements = tags_with_text(xml)
-        content = {'username': service.username,
-                   'service_id': service.session_id,
-                   'description': service.description}
-        for item in all_text_elements:
-            tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
-            tag = camel_to_underscore(tag)  # Convert to nice names
-            if not tag in cls.valid_fields:
-                message = 'The info tag \'{}\' is not allowed for this item'.\
-                    format(tag)
-                raise ValueError(message)
-            content[camel_to_underscore(tag)] = item.text
-
-        # Convert values for known types
-        for key, value in content.items():
-            if key == 'duration':
-                content[key] = int(value)
-            if key in ['can_play', 'can_skip', 'can_add_to_favorites',
-                       'can_enumerate']:
-                content[key] = True if value == 'true' else False
-        # Rename a single item
-        content['item_id'] = content.pop('id')
-
-        # Check for all required values
-        for key in cls.required_fields:
-            if not key in content:
-                message = 'An XML field that correspond to the key \'{}\' is '\
-                    'required. See the docstring for help.'.format(key)
-
-        return cls.from_dict(content)
-
-    @classmethod
-    def from_dict(cls, dict_in):
-        """Initialize the class from a dict"""
-        kwargs = dict_in.copy()
-        args = [kwargs.pop(key) for key in cls.required_fields]
-        return cls(*args, **kwargs)
-
-    @property
-    def to_dict(self):
-        """Return a copy of the content dict"""
-        return self.content.copy()
-
-    @property
-    def item_id(self):
-        """Return the item id"""
-        return self.content['item_id']
-
-    @property
-    def title(self):
-        """Return the title"""
-        return self.content['title']
-
-    @property
-    def username(self):
-        """Return the username"""
-        return self.content['username']
-
-    @property
-    def service_id(self):
-        """Return the service id"""
-        return self.content['service_id']
-
-
-class MusicServiceItem(QueueableItem):
+class MusicServiceItem(MusicInfoItem):
     """Class that represents a music service item"""
 
     # These fields must be overwritten in the sub classes
@@ -955,7 +833,7 @@ class MusicServiceItem(QueueableItem):
     required_fields = None
 
     def __init__(self, **kwargs):
-        QueueableItem.__init__(self)
+        super(MusicServiceItem, self).__init__()
         self.content = kwargs
 
     @classmethod
@@ -1088,7 +966,7 @@ class MSTrack(MusicServiceItem):
                    'mime_type': mime_type, 'description': description,
                    'service_id': service_id}
         content.update(kwargs)
-        MusicServiceItem.__init__(self, **content)
+        super(MSTrack, self).__init__(**content)
 
     @property
     def didl_metadata(self):
@@ -1178,7 +1056,7 @@ class MSAlbum(MusicServiceItem):
         content = {'title': title, 'item_id': item_id,
                    'description': description, 'service_id': service_id}
         content.update(kwargs)
-        MusicServiceItem.__init__(self, **content)
+        super(MSAlbum, self).__init__(**content)
 
     @property
     def didl_metadata(self):
@@ -1241,7 +1119,7 @@ class MSAlbum(MusicServiceItem):
         return 'x-rincon-cpcontainer:0004002c{}'.format(self.item_id)
 
 
-class MSArtist(MusicServiceInfoItem):
+class MSArtist(MusicServiceItem):
     """Class that represents a music service artist"""
 
     valid_fields = [
@@ -1275,7 +1153,7 @@ class MSPlaylist(MusicServiceItem):
         content = {'title': title, 'item_id': item_id,
                    'description': description, 'service_id': service_id}
         content.update(kwargs)
-        MusicServiceItem.__init__(self, **content)
+        super(MSPlaylist, self).__init__(**content)
 
     @property
     def didl_metadata(self):

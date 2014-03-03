@@ -22,7 +22,7 @@ import requests
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueableItem, QueueItem
+from .data_structures import get_ml_item, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
