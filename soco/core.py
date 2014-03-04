@@ -686,34 +686,29 @@ class SoCo(object):  # pylint: disable=R0904
 
             return self.speaker_info
 
-    def get_group_coordinator(self, zone_name, refresh=False):
+    def get_group_coordinator(self, zone_name):
         """ Get the IP address of the Sonos system that is coordinator for
-            the group containing zone_name
+        the group containing zone_name
 
         Code contributed by Aaron Daubman (daubman@gmail.com)
 
         Arguments:
-        zone_name -- the name of the Zone to control for which you need the
-                     coordinator
-
-        refresh -- Refresh the topology cache prior to looking for coordinator
+        zone_name -- Name of the Zone, for which you need a coordinator
 
         Returns:
-        The IP address of the coordinator or None of one can not be determined
+        The IP address of the coordinator or None if one cannot be determined
 
         """
-        if not self.topology or refresh:
-            self.__get_topology(refresh=True)
 
-        # The zone name must be in the topology
-        if zone_name not in self.topology:
-            return None
+        response = requests.get('http://' + self.speaker_ip +
+                            ':1400/status/topology')
+        dom = XML.fromstring(really_utf8(response.content))
 
-        zone_dict = self.topology[zone_name]
-        zone_group = zone_dict['group']
-        for zone_value in self.topology.values():
-            if zone_value['group'] == zone_group and zone_value['coordinator']:
-                return zone_value['ip']
+        for player in dom.find('ZonePlayers'):
+            if (player.text == zone_name) and\
+                (player.attrib.get('coordinator') == 'true'):
+                    return player.attrib.get('location').\
+                        split('//')[1].split(':')[0]
 
         # Not Found
         return None
