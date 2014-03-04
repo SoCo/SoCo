@@ -687,7 +687,7 @@ class SoCo(object):  # pylint: disable=R0904
             return self.speaker_info
 
     def get_group_coordinator(self, zone_name):
-    """ Get the IP address of the Sonos system that is coordinator for
+        """ Get the IP address of the Sonos system that is coordinator for
         the group containing zone_name
 
         Code contributed by Aaron Daubman (daubman@gmail.com)
@@ -700,18 +700,18 @@ class SoCo(object):  # pylint: disable=R0904
 
         """
 
-    response = requests.get('http://' + self.speaker_ip +
+        response = requests.get('http://' + self.speaker_ip +
                             ':1400/status/topology')
-    dom = XML.fromstring(really_utf8(response.content))
+        dom = XML.fromstring(really_utf8(response.content))
 
-    for player in dom.find('ZonePlayers'):
-        if (player.text == zone_name) and\
-            (player.attrib.get('coordinator') == 'true'):
-                return player.attrib.get('location').\
-                    split('//')[1].split(':')[0]
+        for player in dom.find('ZonePlayers'):
+            if (player.text == zone_name) and\
+                (player.attrib.get('coordinator') == 'true'):
+                    return player.attrib.get('location').\
+                        split('//')[1].split(':')[0]
 
-    # Not Found
-    return None
+        # Not Found
+        return None
 
     def __get_topology(self, refresh=False):
         """ Gets the topology if it is not already available or if refresh=True
