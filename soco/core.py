@@ -692,6 +692,7 @@ class SoCo(object):  # pylint: disable=R0904
         the group containing zone_name
 
         Code contributed by Aaron Daubman (daubman@gmail.com)
+                            Murali Allada (amuralis@hotmail.com)
 
         Arguments:
         zone_name -- Name of the Zone, for which you need a coordinator
@@ -704,7 +705,6 @@ class SoCo(object):  # pylint: disable=R0904
         coord_uuid = None
         zgroups =  self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
         XMLtree = XML.fromstring(really_utf8(zgroups))
-        print zgroups
 
         for grp in XMLtree:
             for zone in grp:
@@ -716,7 +716,8 @@ class SoCo(object):  # pylint: disable=R0904
             for zone in grp:
                 if coord_uuid == zone.attrib['UUID']:
                     #find IP of coordinator UUID for this group
-                    coord_ip = zone.attrib['Location'].split('//')[1].split(':')[0]
+                    coord_ip = zone.attrib['Location'].\
+                        split('//')[1].split(':')[0]
 
         return coord_ip
 
