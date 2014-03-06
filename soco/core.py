@@ -692,6 +692,7 @@ class SoCo(object):  # pylint: disable=R0904
         the group containing zone_name
 
         Code contributed by Aaron Daubman (daubman@gmail.com)
+                            Murali Allada (amuralis@hotmail.com)
 
         Arguments:
         zone_name -- Name of the Zone, for which you need a coordinator
