@@ -705,7 +705,6 @@ class SoCo(object):  # pylint: disable=R0904
         coord_uuid = None
         zgroups =  self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
         XMLtree = XML.fromstring(really_utf8(zgroups))
-        print zgroups
 
         for grp in XMLtree:
             for zone in grp:
@@ -717,7 +716,8 @@ class SoCo(object):  # pylint: disable=R0904
             for zone in grp:
                 if coord_uuid == zone.attrib['UUID']:
                     #find IP of coordinator UUID for this group
-                    coord_ip = zone.attrib['Location'].split('//')[1].split(':')[0]
+                    coord_ip = zone.attrib['Location'].\
+                        split('//')[1].split(':')[0]
 
         return coord_ip
 
