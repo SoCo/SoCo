@@ -31,22 +31,16 @@ functionality. This has been implemented by means of inheritance, in
 such a way that common functionality is always pulled up the
 inheritance hierarchy to the highest point that have this
 functionality in common. The hierarchy is illustrated in figure
-:ref:`the figure below <figure-inheritance>`, where red boxes
-represent items that are not yet implemented, green boxes are abstract
-items and blue are real items. The black lines are the lines of
-inheritance, going from the top down.
+:ref:`the figure below <figure-inheritance>`. The black lines are the
+lines of inheritance, going from the top down.
 
 .. _figure-inheritance:
 .. inheritance-diagram:: soco.data_structures 
 
-;;.. image:: graphics/data_structures.png
-
-All data structures are :py:class:`playable items
-<.PlayableItem>`. They are then split up into :py:class:`queueable
-items<.QueueableItem>` and single play items. :py:class:`Queueable
-items <.QueueableItem>` are all the "real" :py:class:`music library
-items <.MusicLibraryItem>` and music service items such as tracks,
-albums and playlists.
+All data structures are :py:class:`music information items
+<.MusicInfoItem>`. Three classes inherit from this top level class;
+the :py:class:`queue item <.QueueItem>`, the :py:class:`music library
+item <.MusicLibraryItem>` and the music service item
 
 There are 8 types of :py:class:`music library items
 <.MusicLibraryItem>`, represented by the 8 classes that inherit from
@@ -82,26 +76,17 @@ Functions
 .. autofunction:: soco.data_structures.ns_tag
 .. autofunction:: soco.data_structures.get_ml_item
 
-PlayableItem
-============
-
-.. autoclass:: soco.data_structures.PlayableItem
-   :members:
-   :show-inheritance:
-
-   .. automethod:: soco.data_structures.PlayableItem.__init__
-   .. automethod:: soco.data_structures.PlayableItem.__eq__
-   .. automethod:: soco.data_structures.PlayableItem.__repr__
-   .. automethod:: soco.data_structures.PlayableItem.__str__
-
-
-QueueableItem
+MusicInfoItem
 =============
 
-.. autoclass:: soco.data_structures.QueueableItem
+.. autoclass:: soco.data_structures.MusicInfoItem
    :members:
-   :special-members:
    :show-inheritance:
+
+   .. automethod:: soco.data_structures.MusicInfoItem.__init__
+   .. automethod:: soco.data_structures.MusicInfoItem.__eq__
+   .. automethod:: soco.data_structures.MusicInfoItem.__repr__
+   .. automethod:: soco.data_structures.MusicInfoItem.__str__
 
 MusicLibraryItem
 ================

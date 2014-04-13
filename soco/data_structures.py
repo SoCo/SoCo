@@ -11,16 +11,9 @@ try:
     import xml.etree.cElementTree as XML
 except ImportError:
     import xml.etree.ElementTree as XML
-NS = {
-    'dc': 'http://purl.org/dc/elements/1.1/',
-    'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-    '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-}
-# Register all name spaces within the XML module
-for key_, value_ in NS.items():
-    XML.register_namespace(key_, value_)
-from soco.utils import really_unicode
-from soco.exceptions import CannotCreateDIDLMetadata
+
+from .exceptions import CannotCreateDIDLMetadata
+from .utils import really_unicode, camel_to_underscore
 
 
 def ns_tag(ns_id, tag):
@@ -41,8 +34,33 @@ def get_ml_item(xml):
     return cls.from_xml(xml=xml)
 
 
-class PlayableItem(object):
-    """Abstract class for all playable items."""
+def get_ms_item(xml, service):
+    """Return the music service item that corresponds to xml. The class is
+    identified by getting the type from the 'itemType' tag
+    """
+    cls = MS_TYPE_TO_CLASS[xml.findtext(ns_tag('ms', 'itemType'))]
+    return cls.from_xml(xml, service)
+
+
+def tags_with_text(xml, tags=None):
+    """Return a list of tags that contain text retrieved recursively from an
+    XML tree
+    """
+    if tags is None:
+        tags = []
+    for element in xml:
+        if element.text is not None:
+            tags.append(element)
+        elif len(element) > 0:
+            tags_with_text(element, tags)
+        else:
+            message = 'Unknown XML structure: {}'.format(element)
+            raise ValueError(message)
+    return tags
+
+
+class MusicInfoItem(object):
+    """Abstract class for all data structure classes"""
 
     def __init__(self):
         """Initialize the content as an empty dict."""
@@ -86,15 +104,10 @@ class PlayableItem(object):
         return self.__repr__()
 
 
-class QueueableItem(PlayableItem):
-    """Abstract class for a playable item that can be queued."""
-
-    def __init__(self):
-        """Run __init__ from :py:class:`.PlayableItem`."""
-        PlayableItem.__init__(self)
-
-
-class MusicLibraryItem(QueueableItem):
+###############################################################################
+# MUSIC LIBRARY                                                               #
+###############################################################################
+class MusicLibraryItem(MusicInfoItem):
     """Abstract class for a queueable item from the music library.
 
     :ivar parent_id: The parent ID for the music library item is ``None``,
@@ -124,7 +137,7 @@ class MusicLibraryItem(QueueableItem):
     }
 
     def __init__(self, uri, title, item_class, **kwargs):
-        """Initialize the MusicLibraryItem from parameter arguments.
+        r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
         :param title: The title for the item
@@ -136,7 +149,7 @@ class MusicLibraryItem(QueueableItem):
             unicode objects.
 
         """
-        QueueableItem.__init__(self)
+        super(MusicLibraryItem, self).__init__()
 
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'item_class': item_class}
@@ -214,10 +227,10 @@ class MusicLibraryItem(QueueableItem):
     def didl_metadata(self):
         """Produce the DIDL metadata XML.
 
-        This method uses the :py:attr:`~.MusicLibraryItem.item_id` 
-        attribute (and via that the :py:attr:`~.MusicLibraryItem.uri` 
-        attribute), the :py:attr:`~.MusicLibraryItem.item_class` attribute 
-        and the :py:attr:`~.MusicLibraryItem.title`  attribute. The 
+        This method uses the :py:attr:`~.MusicLibraryItem.item_id`
+        attribute (and via that the :py:attr:`~.MusicLibraryItem.uri`
+        attribute), the :py:attr:`~.MusicLibraryItem.item_class` attribute
+        and the :py:attr:`~.MusicLibraryItem.title`  attribute. The
         metadata will be on the form:
 
         .. code :: xml
@@ -241,18 +254,22 @@ class MusicLibraryItem(QueueableItem):
                 'DIDL Metadata cannot be created when item_id returns None '
                 '(most likely because uri is not set)')
 
-        # Main element
-        xml = XML.Element('DIDL-Lite')
+        # Main element, ugly yes, but I have given up on using namespaces with
+        # xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
         # Item sub element
         item_attrib = \
             {'parentID': self.parent_id, 'restricted': 'true',
              'id': self.item_id}
         item = XML.SubElement(xml, 'item', item_attrib)
         # Add content from self.content to item
-        for key in ['title', 'item_class']:
-            element = XML.SubElement(
-                item, ns_tag(*self._translation[key]))
-            element.text = self.content[key]
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
         # Add the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
                        'urn:schemas-rinconnetworks-com:metadata-1-0/'}
@@ -325,7 +342,7 @@ class MLTrack(MusicLibraryItem):
 
     def __init__(self, uri, title,
                  item_class='object.item.audioItem.musicTrack', **kwargs):
-        """Instantiate the MLTrack item by passing the arguments to the
+        r"""Instantiate the MLTrack item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
         :param uri: The URI for the track
@@ -333,8 +350,8 @@ class MLTrack(MusicLibraryItem):
         :param item_class: The UPnP class for the track. The default value is:
             ``object.item.audioItem.musicTrack``
         :param \*\*kwargs: Optional extra information items, valid keys are:
-            ``album``, ``album_art_uri``, ``creator``, 
-            ``original_track_number``. ``original_track_number`` is an ``int``. 
+            ``album``, ``album_art_uri``, ``creator``,
+            ``original_track_number``. ``original_track_number`` is an ``int``.
             All other values are unicode objects.
         """
         MusicLibraryItem.__init__(self, uri, title, item_class, **kwargs)
@@ -423,7 +440,7 @@ class MLAlbum(MusicLibraryItem):
 
     def __init__(self, uri, title,
                  item_class='object.container.album.musicAlbum', **kwargs):
-        """Instantiate the MLAlbum item by passing the arguments to the
+        r"""Instantiate the MLAlbum item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
         :param uri: The URI for the alum
@@ -618,7 +635,10 @@ class MLShare(MusicLibraryItem):
         MusicLibraryItem.__init__(self, uri, title, item_class)
 
 
-class QueueItem(QueueableItem):
+###############################################################################
+# QUEUE                                                                       #
+###############################################################################
+class QueueItem(MusicInfoItem):
     """Class that represents a queue item.
 
     :ivar parent_id: The parent ID for the QueueItem is 'Q:0'
@@ -654,19 +674,19 @@ class QueueItem(QueueableItem):
 
     def __init__(self, uri, title,
                  item_class="object.item.audioItem.musicTrack", **kwargs):
-        """Instantiate the QueueItem by passing the arguments to the super
-        class :py:meth:`.QueueableItem.__init__`.
+        r"""Instantiate the QueueItem by passing the arguments to the super
+        class :py:meth:`.MusicInfoItem.__init__`.
 
         :param uri: The URI for the queue item
         :param title: The title of the queue item
         :param item_class: The UPnP class for the queue item. The default value
             is: ``object.item.audioItem.musicTrack``
         :param \*\*kwargs: Optional extra information items, valid keys are:
-            ``album``, ``album_art_uri``, ``creator``, 
-            ``original_track_number``. ``original_track_number`` is an ``int``. 
+            ``album``, ``album_art_uri``, ``creator``,
+            ``original_track_number``. ``original_track_number`` is an ``int``.
             All other values are unicode objects.
         """
-        QueueableItem.__init__(self)
+        super(QueueItem, self).__init__()
 
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'item_class': item_class}
@@ -726,12 +746,6 @@ class QueueItem(QueueableItem):
     def to_dict(self):
         """Get the dict representation of the instance."""
         return self.content
-
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Return the id
-        """
-        return self._item_id
 
     @property
     def didl_metadata(self):
@@ -804,7 +818,419 @@ class QueueItem(QueueableItem):
         self.content['original_track_number'] = original_track_number
 
 
+###############################################################################
+# MUSIC LIBRARY                                                               #
+###############################################################################
+class MusicServiceItem(MusicInfoItem):
+    """Class that represents a music service item"""
+
+    # These fields must be overwritten in the sub classes
+    item_class = None
+    valid_fields = None
+    required_fields = None
+
+    def __init__(self, **kwargs):
+        super(MusicServiceItem, self).__init__()
+        self.content = kwargs
+
+    @classmethod
+    def from_xml(cls, xml, service):
+        """Return a Music Service item generated from xml
+
+        :param xml: Object XML. All items containing text are added to the
+            content of the item. The class variable ``valid_fields`` of each of
+            the classes list the valid fields (after translating the camel
+            case to underscore notation). Required fields are liste in the
+            class variable by that name (where 'id' has been renamed to
+            'item_id').
+        :type xml: :py:class:`xml.etree.ElementTree.Element`
+        :param service: The music service instance that retrieved the element
+        :type service: :class:`soco.services.MusicServices`
+
+        For a track the XML can e.g. be on the following form:
+
+        .. code :: xml
+
+         <mediaMetadata xmlns="http://www.sonos.com/Services/1.1">
+           <id>trackid_141359</id>
+           <itemType>track</itemType>
+           <mimeType>audio/aac</mimeType>
+           <title>Teacher</title>
+           <trackMetadata>
+             <artistId>artistid_10597</artistId>
+             <artist>Jethro Tull</artist>
+             <composerId>artistid_10597</composerId>
+             <composer>Jethro Tull</composer>
+             <albumId>albumid_141358</albumId>
+             <album>MU - The Best Of Jethro Tull</album>
+             <albumArtistId>artistid_10597</albumArtistId>
+             <albumArtist>Jethro Tull</albumArtist>
+             <duration>229</duration>
+             <albumArtURI>http://varnish01.music.aspiro.com/sca/
+              imscale?h=90&amp;w=90&amp;img=/content/music10/prod/wmg/
+              1383757201/094639008452_20131105025504431/resources/094639008452.
+              jpg</albumArtURI>
+             <canPlay>true</canPlay>
+             <canSkip>true</canSkip>
+             <canAddToFavorites>true</canAddToFavorites>
+           </trackMetadata>
+         </mediaMetadata>
+        """
+        # Extract values from the XML
+        all_text_elements = tags_with_text(xml)
+        content = {'username': service.username,
+                   'service_id': service.session_id,
+                   'description': service.description}
+        for item in all_text_elements:
+            tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
+            tag = camel_to_underscore(tag)  # Convert to nice names
+            if not tag in cls.valid_fields:
+                message = 'The info tag \'{}\' is not allowed for this item'.\
+                    format(tag)
+                raise ValueError(message)
+            content[camel_to_underscore(tag)] = item.text
+
+        # Convert values for known types
+        for key, value in content.items():
+            if key == 'duration':
+                content[key] = int(value)
+            if key in ['can_play', 'can_skip', 'can_add_to_favorites',
+                       'can_enumerate']:
+                content[key] = True if value == 'true' else False
+        # Rename a single item
+        content['item_id'] = content.pop('id')
+
+        # Check for all required values
+        for key in cls.required_fields:
+            if not key in content:
+                message = 'An XML field that correspond to the key \'{}\' is '\
+                    'required. See the docstring for help.'.format(key)
+
+        return cls.from_dict(content)
+
+    @classmethod
+    def from_dict(cls, dict_in):
+        """Initialize the class from a dict"""
+        kwargs = dict_in.copy()
+        args = [kwargs.pop(key) for key in cls.required_fields]
+        return cls(*args, **kwargs)
+
+    @property
+    def to_dict(self):
+        """Return a copy of the content dict"""
+        return self.content.copy()
+
+    @property
+    def item_id(self):
+        """Return the item id"""
+        return self.content['item_id']
+
+    @property
+    def title(self):
+        """Return the title"""
+        return self.content['title']
+
+    @property
+    def username(self):
+        """Return the username"""
+        return self.content['username']
+
+    @property
+    def service_id(self):
+        """Return the service id"""
+        return self.content['service_id']
+
+
+class MSTrack(MusicServiceItem):
+    """Music service track"""
+
+    item_class = 'object.item.audioItem.musicTrack'
+    valid_fields = [
+        'album', 'can_add_to_favorites', 'artist', 'album_artist_id', 'title',
+        'album_id', 'album_art_uri', 'album_artist', 'composer_id',
+        'item_type', 'composer', 'duration', 'can_skip', 'artist_id',
+        'can_play', 'id', 'mime_type', 'description'
+    ]
+    required_fields = [
+        'title', 'item_id', 'album_id', 'mime_type', 'description',
+        'service_id'
+    ]
+
+    def __init__(self, title, item_id, album_id, mime_type, description,
+                 service_id, **kwargs):
+        """Initialize MSTrack item"""
+        content = {'title': title, 'item_id': item_id, 'album_id': album_id,
+                   'mime_type': mime_type, 'description': description,
+                   'service_id': service_id}
+        content.update(kwargs)
+        super(MSTrack, self).__init__(**content)
+
+    @property
+    def didl_metadata(self):
+        """Return the DIDL metadata for a Music Service Track
+
+        The metadata is on the form:
+
+        .. code :: xml
+
+         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+           <item id="00030020...self.item_id..."
+              parentID="0004002c...self.album_id"
+              restricted="true">
+             <dc:title>...self.title...</dc:title>
+             <upnp:class>...self.item_class...</upnp:class>
+             <desc id="cdudn"
+                nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+               SA_RINCON5127_...self.username...
+             </desc>
+           </item>
+         </DIDL-Lite>
+        """
+        # Main element, ugly yes, but I have given up on using namespaces with
+        # xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
+        # Item sub element
+        item_attrib = {
+            'parentID': '0004002c{}'.format(self.album_id),
+            'restricted': 'true',
+            'id': '00030020{}'.format(self.item_id)
+        }
+        item = XML.SubElement(xml, 'item', item_attrib)
+        # Add title and class
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
+        # Add the desc element
+        desc_attrib = {
+            'id': 'cdudn',
+            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
+        }
+        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc.text = self.content['description']
+
+        return xml
+
+    @property
+    def album_id(self):
+        """Return the album id"""
+        return self.content['album_id']
+
+    @property
+    def mime_type(self):
+        """Return the mime type"""
+        return self.content['mime_type']
+
+    @property
+    def uri(self):
+        """Return the uri"""
+        # x-sonos-http:trackid_19356232.mp4?sid=20&amp;flags=32
+        return 'x-sonos-http:{}.{}?sid={}&flags=32'.format(
+            self.item_id,
+            MIME_TYPE_TO_EXTENSION[self.mime_type],
+            self.service_id
+        )
+
+
+class MSAlbum(MusicServiceItem):
+    """Class that represents a Music Service Album"""
+
+    item_class = 'object.container.album.musicAlbum'
+    valid_fields = [
+        'username', 'can_add_to_favorites', 'artist', 'title', 'album_art_uri',
+        'can_play', 'item_type', 'service_id', 'id', 'description'
+    ]
+    required_fields = ['title', 'item_id', 'description', 'service_id']
+
+    def __init__(self, title, item_id, description, service_id, **kwargs):
+        content = {'title': title, 'item_id': item_id,
+                   'description': description, 'service_id': service_id}
+        content.update(kwargs)
+        super(MSAlbum, self).__init__(**content)
+
+    @property
+    def didl_metadata(self):
+        """Return the DIDL metadata for a Music Service Album
+
+        The metadata is on the form:
+
+        .. code :: xml
+
+         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+           <item id="0004002calbumid_22757081"
+                parentID="000d0064artistmainalbumsid_3694795"
+                restricted="true">
+             <dc:title>Aventine</dc:title>
+             <upnp:class>object.container.album.musicAlbum</upnp:class>
+             <desc id="cdudn"
+                  nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+               SA_RINCON5127_...self.username...
+             </desc>
+           </item>
+         </DIDL-Lite>
+
+        """
+        # Main element, ugly yes, but I have given up on using namespaces with
+        # xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
+        # Item sub element
+        item_attrib = {
+            'parentID': '',
+            'restricted': 'true',
+            'id': '0004002c{}'.format(self.item_id)
+        }
+        item = XML.SubElement(xml, 'item', item_attrib)
+        # Add title and class
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
+        # Add the desc element
+        desc_attrib = {
+            'id': 'cdudn',
+            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
+        }
+        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc.text = self.content['description']
+
+        return xml
+
+    @property
+    def uri(self):
+        """Return the uri"""
+        # x-rincon-cpcontainer:0004002calbumid_22757081
+        return 'x-rincon-cpcontainer:0004002c{}'.format(self.item_id)
+
+
+class MSArtist(MusicServiceItem):
+    """Class that represents a music service artist"""
+
+    valid_fields = [
+        'username', 'can_add_to_favorites', 'artist', 'title', 'album_art_uri',
+        'item_type', 'id', 'service_id', 'description'
+    ]
+    # Since MSArtist cannot produce didl_metadata, they are strictly required,
+    # but it makes sense to require them anyway, since that are the fields that
+    # that describe the item
+    required_fields = ['title', 'item_id', 'description', 'service_id']
+
+    def __init__(self, title, item_id, description, service_id, **kwargs):
+        content = {'title': title, 'item_id': item_id,
+                   'description': description, 'service_id': service_id}
+        content.update(kwargs)
+        super(MSArtist, self).__init__(**content)
+
+
+class MSPlaylist(MusicServiceItem):
+    """Class that represents a Music Service Playlist"""
+
+    item_class = 'object.container.albumlist'
+    valid_fields = [
+        'username', 'can_add_to_favorites', 'artist', 'title', 'album_art_uri',
+        'can_play', 'item_type', 'id', 'service_id', 'artist_id',
+        'can_enumerate', 'description'
+    ]
+    required_fields = ['title', 'item_id', 'description', 'service_id']
+
+    def __init__(self, title, item_id, description, service_id, **kwargs):
+        content = {'title': title, 'item_id': item_id,
+                   'description': description, 'service_id': service_id}
+        content.update(kwargs)
+        super(MSPlaylist, self).__init__(**content)
+
+    @property
+    def didl_metadata(self):
+        """Return the DIDL metadata for a Music Service Playlist
+
+        The metadata is on the form:
+
+        .. code :: xml
+
+         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+           <item id="000d006cplaylist_bf148cdf-a69b-4da1-b3a3-d94315abe9a4"
+                parentID="00020064playlistsearch:a"
+                restricted="true">
+             <dc:title>WiMP: &#197;rets mest spillede sange</dc:title>
+             <upnp:class>object.container.albumlist</upnp:class>
+             <desc id="cdudn"
+                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+               SA_RINCON5127_...self.username...
+             </desc>
+           </item>
+         </DIDL-Lite>
+
+
+        """
+        # Main element, ugly yes, but I have given up on using namespaces with
+        # xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
+        # Item sub element
+        item_attrib = {
+            'parentID': '',
+            'restricted': 'true',
+            'id': '000d006c{}'.format(self.item_id)
+        }
+        item = XML.SubElement(xml, 'item', item_attrib)
+        # Add title and class
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
+        # Add the desc element
+        desc_attrib = {
+            'id': 'cdudn',
+            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
+        }
+        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc.text = self.content['description']
+
+        return xml
+
+    @property
+    def uri(self):
+        """Return the uri"""
+        # x-rincon-cpcontainer:000d006cplaylist_bf148cdf-a69b-4da1-b3a3-
+        #d94315abe9a4
+        return 'x-rincon-cpcontainer:000d006c{}'.format(self.item_id)
+
+
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
                       'A:PLAYLISTS': MLPlaylist, 'S:': MLShare}
+
+MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
+                    'albumList': MSPlaylist}
+
+
+MIME_TYPE_TO_EXTENSION = {
+    'audio/aac': 'mp4'
+}
+
+NS = {
+    'dc': 'http://purl.org/dc/elements/1.1/',
+    'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+    '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+    'ms': 'http://www.sonos.com/Services/1.1'
+}

@@ -16,13 +16,12 @@ import socket
 import logging
 import traceback
 import re
-import xml.sax.saxutils
 import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueableItem, QueueItem
+from .data_structures import get_ml_item, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
 
 LOGGER = logging.getLogger(__name__)
@@ -838,8 +837,8 @@ class SoCo(object):  # pylint: disable=R0904
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
                 './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-                item = QueueItem.from_xml(element)
-                queue.append(item)
+            item = QueueItem.from_xml(element)
+            queue.append(item)
 
         return queue
 
@@ -982,7 +981,7 @@ class SoCo(object):  # pylint: disable=R0904
                        'raised a CannotCreateDIDLMetadata exception with the '
                        'following message:\n{0}').format(exception.message)
             raise ValueError(message)
-        metadata = xml.sax.saxutils.escape(metadata).encode('utf-8')
+        metadata = metadata.encode('utf-8')
 
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
