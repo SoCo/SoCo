@@ -42,6 +42,8 @@ def _get_header(soap_action):
     :param soap_action: The soap action to include in the header. Can be either
         'search' or 'get_metadata'
     """
+    # TODO fix accepted encoding. Either form list, fetch from locale settings
+    # or some combination
     header = {'CONNECTION': 'close',
               'ACCEPT-ENCODING': 'gzip',
               'ACCEPT-LANGUAGE': 'da-DK, en-US;q=0.9',
@@ -131,7 +133,7 @@ class Wimp(SoCoPlugin):
 
         :param search_type: The type of search to perform, possible values are:
             'artists', 'albums', 'tracks' and 'playlists'
-        :type seatch_type: str
+        :type search_type: str
         :param search: The search string to use
         :type search: str
         :param start: The starting index of the returned items

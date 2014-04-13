@@ -16,7 +16,6 @@ import socket
 import logging
 import traceback
 import re
-import xml.sax.saxutils
 import requests
 
 from .services import DeviceProperties, ContentDirectory
@@ -835,8 +834,8 @@ class SoCo(object):  # pylint: disable=R0904
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
                 './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-                item = QueueItem.from_xml(element)
-                queue.append(item)
+            item = QueueItem.from_xml(element)
+            queue.append(item)
 
         return queue
 

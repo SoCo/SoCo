@@ -13,7 +13,7 @@ except ImportError:
     import xml.etree.ElementTree as XML
 
 from .exceptions import CannotCreateDIDLMetadata
-from .utils import really_unicode, camel_to_underscore, prettify
+from .utils import really_unicode, camel_to_underscore
 
 
 def ns_tag(ns_id, tag):
@@ -43,6 +43,9 @@ def get_ms_item(xml, service):
 
 
 def tags_with_text(xml, tags=None):
+    """Return a list of tags that contain text retrieved recursively from an
+    XML tree
+    """
     if tags is None:
         tags = []
     for element in xml:
@@ -339,7 +342,7 @@ class MLTrack(MusicLibraryItem):
 
     def __init__(self, uri, title,
                  item_class='object.item.audioItem.musicTrack', **kwargs):
-        """Instantiate the MLTrack item by passing the arguments to the
+        r"""Instantiate the MLTrack item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
         :param uri: The URI for the track
@@ -437,7 +440,7 @@ class MLAlbum(MusicLibraryItem):
 
     def __init__(self, uri, title,
                  item_class='object.container.album.musicAlbum', **kwargs):
-        """Instantiate the MLAlbum item by passing the arguments to the
+        r"""Instantiate the MLAlbum item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
         :param uri: The URI for the alum
@@ -671,7 +674,7 @@ class QueueItem(MusicInfoItem):
 
     def __init__(self, uri, title,
                  item_class="object.item.audioItem.musicTrack", **kwargs):
-        """Instantiate the QueueItem by passing the arguments to the super
+        r"""Instantiate the QueueItem by passing the arguments to the super
         class :py:meth:`.MusicInfoItem.__init__`.
 
         :param uri: The URI for the queue item
@@ -743,12 +746,6 @@ class QueueItem(MusicInfoItem):
     def to_dict(self):
         """Get the dict representation of the instance."""
         return self.content
-
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Return the id
-        """
-        return self._item_id
 
     @property
     def didl_metadata(self):
