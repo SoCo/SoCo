@@ -206,7 +206,7 @@ class MusicLibraryItem(MusicInfoItem):
     @property
     def to_dict(self):
         """Get the dict representation of the instance."""
-        return self.content
+        return self.content.copy()
 
     @property
     def item_id(self):  # pylint: disable=C0103
@@ -745,7 +745,7 @@ class QueueItem(MusicInfoItem):
     @property
     def to_dict(self):
         """Get the dict representation of the instance."""
-        return self.content
+        return self.content.copy()
 
     @property
     def didl_metadata(self):
