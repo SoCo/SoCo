@@ -12,6 +12,7 @@ __license__ = 'MIT License'
 
 from .core import SonosDiscovery, SoCo
 from .exceptions import SoCoException, UnknownSoCoException
+from .events import Events
 
 __all__ = ['SonosDiscovery', 'SoCo', 'SoCoException', 'UnknownSoCoException']
 

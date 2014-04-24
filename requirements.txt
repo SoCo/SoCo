@@ -1,2 +1,5 @@
 requests
 colorama
+gevent
+lxml
+HTMLParser
