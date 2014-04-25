@@ -15,6 +15,7 @@ import select
 import socket
 import logging
 import traceback
+from textwrap import dedent
 import re
 import requests
 
@@ -27,50 +28,122 @@ from .utils import really_unicode, really_utf8, camel_to_underscore
 LOGGER = logging.getLogger(__name__)
 
 
-class SonosDiscovery(object):  # pylint: disable=R0903
-    """A simple class for discovering Sonos speakers.
+def discover():
+    """ Discover Sonos zones on the local network.
 
-    Public functions:
-    get_speaker_ips -- Get a list of IPs of all zoneplayers.
+    Return an iterator providing SoCo instances for each zone found.
+
+    """
+    PLAYER_SEARCH = dedent("""\
+        M-SEARCH * HTTP/1.1
+        HOST: 239.255.255.250:reservedSSDPport
+        MAN: ssdp:discover
+        MX: 1
+        ST: urn:schemas-upnp-org:device:ZonePlayer:1
+        """)
+    MCAST_GRP = "239.255.255.250"
+    MCAST_PORT = 1900
+
+    _sock = socket.socket(
+        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+
+    while True:
+        response, _, _ = select.select([_sock], [], [], 1)
+        if response:
+            data, addr = _sock.recvfrom(2048)
+            # Look for the model in parentheses in a line like this
+            # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
+            search = re.search(br'SERVER.*\((.*)\)', data)
+            try:
+                model = really_unicode(search.group(1))
+            except AttributeError:
+                model = None
+
+            # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
+            # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
+            # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
+            # If it's the bridge, then it's not a speaker and shouldn't
+            # be returned
+            if (model and model != "BR100"):
+                soco = SoCo(addr[0])
+                yield soco
+        else:
+            break
+
+
+class SonosDiscovery(object):  # pylint: disable=R0903
+    """Retained for backward compatibility only. Will be removed in future
+    releases
+
+    .. deprecated:: 0.7
+       Use :func:`discover` instead.
 
     """
 
     def __init__(self):
-        self._sock = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self._sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+        import warnings
+        warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
 
     def get_speaker_ips(self):
-        """ Get a list of ips for Sonos devices that can be controlled """
-        speakers = []
-        self._sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-
-        while True:
-            response, _, _ = select.select([self._sock], [], [], 1)
-            if response:
-                data, addr = self._sock.recvfrom(2048)
-                # Look for the model in parentheses in a line like this
-                # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-                search = re.search(br'SERVER.*\((.*)\)', data)
-                try:
-                    model = really_unicode(search.group(1))
-                except AttributeError:
-                    model = None
-
-                # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
-                # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
-                # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
-                # If it's the bridge, then it's not a speaker and shouldn't
-                # be returned
-                if (model and model != "BR100"):
-                    speakers.append(addr[0])
-            else:
-                break
-        return speakers
+        import warnings
+        warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
+        return [i.ip_address for i in discover()]
 
 
-class SoCo(object):  # pylint: disable=R0904
-    """A simple class for controlling a Sonos speaker
+class _ArgsSingleton(type):
+    """ A metaclass which permits only a single instance of each derived class
+    to exist for any given set of positional arguments.
+
+    Attempts to instantiate a second instance of a derived class will return
+    the existing instance.
+
+    For example:
+
+    >>> class ArgsSingletonBase(object):
+    ...     __metaclass__ = _ArgsSingleton
+    ...
+    >>> class First(ArgsSingletonBase):
+    ...     def __init__(self, param):
+    ...         pass
+    ...
+    >>> assert First('hi') is First('hi')
+    >>> assert First('hi') is First('bye')
+    AssertionError
+
+     """
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = {}
+        if args not in cls._instances[cls]:
+            cls._instances[cls][args] = super(_ArgsSingleton, cls).__call__(
+                *args, **kwargs)
+        return cls._instances[cls][args]
+
+
+class _SocoSingletonBase(_ArgsSingleton(str('ArgsSingletonMeta'),
+                        (object,), {})):
+    """ The base class for the SoCo class.
+
+    Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
+    here: http://www.artima.com/weblogs/viewpost.jsp?thread=236234 and
+    here: http://mikewatkins.ca/2008/11/29/python-2-and-3-metaclasses/
+
+    """
+    pass
+
+
+class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
+    """A simple class for controlling a Sonos speaker.
+
+    For any given set of arguments to __init__, only one instance of this class
+    may be created. Subsequent attempts to create an instance with the same
+    arguments will return the previously created instance. This means that all
+    SoCo instances created with the same ip address are in fact the *same* SoCo
+    instance, reflecting the real world position.
 
     Public functions::
 
@@ -134,15 +207,27 @@ class SoCo(object):  # pylint: disable=R0904
     # Stores the topology of all Zones in the network
     topology = {}
 
-    def __init__(self, speaker_ip):
+    def __init__(self, ip_address):
+        # Check if ip_address is a valid IPv4 representation.
+        # Sonos does not (yet) support IPv6
+        try:
+            socket.inet_aton(ip_address)
+        except socket.error:
+            raise ValueError("Not a valid IP address string")
         #: The speaker's ip address
-        self.speaker_ip = speaker_ip
+        self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
         self.deviceProperties = DeviceProperties(self)
         self.contentDirectory = ContentDirectory(self)
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
+
+    def __str__(self):
+        return "<SoCo object at ip {}>".format(self.ip_address)
+
+    def __repr__(self):
+        return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
 
     @property
     def player_name(self):
@@ -184,6 +269,19 @@ class SoCo(object):  # pylint: disable=R0904
             ('InstanceID', 0),
             ('NewPlayMode', playmode)
             ])
+
+    @property
+    def speaker_ip(self):
+        """Retained for backward compatibility only. Will be removed in future
+        releases
+
+        .. deprecated:: 0.7
+           Use :attr:`ip_address` instead.
+
+        """
+        import warnings
+        warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
+        return self.ip_address
 
     def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
@@ -471,7 +569,7 @@ class SoCo(object):  # pylint: disable=R0904
         return_status = True
         # loop through all IP's in topology and make them join this master
         for ip in ips:  # pylint: disable=C0103
-            if not (ip == self.speaker_ip):
+            if not (ip == self.ip_address):
                 slave = SoCo(ip)
                 ret = slave.join(master_speaker_info["uid"])
                 if ret is False:
@@ -647,7 +745,7 @@ class SoCo(object):  # pylint: disable=R0904
                 if url.startswith(('http:', 'https:')):
                     track['album_art'] = url
                 else:
-                    track['album_art'] = 'http://' + self.speaker_ip + ':1400'\
+                    track['album_art'] = 'http://' + self.ip_address + ':1400'\
                         + url
 
         return track
@@ -666,7 +764,7 @@ class SoCo(object):  # pylint: disable=R0904
         if self.speaker_info and refresh is False:
             return self.speaker_info
         else:
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/zp')
             dom = XML.fromstring(response.content)
 
@@ -730,7 +828,7 @@ class SoCo(object):  # pylint: disable=R0904
         """
         if not self.topology or refresh:
             self.topology = {}
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/topology')
             dom = XML.fromstring(really_utf8(response.content))
             for player in dom.find('ZonePlayers'):
@@ -761,7 +859,7 @@ class SoCo(object):  # pylint: disable=R0904
         if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
-            response = requests.get('http://' + self.speaker_ip +
+            response = requests.get('http://' + self.ip_address +
                                     ':1400/status/topology')
             text = response.text
             grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)
@@ -1103,15 +1201,6 @@ class SoCo(object):  # pylint: disable=R0904
 
 
 # definition section
-
-PLAYER_SEARCH = """M-SEARCH * HTTP/1.1
-HOST: 239.255.255.250:reservedSSDPport
-MAN: ssdp:discover
-MX: 1
-ST: urn:schemas-upnp-org:device:ZonePlayer:1"""
-
-MCAST_GRP = "239.255.255.250"
-MCAST_PORT = 1900
 
 RADIO_STATIONS = 0
 RADIO_SHOWS = 1
