@@ -185,12 +185,12 @@ class Service(object):
         """
         if args is None:
             args = []
-        l = ["<{name}>{value}</{name}>".format(
+        tag = ["<{name}>{value}</{name}>".format(
             name=name, value=escape("%s" % value, {'"': "&quot;"}))
             for name, value in args]  # % converts to unicode because we are
         # using unicode literals. Avoids use of 'unicode' function which does
         # not exist in python 3
-        xml = "".join(l)
+        xml = "".join(tag)
         return xml
 
     def unwrap_arguments(self, xml_response):
