@@ -107,8 +107,8 @@ class _ArgsSingleton(type):
     ...     def __init__(self, param):
     ...         pass
     ...
-    >>> assert First('hi') == First('hi')
-    >>> assert First('hi') == First('bye')
+    >>> assert First('hi') is First('hi')
+    >>> assert First('hi') is First('bye')
     AssertionError
 
      """
@@ -140,7 +140,9 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     For any given set of arguments to __init__, only one instance of this class
     may be created. Subsequent attempts to create an instance with the same
-    arguments will return the previously created instance.
+    arguments will return the previously created instance. This means that all
+    SoCo instances created with the same ip address are in fact the *same* SoCo
+    instance, reflecting the real world position.
 
     Public functions::
 
@@ -220,8 +222,11 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
 
+    def __str__(self):
+        return "<SoCo object at ip {}>".format(self.ip_address)
+
     def __repr__(self):
-        return "SoCo object at ip {}".format(self.ip_address)
+        return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
 
     @property
     def player_name(self):
@@ -263,6 +268,19 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
             ('InstanceID', 0),
             ('NewPlayMode', playmode)
             ])
+
+    @property
+    def speaker_ip(self):
+        """Retained for backward compatibility only. Will be removed in future
+        releases
+
+        .. deprecated:: 0.7
+           Use :attr:`ip_address` instead.
+
+        """
+        import warnings
+        warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
+        return self.ip_address
 
     def play_from_queue(self, queue_index):
         """ Play an item from the queue. The track number is required as an
