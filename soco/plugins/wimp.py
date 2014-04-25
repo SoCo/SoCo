@@ -142,7 +142,7 @@ class Wimp(SoCoPlugin):
         :type max_items: int
         """
         # Check input
-        if not search_type in ['artists', 'albums', 'tracks', 'playlists']:
+        if search_type not in ['artists', 'albums', 'tracks', 'playlists']:
             message = 'The requested search {} is not valid'\
                 .format(search_type)
             raise ValueError(message)

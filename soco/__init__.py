@@ -13,7 +13,12 @@ __license__ = 'MIT License'
 from .core import discover, SoCo, SonosDiscovery
 from .exceptions import SoCoException, UnknownSoCoException
 
-__all__ = ['discover', 'SonosDiscovery', 'SoCo', 'SoCoException', 'UnknownSoCoException']
+__all__ = [
+    'discover',
+    'SonosDiscovery',
+    'SoCo',
+    'SoCoException',
+    'UnknownSoCoException']
 
 # http://docs.python.org/2/howto/logging.html#library-config
 # Avoids spurious error messages if no logger is configured by the user
