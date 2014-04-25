@@ -46,4 +46,3 @@ class ExamplePlugin(SoCoPlugin):
 
         print('Bye,', self.username)
         self.soco.stop()
-
