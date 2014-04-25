@@ -314,8 +314,8 @@ class Service(object):
             # content will be a SOAP Fault. Parse it and raise an error.
             try:
                 self.handle_upnp_error(response.text)
-            except Exception as e:
-                log.exception(e.message)
+            except Exception as exc:
+                log.exception(exc.message)
                 raise
         else:
             # Something else has gone wrong. Probably a network error. Let
