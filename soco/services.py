@@ -38,7 +38,6 @@ from __future__ import unicode_literals
 # Python 3 compatibility
 
 
-
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
@@ -188,7 +187,7 @@ class Service(object):
             args = []
         l = ["<{name}>{value}</{name}>".format(
             name=name, value=escape("%s" % value, {'"': "&quot;"}))
-            for name, value in args] # % converts to unicode because we are 
+            for name, value in args]  # % converts to unicode because we are
             # using unicode literals. Avoids use of 'unicode' function which
             # does not exist in python 3
         xml = "".join(l)

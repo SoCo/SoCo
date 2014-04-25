@@ -177,12 +177,13 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         add_to_queue -- Add a track to the end of the queue
         remove_from_queue -- Remove a track from the queue
         clear_queue -- Remove all tracks from queue
-        get_favorite_radio_shows -- Get favorite radio shows from Sonos' Radio app.
+        get_favorite_radio_shows -- Get favorite radio shows from Sonos'
+                                    Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
-        get_group_coordinator -- Get the coordinator for a grouped collection of
-                                 Sonos units.
-        get_speakers_ip -- Get the IP addresses of all the Sonos speakers in the
-                           network.
+        get_group_coordinator -- Get the coordinator for a grouped
+                                 collection of Sonos units.
+        get_speakers_ip -- Get the IP addresses of all the Sonos
+                           speakers in the network.
 
     Properties::
 
@@ -799,7 +800,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         """
         coord_ip = None
         coord_uuid = None
-        zgroups =  self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        zgroups = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
         XMLtree = XML.fromstring(really_utf8(zgroups))
 
         for grp in XMLtree:

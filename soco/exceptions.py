@@ -21,7 +21,7 @@ class SoCoUPnPException(SoCoException):
         self.error_code = error_code
         self.error_description = error_description
         self.error_xml = error_xml
-        
+
     def __str__(self):
         return self.message
 
