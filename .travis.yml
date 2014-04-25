@@ -1,0 +1,13 @@
+language: python
+python:
+  - "2.7"
+  - "3.2"
+  - "3.3"
+
+install:
+  - pip install -r requirements.txt
+  - pip install -r requirements-dev.txt
+
+script:
+  - python -m pytest unittest/test_services.py
+  - python -m pytest unittest/test_data_structures.py
