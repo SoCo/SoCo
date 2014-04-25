@@ -511,8 +511,7 @@ class SoCo(object):  # pylint: disable=R0904
         """
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
-            ('InstanceID', 0),
-            ('Speed', '1')
+            ('InstanceID', 0)
             ])
 
     def switch_to_line_in(self):
