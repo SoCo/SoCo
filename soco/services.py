@@ -50,7 +50,7 @@ import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 
-log = logging.getLogger(__name__) # pylint: disable-msg=C0103
+log = logging.getLogger(__name__)  # pylint: disable-msg=C0103
 # logging.basicConfig()
 # log.setLevel(logging.INFO)
 
