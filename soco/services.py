@@ -50,9 +50,9 @@ import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 # logging.basicConfig()
-# log.setLevel(logging.INFO)
+# logger.setLevel(logging.INFO)
 
 Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
@@ -93,7 +93,7 @@ class Service(object):
         self.control_url = '/{}/Control'.format(self.service_type)
         # Service control protocol description
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
-        log.debug(
+        logger.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
             self.control_url)
@@ -163,7 +163,7 @@ class Service(object):
         # Now we have a bound method, we cache it on this instance, so that
         # next time we don't have to go through this again
         setattr(self, action, method)
-        log.debug("Dispatching method %s", action)
+        logger.debug("Dispatching method %s", action)
 
         # return our new bound method, which will be called by Python
         return method
@@ -294,18 +294,18 @@ class Service(object):
         """
 
         headers, body = self.build_command(action, args)
-        log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
-        log.debug("Sending %s, %s", headers, prettify(body))
+        logger.info("Sending %s %s to %s", action, args, self.soco.ip_address)
+        logger.debug("Sending %s, %s", headers, prettify(body))
         response = requests.post(
             self.base_url + self.control_url, headers=headers, data=body)
-        log.debug("Received %s, %s", response.headers, response.text)
+        logger.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
             result = self.unwrap_arguments(response.text) or True
-            log.info(
+            logger.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result
         elif status == 500:
@@ -315,7 +315,7 @@ class Service(object):
             try:
                 self.handle_upnp_error(response.text)
             except Exception as e:
-                log.exception(e.message)
+                logger.exception(e.message)
                 raise
         else:
             # Something else has gone wrong. Probably a network error. Let
@@ -364,7 +364,7 @@ class Service(object):
         # NB need to encode unicode strings before passing to ElementTree
         xml_error = xml_error.encode('utf-8')
         error = XML.fromstring(xml_error)
-        log.debug("Error %s", xml_error)
+        logger.debug("Error %s", xml_error)
         error_code = error.findtext(
             './/{urn:schemas-upnp-org:control-1-0}errorCode')
         if error_code is not None:
@@ -378,7 +378,7 @@ class Service(object):
                 )
         else:
             # Unknown error, so just return the entire response
-            log.error("Unknown error received from %s", self.soco.ip_address)
+            logger.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
     def iter_actions(self):
