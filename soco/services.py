@@ -402,9 +402,9 @@ class Service(object):
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
-        for s in statevars:
-            name = s.findtext('{}name'.format(ns))
-            vartypes[name] = s.findtext('{}dataType'.format(ns))
+        for state in statevars:
+            name = state.findtext('{}name'.format(ns))
+            vartypes[name] = state.findtext('{}dataType'.format(ns))
         # find all the actions
         actions = tree.iterfind('.//{}action'.format(ns))
         for i in actions:
@@ -412,10 +412,10 @@ class Service(object):
             args_iter = i.iterfind('.//{}argument'.format(ns))
             in_args = []
             out_args = []
-            for a in args_iter:
-                arg_name = a.findtext('{}name'.format(ns))
-                direction = a.findtext('{}direction'.format(ns))
-                related_variable = a.findtext(
+            for arg in args_iter:
+                arg_name = arg.findtext('{}name'.format(ns))
+                direction = arg.findtext('{}direction'.format(ns))
+                related_variable = arg.findtext(
                     '{}relatedStateVariable'.format(ns))
                 vartype = vartypes[related_variable]
                 if direction == "in":
