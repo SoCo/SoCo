@@ -124,8 +124,8 @@ class _ArgsSingleton(type):
         return cls._instances[cls][args]
 
 
-class _SocoSingletonBase(_ArgsSingleton(str('ArgsSingletonMeta'),
-                        (object,), {})):
+class _SocoSingletonBase(
+        _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
     """ The base class for the SoCo class.
 
     Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
@@ -263,7 +263,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     def play_mode(self, playmode):
         modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
-        if not playmode in modes:
+        if playmode not in modes:
             raise KeyError('invalid play mode')
 
         self.avTransport.SetPlayMode([
@@ -350,7 +350,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
             ])
-            # The track is enqueued, now play it.
+        # The track is enqueued, now play it.
         return self.play()
 
     def pause(self):
@@ -806,13 +806,13 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         for grp in XMLtree:
             for zone in grp:
                 if zone_name == zone.attrib['ZoneName']:
-                    #find UUID of coordinator
+                    # find UUID of coordinator
                     coord_uuid = grp.attrib['Coordinator']
 
         for grp in XMLtree:
             for zone in grp:
                 if coord_uuid == zone.attrib['UUID']:
-                    #find IP of coordinator UUID for this group
+                    # find IP of coordinator UUID for this group
                     coord_ip = zone.attrib['Location'].\
                         split('//')[1].split(':')[0]
 

@@ -51,8 +51,8 @@ from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 
 log = logging.getLogger(__name__)
-#logging.basicConfig()
-#log.setLevel(logging.INFO)
+# logging.basicConfig()
+# log.setLevel(logging.INFO)
 
 Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
@@ -188,8 +188,8 @@ class Service(object):
         l = ["<{name}>{value}</{name}>".format(
             name=name, value=escape("%s" % value, {'"': "&quot;"}))
             for name, value in args]  # % converts to unicode because we are
-            # using unicode literals. Avoids use of 'unicode' function which
-            # does not exist in python 3
+        # using unicode literals. Avoids use of 'unicode' function which does
+        # not exist in python 3
         xml = "".join(l)
         return xml
 
@@ -320,7 +320,7 @@ class Service(object):
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
-            #raise Exception('OOPS')
+            # raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
