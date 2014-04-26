@@ -38,7 +38,6 @@ from __future__ import unicode_literals
 # Python 3 compatibility
 
 
-
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
@@ -51,9 +50,9 @@ import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 
-log = logging.getLogger(__name__)
-#logging.basicConfig()
-#log.setLevel(logging.INFO)
+log = logging.getLogger(__name__)  # pylint: disable=C0103
+# logging.basicConfig()
+# log.setLevel(logging.INFO)
 
 Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
@@ -186,12 +185,12 @@ class Service(object):
         """
         if args is None:
             args = []
-        l = ["<{name}>{value}</{name}>".format(
+        tag = ["<{name}>{value}</{name}>".format(
             name=name, value=escape("%s" % value, {'"': "&quot;"}))
-            for name, value in args] # % converts to unicode because we are 
-            # using unicode literals. Avoids use of 'unicode' function which
-            # does not exist in python 3
-        xml = "".join(l)
+            for name, value in args]  # % converts to unicode because we are
+        # using unicode literals. Avoids use of 'unicode' function which does
+        # not exist in python 3
+        xml = "".join(tag)
         return xml
 
     def unwrap_arguments(self, xml_response):
@@ -315,13 +314,13 @@ class Service(object):
             # content will be a SOAP Fault. Parse it and raise an error.
             try:
                 self.handle_upnp_error(response.text)
-            except Exception as e:
-                log.exception(e.message)
+            except Exception as exc:
+                log.exception(exc.message)
                 raise
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
-            #raise Exception('OOPS')
+            # raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
@@ -403,9 +402,9 @@ class Service(object):
         # parse the state variables to get the relevant variable types
         statevars = tree.iterfind('.//{}stateVariable'.format(ns))
         vartypes = {}
-        for s in statevars:
-            name = s.findtext('{}name'.format(ns))
-            vartypes[name] = s.findtext('{}dataType'.format(ns))
+        for state in statevars:
+            name = state.findtext('{}name'.format(ns))
+            vartypes[name] = state.findtext('{}dataType'.format(ns))
         # find all the actions
         actions = tree.iterfind('.//{}action'.format(ns))
         for i in actions:
@@ -413,10 +412,10 @@ class Service(object):
             args_iter = i.iterfind('.//{}argument'.format(ns))
             in_args = []
             out_args = []
-            for a in args_iter:
-                arg_name = a.findtext('{}name'.format(ns))
-                direction = a.findtext('{}direction'.format(ns))
-                related_variable = a.findtext(
+            for arg in args_iter:
+                arg_name = arg.findtext('{}name'.format(ns))
+                direction = arg.findtext('{}direction'.format(ns))
+                related_variable = arg.findtext(
                     '{}relatedStateVariable'.format(ns))
                 vartype = vartypes[related_variable]
                 if direction == "in":

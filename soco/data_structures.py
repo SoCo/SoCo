@@ -884,7 +884,7 @@ class MusicServiceItem(MusicInfoItem):
         for item in all_text_elements:
             tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
-            if not tag in cls.valid_fields:
+            if tag not in cls.valid_fields:
                 message = 'The info tag \'{}\' is not allowed for this item'.\
                     format(tag)
                 raise ValueError(message)
@@ -902,7 +902,7 @@ class MusicServiceItem(MusicInfoItem):
 
         # Check for all required values
         for key in cls.required_fields:
-            if not key in content:
+            if key not in content:
                 message = 'An XML field that correspond to the key \'{}\' is '\
                     'required. See the docstring for help.'.format(key)
 
@@ -1211,7 +1211,7 @@ class MSPlaylist(MusicServiceItem):
     def uri(self):
         """Return the uri"""
         # x-rincon-cpcontainer:000d006cplaylist_bf148cdf-a69b-4da1-b3a3-
-        #d94315abe9a4
+        # d94315abe9a4
         return 'x-rincon-cpcontainer:000d006c{}'.format(self.item_id)
 
 
