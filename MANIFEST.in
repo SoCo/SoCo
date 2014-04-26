@@ -1,3 +1,3 @@
 include requirements.txt
 include requirements-dev.txt
-include README.md AUTHORS.rst LICENSE.rst
+include README.rst AUTHORS.rst LICENSE.rst
