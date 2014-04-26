@@ -13,6 +13,8 @@ For more background on the project, please see Rahim's `blog post
 Installation
 ------------
 
+SoCo requires Python 2.7, or 3.2 or newer.
+
 Use pip:
 
 ``pip install soco``
