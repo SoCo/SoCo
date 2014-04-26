@@ -288,6 +288,8 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         """ Play a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
 
+        index: the index of the track to play; first item in the queue is 0
+
         Returns:
         True if the Sonos speaker successfully started playing the track.
 
@@ -1101,6 +1103,8 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     def remove_from_queue(self, index):
         """ Remove a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
+
+        index: the index of the track to remove; first item in the queue is 0
 
         Returns:
             True if the Sonos speaker successfully removed the track
