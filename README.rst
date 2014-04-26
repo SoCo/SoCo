@@ -3,8 +3,8 @@ SoCo
 
 SoCo  (Sonos  Controller)   is  a  simple  Python  class  that   allows  you  to
 programmatically control `Sonos speakers`_. It  was originally created at `Music
-Hack Day Sydney`_ by `Rahim Sonawalla`_ and  is now developed by a :doc:`team of
-people <AUTHORS>` at its `GitHub repository`_
+Hack Day Sydney`_ by `Rahim Sonawalla`_ and  is now developed by a `team of
+people`_ at its `GitHub repository`_
 
 For  more  background  on  the  project,  please  see  his  `related  blog  post
 <http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/>`_.
@@ -179,5 +179,5 @@ SoCo is released under the `MIT license`_.
 .. _MIT license: http://www.opensource.org/licenses/mit-license.php
 .. _Rahim Sonawalla: https://github.com/rahims/SoCo
 .. _GitHub repository: https:github.com/SoCo/SoCo
-
+.. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
 
