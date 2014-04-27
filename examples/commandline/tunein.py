@@ -49,14 +49,14 @@ if __name__ == '__main__':
         stations = mySonos.get_favorite_radio_stations(preset, limit)
         print 'returned %s of a possible %s radio stations:' % (
             stations['returned'], stations['total'])
-    for fave in stations['favorites']:
-        print fave['title']
-        uri = fave['uri']
+    for station in stations['favorites']:
+        print station['title']
+        uri = station['uri']
         # TODO seems at least & needs to be escaped - should move this to
         # play_uri and maybe escape other chars.
         uri = uri.replace('&', '&amp;')
 
-        metadata = meta_template.format(title=fave['title'], service=tunein_service)
+        metadata = meta_template.format(title=station['title'], service=tunein_service)
 
         print mySonos.play_uri(uri, metadata)
 
