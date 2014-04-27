@@ -148,6 +148,7 @@ SoCo supports the following controls amongst others:
    play a specific song from it)
 -  Get the saved favorite radio stations and shows (title and stream
    URI)
+-  Search for and play item from your music library
 
 SoCo also supports lower level access from Python to all Sonos services (eg
 Alarms)
