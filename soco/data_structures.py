@@ -632,16 +632,6 @@ class MLSonosPlaylist(MusicLibraryItem):
         """
         MusicLibraryItem.__init__(self, uri, title, item_class)
 
-    @property
-    def item_id(self): #pylint: disable=C0103
-        """ Returns the id. """
-        out = self.content['uri']
-        if 'x-file-cids' in out:
-            out = out.replace('x-file-cifs', 'S')
-        else:
-            out = None
-        return out
-
 
 class MLShare(MusicLibraryItem):
     """Class that represents a music library share.
