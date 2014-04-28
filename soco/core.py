@@ -980,6 +980,14 @@ class SoCo(_SocoSingletonBase):
 
         return queue
 
+    def get_sonos_playlists(self, start=0, max_items=100):
+        """ Convenience method for: get_music_library_information('sonos_playlists')
+        Refer to the docstring for that method
+
+        """
+        out = self.get_music_library_information('sonos_playlists')
+        return out
+
     def get_artists(self, start=0, max_items=100):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
@@ -1089,7 +1097,8 @@ class SoCo(_SocoSingletonBase):
                               'album_artists': 'A:ALBUMARTIST',
                               'albums': 'A:ALBUM', 'genres': 'A:GENRE',
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
-                              'playlists': 'A:PLAYLISTS', 'share': 'S:'}
+                              'playlists': 'A:PLAYLISTS', 'share': 'S:',
+                              'sonos_playlists': 'SQ:'}
         search = search_translation[search_type]
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
