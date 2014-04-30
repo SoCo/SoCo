@@ -16,6 +16,7 @@ import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
+from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
@@ -554,6 +555,80 @@ class SoCo(_SocoSingletonBase):
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
             ])
+
+    @property
+    def all_groups(self):
+        """ Obtain and parse Group topology information
+
+        Return an iterable over all the available groups"""
+
+# zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like this:
+#
+# <ZoneGroups>
+#   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+#     <ZoneGroupMember
+#         BootSeq="33"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:zoneextender"
+#         Invisible="1"
+#         IsZoneBridge="1"
+#         Location="http://192.168.1.100:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000ZZZ1400"
+#         ZoneName="BRIDGE"/>
+#   </ZoneGroup>
+#   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
+#     <ZoneGroupMember
+#         BootSeq="44"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:living"
+#         Location="http://192.168.1.101:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000XXX1400"
+#         ZoneName="Living Room"/>
+#     <ZoneGroupMember
+#         BootSeq="52"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:kitchen"
+#         Location="http://192.168.1.102:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000YYY1400"
+#         ZoneName="Kitchen"/>
+#   </ZoneGroup>
+# </ZoneGroups>
+#
+
+        zgs = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        tree = XML.fromstring(zgs.encode('utf-8'))
+        for group_element in tree.iter('ZoneGroup'):
+            coordinator_uid = group_element.attrib['Coordinator']
+            uid = group_element.attrib['ID']
+            members = set()
+            for member_element in group_element.iter('ZoneGroupMember'):
+                ip_addr = member_element.attrib['Location'].\
+                    split('//')[1].split(':')[0]
+                zone = SoCo(ip_addr)
+                if member_element.attrib['UUID'] == coordinator_uid:
+                    coordinator = zone
+                members.add(zone)
+            yield ZoneGroup(uid, coordinator, members)
+
+    @property
+    def group(self):
+        """The Zone Group of which this device is a member.
+
+        group will be None if this zone is a slave in a stereo pair."""
+        current_group_id = self.zoneGroupTopology.GetZoneGroupAttributes()[
+            'CurrentZoneGroupID']
+        if current_group_id:
+            for group in self.all_groups:
+                if group.uid == current_group_id:
+                    return group
+        else:
+            return None
 
     def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party
