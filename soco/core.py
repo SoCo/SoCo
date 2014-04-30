@@ -206,8 +206,6 @@ class SoCo(_SocoSingletonBase):
     """
     # Stores the IP addresses of all the speakers in a network
     speakers_ip = []
-    # Stores the topology of all Zones in the network
-    topology = {}
 
     def __init__(self, ip_address):
         super(SoCo, self).__init__()
@@ -831,33 +829,6 @@ class SoCo(_SocoSingletonBase):
                         split('//')[1].split(':')[0]
 
         return coord_ip
-
-    def __get_topology(self, refresh=False):
-        """ Gets the topology if it is not already available or if refresh=True
-
-        Code contributed by Aaron Daubman (daubman@gmail.com)
-
-        Arguments:
-        refresh -- Refresh the topology cache
-
-        """
-        if not self.topology or refresh:
-            self.topology = {}
-            response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/topology')
-            dom = XML.fromstring(really_utf8(response.content))
-            for player in dom.find('ZonePlayers'):
-                if player.text not in self.topology:
-                    self.topology[player.text] = {}
-                self.topology[player.text]['group'] = \
-                    player.attrib.get('group')
-                self.topology[player.text]['uuid'] = player.attrib.get('uuid')
-                self.topology[player.text]['coordinator'] = \
-                    (player.attrib.get('coordinator') == 'true')
-                # Split the IP out of the URL returned in location
-                # e.g. return '10.1.1.1' from 'http://10.1.1.1:1400/...'
-                self.topology[player.text]['ip'] = \
-                    player.attrib.get('location').split('//')[1].split(':')[0]
 
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
