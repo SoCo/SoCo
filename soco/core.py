@@ -904,16 +904,11 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         return playstate
 
     def get_queue(self, start=0, max_items=100):
-        """ Get information about the queue.
+        """ Get information about the queue
 
-        Returns:
-        A list containing a dictionary for each track in the queue. The track
-        dictionary contains the following information about the track: title,
-        artist, album, album_art, uri
-
-        If we're unable to return data for a field, we'll return an empty
-        list. This can happen for all kinds of reasons so be sure to check
-        values.
+        :param start: Starting number of returned matches
+        :param max_items: Maximum number of returned matches
+        :returns: A list of :py:class:`~.soco.data_structures.QueueItem`.
 
         This method is heavly based on Sam Soffes (aka soffes) ruby
         implementation
@@ -941,17 +936,18 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         return queue
 
     def get_artists(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('artists')
-        Refer to the docstring for that method
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='artists'`. For details on remaining arguments refer
+        to the docstring for that method.
 
         """
         out = self.get_music_library_information('artists', start, max_items)
         return out
 
     def get_album_artists(self, start=0, max_items=100):
-        """ Convinience method for:
-        get_music_library_information('album_artists')
-        Refer to the docstring for that method
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='album_artists'`. For details on remaining arguments
+        refer to the docstring for that method.
 
         """
         out = self.get_music_library_information('album_artists',
@@ -959,42 +955,48 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         return out
 
     def get_albums(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('albums')
-        Refer to the docstring for that method
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='albums'`. For details on remaining arguments refer
+        to the docstring for that method.
 
         """
         out = self.get_music_library_information('albums', start, max_items)
         return out
 
     def get_genres(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('genres')
-        Refer to the docstring for that method.
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='genres'`. For details on remaining arguments refer
+        to the docstring for that method.
 
         """
         out = self.get_music_library_information('genres', start, max_items)
         return out
 
     def get_composers(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('composers')
-        Refer to the docstring for that method
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='composers'`. For details on remaining arguments
+        refer to the docstring for that method.
 
         """
         out = self.get_music_library_information('composers', start, max_items)
         return out
 
     def get_tracks(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('tracks')
-        Refer to the docstring for that method
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='tracks'`. For details on remaining arguments refer
+        to the docstring for that method.
 
         """
         out = self.get_music_library_information('tracks', start, max_items)
         return out
 
     def get_playlists(self, start=0, max_items=100):
-        """ Convinience method for: get_music_library_information('playlists')
-        Refer to the docstring for that method. NOTE: The playlists that are
-        referred to here are the playlist (files) imported from the music
-        library, they are not the Sonos playlists.
+        """ Convinience method for :py:meth:`get_music_library_information`
+        with `search_type='playlists'`. For details on remaining arguments
+        refer to the docstring for that method.
+
+        NOTE: The playlists that are referred to here are the playlist (files)
+        imported from the music library, they are not the Sonos playlists.
 
         """
         out = self.get_music_library_information('playlists', start, max_items)
@@ -1004,28 +1006,33 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
                                       max_items=100):
         """ Retrieve information about the music library
 
-        Arguments:
-        search      The kind of information to retrieve. Can be one of:
-                    'artists', 'album_artists', 'albums', 'genres', 'composers'
-                    'tracks', 'share' and 'playlists', where playlists are the
-                    imported file based playlists from the music library
-        start       starting number of returned matches
-        max_items   maximum number of returned matches. NOTE: The maximum
-                    may be restricted by the unit, presumably due to transfer
-                    size consideration, so check the returned number against
-                    the requested.
-
-        Returns a dictionary with metadata for the search, with the keys
-        'number_returned', 'update_id', 'total_matches' and an 'item' list with
-        the search results. The search results are instances of one of the
-        subclasses of MusicLibraryItem depending on the search class. See the
-        docs for those class for the details on the available information.
+        :param search_type: The kind of information to retrieve. Can be one of:
+            'artists', 'album_artists', 'albums', 'genres', 'composers',
+            'tracks', 'share' and 'playlists', where playlists are the imported
+            file based playlists from the music library
+        :param start: Starting number of returned matches
+        :param max_items: Maximum number of returned matches. NOTE: The maximum
+            may be restricted by the unit, presumably due to transfer 
+            size consideration, so check the returned number against the
+            requested.
+        :returns: A dictionary with metadata for the search, with the
+            keys 'number_returned', 'update_id', 'total_matches' and an
+            'item_list' list with the search results. The search results
+            are instances of one of
+            :py:class:`~.soco.data_structures.MLArtist`,
+            :py:class:`~.soco.data_structures.MLAlbumArtist`,
+            :py:class:`~.soco.data_structures.MLAlbum`,
+            :py:class:`~.soco.data_structures.MLGenre`,
+            :py:class:`~.soco.data_structures.MLComposer`,
+            :py:class:`~.soco.data_structures.MLTrack`,
+            :py:class:`~.soco.data_structures.MLShare` and
+            :py:class:`~.soco.data_structures.MLPlaylist` depending on the
+            type of the search.
+        :raises: :py:class:`SoCoException` upon errors
 
         NOTE: The playlists that are returned with the 'playlists' search, are
         the playlists imported from (files in) the music library, they are not
         the Sonos playlists.
-
-        Raises SoCoException (or a subclass) upon errors.
 
         The information about the which searches can be performed and the form
         of the query has been gathered from the Janos project:
