@@ -20,7 +20,7 @@ New Features
   * They have the ability to produce their own UPnP meta-data (which is
     used by the ``add_to_queue`` method).
 
-  See backwards incompatibility notice below.
+  See the Backwards Compatibility notice below.
 
 * A webservice analyzer has been added in ``dev_tools/analyse_ws.py``
   (`#46 <https://github.com/SoCo/SoCo/pull/46>`_).
@@ -105,7 +105,7 @@ you should now write
 Properties
 ^^^^^^^^^^
 
-A number of methods have been replaced with properties, to simplify use (see (see #62 +<https://github.com/SoCo/SoCo/pull/62>_ )
+A number of methods have been replaced with properties, to simplify use (see (see #62 <https://github.com/SoCo/SoCo/pull/62>_ )
 
 For example, use
 
