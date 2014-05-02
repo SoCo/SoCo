@@ -105,7 +105,7 @@ you should now write
 Properties
 ^^^^^^^^^^
 
-A number of methods have been replaced with properties, to simplify use (see (see #62 <https://github.com/SoCo/SoCo/pull/62>_ )
+A number of methods have been replaced with properties, to simplify use (see `#62 <https://github.com/SoCo/SoCo/pull/62>`_ )
 
 For example, use
 
