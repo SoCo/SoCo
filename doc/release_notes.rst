@@ -1,6 +1,129 @@
 Release notes
 *************
 
+Version 0.7
+===========
+
+New Features
+------------
+
+* All information about queue and music library items, like e.g. the
+  title and album of a track, are now included in data structure classes
+  instead of dictionaries (the classes are available in the
+  :ref:`data_structure_mod` sub-module ). This advantages of this
+  approach are:
+
+  * The type of the item is identifiable by its class name
+  * They have useful ``__str__`` representations and an ``__equals__``
+    method
+  * Information is available as named attributes
+  * They have the ability to produce their own UPnP meta-data (which is
+    used by the ``add_to_queue`` method).
+
+  See backwards incompatibility notice below.
+
+* A webservice analyzer has been added in ``dev_tools/analyse_ws.py``
+  (`#46 <https://github.com/SoCo/SoCo/pull/46>`_).
+
+* The commandline interface has been split into a separate project `socos
+  <https://github.com/SoCo/socos>`_. It provides an command line interface on
+  top of the SoCo library, and allows users to control their Sonos speakers
+  from scripts and from an interactive shell.
+
+* Python 3.2 and later is now supported in addition to 2.7.
+
+* A simple version of the first plugin for the Wimp service has been added
+  (`#93 <https://github.com/SoCo/SoCo/pull/93>`_).
+
+* The new ``soco.discover()`` method provides an easier interface for
+  discovering speakers in your network. ``SonosDiscovery`` has been deprecated
+  in favour of it (see Backwards Compatability below).
+
+* SoCo instances are now singletons per IP address. For any given IP address, there is only one SoCo instance.
+
+* The code for generating the XML to be sent to Sonos devices has been
+  completely rewritten, and it is now much easier to add new functionality. All
+  services exposed by Sonos zones are now available if you need them (`#48
+  <https://github.com/SoCo/SoCo/pull/48>`_).
+
+
+Backwards Compatability
+-----------------------
+
+.. warning:: Please read the section below carefully when upgrading to SoCo
+             0.7.
+
+Data Structures
+^^^^^^^^^^^^^^^
+
+The move to using **data structure classes** for music item information instead
+of dictionaries introduces some **backwards incompatible changes** in the
+library (see `#83 <https://github.com/SoCo/SoCo/pull/83>`_). The `get_queue`
+and `get_library_information` functions (and all methods derived from the
+latter) are affected. In the data structure classes, information like
+e.g. the title is now available as named attributes.  This means that by the
+update to 0.7 it will also be necessary to update your code like e.g:
+
+.. code-block:: python
+
+    # Version < 0.7
+    for item in soco.get_queue():
+        print item['title']
+    # Version >=0.7
+    for item in soco.get_queue():
+        print item.title
+
+SonosDiscovery
+^^^^^^^^^^^^^^
+
+The ``SonosDiscovery`` class has been deprecated (see `#80
+<https://github.com/SoCo/SoCo/pull/80>`_ and `#75
+<https://github.com/SoCo/SoCo/issues/75>`_).
+
+Instead of the following
+
+.. code-block:: python
+
+    >>> import soco
+    >>> d = soco.SonosDiscovery()
+    >>> ips = d.get_speaker_ips()
+    >>> for i in ips:
+    ...        s = soco.SoCo(i)
+    ...        print s.player_name
+
+
+you should now write
+
+.. code-block:: python
+
+    >>> import soco
+    >>> for s in soco.discover():
+    ...        print s.player_name
+
+
+
+Properties
+^^^^^^^^^^
+
+A number of methods have been replaced with properties, to simplify use (see (see #62 +<https://github.com/SoCo/SoCo/pull/62>_ )
+
+For example, use
+
+.. code-block:: python
+
+    soco.volume = 30
+    soco.volume -=3
+    soco.status_light = True
+
+instead of
+
+.. code-block:: python
+
+    soco.volume(30)
+    soco.volume(soco.volume()-3)
+    soco.status_light("On")
+
+
 Version 0.6
 ===========
 
