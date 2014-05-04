@@ -55,11 +55,17 @@ def discover():
             data, addr = _sock.recvfrom(2048)
             # Look for the model in parentheses in a line like this
             # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-            search = re.search(br'SERVER.*\((.*)\)', data)
+            model_search = re.search(br'SERVER.*\((.*)\)', data)
+            uid_search = re.search(br'USN: uuid:(.*?):',data)
             try:
-                model = really_unicode(search.group(1))
+                model = really_unicode(model_search.group(1))
             except AttributeError:
                 model = None
+
+            try:
+                uid = really_unicode(uid_search.group(1))
+            except AttributeError:
+                uid = None
 
             # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
             # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
@@ -67,7 +73,7 @@ def discover():
             # If it's the bridge, then it's not a speaker and shouldn't
             # be returned
             if (model and model != "BR100"):
-                soco = SoCo(addr[0])
+                soco = SoCo(addr[0], uid, model)
                 yield soco
         else:
             break
@@ -208,7 +214,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     # Stores the topology of all Zones in the network
     topology = {}
 
-    def __init__(self, ip_address):
+    def __init__(self, ip_address, uid, model):
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
         try:
@@ -223,6 +229,11 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
+
+        if uid:
+            self.speaker_info['uid'] = uid
+        if model:
+            self.speaker_info['model'] = model
 
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
