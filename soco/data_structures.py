@@ -612,15 +612,15 @@ class MLSonosPlaylist(MusicLibraryItem):
 
     :ivar parent_id: The parent ID for the MLSonosPlaylist is 'SQ:'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating MLSonosPlaylist from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating MLSonosPlaylist from
+        XML is inherited from :py:class:`.MusicLibraryItem`.
 
     """
 
     parent_id = 'SQ:'
 
     def __init__(self, uri, title,
-                item_class='object.container.playlistContainer'):
+                 item_class='object.container.playlistContainer'):
         """ Instantiate the MLSonosPlaylist item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
@@ -1243,7 +1243,8 @@ class MSPlaylist(MusicServiceItem):
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
-                      'A:PLAYLISTS': MLPlaylist, 'S:': MLShare, 'SQ:': MLSonosPlaylist}
+                      'A:PLAYLISTS': MLPlaylist, 'S:': MLShare,
+                      'SQ:': MLSonosPlaylist}
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
                     'albumList': MSPlaylist}

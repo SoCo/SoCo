@@ -507,6 +507,7 @@ def test_mlsonosplaylist():
     common_tests('SQ:', '13 title: Koop',
                  playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
+
 def test_mlshare():
     """Test the MLShare class"""
     # Set the tests up
