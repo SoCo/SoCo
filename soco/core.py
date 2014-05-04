@@ -214,7 +214,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     # Stores the topology of all Zones in the network
     topology = {}
 
-    def __init__(self, ip_address, uid, model):
+    def __init__(self, ip_address, uid=None, model=None):
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
         try:
