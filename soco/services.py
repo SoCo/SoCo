@@ -79,6 +79,7 @@ class Service(object):
             '</s:Body>',
         '</s:Envelope>'])  # noqa PEP8
 
+
     def __init__(self, soco):
         self.soco = soco
         # Some defaults. Some or all these will need to be overridden
@@ -93,6 +94,8 @@ class Service(object):
         self.control_url = '/{}/Control'.format(self.service_type)
         # Service control protocol description
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
+        # Eventing subscription
+        self.event_subscription_url = '/{}/Event'.format(self.service_type)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -381,6 +384,25 @@ class Service(object):
             log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
+    def subscribe(self):
+        """ Subscribe to the service's events """
+        # an event subscription looks like this:
+        # SUBSCRIBE publisher path HTTP/1.1
+        # HOST: publisher host:publisher port
+        # CALLBACK: <delivery URL>
+        # NT: upnp:event
+        # TIMEOUT: Second-requested subscription duration (optional)
+        ip = 'XXXXX'
+        port = 'YYYY'
+        headers = {
+            'Callback': '<http://{0}:{1}>'.format(ip, port),
+            'NT': 'upnp:event'
+        }
+        response = requests.request('SUBSCRIBE',
+            self.base_url + self.event_subscription_url, headers=headers)
+        response.raise_for_status()
+        # TODO: Handle specific return codes from the UPnP spec
+
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
         to pass to the action) and out_arguments (ie returned values).
@@ -477,6 +499,7 @@ class ContentDirectory(Service):
     def __init__(self, soco):
         super(ContentDirectory, self).__init__(soco)
         self.control_url = "/MediaServer/ContentDirectory/Control"
+        self.event_subscription_url = "/MediaServer/ContentDirectory/Event"
         # For error codes, see table 2.7.16 in
         # http://upnp.org/specs/av/UPnP-av-ContentDirectory-v1-Service.pdf
         self.UPNP_ERRORS.update({
@@ -508,6 +531,7 @@ class MS_ConnectionManager(Service):
         super(MS_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
         self.control_url = "/MediaServer/ConnectionManager/Control"
+        self.event_subscription_url = "/MediaServer/ConnectionManager/Event"
 
 
 class RenderingControl(Service):
@@ -516,6 +540,7 @@ class RenderingControl(Service):
     def __init__(self, soco):
         super(RenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
+        self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
 
 
 class MR_ConnectionManager(Service):
@@ -524,6 +549,7 @@ class MR_ConnectionManager(Service):
         super(MR_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
         self.control_url = "/MediaRenderer/ConnectionManager/Control"
+        self.event_subscription_url = "/MediaRenderer/ConnectionManager/Event"
 
 
 class AVTransport(Service):
@@ -532,6 +558,7 @@ class AVTransport(Service):
     def __init__(self, soco):
         super(AVTransport, self).__init__(soco)
         self.control_url = "/MediaRenderer/AVTransport/Control"
+        self.event_subscription_url = "/MediaRenderer/AVTransport/Event"
         # For error codes, see
         # http://upnp.org/specs/av/UPnP-av-AVTransport-v1-Service.pdf
         self.UPNP_ERRORS.update({
@@ -565,6 +592,8 @@ class Queue(Service):
     def __init__(self, soco):
         super(Queue, self).__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
+        self.event_subscription_url = "/MediaRenderer/Queue/Event"
+
 
 
 class GroupRenderingControl(Service):
@@ -573,3 +602,4 @@ class GroupRenderingControl(Service):
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
+        self.event_subscription_url = "/MediaRenderer/GroupRenderingControl/Event"
