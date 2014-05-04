@@ -80,7 +80,6 @@ class Spotify(SoCoPlugin):
 
 	sid = '9'
 	api_lookup_url = 'http://ws.spotify.com/lookup/1/.json'
-	api_search_track_url = 'http://ws.spotify.com/search/1/track.json'
 
 	def __init__(self, soco):
 		""" Initialize the plugin"""
@@ -114,24 +113,3 @@ class Spotify(SoCoPlugin):
 			print "Couldn't add song.."
 
 		return index
-
-	def get_spotify_top_tracks(artist, max):
-		retList = []
-
-		params = {'q': 'artist:' + artist}
-		res = requests.get(api_url, params=params)
-
-		if 'tracks' in data:
-			i = 0
-			data = res.json()
-			for d in data['tracks']:
-				t = SpotifyTrack(d['href'])
-				t.title = d['name']
-				t.album_uri = d['album']['href']
-
-				retList.append(t)
-				i = i + 1
-				if i >= max: 
-					break
-
-		return retList
