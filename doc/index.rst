@@ -20,6 +20,7 @@ Contents
    unittests
    data-structures-mod
    release_notes
+   release-howto
 
 
 Indices and tables
