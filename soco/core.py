@@ -207,6 +207,9 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     speakers_ip = []
     # Stores the topology of all Zones in the network
     topology = {}
+    # The ip address of one of the players. Used by the event system to
+    # detect which IP address to use for the event server.
+    _event_helper_ip = ''
 
     def __init__(self, ip_address):
         # Check if ip_address is a valid IPv4 representation.
@@ -223,6 +226,8 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
+        if SoCo._event_helper_ip == '':
+            SoCo._event_helper_ip = ip_address
 
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
@@ -1014,7 +1019,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
             file based playlists from the music library
         :param start: Starting number of returned matches
         :param max_items: Maximum number of returned matches. NOTE: The maximum
-            may be restricted by the unit, presumably due to transfer 
+            may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
         :returns: A dictionary with metadata for the search, with the

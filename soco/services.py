@@ -49,6 +49,7 @@ except ImportError:
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
+from .events import event_listener
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
@@ -78,7 +79,6 @@ class Service(object):
                 '</u:{action}>',
             '</s:Body>',
         '</s:Envelope>'])  # noqa PEP8
-
 
     def __init__(self, soco):
         self.soco = soco
@@ -386,14 +386,16 @@ class Service(object):
 
     def subscribe(self):
         """ Subscribe to the service's events """
+        # The event listener must be running, so start it if not
+        if not event_listener.is_running:
+            event_listener.start(self.soco)
         # an event subscription looks like this:
         # SUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # CALLBACK: <delivery URL>
         # NT: upnp:event
         # TIMEOUT: Second-requested subscription duration (optional)
-        ip = 'XXXXX'
-        port = 'YYYY'
+        ip, port = event_listener.address
         headers = {
             'Callback': '<http://{0}:{1}>'.format(ip, port),
             'NT': 'upnp:event'
@@ -401,7 +403,35 @@ class Service(object):
         response = requests.request('SUBSCRIBE',
             self.base_url + self.event_subscription_url, headers=headers)
         response.raise_for_status()
-        # TODO: Handle specific return codes from the UPnP spec
+
+    def renew_suscription(self, event_sid):
+        """ Renew an event subscription """
+        # SUBSCRIBE publisher path HTTP/1.1
+        # HOST: publisher host:publisher port
+        # SID: uuid:subscription UUID
+        # TIMEOUT: Second-requested subscription duration (optional)
+
+        # NB: Sonos does not seem to use TIMEOUTs, so it may be that a
+        # subscription never needs to be renewed, and there is no need for this
+        # method.
+        headers = {
+            'SID': event_sid
+        }
+        response = requests.request('SUBSCRIBE',
+            self.base_url + self.event_subscription_url, headers=headers)
+        response.raise_for_status()
+
+    def unsubscribe(self, event_sid):
+        """ Unsubscribe from the service's events """
+        # UNSUBSCRIBE publisher path HTTP/1.1
+        # HOST: publisher host:publisher port
+        # SID: uuid:subscription UUID
+        headers = {
+            'SID': event_sid
+        }
+        response = requests.request('UNSUBSCRIBE',
+            self.base_url + self.event_subscription_url, headers=headers)
+        response.raise_for_status()
 
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
@@ -593,7 +623,6 @@ class Queue(Service):
         super(Queue, self).__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
         self.event_subscription_url = "/MediaRenderer/Queue/Event"
-
 
 
 class GroupRenderingControl(Service):
