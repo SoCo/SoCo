@@ -56,6 +56,6 @@ Wrap-Up
 -------
 
 * Create the milestone for the next release (with the most likely version
-  number)
+  number) and close the milestone for the current release.
 
 * Share the news!
