@@ -290,8 +290,8 @@ class Service(object):
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, send the command to the Sonos device. args
-        can be emptyReturn
-        a dict of {argument_name, value)} items or True on success. Raise
+        can be empty.
+        Return a dict of {argument_name, value)} items or True on success. Raise
         an exception on failure.
 
         """
@@ -385,7 +385,13 @@ class Service(object):
             raise UnknownSoCoException(xml_error)
 
     def subscribe(self):
-        """ Subscribe to the service's events """
+        """Subscribe to the service's events.
+
+        Returns a tuple containing the unique ID representing the subscription
+        and the number of seconds until the subscription expires (or None, if
+        the subscription never expires). Use `renew` to renew the subscription.
+
+         """
         # The event listener must be running, so start it if not
         if not event_listener.is_running:
             event_listener.start(self.soco)
@@ -403,17 +409,30 @@ class Service(object):
         response = requests.request('SUBSCRIBE',
             self.base_url + self.event_subscription_url, headers=headers)
         response.raise_for_status()
+        event_sid = response.headers['sid']
+        timeout = response.headers['timeout']
+        # According to the spec, timeout can be "infinite" or "second-XXX" where
+        # XXX is a number of seconds.  Sonos uses "Seconds-XXX" (with an 's')
+        # and a capital letter
+        if timeout.lower() == 'infinite':
+            timeout = None
+        else:
+            timeout = int(timeout.lstrip('Seconds-'))
+        return (event_sid, timeout)
 
     def renew_suscription(self, event_sid):
-        """ Renew an event subscription """
+        """Renew an event subscription
+
+        Arguments:
+
+            event_sid: The unique ID returned by `subscribe`
+
+        """
         # SUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
         # TIMEOUT: Second-requested subscription duration (optional)
 
-        # NB: Sonos does not seem to use TIMEOUTs, so it may be that a
-        # subscription never needs to be renewed, and there is no need for this
-        # method.
         headers = {
             'SID': event_sid
         }
@@ -422,7 +441,13 @@ class Service(object):
         response.raise_for_status()
 
     def unsubscribe(self, event_sid):
-        """ Unsubscribe from the service's events """
+        """Unsubscribe from the service's events
+
+        Arguments:
+
+            event_sid: The unique ID returned by `subscribe`
+
+        """
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
@@ -475,6 +500,26 @@ class Service(object):
                 else:
                     out_args.append(Argument(arg_name, vartype))
             yield Action(action_name, in_args, out_args)
+
+    def iter_event_vars(self):
+        """ Yield an iterator over the services eventable variables.
+
+        Yields a tuple of (variable name, data type)
+
+        """
+
+        ns = '{urn:schemas-upnp-org:service-1-0}'
+        scpd_body = requests.get(self.base_url + self.scpd_url).text
+        tree = XML.fromstring(scpd_body.encode('utf-8'))
+        # parse the state variables to get the relevant variable types
+        statevars = tree.iterfind('.//{}stateVariable'.format(ns))
+        for state in statevars:
+            # We are only interested if 'sendEvents' is 'yes', i.e this
+            # is an eventable variable
+            if state.attrib['sendEvents'] == "yes":
+                name = state.findtext('{}name'.format(ns))
+                vartype = state.findtext('{}dataType'.format(ns))
+                yield (name, vartype)
 
 
 class AlarmClock(Service):
