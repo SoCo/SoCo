@@ -207,9 +207,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     speakers_ip = []
     # Stores the topology of all Zones in the network
     topology = {}
-    # The ip address of one of the players. Used by the event system to
-    # detect which IP address to use for the event server.
-    _event_helper_ip = ''
+
 
     def __init__(self, ip_address):
         # Check if ip_address is a valid IPv4 representation.
