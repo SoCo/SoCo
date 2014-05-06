@@ -190,6 +190,6 @@ SoCo is released under the `MIT license`_.
 .. _Joel Björkman: https://github.com/labero
 .. _MIT license: http://www.opensource.org/licenses/mit-license.php
 .. _Rahim Sonawalla: https://github.com/rahims/SoCo
-.. _GitHub repository: https:github.com/SoCo/SoCo
+.. _GitHub repository: https://github.com/SoCo/SoCo
 .. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
 .. _Google Groups: https://groups.google.com/forum/#!forum/python-soco
