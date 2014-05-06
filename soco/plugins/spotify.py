@@ -49,12 +49,12 @@ class SpotifyTrack(object):
 	def didl_metadata(self):
 		if 'spotify_uri' in self.data and 'title' in self.data and 'album_uri' in self.data:
 			didl_metadata = """<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-		 		<item id=\"""" + urllib.quote_plus(self.data['spotify_uri']) + """\" parentID=\"""" + urllib.quote_plus(self.data['album_uri']) +  """\" restricted="true">
-		 			<dc:title>""" + urllib.quote_plus(self.data['title']) + """</dc:title>
+		 		<item id="{0}" parentID="{1}" restricted="true">
+		 			<dc:title>{2}</dc:title>
 		 			<upnp:class>object.item.audioItem.musicTrack</upnp:class>
 		 			<desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON2311_X_#Svc2311-0-Token</desc>
 		 		</item>
-		 	</DIDL-Lite>"""
+		 	</DIDL-Lite>""".format(urllib.quote_plus(self.data['spotify_uri']), urllib.quote_plus(self.data['album_uri']), urllib.quote_plus(self.data['title']))
 		 	didl_metadata = didl_metadata.encode('utf-8')
 		 	return XML.fromstring(didl_metadata)
 		else:
@@ -119,11 +119,11 @@ class SpotifyAlbum(object):
 	def didl_metadata(self):
 		if self.satisfied:
 			didl_metadata = """<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-				<item id=\"""" + urllib.quote_plus(self.data['spotify_uri']) + """\" parentID=\"""" + urllib.quote_plus(self.data['artist_uri']) + """\" restricted="true">
-
-				<dc:title>\"""" + urllib.quote_plus(self.data['title']) + """\"</dc:title>
+				<item id="{0}" parentID="{1}" restricted="true">
+				<dc:title>{2}</dc:title>
 				<upnp:class>object.container.album.musicAlbum</upnp:class>
-				<desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON2311_X_#Svc2311-0-Token</desc></item></DIDL-Lite>"""
+				<desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON2311_X_#Svc2311-0-Token</desc></item></DIDL-Lite>
+				""".format(urllib.quote_plus(self.data['spotify_uri']), urllib.quote_plus(self.data['artist_uri']), urllib.quote_plus(self.data['title']))
 			didl_metadata = didl_metadata.encode('utf-8')
 			return XML.fromstring(didl_metadata)
 		else:
@@ -174,22 +174,10 @@ class Spotify(SoCoPlugin):
 		if not spotify_track.satisfied():
 			spotify_track = self._add_track_metadata(spotify_track)
 
-		index = -1
-		try:
-			index = self.soco.add_to_queue(spotify_track)
-		except SoCoUPnPException:
-			pass
-
-		return index
+		return self.soco.add_to_queue(spotify_track)
 
 	def add_album_to_queue(self, spotify_album):
 		if not spotify_album.satisfied():
 			spotify_album = self._add_album_metadata(spotify_album)
 
-		index = -1
-		try:
-			index = self.soco.add_to_queue(spotify_album)
-		except SoCoUPnPException:
-			pass
-
-		return index
+		return self.soco.add_to_queue(spotify_album)
