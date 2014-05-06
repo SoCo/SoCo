@@ -284,9 +284,11 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
         return self.ip_address
 
-    def play_from_queue(self, queue_index):
-        """ Play an item from the queue. The track number is required as an
-        argument, where the first track is 0.
+    def play_from_queue(self, index):
+        """ Play a track from the queue by index. The index number is
+        required as an argument, where the first index is 0.
+
+        index: the index of the track to play; first item in the queue is 0
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -311,7 +313,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.avTransport.Seek([
             ('InstanceID', 0),
             ('Unit', 'TRACK_NR'),
-            ('Target', queue_index + 1)
+            ('Target', index + 1)
             ])
 
         # finally, just play what's set
@@ -1099,19 +1101,20 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         return int(qnumber)
 
     def remove_from_queue(self, index):
-        """ Removes a track from the queue.
+        """ Remove a track from the queue by index. The index number is
+        required as an argument, where the first index is 0.
 
-        index: the index of the track to remove; first item in the queue is 1
+        index: the index of the track to remove; first item in the queue is 0
 
         Returns:
-        True if the Sonos speaker successfully removed the track
+            True if the Sonos speaker successfully removed the track
 
         Raises SoCoException (or a subclass) upon errors.
 
         """
         # TODO: what do these parameters actually do?
         updid = '0'
-        objid = 'Q:0/' + str(index)
+        objid = 'Q:0/' + str(index + 1)
         self.avTransport.RemoveTrackFromQueue([
             ('InstanceID', 0),
             ('ObjectID', objid),
