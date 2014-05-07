@@ -22,6 +22,7 @@ import requests
 
 from ..services import MusicServices
 from ..data_structures import get_ms_item
+from ..utils import really_utf8  # prettify
 from .__init__ import SoCoPlugin
 
 
@@ -142,10 +143,10 @@ class Wimp(SoCoPlugin):
         :type max_items: int
         """
         # Check input
-        if not search_type in ['artists', 'albums', 'tracks', 'playlists']:
-            message = 'The requested search {} is not valid'\
-                .format(search_type)
-            raise ValueError(message)
+        #if not search_type in ['artists', 'albums', 'tracks', 'playlists']:
+        #    message = 'The requested search {} is not valid'\
+        #        .format(search_type)
+        #    raise ValueError(message)
         # Transform search: tracks -> tracksearch
         search_type = '{}earch'.format(search_type)
         # Perform search
@@ -169,6 +170,21 @@ class Wimp(SoCoPlugin):
         for element in search_result.findall(ns_tag('', item_name)):
             out.append(get_ms_item(element, self))
 
+        return out
+
+    def browse(self, item=None):
+        """Return the subelements of item"""
+        headers = _get_header('get_metadata')
+        if item:
+            body = self._root_body(item.item_id)
+        else:
+            body = self._root_body('root')
+        response = requests.post(self._url, headers=headers, data=body)
+        result_dom = XML.fromstring(really_utf8(response.text))
+        out = []
+        for item in result_dom.findall('.//' + ns_tag('', 'mediaCollection')):
+            out.append(get_ms_item(item, self))
+            #out.append(MSMediaCollection.from_xml(item, self))
         return out
 
     def _search_body(self, search_type, search_term, start, max_items):
@@ -209,6 +225,33 @@ class Wimp(SoCoPlugin):
 
         return XML.tostring(xml)
 
+    def _root_body(self, search_id, start=0, max_items=0):
+        """Return the root XML body
+
+        The XML is formed by adding, to the envelope of the XML returned by
+        ``self._base_body``, the following ``Body`` part:
+
+        .. code :: xml
+
+         <s:Body>
+           <getMetadata xmlns="http://www.sonos.com/Services/1.1">
+             <id>root</id>
+             <index>0</index>
+             <count>100</count>
+           </getMetadata>
+         </s:Body>
+        """
+        xml = self._base_body()
+
+        # Add the Body part
+        XML.SubElement(xml, ns_tag('s', 'Body'))
+        search = XML.SubElement(xml[1], ns_tag('', 'getMetadata'))
+        XML.SubElement(search, 'id').text = search_id
+        XML.SubElement(search, 'index').text = str(start)
+        XML.SubElement(search, 'count').text = str(max_items)
+
+        return XML.tostring(xml)
+
     def _base_body(self):
         """Return the base XML body, which has the following form:
 
@@ -239,6 +282,8 @@ class Wimp(SoCoPlugin):
         """Check a response for errors"""
         if response.status_code != 200:
             self._music_services.handle_upnp_error(response.text)
+
+
 
 
 SOAP_ACTION = {

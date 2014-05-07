@@ -38,8 +38,15 @@ def get_ms_item(xml, service):
     """Return the music service item that corresponds to xml. The class is
     identified by getting the type from the 'itemType' tag
     """
-    cls = MS_TYPE_TO_CLASS[xml.findtext(ns_tag('ms', 'itemType'))]
-    return cls.from_xml(xml, service)
+    cls = MS_TYPE_TO_CLASS.get(xml.findtext(ns_tag('ms', 'itemType')))
+    print xml.findtext(ns_tag('ms', 'itemType')),\
+        xml.findtext(ns_tag('ms', 'title'))
+    if cls is not None:
+        out = cls.from_xml(xml, service)
+        print ' ' + str(out.can_play)
+        return out
+    else:
+        return cls
 
 
 def tags_with_text(xml, tags=None):
@@ -940,6 +947,11 @@ class MusicServiceItem(MusicInfoItem):
         """Return the service id"""
         return self.content['service_id']
 
+    @property
+    def can_play(self):
+        """Return a boolean for whether the item can be played"""
+        return self.content.get('can_play')
+
 
 class MSTrack(MusicServiceItem):
     """Music service track"""
@@ -1135,14 +1147,14 @@ class MSArtist(MusicServiceItem):
         super(MSArtist, self).__init__(**content)
 
 
-class MSPlaylist(MusicServiceItem):
-    """Class that represents a Music Service Playlist"""
+class MSAlbumList(MusicServiceItem):
+    """Class that represents a Music Service Album List"""
 
     item_class = 'object.container.albumlist'
     valid_fields = [
         'username', 'can_add_to_favorites', 'artist', 'title', 'album_art_uri',
         'can_play', 'item_type', 'id', 'service_id', 'artist_id',
-        'can_enumerate', 'description'
+        'can_enumerate', 'description', 'can_cache'
     ]
     required_fields = ['title', 'item_id', 'description', 'service_id']
 
@@ -1150,11 +1162,11 @@ class MSPlaylist(MusicServiceItem):
         content = {'title': title, 'item_id': item_id,
                    'description': description, 'service_id': service_id}
         content.update(kwargs)
-        super(MSPlaylist, self).__init__(**content)
+        super(MSAlbumList, self).__init__(**content)
 
     @property
     def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Playlist
+        """Return the DIDL metadata for a Music Service Album List
 
         The metadata is on the form:
 
@@ -1215,13 +1227,51 @@ class MSPlaylist(MusicServiceItem):
         return 'x-rincon-cpcontainer:000d006c{}'.format(self.item_id)
 
 
+class MSFavorites(MusicServiceItem):
+    """Class that represents a music service favorite"""
+
+    valid_fields = ['id', 'item_type', 'title', 'can_play', 'can_cache',
+                    'album_art_uri']
+    # Since MSFavorites cannot produce didl_metadata, they are strictly
+    # required, but it makes sense to require them anyway, since that are the
+    # fields that that describe the item
+    required_fields = ['title', 'item_id', 'description', 'service_id']
+
+    def __init__(self, title, item_id, description, service_id, **kwargs):
+        content = {'title': title, 'item_id': item_id,
+                   'description': description, 'service_id': service_id}
+        content.update(kwargs)
+        super(MSFavorites, self).__init__(**content)
+
+
+class MSCollection(MusicServiceItem):
+    """Class that represents a music service collection"""
+
+    valid_fields = ['id', 'item_type', 'title', 'can_play', 'can_cache',
+                    'album_art_uri']
+    # Since MSCollection cannot produce didl_metadata, they are strictly
+    # required, but it makes sense to require them anyway, since that are the
+    # fields that that describe the item
+    required_fields = ['title', 'item_id', 'description', 'service_id']
+
+    def __init__(self, title, item_id, description, service_id, **kwargs):
+        content = {'title': title, 'item_id': item_id,
+                   'description': description, 'service_id': service_id}
+        content.update(kwargs)
+        super(MSCollection, self).__init__(**content)
+
+
+# Playlist, can be played
+
+
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
                       'A:PLAYLISTS': MLPlaylist, 'S:': MLShare}
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
-                    'albumList': MSPlaylist}
+                    'albumList': MSAlbumList, 'favorites': MSFavorites,
+                    'collection': MSCollection}
 
 
 MIME_TYPE_TO_EXTENSION = {
