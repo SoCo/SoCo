@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
-    pass
+    allow_reuse_address = True
 
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
