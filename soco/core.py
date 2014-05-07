@@ -224,8 +224,6 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
-        if SoCo._event_helper_ip == '':
-            SoCo._event_helper_ip = ip_address
 
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
