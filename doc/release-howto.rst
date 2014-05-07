@@ -49,7 +49,7 @@ Create and Publish
 
 .. code-block:: bash
 
-    python setup.py sdist upload
+    python setup.py sdist bdist_wheel upload
 
 
 Wrap-Up
