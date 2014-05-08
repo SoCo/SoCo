@@ -918,19 +918,22 @@ class SoCo(_SocoSingletonBase):
         Returns:
         IP addresses of the Sonos speakers.
 
+        Retained for backward compatibility only. Will be removed in future
+        releases
+
+        .. deprecated:: 0.8
+        Use :func:`discover` instead.
         """
+
+        import warnings
+        warnings.warn("get_speakers_ip is deprecated. Use discover instead.")
+
         if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
-            response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/topology')
-            text = response.text
-            grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)
-
-            for i in grp:
-                response = requests.get('http://' + i + ':1400/status')
-                if response.status_code == 200:
-                    self.speakers_ip.append(i)
+            self.speakers_ip = []
+            for i in discover():
+                self.speakers_ip.append(i.ip_address)
 
             return self.speakers_ip
 
