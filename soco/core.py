@@ -931,7 +931,6 @@ class SoCo(_SocoSingletonBase):
         if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
-            self.speakers_ip = []
             for i in discover():
                 self.speakers_ip.append(i.ip_address)
 
