@@ -20,11 +20,20 @@ def gen_sig():
     return hashlib.md5(app.config['ROVI_API_KEY'] + app.config['ROVI_SHARED_SECRET'] + repr(int(time.time()))).hexdigest()
 
 def get_track_image(artist, album):
+    if 'ROVI_SHARED_SECRET' not in app.config:
+        return None
+    elif 'ROVI_API_KEY' not in app.config:
+        return None
+
+
     headers = {
         "Accept-Encoding": "gzip"
     }
 
     r = requests.get('http://api.rovicorp.com/recognition/v2.1/music/match/album?apikey=' + app.config['ROVI_API_KEY'] + '&sig=' + gen_sig() + '&name= ' + album + '&performername=' + artist + '&include=images&size=1', headers=headers)
+
+    if r.status_code != requests.codes.ok:
+        return None
 
     d = json.loads(r.content)
 
