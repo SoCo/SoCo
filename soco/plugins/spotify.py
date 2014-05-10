@@ -16,6 +16,7 @@ from . import SoCoPlugin
 __all__ = ['Spotify']
 
 class SpotifyTrack(object):
+    """ Class that represents a Spotify track, usage example: SpotifyTrack('spotify:track:20DfkHC5grnKNJCzZQB6KC') """
     def __init__(self, spotify_uri):
         self.data = {}
         self.data['spotify_uri'] = spotify_uri
@@ -76,6 +77,7 @@ class SpotifyTrack(object):
         return 'title' in self.data and 'didl_metadata' in self.data
 
 class SpotifyAlbum(object):
+    """ Class that represents a Spotifyalbum, usage example: SpotifyAlbum('spotify:album:6a50SaJpvdWDp13t0wUcPU') """
     def __init__(self, spotify_uri):
         self.data = {}
         self.data['spotify_uri'] = spotify_uri
@@ -133,6 +135,7 @@ class SpotifyAlbum(object):
         return 'spotify_uri' in self.data and 'artist' in self.data and 'title' in self.data
 
 class Spotify(SoCoPlugin):
+    """ Class that implements spotify plugin"""
 
     sid = '9'
     api_lookup_url = 'http://ws.spotify.com/lookup/1/.json'
@@ -147,6 +150,7 @@ class Spotify(SoCoPlugin):
         return 'Spotify plugin'
 
     def _add_track_metadata(self, spotify_track):
+        """ Adds metadata by using the spotify public API """
         retTrack = SpotifyTrack(spotify_track.spotify_uri)
         params = {'uri': spotify_track.spotify_uri}
         res = requests.get(self.api_lookup_url, params=params)
@@ -159,6 +163,7 @@ class Spotify(SoCoPlugin):
         return retTrack
 
     def _add_album_metadata(self, spotify_album):
+        """ Adds metadata by using the spotify public API """
         retAlbum = SpotifyAlbum(spotify_album.spotify_uri)
         params = {'uri': spotify_album.spotify_uri}
         res = requests.get(self.api_lookup_url, params=params)
@@ -171,12 +176,14 @@ class Spotify(SoCoPlugin):
         return retAlbum
 
     def add_track_to_queue(self, spotify_track):
+        """ Add a spotify track to the queue using the SpotifyTrack class"""
         if not spotify_track.satisfied():
             spotify_track = self._add_track_metadata(spotify_track)
 
         return self.soco.add_to_queue(spotify_track)
 
     def add_album_to_queue(self, spotify_album):
+        """ Add a spotify album to the queue using the SpotifyAlbum class """
         if not spotify_album.satisfied():
             spotify_album = self._add_album_metadata(spotify_album)
 
