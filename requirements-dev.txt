@@ -3,3 +3,5 @@ sphinx
 pytest >= 2.5
 mock >= 1.0.1
 graphviz
+flake8
+pylint
