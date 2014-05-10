@@ -49,7 +49,7 @@ containing them:
 .. code:: python
 
     >>> import soco
-    >>> for zones in soco.discover():
+    >>> for zone in soco.discover():
     ...        print zone.player_name
     Living Room
     Kitchen
