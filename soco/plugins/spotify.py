@@ -44,7 +44,7 @@ class SpotifyTrack(object):
 
     @title.setter
     def title(self, title):
-        self.data['title'] = title
+        self.data['title'] = title.encode('utf-8')
 
     @property
     def didl_metadata(self):
@@ -105,7 +105,7 @@ class SpotifyAlbum(object):
 
     @title.setter
     def title(self, title):
-        self.data['title'] = title
+        self.data['title'] = title.encode('utf-8')
 
     @property
     def uri(self):
