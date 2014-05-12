@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+""" Exceptions that are used by SoCo """
+
 
 class SoCoException(Exception):
     """ base exception raised by SoCo, containing the UPnP error code """
@@ -17,6 +19,7 @@ class SoCoUPnPException(SoCoException):
     the network """
 
     def __init__(self, message, error_code, error_xml, error_description=""):
+        super(SoCoUPnPException, self).__init__()
         self.message = message
         self.error_code = error_code
         self.error_description = error_description

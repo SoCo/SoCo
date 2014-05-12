@@ -15,9 +15,8 @@ class SoCoPlugin(object):
     """ The base class for SoCo plugins """
 
     def __init__(self, soco):
-        LOGGER.info('Initializing SoCo plugin {cls}'.format(
-            cls=self.__class__.__name__)
-        )
+        cls = self.__class__.__name__
+        LOGGER.info('Initializing SoCo plugin {cls}'.format(cls=cls))
         self.soco = soco
 
     @property
