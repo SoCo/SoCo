@@ -84,6 +84,7 @@ def test_init_defaults(service):
     assert service.base_url == "http://192.168.1.101:1400"
     assert service.control_url == "/Service/Control"
     assert service.scpd_url == "/xml/Service1.xml"
+    assert service.event_subscription_url == "/Service/Event"
 
 
 def test_method_dispatcher_function_creation(service):
