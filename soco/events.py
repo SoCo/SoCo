@@ -38,6 +38,7 @@ class EventQueue(Queue):
     xml
 
     """
+
     def get(self, block=True, timeout=None):
         """ Overrides Queue's get, and unescapes xml automatically
 
@@ -59,6 +60,7 @@ class EventQueue(Queue):
                 result[variable.tag] = variable.text
         return result
 
+
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
     allow_reuse_address = True
@@ -69,7 +71,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
     def do_NOTIFY(self):
         """ Handle a NOTIFY request.  See the UPnP Spec for details."""
-        headers = dict(self.headers)
+        headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
@@ -92,9 +94,9 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
-    def log_message(self, format, *args):
+    def log_message(self, fmt, *args):
         # Divert standard webserver logging to the debug log
-        log.debug(format, *args)
+        log.debug(fmt, *args)
 
 
 class EventServerThread(threading.Thread):
@@ -148,13 +150,13 @@ class EventListener(object):
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         temp_sock.connect((any_zone.ip_address, 1400))
-        ip = temp_sock.getsockname()[0]
+        ip_address = temp_sock.getsockname()[0]
         temp_sock.close()
         # Start the event listener server in a separate thread.
         # Hardcoded to listen on port 1400. Any free port could
         # be used but this seems appropriate for Sonos, and avoids the need
         # to find a free port.
-        self.address = (ip, 1400)
+        self.address = (ip_address, 1400)
         self._listener_thread = EventServerThread(self.address)
         self._listener_thread.daemon = True
         self._listener_thread.start()
@@ -209,13 +211,14 @@ class Subscription(object):
         # CALLBACK: <delivery URL>
         # NT: upnp:event
         # TIMEOUT: Second-requested subscription duration (optional)
-        ip, port = event_listener.address
+        ip_address, port = event_listener.address
         headers = {
-            'Callback': '<http://{0}:{1}>'.format(ip, port),
+            'Callback': '<http://{0}:{1}>'.format(ip_address, port),
             'NT': 'upnp:event'
         }
-        response = requests.request('SUBSCRIBE',
-            service.base_url + service.event_subscription_url, headers=headers)
+        response = requests.request(
+            'SUBSCRIBE', service.base_url + service.event_subscription_url,
+            headers=headers)
         response.raise_for_status()
         self.sid = response.headers['sid']
         timeout = response.headers['timeout']
@@ -227,7 +230,8 @@ class Subscription(object):
         else:
             self.timeout = int(timeout.lstrip('Seconds-'))
         self.is_subscribed = True
-        log.debug("Subscribed to %s, sid: %s",
+        log.debug(
+            "Subscribed to %s, sid: %s",
             service.base_url + service.event_subscription_url, self.sid)
         # Add the queue to the master dict of queues so it can be looked up
         # by sid
@@ -244,13 +248,15 @@ class Subscription(object):
         headers = {
             'SID': self.sid
         }
-        response = requests.request('SUBSCRIBE',
+        response = requests.request(
+            'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
             headers=headers)
         response.raise_for_status()
-        log.debug("Renewed subscription to %s, sid: %s",
-             self.service.base_url + self.service.event_subscription_url,
-             self.sid)
+        log.debug(
+            "Renewed subscription to %s, sid: %s",
+            self.service.base_url + self.service.event_subscription_url,
+            self.sid)
 
     def unsubscribe(self):
         """Unsubscribe from the service's events """
@@ -260,14 +266,16 @@ class Subscription(object):
         headers = {
             'SID': self.sid
         }
-        response = requests.request('UNSUBSCRIBE',
+        response = requests.request(
+            'UNSUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
             headers=headers)
         response.raise_for_status()
         self.is_subscribed = False
-        log.debug("Unsubscribed from %s, sid: %s",
-             self.service.base_url + self.service.event_subscription_url,
-             self.sid)
+        log.debug(
+            "Unsubscribed from %s, sid: %s",
+            self.service.base_url + self.service.event_subscription_url,
+            self.sid)
         # remove queue from master dict
         with _event_queues_lock:
             del _event_queues[self.sid]
@@ -283,4 +291,3 @@ _event_queues = {}
 # with _event_queue_lock:
 #    queue = _event_queues[sid]
 _event_queues_lock = threading.Lock()
-
