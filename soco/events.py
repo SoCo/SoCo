@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 """
 
 Classes to handle Sonos UPnP Events and Subscriptions
 
 """
+from __future__ import unicode_literals
 
 try:  # python 3
     from http.server import SimpleHTTPRequestHandler
@@ -22,12 +21,43 @@ except ImportError:  # python 2.7
 import threading
 import socket
 import logging
+try:
+    import xml.etree.cElementTree as XML
+except ImportError:
+    import xml.etree.ElementTree as XML
 
 import requests
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
+
+class EventQueue(Queue):
+    """
+    A thread safe queue for handling events, with the ability to unescape
+    xml
+
+    """
+    def get(self, block=True, timeout=None):
+        """ Overrides Queue's get, and unescapes xml automatically
+
+        Returns a dict with keys which are the evented variables and values
+        which are the values in the event
+
+        """
+        event = Queue.get(self, block, timeout)
+        # event is a dict with keys 'seq', 'sid' and 'content'
+        # 'content' is the xml returned by the sonos device. We want to extract
+        # the <property> elements
+        tree = XML.fromstring(event['content'].encode('utf-8'))
+        # parse the state variables to get the relevant variable types
+        properties = tree.iterfind(
+            './/{urn:schemas-upnp-org:event-1-0}property')
+        result = {}
+        for prop in properties:
+            for variable in prop:
+                result[variable.tag] = variable.text
+        return result
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
@@ -55,7 +85,10 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         log.debug("Current thread is %s", threading.current_thread())
         # put it on the relevant queue for later consumption
         with _event_queues_lock:
-            _event_queues[sid].put(event)
+            try:
+                _event_queues[sid].put(event)
+            except KeyError:
+                pass
         self.send_response(200)
         self.end_headers()
 
@@ -162,7 +195,7 @@ class Subscription(object):
         #: An indication of whether the subscription is subscribed
         self.is_subscribed = False
         #: A queue of events received
-        self.events = Queue()
+        self.events = EventQueue()
 
     def subscribe(self):
         """ Subscribe to the service """
@@ -215,7 +248,7 @@ class Subscription(object):
             self.service.base_url + self.service.event_subscription_url,
             headers=headers)
         response.raise_for_status()
-        log.debug("Renewed subscription to %s, sid: ",
+        log.debug("Renewed subscription to %s, sid: %s",
              self.service.base_url + self.service.event_subscription_url,
              self.sid)
 
@@ -237,9 +270,9 @@ class Subscription(object):
              self.sid)
         # remove queue from master dict
         with _event_queues_lock:
-            del(_event_queues[self.sid])
+            del _event_queues[self.sid]
 
-
+# pylint: disable=C0103
 event_listener = EventListener()
 
 # Used to store a mapping of sids to event queues
