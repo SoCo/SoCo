@@ -22,6 +22,7 @@ except ImportError:  # python 2.7
 import threading
 import socket
 import logging
+import requests
 
 import soco
 
@@ -38,7 +39,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
     def do_NOTIFY(self):
         """ Handle a NOTIFY request.  See the UPnP Spec for details."""
-        headers = dict(self.headers)
+        headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
