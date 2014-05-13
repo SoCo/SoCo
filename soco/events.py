@@ -52,8 +52,10 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
             'content': content
             }
         log.debug("Event %s received for sid: %s", seq, sid)
-        # put it on the queue for later consumption
-        self.server.event_queue.put(event)
+        log.debug("Current thread is %s", threading.current_thread())
+        # put it on the relevant queue for later consumption
+        with _event_queues_lock:
+            _event_queues[sid].put(event)
         self.send_response(200)
         self.end_headers()
 
@@ -65,20 +67,17 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 class EventServerThread(threading.Thread):
     """The thread in which the event listener server will run"""
 
-    def __init__(self, address, event_queue):
+    def __init__(self, address):
         super(EventServerThread, self).__init__()
         #: used to signal that the server should stop
         self.stop_flag = threading.Event()
         #: The (ip, port) address on which the server should listen
         self.address = address
-        #: The queue onto which events will be placed
-        self.event_queue = event_queue
 
     def run(self):
         # Start the server on the local IP at port 1400.  Handling of requests
         # is delegated to instances of the EventNotifyHandler class
         listener = EventServer(self.address, EventNotifyHandler)
-        listener.event_queue = self.event_queue
         log.debug("Event listener running on %s", listener.server_address)
         # Listen for events untill told to stop
         while not self.stop_flag.is_set():
@@ -95,8 +94,6 @@ class EventListener(object):
         super(EventListener, self).__init__()
         #: Indicates whether the server is currently running
         self.is_running = False
-        #: The queue to which events are posted
-        self.event_queue = Queue()
         self._listener_thread = None
         #: The address (ip, port) on which the server will listen. Empty for
         #  the moment. (It is set in `meth`:start)
@@ -125,8 +122,7 @@ class EventListener(object):
         # be used but this seems appropriate for Sonos, and avoids the need
         # to find a free port.
         self.address = (ip, 1400)
-        self._listener_thread = EventServerThread(
-            self.address, self.event_queue)
+        self._listener_thread = EventServerThread(self.address)
         self._listener_thread.daemon = True
         self._listener_thread.start()
         self.is_running = True
@@ -165,6 +161,8 @@ class Subscription(object):
         self.timeout = None
         #: An indication of whether the subscription is subscribed
         self.is_subscribed = False
+        #: A queue of events received
+        self.events = Queue()
 
     def subscribe(self):
         """ Subscribe to the service """
@@ -198,6 +196,10 @@ class Subscription(object):
         self.is_subscribed = True
         log.debug("Subscribed to %s, sid: %s",
             service.base_url + service.event_subscription_url, self.sid)
+        # Add the queue to the master dict of queues so it can be looked up
+        # by sid
+        with _event_queues_lock:
+            _event_queues[self.sid] = self.events
 
     def renew_suscription(self):
         """Renew the event subscription """
@@ -233,7 +235,19 @@ class Subscription(object):
         log.debug("Unsubscribed from %s, sid: %s",
              self.service.base_url + self.service.event_subscription_url,
              self.sid)
+        # remove queue from master dict
+        with _event_queues_lock:
+            del(_event_queues[self.sid])
 
 
 event_listener = EventListener()
-event_queue = event_listener.event_queue
+
+# Used to store a mapping of sids to event queues
+_event_queues = {}
+
+# A global lock for accessing _event_queues. You must only ever access
+# _event_queues in the context of this lock, eg:
+# with _event_queue_lock:
+#    queue = _event_queues[sid]
+_event_queues_lock = threading.Lock()
+
