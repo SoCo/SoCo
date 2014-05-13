@@ -49,7 +49,7 @@ except ImportError:
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
-from .events import event_listener
+from .events import event_listener, Subscription
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
@@ -387,76 +387,13 @@ class Service(object):
     def subscribe(self):
         """Subscribe to the service's events.
 
-        Returns a tuple containing the unique ID representing the subscription
-        and the number of seconds until the subscription expires (or None, if
-        the subscription never expires). Use `renew` to renew the subscription.
-
-         """
-        # The event listener must be running, so start it if not
-        if not event_listener.is_running:
-            event_listener.start(self.soco)
-        # an event subscription looks like this:
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # CALLBACK: <delivery URL>
-        # NT: upnp:event
-        # TIMEOUT: Second-requested subscription duration (optional)
-        ip, port = event_listener.address
-        headers = {
-            'Callback': '<http://{0}:{1}>'.format(ip, port),
-            'NT': 'upnp:event'
-        }
-        response = requests.request('SUBSCRIBE',
-            self.base_url + self.event_subscription_url, headers=headers)
-        response.raise_for_status()
-        event_sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-XXX" where
-        # XXX is a number of seconds.  Sonos uses "Seconds-XXX" (with an 's')
-        # and a capital letter
-        if timeout.lower() == 'infinite':
-            timeout = None
-        else:
-            timeout = int(timeout.lstrip('Seconds-'))
-        return (event_sid, timeout)
-
-    def renew_suscription(self, event_sid):
-        """Renew an event subscription
-
-        Arguments:
-
-            event_sid: The unique ID returned by `subscribe`
+        Returns a subscription object, representing the new subscription
 
         """
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        # TIMEOUT: Second-requested subscription duration (optional)
+        subscription = Subscription(self)
+        subscription.subscribe()
+        return subscription
 
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request('SUBSCRIBE',
-            self.base_url + self.event_subscription_url, headers=headers)
-        response.raise_for_status()
-
-    def unsubscribe(self, event_sid):
-        """Unsubscribe from the service's events
-
-        Arguments:
-
-            event_sid: The unique ID returned by `subscribe`
-
-        """
-        # UNSUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request('UNSUBSCRIBE',
-            self.base_url + self.event_subscription_url, headers=headers)
-        response.raise_for_status()
 
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
