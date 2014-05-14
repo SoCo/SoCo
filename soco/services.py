@@ -397,9 +397,11 @@ class Service(object):
         """Subscribe to the service's events.
 
         event_queue is a thread-safe queue object onto which events will
-        be put. If None, a default queue will be created.
+        be put. If None, a default EventQueue object will be created and used.
 
         Returns a subscription object, representing the new subscription
+
+        To unsubscribe, call the `unsubscribe` method on the returned object.
 
         """
         subscription = Subscription(self, event_queue)

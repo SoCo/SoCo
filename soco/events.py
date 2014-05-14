@@ -19,6 +19,7 @@ import requests
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
+from .exceptions import SoCoException
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -34,19 +35,33 @@ class EventQueue(Queue):
     def get(self, block=True, timeout=None):
         """ Overrides Queue's get, and unescapes xml automatically
 
-        Returns a dict with keys which are the evented variables and values
-        which are the values in the event
+        Returns a dict-like object with keys which are the evented variables
+        and values which are the values in the event. The event sid and seq
+        are available as properties of the dict
 
         """
+
+        class EventDict(dict):
+            """
+            A dict-like object used to represents events from the event queue.
+
+            """
+            def __init__(self, sid, seq, *args, **kwargs):
+                dict.__init__(self, *args, **kwargs)
+                self.sid = sid
+                self.seq = seq
+
         event = Queue.get(self, block, timeout)
-        # event is a dict with keys 'seq', 'sid' and 'content'
+        # event is a dict with keys 'seq', 'sid' and 'content' - see
+        # EventNotifyHandler.do_NOTIFY
         # 'content' is the xml returned by the sonos device. We want to extract
         # the <property> elements
         tree = XML.fromstring(event['content'].encode('utf-8'))
         # parse the state variables to get the relevant variable types
         properties = tree.iterfind(
             './/{urn:schemas-upnp-org:event-1-0}property')
-        result = {}
+        # Add the seq and sid values to the return value
+        result = EventDict(event['sid'], event['seq'])
         for prop in properties:
             for variable in prop:
                 result[variable.tag] = variable.text
@@ -68,8 +83,10 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
         content = self.rfile.read(content_length)
-        # Build an event structure to put on the queue, containing the useful
-        # information extracted from the request
+        # Build a simple event structure to put on the queue, containing the
+        # useful information extracted from the request. Putting a class
+        # instance on the queue may cause race conditions when its properties
+        # are accessed later, so it is best to use a simple dict here
         event = {
             'seq': seq,
             'sid': sid,
@@ -191,9 +208,15 @@ class Subscription(object):
         self.is_subscribed = False
         #: A queue of events received
         self.events = EventQueue() if event_queue is None else event_queue
+        # A flag to make sure that an unsubscribed instance is not
+        # resubscribed
+        self._has_been_unsubscribed = False
 
     def subscribe(self):
         """ Subscribe to the service """
+        if self._has_been_unsubscribed:
+            raise SoCoException(
+                'Cannot resubscribe instance once unsubscribed')
         service = self.service
         # The event listener must be running, so start it if not
         if not event_listener.is_running:
@@ -233,8 +256,17 @@ class Subscription(object):
         with _event_queues_lock:
             _event_queues[self.sid] = self.events
 
-    def renew_suscription(self):
-        """Renew the event subscription """
+    def renew(self):
+        """Renew the event subscription.
+
+        You should not try to renew a subscription which has been
+        unsubscribed
+
+        """
+        if self._has_been_unsubscribed:
+            raise SoCoException(
+                'Cannot renew instance once unsubscribed')
+
         # SUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
@@ -254,7 +286,11 @@ class Subscription(object):
             self.sid)
 
     def unsubscribe(self):
-        """Unsubscribe from the service's events """
+        """Unsubscribe from the service's events
+
+        Once unsubscribed, a Subscription instance should not be reused
+
+        """
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
@@ -274,6 +310,7 @@ class Subscription(object):
         # remove queue from master dict
         with _event_queues_lock:
             del _event_queues[self.sid]
+        self._has_been_unsubscribed = True
 
 # pylint: disable=C0103
 event_listener = EventListener()
