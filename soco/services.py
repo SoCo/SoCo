@@ -403,7 +403,6 @@ class Service(object):
         subscription.subscribe()
         return subscription
 
-
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
         to pass to the action) and out_arguments (ie returned values).

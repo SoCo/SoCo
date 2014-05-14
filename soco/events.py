@@ -202,7 +202,9 @@ class Subscription(object):
         # CALLBACK: <delivery URL>
         # NT: upnp:event
         # TIMEOUT: Second-requested subscription duration (optional)
-        (ip_address, port) = event_listener.address
+
+        # pylint: disable=unbalanced-tuple-unpacking
+        ip_address, port = event_listener.address
         headers = {
             'Callback': '<http://{0}:{1}>'.format(ip_address, port),
             'NT': 'upnp:event'
@@ -213,8 +215,8 @@ class Subscription(object):
         response.raise_for_status()
         self.sid = response.headers['sid']
         timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-XXX"
-        # where XXX is a number of seconds.  Sonos uses "Seconds-XXX" (with an
+        # According to the spec, timeout can be "infinite" or "second-123"
+        # where 123 is a number of seconds.  Sonos uses "Seconds-123" (with an
         # 's') and a capital letter
         if timeout.lower() == 'infinite':
             self.timeout = None
