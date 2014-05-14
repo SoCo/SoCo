@@ -7,11 +7,8 @@ such as music tracks or genres
 """
 
 from __future__ import unicode_literals
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
 
+from .xml import XML
 from .exceptions import CannotCreateDIDLMetadata
 from .utils import really_unicode, camel_to_underscore
 
@@ -748,7 +745,8 @@ class QueueItem(MusicInfoItem):
         return self.content
 
     @property
-    def didl_metadata(self):
+    @staticmethod
+    def didl_metadata():
         """Produce the DIDL metadata XML. CURRENTLY DISABLED."""
         message = 'Queueitems cannot not yet form didl_metadata'
         raise NotImplementedError(message)
@@ -956,6 +954,7 @@ class MSTrack(MusicServiceItem):
         'service_id'
     ]
 
+    # pylint: disable=too-many-arguments
     def __init__(self, title, item_id, album_id, mime_type, description,
                  service_id, **kwargs):
         """Initialize MSTrack item"""

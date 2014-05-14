@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 """ SoCo (Sonos Controller) is a simple library to control Sonos speakers """
+
+from __future__ import unicode_literals
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'The SoCo-Team <python-soco@googlegroups.com>'

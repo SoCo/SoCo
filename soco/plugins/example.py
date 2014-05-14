@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+
+""" Example implementation of a plugin """
+
 from __future__ import unicode_literals, print_function
 
 from ..plugins import SoCoPlugin
-
-""" Example implementation of a plugin """
 
 
 __all__ = ['ExamplePlugin']

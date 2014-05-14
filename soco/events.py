@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+# pylint: disable=too-many-public-methods
 
 """
 
@@ -7,37 +7,35 @@ Classes to handle Sonos UPnP Events
 
 """
 
-try:  # python 3
-    from http.server import SimpleHTTPRequestHandler
-    from urllib.request import urlopen
-    from urllib.error import URLError
-    import socketserver
-    from queue import Queue
-except ImportError:  # python 2.7
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from urllib2 import urlopen, URLError
-    import SocketServer as socketserver
-    from Queue import Queue
+from __future__ import unicode_literals
+
 
 import threading
 import socket
 import logging
 import requests
 
-import soco
+from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
+                     Queue,)
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
+# pylint: disable=super-on-old-class
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
     allow_reuse_address = True
+
+    def __init__(self, *args, **kwargs):
+        super(EventServer, self).__init__(*args, **kwargs)
+        # the event_queue is initialized in EventServerThread.run()
+        self.event_queue = None
 
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
     """ Handles HTTP NOTIFY Verbs sent to the listener server """
 
-    def do_NOTIFY(self):
+    def do_NOTIFY(self):  # pylint: disable=invalid-name
         """ Handle a NOTIFY request.  See the UPnP Spec for details."""
         headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
@@ -56,6 +54,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
+    # pylint: disable=redefined-builtin
     def log_message(self, format, *args):
         # We override this to stop the printing of requests and errors
         pass
@@ -63,11 +62,14 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
 class EventServerThread(threading.Thread):
     """The thread in which the event listener server will run"""
+
+    # pylint: disable=redefined-outer-name
     def __init__(self, ip, event_queue):
         super(EventServerThread, self).__init__()
         #: used to signal that the server should stop
         self.stop_flag = threading.Event()
         #: The ip address on which the server should listen
+        # pylint: disable=invalid-name
         self.ip = ip
         #: The queue onto which events will be placed
         self.event_queue = event_queue
@@ -109,16 +111,16 @@ class EventListener(object):
 
         """
 
-        # Find our local network IP address which is accessible to the Sonos net
-        # See http://stackoverflow.com/q/166506
+        # Find our local network IP address which is accessible to the
+        # Sonos net, see http://stackoverflow.com/q/166506
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         temp_sock.connect((any_zone.ip_address, 1400))
-        ip = temp_sock.getsockname()[0]
+        ipaddr = temp_sock.getsockname()[0]
         temp_sock.close()
         # Start the event listener server in a separate thread
-        self.address = (ip, 1400)
-        self._listener_thread = EventServerThread(ip, self.event_queue)
+        self.address = (ipaddr, 1400)
+        self._listener_thread = EventServerThread(ipaddr, self.event_queue)
         self._listener_thread.daemon = True
         self._listener_thread.start()
         self.is_running = True
@@ -141,5 +143,6 @@ class EventListener(object):
         self.is_running = False
         log.info("Event listener stopped")
 
+# pylint: disable=invalid-name
 event_listener = EventListener()
 event_queue = event_listener.event_queue

@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0302
+# pylint: disable=C0302,fixme
 """ The core module contains SonosDiscovery and SoCo classes that implement
 the main entry to the SoCo functionality
 """
 
 from __future__ import unicode_literals
-
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
 
 import select
 import socket
@@ -24,6 +19,7 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
+from .xml import XML
 
 LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +30,8 @@ def discover():
     Return an iterator providing SoCo instances for each zone found.
 
     """
+
+    # pylint: disable=invalid-name
     PLAYER_SEARCH = dedent("""\
         M-SEARCH * HTTP/1.1
         HOST: 239.255.255.250:reservedSSDPport
@@ -66,7 +64,7 @@ def discover():
             # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
             # If it's the bridge, then it's not a speaker and shouldn't
             # be returned
-            if (model and model != "BR100"):
+            if model and model != "BR100":
                 soco = SoCo(addr[0])
                 yield soco
         else:
@@ -86,7 +84,9 @@ class SonosDiscovery(object):  # pylint: disable=R0903
         import warnings
         warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
 
-    def get_speaker_ips(self):
+    @staticmethod
+    def get_speaker_ips():
+        """ Deprecated in favour of discover() """
         import warnings
         warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
         return [i.ip_address for i in discover()]
@@ -124,7 +124,7 @@ class _ArgsSingleton(type):
         return cls._instances[cls][args]
 
 
-class _SocoSingletonBase(
+class _SocoSingletonBase(  # pylint: disable=too-few-public-methods
         _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
     """ The base class for the SoCo class.
 
@@ -136,7 +136,8 @@ class _SocoSingletonBase(
     pass
 
 
-class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
+# pylint: disable=R0904,too-many-instance-attributes
+class SoCo(_SocoSingletonBase):
     """A simple class for controlling a Sonos speaker.
 
     For any given set of arguments to __init__, only one instance of this class
@@ -208,8 +209,8 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
     # Stores the topology of all Zones in the network
     topology = {}
 
-
     def __init__(self, ip_address):
+        super(SoCo, self).__init__()
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
         try:
@@ -219,6 +220,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         #: The speaker's ip address
         self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
+        # pylint: disable=invalid-name
         self.deviceProperties = DeviceProperties(self)
         self.contentDirectory = ContentDirectory(self)
         self.renderingControl = RenderingControl(self)
@@ -239,6 +241,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @player_name.setter
     def player_name(self, playername):
+        """ Set the speaker's name """
         self.deviceProperties.SetZoneAtrributes([
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
@@ -262,6 +265,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @play_mode.setter
     def play_mode(self, playmode):
+        """ Set the speaker's mode """
         modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
         if playmode not in modes:
@@ -455,6 +459,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @mute.setter
     def mute(self, mute):
+        """ Mute (or unmute) the speaker """
         mute_value = '1' if mute else '0'
         self.renderingControl.SetMute([
             ('InstanceID', 0),
@@ -475,6 +480,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @volume.setter
     def volume(self, volume):
+        """ Set the speaker's volume """
         volume = int(volume)
         volume = max(0, min(volume, 100))  # Coerce in range
         self.renderingControl.SetVolume([
@@ -496,6 +502,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @bass.setter
     def bass(self, bass):
+        """ Set the speaker's bass """
         bass = int(bass)
         bass = max(-10, min(bass, 10))  # Coerce in range
         self.renderingControl.SetBass([
@@ -516,6 +523,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @treble.setter
     def treble(self, treble):
+        """ Set the speaker's treble """
         treble = int(treble)
         treble = max(-10, min(treble, 10))  # Coerce in range
         self.renderingControl.SetTreble([
@@ -541,6 +549,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
     @loudness.setter
     def loudness(self, loudness):
+        """ Switch on/off the speaker's loudness compensation """
         loudness_value = '1' if loudness else '0'
         self.renderingControl.SetLoudness([
             ('InstanceID', 0),
@@ -573,7 +582,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         return_status = True
         # loop through all IP's in topology and make them join this master
         for ip in ips:  # pylint: disable=C0103
-            if not (ip == self.ip_address):
+            if ip != self.ip_address:
                 slave = SoCo(ip)
                 ret = slave.join(master_speaker_info["uid"])
                 if ret is False:
@@ -665,11 +674,12 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
 
         """
         result = self.deviceProperties.GetLEDState()
-        LEDState = result["CurrentLEDState"]
+        LEDState = result["CurrentLEDState"]  # pylint: disable=invalid-name
         return True if LEDState == "On" else False
 
     @status_light.setter
     def status_light(self, led_on):
+        """ Switch on/off the speaker's status light """
         led_state = 'On' if led_on else 'Off'
         self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
@@ -732,13 +742,13 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}album')
 
             track['title'] = ""
-            if (md_title):
+            if md_title:
                 track['title'] = md_title
             track['artist'] = ""
-            if (md_artist):
+            if md_artist:
                 track['artist'] = md_artist
             track['album'] = ""
-            if (md_album):
+            if md_album:
                 track['album'] = md_album
 
             album_art = metadata.findtext(
@@ -804,6 +814,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         coord_ip = None
         coord_uuid = None
         zgroups = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        # pylint: disable=invalid-name
         XMLtree = XML.fromstring(really_utf8(zgroups))
 
         for grp in XMLtree:
@@ -1087,7 +1098,7 @@ class SoCo(_SocoSingletonBase):  # pylint: disable=R0904
         except CannotCreateDIDLMetadata as exception:
             message = ('The queueable item could not be enqueued, because it '
                        'raised a CannotCreateDIDLMetadata exception with the '
-                       'following message:\n{0}').format(exception.message)
+                       'following message:\n{0}').format(str(exception))
             raise ValueError(message)
         metadata = metadata.encode('utf-8')
 

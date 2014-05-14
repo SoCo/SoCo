@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0913,W0142
+# pylint: disable=R0913,W0142,fixme
 
 """ Plugin for the Wimp music service (Service ID 20) """
 
 from __future__ import unicode_literals
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
 NS = {
     's': 'http://schemas.xmlsoap.org/soap/envelope/',
     '': 'http://www.sonos.com/Services/1.1'
 }
 
 
-# Register all name spaces within the XML module
-for key_, value_ in NS.items():
-    XML.register_namespace(key_, value_)
-
 import requests
 
 from ..services import MusicServices
+from ..xml import XML
 from ..data_structures import get_ms_item
 from .__init__ import SoCoPlugin
 
 
 __all__ = ['Wimp']
+
+# Register all name spaces within the XML module
+for key_, value_ in NS.items():
+    XML.register_namespace(key_, value_)
 
 
 def ns_tag(ns_id, tag):
@@ -44,12 +41,13 @@ def _get_header(soap_action):
     """
     # TODO fix accepted encoding. Either form list, fetch from locale settings
     # or some combination
-    header = {'CONNECTION': 'close',
-              'ACCEPT-ENCODING': 'gzip',
-              'ACCEPT-LANGUAGE': 'da-DK, en-US;q=0.9',
-              'Content-Type': 'text/xml; charset="utf-8"',
-              'SOAPACTION': SOAP_ACTION[soap_action]
-              }
+    header = {
+        'CONNECTION': 'close',
+        'ACCEPT-ENCODING': 'gzip',
+        'ACCEPT-LANGUAGE': 'da-DK, en-US;q=0.9',
+        'Content-Type': 'text/xml; charset="utf-8"',
+        'SOAPACTION': SOAP_ACTION[soap_action],
+    }
     return header
 
 
