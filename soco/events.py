@@ -36,8 +36,8 @@ class EventQueue(Queue):
         """ Overrides Queue's get, and unescapes xml automatically
 
         Returns a dict-like object with keys which are the evented variables
-        and values which are the values in the event. The event sid and seq
-        are available as properties of the dict
+        and values which are the values in the event. The event sid and seq,
+        and the raw xml of the event are available as properties of the dict
 
         """
 
@@ -46,10 +46,11 @@ class EventQueue(Queue):
             A dict-like object used to represents events from the event queue.
 
             """
-            def __init__(self, sid, seq, *args, **kwargs):
+            def __init__(self, sid, seq, xml, *args, **kwargs):
                 dict.__init__(self, *args, **kwargs)
                 self.sid = sid
                 self.seq = seq
+                self.xml = xml  # The raw xml returned from the Sonos Device
 
         event = Queue.get(self, block, timeout)
         # event is a dict with keys 'seq', 'sid' and 'content' - see
@@ -61,7 +62,11 @@ class EventQueue(Queue):
         properties = tree.iterfind(
             './/{urn:schemas-upnp-org:event-1-0}property')
         # Add the seq and sid values to the return value
-        result = EventDict(event['sid'], event['seq'])
+        result = EventDict(
+            event['sid'],
+            event['seq'],
+            event['content']
+            )
         for prop in properties:
             for variable in prop:
                 result[variable.tag] = variable.text
