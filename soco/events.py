@@ -178,8 +178,9 @@ class Subscription(object):
 
     """
 
-    def __init__(self, service):
-        """ Pass a SoCo Service instance as a parameter """
+    def __init__(self, service, event_queue=None):
+        """ Pass a SoCo Service instance as a parameter. If event_queue is
+        specified, use it for the queue """
         super(Subscription, self).__init__()
         self.service = service
         #: A unique ID for this subscription
@@ -189,7 +190,7 @@ class Subscription(object):
         #: An indication of whether the subscription is subscribed
         self.is_subscribed = False
         #: A queue of events received
-        self.events = EventQueue()
+        self.events = EventQueue() if event_queue is None else event_queue
 
     def subscribe(self):
         """ Subscribe to the service """

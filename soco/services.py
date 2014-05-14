@@ -393,13 +393,16 @@ class Service(object):
             log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
-    def subscribe(self):
+    def subscribe(self, event_queue=None):
         """Subscribe to the service's events.
+
+        event_queue is a thread-safe queue object onto which events will
+        be put. If None, a default queue will be created.
 
         Returns a subscription object, representing the new subscription
 
         """
-        subscription = Subscription(self)
+        subscription = Subscription(self, event_queue)
         subscription.subscribe()
         return subscription
 
