@@ -46,7 +46,7 @@ import logging
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
-from .events import event_listener, Subscription
+from .events import Subscription
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103

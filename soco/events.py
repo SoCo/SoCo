@@ -17,6 +17,7 @@ import requests
 
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
+from .xml import XML
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -54,11 +55,6 @@ class EventQueue(Queue):
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
     allow_reuse_address = True
-
-    def __init__(self, *args, **kwargs):
-        super(EventServer, self).__init__(*args, **kwargs)
-        # the event_queue is initialized in EventServerThread.run()
-        self.event_queue = None
 
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
@@ -206,7 +202,7 @@ class Subscription(object):
         # CALLBACK: <delivery URL>
         # NT: upnp:event
         # TIMEOUT: Second-requested subscription duration (optional)
-        ip_address, port = event_listener.address
+        (ip_address, port) = event_listener.address
         headers = {
             'Callback': '<http://{0}:{1}>'.format(ip_address, port),
             'NT': 'upnp:event'
