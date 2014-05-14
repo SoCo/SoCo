@@ -13,6 +13,7 @@ from __future__ import unicode_literals
 import threading
 import socket
 import logging
+import weakref
 import requests
 
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
@@ -277,7 +278,7 @@ class Subscription(object):
 event_listener = EventListener()
 
 # Used to store a mapping of sids to event queues
-_event_queues = {}
+_event_queues = weakref.WeakValueDictionary()
 
 # A global lock for accessing _event_queues. You must only ever access
 # _event_queues in the context of this lock, eg:
