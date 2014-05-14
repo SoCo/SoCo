@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 """ Provides general utility functions to be used across modules """
 
+from __future__ import unicode_literals, absolute_import
+
 import re
-
-try:
-    from types import StringType, UnicodeType
-
-except ImportError:
-    StringType = bytes
-    UnicodeType = str
+from .compat import StringType, UnicodeType
 
 
 def really_unicode(in_string):
@@ -22,6 +17,7 @@ def really_unicode(in_string):
     if type(in_string) is StringType:
         for args in (('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
+                # pylint: disable=star-args
                 in_string = in_string.decode(*args)
                 break
             except UnicodeDecodeError:

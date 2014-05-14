@@ -10,9 +10,11 @@
     <body class="container">
         <div class="row">
             <div id="info" class="span12"></div>
+            {% if track.image != None %}
             <div class="span6 card">
                 <img id="track-image" src="{{ track.image }}" >
             </div>
+            {% endif %}
             <div class="span6">
                 <h1 id="track-title"></h1>
                 <h2 id="track-artist"></h2>

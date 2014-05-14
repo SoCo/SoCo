@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=fixme
 
 """
 Classes representing Sonos UPnP services.
@@ -24,7 +25,7 @@ Classes representing Sonos UPnP services.
 """
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 # UNICODE NOTE
 # UPnP requires all XML to be transmitted/received with utf-8 encoding. All
@@ -41,15 +42,12 @@ from __future__ import unicode_literals
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 from .events import event_listener, Subscription
+from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
@@ -59,6 +57,7 @@ Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
 
 
+# pylint: disable=too-many-instance-attributes
 class Service(object):
     """ An class representing a UPnP service. The base class for all Sonos
     Service classes
@@ -68,17 +67,18 @@ class Service(object):
     with the same name.
 
     """
-    soap_body_template = "".join([
-        '<?xml version="1.0"?>',
-        '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"',
-        ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">',
-            '<s:Body>',
-                '<u:{action} xmlns:u="urn:schemas-upnp-org:service:',
-                    '{service_type}:{version}">',
-                    '{arguments}',
-                '</u:{action}>',
-            '</s:Body>',
-        '</s:Envelope>'])  # noqa PEP8
+    # pylint: disable=bad-continuation
+    soap_body_template = (
+        '<?xml version="1.0"?>'
+        '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"'
+        ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
+            '<s:Body>'
+                '<u:{action} xmlns:u="urn:schemas-upnp-org:service:'
+                    '{service_type}:{version}">'
+                    '{arguments}'
+                '</u:{action}>'
+            '</s:Body>'
+        '</s:Envelope>')  # noqa PEP8
 
     def __init__(self, soco):
         self.soco = soco
@@ -109,6 +109,7 @@ class Service(object):
         # are generally SONOS specific. NB It may well be that SONOS does not
         # use some of these error codes.
 
+        # pylint: disable=invalid-name
         self.UPNP_ERRORS = {
             400: 'Bad Request',
             401: 'Invalid Action',
@@ -143,6 +144,7 @@ class Service(object):
         # Define a function to be invoked as the method, which calls
         # send_command. It should take 0 or one args
         def _dispatcher(self, *args):
+            """ Dispatch to send_command """
             arg_number = len(args)
             if arg_number > 1:
                 raise TypeError(
@@ -162,6 +164,7 @@ class Service(object):
         # _dispatcher is now an unbound menthod, but we need a bound method.
         # This turns an unbound method into a bound method (i.e. one that
         # takes self - an instance of the class - as the first parameter)
+        # pylint: disable=no-member
         method = _dispatcher.__get__(self, self.__class__)
         # Now we have a bound method, we cache it on this instance, so that
         # next time we don't have to go through this again
@@ -171,7 +174,8 @@ class Service(object):
         # return our new bound method, which will be called by Python
         return method
 
-    def wrap_arguments(self, args=None):
+    @staticmethod
+    def wrap_arguments(args=None):
         """ Wrap a list of tuples in xml ready to pass into a SOAP request.
 
         args is a list of (name, value) tuples specifying the name of each
@@ -188,15 +192,20 @@ class Service(object):
         """
         if args is None:
             args = []
-        tag = ["<{name}>{value}</{name}>".format(
-            name=name, value=escape("%s" % value, {'"': "&quot;"}))
-            for name, value in args]  # % converts to unicode because we are
-        # using unicode literals. Avoids use of 'unicode' function which does
-        # not exist in python 3
-        xml = "".join(tag)
+
+        tags = []
+        for name, value in args:
+            tag = "<{name}>{value}</{name}>".format(
+                name=name, value=escape("%s" % value, {'"': "&quot;"}))
+            # % converts to unicode because we are using unicode literals.
+            # Avoids use of 'unicode' function which does not exist in python 3
+            tags.append(tag)
+
+        xml = "".join(tags)
         return xml
 
-    def unwrap_arguments(self, xml_response):
+    @staticmethod
+    def unwrap_arguments(xml_response):
         """ Extract arguments and their values from a SOAP response.
 
         Given an soap/xml response, return a dict of {argument_name, value)}
@@ -291,8 +300,8 @@ class Service(object):
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, send the command to the Sonos device. args
         can be empty.
-        Return a dict of {argument_name, value)} items or True on success. Raise
-        an exception on failure.
+        Return a dict of {argument_name, value)} items or True on success.
+        Raise an exception on failure.
 
         """
 
@@ -318,7 +327,7 @@ class Service(object):
             try:
                 self.handle_upnp_error(response.text)
             except Exception as exc:
-                log.exception(exc.message)
+                log.exception(str(exc))
                 raise
         else:
             # Something else has gone wrong. Probably a network error. Let
@@ -408,8 +417,10 @@ class Service(object):
                      Argument(name='DesiredDateFormat', vartype='string')],
             out_args=[]) """
 
+        # pylint: disable=too-many-locals
         # TODO: Provide for Allowed value list, Allowed value range,
         # default value
+        # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
@@ -445,6 +456,7 @@ class Service(object):
 
         """
 
+        # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
@@ -537,7 +549,7 @@ class ContentDirectory(Service):
         })
 
 
-class MS_ConnectionManager(Service):
+class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
     """ UPnP standard connection manager service for the media server."""
     def __init__(self, soco):
         super(MS_ConnectionManager, self).__init__(soco)
@@ -555,7 +567,7 @@ class RenderingControl(Service):
         self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
 
 
-class MR_ConnectionManager(Service):
+class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
     """ UPnP standard connection manager service for the media renderer."""
     def __init__(self, soco):
         super(MR_ConnectionManager, self).__init__(soco)
@@ -613,4 +625,5 @@ class GroupRenderingControl(Service):
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
-        self.event_subscription_url = "/MediaRenderer/GroupRenderingControl/Event"
+        self.event_subscription_url = \
+            "/MediaRenderer/GroupRenderingControl/Event"

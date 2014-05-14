@@ -1,32 +1,22 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-public-methods
+
 """
 
 Classes to handle Sonos UPnP Events and Subscriptions
 
 """
+
 from __future__ import unicode_literals
 
-try:  # python 3
-    from http.server import SimpleHTTPRequestHandler
-    from urllib.request import urlopen
-    from urllib.error import URLError
-    import socketserver
-    from queue import Queue
-except ImportError:  # python 2.7
-    from SimpleHTTPServer import SimpleHTTPRequestHandler
-    from urllib2 import urlopen, URLError
-    import SocketServer as socketserver
-    from Queue import Queue
 
 import threading
 import socket
 import logging
 import requests
 
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
+from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
+                     Queue,)
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -65,11 +55,16 @@ class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """ A TCP server which handles each new request in a new thread """
     allow_reuse_address = True
 
+    def __init__(self, *args, **kwargs):
+        super(EventServer, self).__init__(*args, **kwargs)
+        # the event_queue is initialized in EventServerThread.run()
+        self.event_queue = None
+
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
     """ Handles HTTP NOTIFY Verbs sent to the listener server """
 
-    def do_NOTIFY(self):
+    def do_NOTIFY(self):  # pylint: disable=invalid-name
         """ Handle a NOTIFY request.  See the UPnP Spec for details."""
         headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
@@ -145,8 +140,8 @@ class EventListener(object):
 
         """
 
-        # Find our local network IP address which is accessible to the Sonos
-        # net. See http://stackoverflow.com/q/166506
+        # Find our local network IP address which is accessible to the
+        # Sonos net, see http://stackoverflow.com/q/166506
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         temp_sock.connect((any_zone.ip_address, 1400))
