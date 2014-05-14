@@ -21,12 +21,12 @@ except ImportError:  # python 2.7
 import threading
 import socket
 import logging
+import requests
+
 try:
     import xml.etree.cElementTree as XML
 except ImportError:
     import xml.etree.ElementTree as XML
-
-import requests
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
