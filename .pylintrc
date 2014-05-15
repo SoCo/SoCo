@@ -4,3 +4,10 @@
 # put into the first line, which is not good practice
 # see https://github.com/SoCo/SoCo/issues/127
 disable=too-many-lines
+
+[TYPECHECK]
+
+# List of module names for which member attributes should not be checked
+# (useful for modules/projects where namespaces are manipulated during runtime
+# and thus extisting member attributes cannot be deduced by static analysis
+ignored-modules=pytest
