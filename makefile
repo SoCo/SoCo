@@ -1,6 +1,6 @@
 
 lint: soco
 	flake8 soco
-	pylint --rcfile=.pylintrc soco
+	pylint --disable=I0011 --rcfile=.pylintrc soco
 
 .PHONY: lint
