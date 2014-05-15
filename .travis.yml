@@ -10,6 +10,5 @@ install:
   - pip install -r requirements-dev.txt
 
 script:
-  - python -m pytest unittest/test_services.py
-  - python -m pytest unittest/test_data_structures.py
   - make lint
+  - py.test .
