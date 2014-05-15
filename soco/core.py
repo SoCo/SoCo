@@ -562,7 +562,8 @@ class SoCo(_SocoSingletonBase):
 
         Return an iterable over all the available groups"""
 
-# zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like this:
+# zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like
+# this:
 #
 # <ZoneGroups>
 #   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
