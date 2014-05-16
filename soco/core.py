@@ -16,6 +16,7 @@ import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
+from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem
 from .utils import really_unicode, really_utf8, camel_to_underscore
@@ -206,8 +207,6 @@ class SoCo(_SocoSingletonBase):
     """
     # Stores the IP addresses of all the speakers in a network
     speakers_ip = []
-    # Stores the topology of all Zones in the network
-    topology = {}
 
     def __init__(self, ip_address):
         super(SoCo, self).__init__()
@@ -557,6 +556,81 @@ class SoCo(_SocoSingletonBase):
             ('DesiredLoudness', loudness_value)
             ])
 
+    @property
+    def all_groups(self):
+        """ Obtain and parse Group topology information
+
+        Return an iterable over all the available groups"""
+
+# zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like
+# this:
+#
+# <ZoneGroups>
+#   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+#     <ZoneGroupMember
+#         BootSeq="33"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:zoneextender"
+#         Invisible="1"
+#         IsZoneBridge="1"
+#         Location="http://192.168.1.100:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000ZZZ1400"
+#         ZoneName="BRIDGE"/>
+#   </ZoneGroup>
+#   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
+#     <ZoneGroupMember
+#         BootSeq="44"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:living"
+#         Location="http://192.168.1.101:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000XXX1400"
+#         ZoneName="Living Room"/>
+#     <ZoneGroupMember
+#         BootSeq="52"
+#         Configuration="1"
+#         Icon="x-rincon-roomicon:kitchen"
+#         Location="http://192.168.1.102:1400/xml/device_description.xml"
+#         MinCompatibleVersion="22.0-00000"
+#         SoftwareVersion="24.1-74200"
+#         UUID="RINCON_000YYY1400"
+#         ZoneName="Kitchen"/>
+#   </ZoneGroup>
+# </ZoneGroups>
+#
+
+        zgs = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        tree = XML.fromstring(zgs.encode('utf-8'))
+        for group_element in tree.iter('ZoneGroup'):
+            coordinator_uid = group_element.attrib['Coordinator']
+            uid = group_element.attrib['ID']
+            members = set()
+            for member_element in group_element.iter('ZoneGroupMember'):
+                ip_addr = member_element.attrib['Location'].\
+                    split('//')[1].split(':')[0]
+                zone = SoCo(ip_addr)
+                if member_element.attrib['UUID'] == coordinator_uid:
+                    coordinator = zone
+                members.add(zone)
+            yield ZoneGroup(uid, coordinator, members)
+
+    @property
+    def group(self):
+        """The Zone Group of which this device is a member.
+
+        group will be None if this zone is a slave in a stereo pair."""
+        current_group_id = self.zoneGroupTopology.GetZoneGroupAttributes()[
+            'CurrentZoneGroupID']
+        if current_group_id:
+            for group in self.all_groups:
+                if group.uid == current_group_id:
+                    return group
+        else:
+            return None
+
     def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party
         Mode.
@@ -831,33 +905,6 @@ class SoCo(_SocoSingletonBase):
                         split('//')[1].split(':')[0]
 
         return coord_ip
-
-    def __get_topology(self, refresh=False):
-        """ Gets the topology if it is not already available or if refresh=True
-
-        Code contributed by Aaron Daubman (daubman@gmail.com)
-
-        Arguments:
-        refresh -- Refresh the topology cache
-
-        """
-        if not self.topology or refresh:
-            self.topology = {}
-            response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/topology')
-            dom = XML.fromstring(really_utf8(response.content))
-            for player in dom.find('ZonePlayers'):
-                if player.text not in self.topology:
-                    self.topology[player.text] = {}
-                self.topology[player.text]['group'] = \
-                    player.attrib.get('group')
-                self.topology[player.text]['uuid'] = player.attrib.get('uuid')
-                self.topology[player.text]['coordinator'] = \
-                    (player.attrib.get('coordinator') == 'true')
-                # Split the IP out of the URL returned in location
-                # e.g. return '10.1.1.1' from 'http://10.1.1.1:1400/...'
-                self.topology[player.text]['ip'] = \
-                    player.attrib.get('location').split('//')[1].split(':')[0]
 
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
