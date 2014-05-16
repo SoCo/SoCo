@@ -42,6 +42,8 @@ from __future__ import unicode_literals, absolute_import
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
+import threading
+from time import time
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
@@ -96,6 +98,14 @@ class Service(object):
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{}/Event'.format(self.service_type)
+        # A per-instance cache for storing the results of UPnP calls
+        self._cache = {}
+        # A thread lock for the cache, because it may be accessed from the
+        # event handler threads
+        self._cache_lock = threading.Lock()
+        #: The default caching interval in seconds for this service. Set to 0
+        #  to disable the cache by default
+        self.default_cache_timeout = 0
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -142,20 +152,10 @@ class Service(object):
         """
 
         # Define a function to be invoked as the method, which calls
-        # send_command. It should take 0 or one args
-        def _dispatcher(self, *args):
+        # send_command.
+        def _dispatcher(self, *args, **kwargs):
             """ Dispatch to send_command """
-            arg_number = len(args)
-            if arg_number > 1:
-                raise TypeError(
-                    "TypeError: {} takes 0 or 1 argument(s) ({} given)"
-                    .format(action, arg_number))
-            elif arg_number == 0:
-                args = None
-            else:
-                args = args[0]
-
-            return self.send_command(action, args)
+            return self.send_command(action, *args, **kwargs)
 
         # rename the function so it appears to be the called method. We
         # probably don't need this, but it doesn't harm
@@ -293,18 +293,57 @@ class Service(object):
                    'SOAPACTION': soap_action}
         return (headers, body)
 
-    def send_command(self, action, args=None):
+    def send_command(self, action, args=None, cache_timeout=None):
         """ Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, send the command to the Sonos device. args
         can be empty.
+
+        A simple cache is operated so that a previous result up to
+        `cache_timeout`seconds old, obtained with the same arguments,may be
+        returned, saving a further network call. The cache may be invalidated
+        or even primed from another thread (for example if a UPnP event is
+        received to indicate that the state of the Sonos device has changed),
+        so all access to the cache must be protected by a lock. If
+        `cache_timeout` is None or not specified, the default cache timeout for
+        this service will be used.
+
+        At present, the cache can theoretically grow and grow, since entries
+        are not automatically purged, though in practice this is unlikely since
+        there are not that many different combinations of arguments, so not
+        that many different cache entries will be created. If this becomes a
+        problem, use a thread and timer to purge the cache, or rewrite this to
+        use a LRU cache!
+
+        If you need to, clear the whole cache (for this service instance) as
+        follows::
+
+            with self._cache_lock:
+                self._cache.clear()
+
+
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
 
         """
-
+        # Lookk in the cache to see if a service call with these args has been
+        # made within cache_timeout seconds. If it has, we can just return the
+        # cached result.
+        if cache_timeout is None:
+            cache_timeout = self.default_cache_timeout
+        # Generate a unique, hashable, representation of teh action and args
+        cache_key = "{}-{!r}".format(action, args)
+        # Lock and check
+        with self._cache_lock:
+            if cache_key in self._cache:
+                timestamp, result = self._cache[cache_key]
+                age = time() - timestamp
+                if age < cache_timeout:
+                    log.debug("Cache hit: %s", cache_key)
+                    return result
+        # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
@@ -317,6 +356,10 @@ class Service(object):
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
             result = self.unwrap_arguments(response.text) or True
+            # Store in the cache. There is no need to do this if there was an
+            # error, since we would want to try a network call again.
+            with self._cache_lock:
+                self._cache[cache_key] = (time(), result)
             log.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result
@@ -332,7 +375,6 @@ class Service(object):
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
-            # raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
