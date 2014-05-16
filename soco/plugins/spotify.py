@@ -4,9 +4,9 @@
 """ Spotify Plugin """
 
 import requests
-import urllib
 
 from ..xml import XML
+from ..compat import quote_plus
 from . import SoCoPlugin
 
 
@@ -71,9 +71,9 @@ class SpotifyTrack(object):
             SA_RINCON2311_X_#Svc2311-0-Token
         </desc>
     </item>
-</DIDL-Lite>""".format(urllib.quote_plus(self.data['spotify_uri']),
-                       urllib.quote_plus(self.data['album_uri']),
-                       urllib.quote_plus(self.data['title']))
+</DIDL-Lite>""".format(quote_plus(self.data['spotify_uri']),
+                       quote_plus(self.data['album_uri']),
+                       quote_plus(self.data['title']))
             didl_metadata = didl_metadata.encode('utf-8')
             return XML.fromstring(didl_metadata)
         else:
@@ -85,7 +85,7 @@ class SpotifyTrack(object):
         if 'spotify_uri' in self.data:
             track = self.data['spotify_uri']
             track = track.encode('utf-8')
-            track = urllib.quote_plus(track)
+            track = quote_plus(track)
             return 'x-sonos-spotify:' + track
         else:
             return ''
@@ -140,7 +140,7 @@ class SpotifyAlbum(object):
         if 'spotify_uri' in self.data:
             album = self.data['spotify_uri']
             album = album.encode('utf-8')
-            album = urllib.quote_plus(album)
+            album = quote_plus(album)
             return "x-rincon-cpcontainer:" + album
         else:
             return ""
@@ -162,9 +162,9 @@ class SpotifyAlbum(object):
             SA_RINCON2311_X_#Svc2311-0-Token
         </desc>
     </item>
-</DIDL-Lite>""".format(urllib.quote_plus(self.data['spotify_uri']),
-                       urllib.quote_plus(self.data['artist_uri']),
-                       urllib.quote_plus(self.data['title']))
+</DIDL-Lite>""".format(quote_plus(self.data['spotify_uri']),
+                       quote_plus(self.data['artist_uri']),
+                       quote_plus(self.data['title']))
             didl_metadata = didl_metadata.encode('utf-8')
             return XML.fromstring(didl_metadata)
         else:
