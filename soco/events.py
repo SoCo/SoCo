@@ -88,6 +88,15 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
         content = self.rfile.read(content_length)
+        log.debug("Event %s received for sid: %s", seq, sid)
+        log.debug("Current thread is %s", threading.current_thread())
+        # find the relevant service from the sid and pass the event details on
+        # to the service's event handler for processing. It is possible that
+        # another thread has removed the mapping, so take precautions.
+        with _sid_to_service_lock:
+            service = _sid_to_service.get(sid)
+        if service is not None:
+            service.handle_event(sid, seq, content)
         # Build a simple event structure to put on the queue, containing the
         # useful information extracted from the request. Putting a class
         # instance on the queue may cause race conditions when its properties
@@ -96,13 +105,10 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
             'seq': seq,
             'sid': sid,
             'content': content
-            }
-        log.debug("Event %s received for sid: %s", seq, sid)
-        log.debug("Current thread is %s", threading.current_thread())
-        # put it on the relevant queue for later consumption
-        with _event_queues_lock:
+        }
+        with _sid_to_event_queue_lock:
             try:
-                _event_queues[sid].put(event)
+                _sid_to_event_queue[sid].put(event)
             except KeyError:
                 pass
         self.send_response(200)
@@ -258,8 +264,11 @@ class Subscription(object):
             service.base_url + service.event_subscription_url, self.sid)
         # Add the queue to the master dict of queues so it can be looked up
         # by sid
-        with _event_queues_lock:
-            _event_queues[self.sid] = self.events
+        with _sid_to_event_queue_lock:
+            _sid_to_event_queue[self.sid] = self.events
+        # And do the same for the sid to service mapping
+        with _sid_to_service_lock:
+            _sid_to_service[self.sid] = self.service
 
     def renew(self):
         """Renew the event subscription.
@@ -312,19 +321,31 @@ class Subscription(object):
             "Unsubscribed from %s, sid: %s",
             self.service.base_url + self.service.event_subscription_url,
             self.sid)
-        # remove queue from master dict
-        with _event_queues_lock:
-            del _event_queues[self.sid]
+        # remove queue from event queues and sid to service mappings
+        with _sid_to_event_queue_lock:
+            try:
+                del _sid_to_event_queue[self.sid]
+            except KeyError:
+                pass
+        with _sid_to_service_lock:
+            try:
+                del _sid_to_service[self.sid]
+            except KeyError:
+                pass
         self._has_been_unsubscribed = True
 
 # pylint: disable=C0103
 event_listener = EventListener()
 
+# Thread safe mappings.
 # Used to store a mapping of sids to event queues
-_event_queues = weakref.WeakValueDictionary()
+_sid_to_event_queue = weakref.WeakValueDictionary()
+# Used to store a mapping of sids to service instances
+_sid_to_service = weakref.WeakValueDictionary()
 
-# A global lock for accessing _event_queues. You must only ever access
-# _event_queues in the context of this lock, eg:
-# with _event_queue_lock:
-#    queue = _event_queues[sid]
-_event_queues_lock = threading.Lock()
+# The locks to go with them
+# You must only ever access the mapping in the context of this lock, eg:
+#   with _sid_to_event_queue_lock:
+#       queue = _sid_to_event_queue[sid]
+_sid_to_event_queue_lock = threading.Lock()
+_sid_to_service_lock = threading.Lock()

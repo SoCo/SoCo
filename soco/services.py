@@ -408,6 +408,23 @@ class Service(object):
         subscription.subscribe()
         return subscription
 
+    @staticmethod
+    def handle_event(sid, seq, content):
+        """ Handle a UPnP event for this service.
+
+        This will be called before an event is put onto the event queue. Code
+        here may take relevant action, such as invalidating caches, depending
+        on the content of the event. The event will be put onto the event queue
+        once this method returns.
+
+        .. warning:: This method will not be called from the main thread but by
+           one or more threads, which handle the events as they come in. You
+           *must not* access any class, instance or global variables without
+           appropriate locks
+
+        """
+        pass
+
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
         to pass to the action) and out_arguments (ie returned values).
