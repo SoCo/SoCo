@@ -302,7 +302,7 @@ class Service(object):
         can be empty.
 
         A simple cache is operated so that a previous result up to
-        `cache_timeout`seconds old, obtained with the same arguments,may be
+        `cache_timeout`seconds old, obtained with the same arguments, may be
         returned, saving a further network call. The cache may be invalidated
         or even primed from another thread (for example if a UPnP event is
         received to indicate that the state of the Sonos device has changed),
@@ -317,8 +317,8 @@ class Service(object):
         problem, use a thread and timer to purge the cache, or rewrite this to
         use a LRU cache!
 
-        If you need to, clear the whole cache (for this service instance) as
-        follows::
+        If you need to do so, clear the whole cache (for this service instance)
+        as follows::
 
             with self._cache_lock:
                 self._cache.clear()
@@ -333,7 +333,7 @@ class Service(object):
         # cached result.
         if cache_timeout is None:
             cache_timeout = self.default_cache_timeout
-        # Generate a unique, hashable, representation of teh action and args
+        # Generate a unique, hashable, representation of the action and args
         cache_key = "{}-{!r}".format(action, args)
         # Lock and check
         with self._cache_lock:
