@@ -5,6 +5,9 @@
 from __future__ import unicode_literals, absolute_import
 
 import re
+import threading
+from time import time
+from cPickle import dumps
 from .compat import StringType, UnicodeType
 
 
@@ -59,3 +62,96 @@ def prettify(unicode_text):
     import xml.dom.minidom
     reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
     return reparsed.toprettyxml(indent="  ", newl="\n")
+
+
+class TimedCache(object):
+
+    """ A simple thread-safe cache for caching method return values
+
+    At present, the cache can theoretically grow and grow, since entries are
+    not automatically purged, though in practice this is unlikely since there
+    are not that many different combinations of arguments in the places where
+    it is used in SoCo, so not that many different cache entries will be
+    created. If this becomes a problem, use a thread and timer to purge the
+    cache, or rewrite this to use LRU logic!
+
+    """
+
+    def __init__(self, default_timeout=0):
+        super(TimedCache, self).__init__()
+        self._cache = {}
+        # A thread lock for the cache
+        self._cache_lock = threading.Lock()
+        #: The default caching interval in seconds. Set to 0
+        #  to disable the cache by default
+        self.default_timeout = default_timeout
+
+    @staticmethod
+    def make_key(args, kwargs):
+        """
+        Generate a unique, hashable, representation of the args and kwargs
+
+        """
+        # This is not entirely straightforward, since args and kwargs may
+        # contain mutable items and unicode. Possibiities include using
+        # __repr__, frozensets, and code from Py3's LRU cache. But cPickle
+        # works, and although it is not as fast as some methods, it is good
+        # enough
+        #cache_key = "{!r}-{!r}".format(args, kwargs)
+        cache_key = dumps((args, kwargs))
+        return cache_key
+
+    def get(self, *args, **kwargs):
+
+        """
+
+        Get an item from the cache for this combination of args and kwargs. If
+        `timeout` is specified as one of the keyword arguments, return a
+        cached value only if it is less than `timeout` seconds old. If
+        `timeout` is None or not specified, the default cache timeout for this
+        cache will be used.
+
+        Return None if no item is found. This means that there is no point
+        storing an item in the cache if is None.
+
+        """
+        # Look in the cache to see if a service call with these args has been
+        # made within cache_timeout seconds. If it has, we can just return the
+        # cached result.
+        timeout = kwargs.pop('timeout', None)
+        if timeout is None:
+            timeout = self.default_timeout
+        # Lock and check
+        cache_key = self.make_key(args, kwargs)
+        with self._cache_lock:
+            if cache_key in self._cache:
+                timestamp, item = self._cache[cache_key]
+                age = time() - timestamp
+                if age < timeout:
+                    return item
+        return None
+
+    def put(self, item, *args, **kwargs):
+        """ Put an item into the cache, for this combination of args and
+        kwargs """
+        print item
+        cache_key = self.make_key(args, kwargs)
+        print args
+        with self._cache_lock:
+            self._cache[cache_key] = (time(), item)
+            print self._cache
+
+    def delete(self, *args, **kwargs):
+        """Delete an item from the cache for this combination of args and
+        kwargs"""
+        cache_key = self.make_key(args, kwargs)
+        with self._cache_lock:
+            try:
+                del self._cache[cache_key]
+            except KeyError:
+                pass
+
+    def clear(self):
+        """Empty the whole cache"""
+        with self._cache_lock:
+            self._cache.clear()

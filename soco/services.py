@@ -42,12 +42,10 @@ from __future__ import unicode_literals, absolute_import
 from collections import namedtuple
 from xml.sax.saxutils import escape
 import logging
-import threading
-from time import time
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
-from .utils import prettify
+from .utils import prettify, TimedCache
 from .events import event_listener
 from .xml import XML
 
@@ -98,14 +96,8 @@ class Service(object):
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{}/Event'.format(self.service_type)
-        # A per-instance cache for storing the results of UPnP calls
-        self._cache = {}
-        # A thread lock for the cache, because it may be accessed from the
-        # event handler threads
-        self._cache_lock = threading.Lock()
-        #: The default caching interval in seconds for this service. Set to 0
-        #  to disable the cache by default
-        self.default_cache_timeout = 0
+        #: A cache for storing the result of network calls
+        self._cache = TimedCache(default_timeout=0)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -305,44 +297,17 @@ class Service(object):
         `cache_timeout`seconds old, obtained with the same arguments, may be
         returned, saving a further network call. The cache may be invalidated
         or even primed from another thread (for example if a UPnP event is
-        received to indicate that the state of the Sonos device has changed),
-        so all access to the cache must be protected by a lock. If
-        `cache_timeout` is None or not specified, the default cache timeout for
-        this service will be used.
-
-        At present, the cache can theoretically grow and grow, since entries
-        are not automatically purged, though in practice this is unlikely since
-        there are not that many different combinations of arguments, so not
-        that many different cache entries will be created. If this becomes a
-        problem, use a thread and timer to purge the cache, or rewrite this to
-        use a LRU cache!
-
-        If you need to do so, clear the whole cache (for this service instance)
-        as follows::
-
-            with self._cache_lock:
-                self._cache.clear()
-
+        received to indicate that the state of the Sonos device has changed).
 
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
 
         """
-        # Lookk in the cache to see if a service call with these args has been
-        # made within cache_timeout seconds. If it has, we can just return the
-        # cached result.
-        if cache_timeout is None:
-            cache_timeout = self.default_cache_timeout
-        # Generate a unique, hashable, representation of the action and args
-        cache_key = "{}-{!r}".format(action, args)
-        # Lock and check
-        with self._cache_lock:
-            if cache_key in self._cache:
-                timestamp, result = self._cache[cache_key]
-                age = time() - timestamp
-                if age < cache_timeout:
-                    log.debug("Cache hit: %s", cache_key)
-                    return result
+
+        result = self._cache.get(action, args, timeout=cache_timeout)
+        if result is not None:
+            log.debug("Cache hit")
+            return result
         # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
@@ -358,8 +323,7 @@ class Service(object):
             result = self.unwrap_arguments(response.text) or True
             # Store in the cache. There is no need to do this if there was an
             # error, since we would want to try a network call again.
-            with self._cache_lock:
-                self._cache[cache_key] = (time(), result)
+            self._cache.put(result, action, args)
             log.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result

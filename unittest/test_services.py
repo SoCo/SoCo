@@ -85,8 +85,6 @@ def test_init_defaults(service):
     assert service.control_url == "/Service/Control"
     assert service.scpd_url == "/xml/Service1.xml"
     assert service.event_subscription_url == "/Service/Event"
-    assert isinstance(service._cache, dict)
-    assert service.default_cache_timeout == 0
 
 
 def test_method_dispatcher_function_creation(service):
@@ -178,7 +176,7 @@ def test_send_command(service):
             ('CurrentURI', 'URI'),
             ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], cache_timeout = 2)
+            ], cache_timeout=2)
         assert not fake_post.called
         # but should not affefct a call with different params
         fake_post.reset_mock()
