@@ -97,7 +97,6 @@ class TimedCache(object):
         # __repr__, frozensets, and code from Py3's LRU cache. But cPickle
         # works, and although it is not as fast as some methods, it is good
         # enough
-        #cache_key = "{!r}-{!r}".format(args, kwargs)
         cache_key = dumps((args, kwargs))
         return cache_key
 
@@ -134,12 +133,9 @@ class TimedCache(object):
     def put(self, item, *args, **kwargs):
         """ Put an item into the cache, for this combination of args and
         kwargs """
-        print item
         cache_key = self.make_key(args, kwargs)
-        print args
         with self._cache_lock:
             self._cache[cache_key] = (time(), item)
-            print self._cache
 
     def delete(self, *args, **kwargs):
         """Delete an item from the cache for this combination of args and
