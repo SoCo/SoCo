@@ -1131,7 +1131,8 @@ class SoCo(_SocoSingletonBase):
                        'raised a CannotCreateDIDLMetadata exception with the '
                        'following message:\n{0}').format(str(exception))
             raise ValueError(message)
-        metadata = metadata.encode('utf-8')
+        if isinstance(metadata, str):
+            metadata = metadata.encode('utf-8')
 
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
