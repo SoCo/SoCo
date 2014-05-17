@@ -19,3 +19,8 @@ except ImportError:  # python 2.7
     import SocketServer as socketserver  # nopep8
     from Queue import Queue  # nopep8
     from types import StringType, UnicodeType  # nopep8
+
+try:  # python 2.7 - this has to be done the other way rund
+    from cPickle import dumps  # nopep8
+except ImportError:  # python 3
+    from pickle import dumps  # nopep8

@@ -7,8 +7,7 @@ from __future__ import unicode_literals, absolute_import
 import re
 import threading
 from time import time
-from cPickle import dumps
-from .compat import StringType, UnicodeType
+from .compat import StringType, UnicodeType, dumps
 
 
 def really_unicode(in_string):
