@@ -55,10 +55,13 @@ def discover():
             # Look for the model in parentheses in a line like this
             # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
             search = re.search(br'SERVER.*\((.*)\)', data)
+
             try:
                 model = really_unicode(search.group(1))
             except AttributeError:
                 model = None
+            # Extract the UID
+            uid = re.search(br'USN:\suuid:(.*?):', data).group(1)
 
             # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
             # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
@@ -67,6 +70,7 @@ def discover():
             # be returned
             if model and model != "BR100":
                 soco = SoCo(addr[0])
+                soco._uid = uid  # pylint: disable=protected-access
                 yield soco
         else:
             break
@@ -189,6 +193,7 @@ class SoCo(_SocoSingletonBase):
 
     Properties::
 
+        uid -- The speaker's unique identifier
         mute -- The speaker's mute status.
         volume -- The speaker's volume.
         bass -- The speaker's bass EQ.
@@ -225,6 +230,9 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
+        self.device_description_url = \
+            'http://{}:1400/xml/device_description.xml'.format(self.ip_address)
+        self._uid = None
 
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
@@ -246,6 +254,19 @@ class SoCo(_SocoSingletonBase):
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')
             ])
+
+    @property
+    def uid(self):
+        """ A unique identifier.  Looks like: RINCON_000XXXXXXXXXX1400 """
+        # This may have been set on discovery
+        if self._uid is not None:
+            return self._uid
+        # if not, we have to get it from the device_description. Is there a
+        # better way?
+        response = requests.get(self.device_description_url).text
+        tree = XML.fromstring(response.encode('utf-8'))
+        self._uid = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
+        return self._uid
 
     @property
     def play_mode(self):
@@ -872,39 +893,19 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
 
     def get_group_coordinator(self, zone_name):
-        """ Get the IP address of the Sonos system that is coordinator for
-        the group containing zone_name
-
-        Code contributed by Aaron Daubman (daubman@gmail.com)
-                            Murali Allada (amuralis@hotmail.com)
-
-        Arguments:
-        zone_name -- Name of the Zone, for which you need a coordinator
-
-        Returns:
-        The IP address of the coordinator or None if one cannot be determined
+        """     .. deprecated:: 0.8
+                   Use :meth:`group` or :meth:`all_groups` instead.
 
         """
-        coord_ip = None
-        coord_uuid = None
-        zgroups = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
-        # pylint: disable=invalid-name
-        XMLtree = XML.fromstring(really_utf8(zgroups))
-
-        for grp in XMLtree:
-            for zone in grp:
-                if zone_name == zone.attrib['ZoneName']:
-                    # find UUID of coordinator
-                    coord_uuid = grp.attrib['Coordinator']
-
-        for grp in XMLtree:
-            for zone in grp:
-                if coord_uuid == zone.attrib['UUID']:
-                    # find IP of coordinator UUID for this group
-                    coord_ip = zone.attrib['Location'].\
-                        split('//')[1].split(':')[0]
-
-        return coord_ip
+        import warnings
+        warnings.warn(
+            "get_group_coordinator is deprecated. "
+            "Use the group or all_groups methods instead")
+        for group in self.all_groups:
+            for member in group:
+                if member.player_name == zone_name:
+                    return group.coordinator.ip_address
+        return None
 
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
