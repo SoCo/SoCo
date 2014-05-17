@@ -327,7 +327,7 @@ class SoCo(_SocoSingletonBase):
             self.get_speaker_info()
 
         # first, set the queue itself as the source URI
-        uri = 'x-rincon-queue:{0}#0'.format(self.speaker_info['uid'])
+        uri = 'x-rincon-queue:{0}#0'.format(self.uid)
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', uri),
@@ -671,7 +671,7 @@ class SoCo(_SocoSingletonBase):
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        master_speaker_info = self.get_speaker_info()
+
         ips = self.get_speakers_ip()
 
         return_status = True
@@ -679,7 +679,7 @@ class SoCo(_SocoSingletonBase):
         for ip in ips:  # pylint: disable=C0103
             if ip != self.ip_address:
                 slave = SoCo(ip)
-                ret = slave.join(master_speaker_info["uid"])
+                ret = slave.join(self.uid)
                 if ret is False:
                     return_status = False
 
@@ -733,11 +733,10 @@ class SoCo(_SocoSingletonBase):
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        speaker_info = self.get_speaker_info()
-        speaker_uid = speaker_info['uid']
+
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon-stream:{}'.format(speaker_uid)),
+            ('CurrentURI', 'x-rincon-stream:{}'.format(self.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -754,11 +753,10 @@ class SoCo(_SocoSingletonBase):
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        speaker_info = self.get_speaker_info()
-        speaker_uid = speaker_info['uid']
+
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-sonos-htastream:{}:spdif'.format(speaker_uid)),
+            ('CurrentURI', 'x-sonos-htastream:{}:spdif'.format(self.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -881,7 +879,7 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['zone_name'] = \
                 dom.findtext('.//ZoneName')
             self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
-            self.speaker_info['uid'] = dom.findtext('.//LocalUID')
+            self.speaker_info['uid'] = self.uid
             self.speaker_info['serial_number'] = \
                 dom.findtext('.//SerialNumber')
             self.speaker_info['software_version'] = \
