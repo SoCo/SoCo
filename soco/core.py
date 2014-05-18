@@ -12,6 +12,7 @@ import logging
 import traceback
 from textwrap import dedent
 import re
+import itertools
 import requests
 
 from .services import DeviceProperties, ContentDirectory
@@ -269,6 +270,23 @@ class SoCo(_SocoSingletonBase):
         # the udn has a "uuid:" prefix before the uid, so we need to strip it
         self._uid = uid = udn[5:]
         return uid
+
+    @property
+    def is_visible(self):
+        """ Is this zone visible? A zone might be invisible if, for example it
+        is a bridge, or the slave part of stereo pair.
+
+        return True or False
+
+        """
+        zgs = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        tree = XML.fromstring(zgs.encode('utf-8'))
+        # in the topolgy xml, look for a ZoneGroupMember which has our uid
+        zone = tree.find(".//ZoneGroupMember[@UUID='{}']".format(self.uid))
+        # Find its "Invisible" attribute, if any, and set is_visible
+        # accordingly
+        is_visible = (zone.attrib.get('Invisible', 0) == 0)
+        return is_visible
 
     @property
     def play_mode(self):
@@ -665,42 +683,23 @@ class SoCo(_SocoSingletonBase):
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
 
-        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-
-        Returns:
-        True if partymode is set
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
 
-        ips = self.get_speakers_ip()
+        for zone in itertools.chain(*self.all_groups):
+            if zone is not self and zone.is_visible:
+                zone.join(self)
 
-        return_status = True
-        # loop through all IP's in topology and make them join this master
-        for ip in ips:  # pylint: disable=C0103
-            if ip != self.ip_address:
-                slave = SoCo(ip)
-                ret = slave.join(self.uid)
-                if ret is False:
-                    return_status = False
-
-        return return_status
-
-    def join(self, master_uid):
+    def join(self, master):
         """ Join this speaker to another "master" speaker.
 
-        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-
-        Returns:
-        True if this speaker has joined the master speaker
-
-        Raises SoCoException (or a subclass) upon errors.
+        ..  note:: The signature of this method has changed in 0.8. It now
+            requires a SoCo instance to be passed as `master`, not an IP
+            address
 
         """
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{}'.format(master_uid)),
+            ('CurrentURI', 'x-rincon:{}'.format(master.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -910,29 +909,19 @@ class SoCo(_SocoSingletonBase):
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
 
-        Code contributed by Thomas Bartvig (thomas.bartvig@gmail.com)
-
         Arguments:
-        refresh -- Refresh the speakers IP cache.
+        refresh -- Refresh the speakers IP cache. Ignored. For backward
+            compatibility only
 
         Returns:
-        IP addresses of the Sonos speakers.
+        a set of IP addresses of the Sonos speakers.
+
+        .. deprecated:: 0.8
+
 
         """
-        if self.speakers_ip and not refresh:
-            return self.speakers_ip
-        else:
-            response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/topology')
-            text = response.text
-            grp = re.findall(r'(\d+\.\d+\.\d+\.\d+):1400', text)
-
-            for i in grp:
-                response = requests.get('http://' + i + ':1400/status')
-                if response.status_code == 200:
-                    self.speakers_ip.append(i)
-
-            return self.speakers_ip
+        # pylint: disable=star-args, unused-argument
+        return {zone.ip_address for zone in itertools.chain(*self.all_groups)}
 
     def get_current_transport_info(self):
         """ Get the current playback state
