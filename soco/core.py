@@ -265,8 +265,10 @@ class SoCo(_SocoSingletonBase):
         # better way?
         response = requests.get(self.device_description_url).text
         tree = XML.fromstring(response.encode('utf-8'))
-        self._uid = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
-        return self._uid
+        udn = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
+        # the udn has a "uuid:" prefix before the uid, so we need to strip it
+        self._uid = uid = udn[5:]
+        return uid
 
     @property
     def play_mode(self):
