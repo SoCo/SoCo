@@ -279,14 +279,8 @@ class SoCo(_SocoSingletonBase):
         return True or False
 
         """
-        zgs = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
-        tree = XML.fromstring(zgs.encode('utf-8'))
-        # in the topolgy xml, look for a ZoneGroupMember which has our uid
-        zone = tree.find(".//ZoneGroupMember[@UUID='{}']".format(self.uid))
-        # Find its "Invisible" attribute, if any, and set is_visible
-        # accordingly
-        is_visible = (zone.attrib.get('Invisible', 0) == 0)
-        return is_visible
+        invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
+        return True if invisible == '0' else False
 
     @property
     def play_mode(self):
