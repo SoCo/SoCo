@@ -31,3 +31,7 @@ class CannotCreateDIDLMetadata(SoCoException):
     missing information
 
     """
+
+
+class UnknownXMLStructure(SoCoException):
+    """Raised if XML with and unknown or unexpected structure is returned"""
