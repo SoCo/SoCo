@@ -42,6 +42,7 @@ def parse_event_xml(xml_event):
 
 
 Event = namedtuple('Event', ['sid', 'seq', 'service', 'variables'])
+# pylint: disable=pointless-string-statement
 """ A namedtuple representing a received event.
 
 sid is the subscription id
@@ -76,6 +77,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         event = Event(sid, seq, service, variables)
         # pass the event details on to the service so it can update its cache.
         if service is not None:  # It might have been removed by another thread
+            # pylint: disable=protected-access
             service._update_cache_on_event(event)
         # Find the right queue, and put the event on it
         with _sid_to_event_queue_lock:
