@@ -397,7 +397,7 @@ class Service(object):
         """Subscribe to the service's events.
 
         event_queue is a thread-safe queue object onto which events will
-        be put. If None, a default EventQueue object will be created and used.
+        be put. If None, a Queue object will be created and used.
 
         Returns a subscription object, representing the new subscription
 
@@ -409,18 +409,21 @@ class Service(object):
         return subscription
 
     @staticmethod
-    def handle_event(sid, seq, content):
-        """ Handle a UPnP event for this service.
+    def _update_cache_on_event(event):
+        """ Update the cache when an event is received.
 
-        This will be called before an event is put onto the event queue. Code
-        here may take relevant action, such as invalidating caches, depending
-        on the content of the event. The event will be put onto the event queue
-        once this method returns.
+        This will be called before an event is put onto the event queue. Events
+        will often indicate that the Sonos device's state has changed, so this
+        opportunity is made availabe for the service to update its cache. The
+        event will be put onto the event queue once this method returns.
 
-        .. warning:: This method will not be called from the main thread but by
-           one or more threads, which handle the events as they come in. You
-           *must not* access any class, instance or global variables without
-           appropriate locks
+        `event` is an Event namedtuple: ('sid', 'seq', 'service', 'variables')
+
+        ..  warning:: This method will not be called from the main thread but
+            by one or more threads, which handle the events as they come in.
+            You *must not* access any class, instance or global variables
+            without appropriate locks. Treat all parameters passed to this
+            method as read only.
 
         """
         pass

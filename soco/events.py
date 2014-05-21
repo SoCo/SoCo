@@ -14,6 +14,8 @@ import threading
 import socket
 import logging
 import weakref
+from collections import namedtuple
+
 import requests
 
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
@@ -25,52 +27,28 @@ from .exceptions import SoCoException
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-class EventQueue(Queue):
-    """
-    A thread safe queue for handling events, with the ability to unescape
-    xml
+def parse_event_xml(xml_event):
+    """ Parse a unicode xml_event and return a dict with keys representing the
+    event properties"""
 
-    """
+    result = {}
+    tree = XML.fromstring(xml_event.encode('utf-8'))
+    properties = tree.iterfind(
+        './/{urn:schemas-upnp-org:event-1-0}property')
+    for prop in properties:
+        for variable in prop:
+            result[variable.tag] = variable.text
+    return result
 
-    def get(self, block=True, timeout=None):
-        """ Overrides Queue's get, and unescapes xml automatically
 
-        Returns a dict-like object with keys which are the evented variables
-        and values which are the values in the event. The event sid and seq,
-        and the raw xml of the event are available as properties of the dict
+Event = namedtuple('Event', ['sid', 'seq', 'service', 'variables'])
+""" A namedtuple representing a received event.
 
-        """
-
-        class EventDict(dict):
-            """
-            A dict-like object used to represents events from the event queue.
-
-            """
-            def __init__(self, sid, seq, xml, *args, **kwargs):
-                dict.__init__(self, *args, **kwargs)
-                self.sid = sid
-                self.seq = seq
-                self.xml = xml  # The raw xml returned from the Sonos Device
-
-        event = Queue.get(self, block, timeout)
-        # event is a dict with keys 'seq', 'sid' and 'content' - see
-        # EventNotifyHandler.do_NOTIFY
-        # 'content' is the xml returned by the sonos device. We want to extract
-        # the <property> elements
-        tree = XML.fromstring(event['content'].encode('utf-8'))
-        # parse the state variables to get the relevant variable types
-        properties = tree.iterfind(
-            './/{urn:schemas-upnp-org:event-1-0}property')
-        # Add the seq and sid values to the return value
-        result = EventDict(
-            event['sid'],
-            event['seq'],
-            event['content']
-            )
-        for prop in properties:
-            for variable in prop:
-                result[variable.tag] = variable.text
-        return result
+sid is the subscription id
+seq is the event sequence number for that subscription
+service is the service which is subscribed to the event
+variables is a dict containing the {names: values} of the evented variables
+"""
 
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -90,26 +68,20 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         content = self.rfile.read(content_length)
         log.debug("Event %s received for sid: %s", seq, sid)
         log.debug("Current thread is %s", threading.current_thread())
-        # find the relevant service from the sid and pass the event details on
-        # to the service's event handler for processing. It is possible that
-        # another thread has removed the mapping, so take precautions.
+        # find the relevant service from the sid
         with _sid_to_service_lock:
             service = _sid_to_service.get(sid)
-        if service is not None:
-            service.handle_event(sid, seq, content)
-        # Build a simple event structure to put on the queue, containing the
-        # useful information extracted from the request. Putting a class
-        # instance on the queue may cause race conditions when its properties
-        # are accessed later, so it is best to use a simple dict here
-        event = {
-            'seq': seq,
-            'sid': sid,
-            'content': content
-        }
+        variables = parse_event_xml(content)
+        # Build the Event tuple
+        event = Event(sid, seq, service, variables)
+        # pass the event details on to the service so it can update its cache.
+        if service is not None:  # It might have been removed by another thread
+            service._update_cache_on_event(event)
+        # Find the right queue, and put the event on it
         with _sid_to_event_queue_lock:
             try:
                 _sid_to_event_queue[sid].put(event)
-            except KeyError:
+            except KeyError:  # The key have been deleted in another thread
                 pass
         self.send_response(200)
         self.end_headers()
@@ -218,7 +190,7 @@ class Subscription(object):
         #: An indication of whether the subscription is subscribed
         self.is_subscribed = False
         #: A queue of events received
-        self.events = EventQueue() if event_queue is None else event_queue
+        self.events = Queue() if event_queue is None else event_queue
         # A flag to make sure that an unsubscribed instance is not
         # resubscribed
         self._has_been_unsubscribed = False
