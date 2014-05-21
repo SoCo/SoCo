@@ -164,7 +164,7 @@ def test_send_command(service):
             ('CurrentURI', 'URI'),
             ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ])
+            ], cache_timeout=2)
         assert result == {'CurrentLEDState': 'On', 'Unicode': "μИⅠℂ☺ΔЄ💋"}
         fake_post.assert_called_once_with(
             'http://192.168.1.101:1400/Service/Control',
@@ -176,27 +176,28 @@ def test_send_command(service):
             ('CurrentURI', 'URI'),
             ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], cache_timeout=2)
+            ], 0)
+        # The cache should be hit, so there should be no http request
         assert not fake_post.called
-        # but should not affefct a call with different params
+        # but this should not affefct a call with different params
         fake_post.reset_mock()
         result = service.send_command('SetAVTransportURI', [
             ('InstanceID', 1),
             ('CurrentURI', 'URI2'),
             ('CurrentURIMetaData', 'abcd'),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], cache_timeout = 2)
+            ])
         assert fake_post.called
-        # and calling again after the time interval will avoid the cache
+        # calling again after the time interval will avoid the cache
         fake_post.reset_mock()
         import time
-        time.sleep(1.1)
+        time.sleep(2)
         result = service.send_command('SetAVTransportURI', [
-            ('InstanceID', 1),
-            ('CurrentURI', 'URI2'),
-            ('CurrentURIMetaData', 'abcd'),
+            ('InstanceID', 0),
+            ('CurrentURI', 'URI'),
+            ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], cache_timeout = 1)
+            ])
         assert fake_post.called
 
 def test_handle_upnp_error(service):

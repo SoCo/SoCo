@@ -82,7 +82,7 @@ class TimedCache(object):
         # A thread lock for the cache
         self._cache_lock = threading.Lock()
         #: The default caching interval in seconds. Set to 0
-        #  to disable the cache by default
+        #: to disable the cache by default
         self.default_timeout = default_timeout
 
     @staticmethod
@@ -93,9 +93,9 @@ class TimedCache(object):
         """
         # This is not entirely straightforward, since args and kwargs may
         # contain mutable items and unicode. Possibiities include using
-        # __repr__, frozensets, and code from Py3's LRU cache. But cPickle
+        # __repr__, frozensets, and code from Py3's LRU cache. But pickle
         # works, and although it is not as fast as some methods, it is good
-        # enough
+        # enough at the moment
         cache_key = dumps((args, kwargs))
         return cache_key
 
@@ -103,38 +103,47 @@ class TimedCache(object):
 
         """
 
-        Get an item from the cache for this combination of args and kwargs. If
-        `timeout` is specified as one of the keyword arguments, return a
-        cached value only if it is less than `timeout` seconds old. If
-        `timeout` is None or not specified, the default cache timeout for this
-        cache will be used.
+        Get an item from the cache for this combination of args and kwargs.
 
-        Return None if no item is found. This means that there is no point
-        storing an item in the cache if is None.
+        Return None if no unexpired item is found. This means that there is no
+        point storing an item in the cache if it is None.
 
         """
-        # Look in the cache to see if a service call with these args has been
-        # made within cache_timeout seconds. If it has, we can just return the
-        # cached result.
-        timeout = kwargs.pop('timeout', None)
-        if timeout is None:
-            timeout = self.default_timeout
-        # Lock and check
+        # Look in the cache to see if there is an unexpired item. If there is
+        # we can just return the cached result.
         cache_key = self.make_key(args, kwargs)
+        # Lock and load
         with self._cache_lock:
             if cache_key in self._cache:
-                timestamp, item = self._cache[cache_key]
-                age = time() - timestamp
-                if age < timeout:
+                expirytime, item = self._cache[cache_key]
+
+                if expirytime >= time():
                     return item
+                else:
+                    # An expired item is present - delete it
+                    del self._cache[cache_key]
+        # Nothing found
         return None
 
     def put(self, item, *args, **kwargs):
+
         """ Put an item into the cache, for this combination of args and
-        kwargs """
+        kwargs.
+
+        If `timeout` is specified as one of the keyword arguments, the item
+        will remain available for retrieval for `timeout` seconds. If `timeout`
+        is None or not specified, the default cache timeout for this cache will
+        be used. Specify a `timeout` of 0 (or ensure that the default timeout
+        for this cache is 0) if this item is not to be cached."""
+
+        # Check for a timeout keyword, store and remove it.
+        timeout = kwargs.pop('timeout', None)
+        if timeout is None:
+            timeout = self.default_timeout
         cache_key = self.make_key(args, kwargs)
+        # Store the item, along with the time at which it will expire
         with self._cache_lock:
-            self._cache[cache_key] = (time(), item)
+            self._cache[cache_key] = (time() + timeout, item)
 
     def delete(self, *args, **kwargs):
         """Delete an item from the cache for this combination of args and

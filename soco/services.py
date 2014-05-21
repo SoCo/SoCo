@@ -96,8 +96,9 @@ class Service(object):
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{}/Event'.format(self.service_type)
-        #: A cache for storing the result of network calls
-        self._cache = TimedCache(default_timeout=0)
+        #: A cache for storing the result of network calls. By default, this is
+        #: TimedCache(default_timeout=0). See :class:`TimedCache`
+        self.cache = TimedCache(default_timeout=0)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -285,7 +286,7 @@ class Service(object):
                    'SOAPACTION': soap_action}
         return (headers, body)
 
-    def send_command(self, action, args=None, cache_timeout=None):
+    def send_command(self, action, args=None, cache=None, cache_timeout=None):
         """ Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
@@ -293,18 +294,24 @@ class Service(object):
         of (name, value) tuples, send the command to the Sonos device. args
         can be empty.
 
-        A simple cache is operated so that a previous result up to
-        `cache_timeout`seconds old, obtained with the same arguments, may be
-        returned, saving a further network call. The cache may be invalidated
-        or even primed from another thread (for example if a UPnP event is
-        received to indicate that the state of the Sonos device has changed).
+        A cache is operated so that the result will be stored for up to
+        `cache_timeout` seconds, and a subsequent call with the same arguments
+        within that period will be returned from the cache, saving a further
+        network call. The cache may be invalidated or even primed from another
+        thread (for example if a UPnP event is received to indicate that the
+        state of the Sonos device has changed). If `cache_timeout` is missing
+        or `None`, the cache will use a default value (which may be 0 - see
+        :attribute:`cache`). By default, the cache identified by the service's
+        :attribute:`cache` attribute will be used, but a different cache object
+        may be specified in the `cache` parameter.
 
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
 
         """
-
-        result = self._cache.get(action, args, timeout=cache_timeout)
+        if cache is None:
+            cache = self.cache
+        result = cache.get(action, args)
         if result is not None:
             log.debug("Cache hit")
             return result
@@ -323,7 +330,7 @@ class Service(object):
             result = self.unwrap_arguments(response.text) or True
             # Store in the cache. There is no need to do this if there was an
             # error, since we would want to try a network call again.
-            self._cache.put(result, action, args)
+            cache.put(result, action, args, timeout=cache_timeout)
             log.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result
