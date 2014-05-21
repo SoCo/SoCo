@@ -176,7 +176,7 @@ def test_send_command(service):
             ('CurrentURI', 'URI'),
             ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], 0)
+            ], cache_timeout=0)
         # The cache should be hit, so there should be no http request
         assert not fake_post.called
         # but this should not affefct a call with different params
