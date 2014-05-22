@@ -37,10 +37,7 @@ def get_ms_item(xml, service, parent_id):
     identified by getting the type from the 'itemType' tag
     """
     cls = MS_TYPE_TO_CLASS.get(xml.findtext(ns_tag('ms', 'itemType')))
-    #print xml.findtext(ns_tag('ms', 'itemType')),\
-    #    xml.findtext(ns_tag('ms', 'title'))
     out = cls.from_xml(xml, service, parent_id)
-    #print ' ' + str(out.can_play)
     return out
 
 
@@ -754,7 +751,7 @@ class QueueItem(MusicInfoItem):
         return self.content.copy()
 
     @property
-    #pylint: disable=no-self-use
+    # pylint: disable=no-self-use
     def didl_metadata(self):
         """Produce the DIDL metadata XML."""
         message = 'Queueitems are not meant to be re-added to the queue and '\
@@ -984,7 +981,7 @@ class MusicServiceItem(MusicInfoItem):
                     'This indicates that this item was not meast to create '\
                     'didl_metadata'
                 raise CannotCreateDIDLMetadata(message)
-        if not 'description' in self.content:
+        if 'description' not in self.content:
             message = 'The item for \'description\' is not present in '\
                 'self.content. This indicates that this item was not meant to '\
                 'create didl_metadata'
@@ -1111,8 +1108,8 @@ class MSAlbum(MusicServiceItem):
     item_class = 'object.container.album.musicAlbum'
     valid_fields = [
         'username', 'can_add_to_favorites', 'artist', 'title', 'album_art_uri',
-        'can_play', 'item_type', 'service_id', 'id', 'description', 'can_cache',
-        'artist_id', 'can_skip'
+        'can_play', 'item_type', 'service_id', 'id', 'description',
+        'can_cache', 'artist_id', 'can_skip'
     ]
     # IMPORTANT. Keep this list, __init__ args and content in __init__ in sync
     required_fields = ['title', 'item_id', 'extended_id', 'uri', 'description',
@@ -1164,7 +1161,7 @@ class MSAlbumList(MusicServiceItem):
     def uri(self):
         """Return the uri"""
         # x-rincon-cpcontainer:000d006cplaylistid_26b18dbb-fd35-40bd-8d4f-
-        #8669bfc9f712
+        # 8669bfc9f712
         return self.content['uri']
 
 
@@ -1192,7 +1189,7 @@ class MSPlaylist(MusicServiceItem):
     def uri(self):
         """Return the uri"""
         # x-rincon-cpcontainer:000d006cplaylistid_c86ddf26-8ec5-483e-b292-
-        #abe18848e89e
+        # abe18848e89e
         return self.content['uri']
 
 
