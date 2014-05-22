@@ -931,8 +931,9 @@ class SoCo(_SocoSingletonBase):
         if self.speakers_ip and not refresh:
             return self.speakers_ip
         else:
-            for speaker in self.group.members:
-                self.speakers_ip.append(speaker.ip_address)
+            for group in self.all_groups:
+                for speaker in group:
+                    self.speakers_ip.append(speaker.ip_address)
 
             return self.speakers_ip
 
