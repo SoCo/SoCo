@@ -45,7 +45,7 @@ import logging
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
-from .utils import prettify
+from .utils import prettify, TimedCache
 from .events import Subscription
 from .xml import XML
 
@@ -96,6 +96,9 @@ class Service(object):
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{}/Event'.format(self.service_type)
+        #: A cache for storing the result of network calls. By default, this is
+        #: TimedCache(default_timeout=0). See :class:`TimedCache`
+        self.cache = TimedCache(default_timeout=0)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -142,20 +145,10 @@ class Service(object):
         """
 
         # Define a function to be invoked as the method, which calls
-        # send_command. It should take 0 or one args
-        def _dispatcher(self, *args):
+        # send_command.
+        def _dispatcher(self, *args, **kwargs):
             """ Dispatch to send_command """
-            arg_number = len(args)
-            if arg_number > 1:
-                raise TypeError(
-                    "TypeError: {} takes 0 or 1 argument(s) ({} given)"
-                    .format(action, arg_number))
-            elif arg_number == 0:
-                args = None
-            else:
-                args = args[0]
-
-            return self.send_command(action, args)
+            return self.send_command(action, *args, **kwargs)
 
         # rename the function so it appears to be the called method. We
         # probably don't need this, but it doesn't harm
@@ -293,18 +286,36 @@ class Service(object):
                    'SOAPACTION': soap_action}
         return (headers, body)
 
-    def send_command(self, action, args=None):
+    def send_command(self, action, args=None, cache=None, cache_timeout=None):
         """ Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, send the command to the Sonos device. args
         can be empty.
+
+        A cache is operated so that the result will be stored for up to
+        `cache_timeout` seconds, and a subsequent call with the same arguments
+        within that period will be returned from the cache, saving a further
+        network call. The cache may be invalidated or even primed from another
+        thread (for example if a UPnP event is received to indicate that the
+        state of the Sonos device has changed). If `cache_timeout` is missing
+        or `None`, the cache will use a default value (which may be 0 - see
+        :attribute:`cache`). By default, the cache identified by the service's
+        :attribute:`cache` attribute will be used, but a different cache object
+        may be specified in the `cache` parameter.
+
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
 
         """
-
+        if cache is None:
+            cache = self.cache
+        result = cache.get(action, args)
+        if result is not None:
+            log.debug("Cache hit")
+            return result
+        # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
@@ -317,6 +328,9 @@ class Service(object):
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
             result = self.unwrap_arguments(response.text) or True
+            # Store in the cache. There is no need to do this if there was an
+            # error, since we would want to try a network call again.
+            cache.put(result, action, args, timeout=cache_timeout)
             log.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result
@@ -332,7 +346,6 @@ class Service(object):
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
-            # raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
