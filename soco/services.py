@@ -408,8 +408,7 @@ class Service(object):
         subscription.subscribe()
         return subscription
 
-    @staticmethod
-    def _update_cache_on_event(event):
+    def _update_cache_on_event(self, event):
         """ Update the cache when an event is received.
 
         This will be called before an event is put onto the event queue. Events
