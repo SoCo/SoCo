@@ -16,7 +16,7 @@ import requests
 from ..services import MusicServices
 from ..data_structures import get_ms_item, MSTrack, MSAlbum, MSArtist, \
     MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
-from ..utils import really_utf8, prettify
+from ..utils import really_utf8
 from ..exceptions import SoCoUPnPException, UnknownXMLStructure
 from .__init__ import SoCoPlugin
 
@@ -109,6 +109,12 @@ class Wimp(SoCoPlugin):
     as close to the reported data as possible, so search for playlists returns
     MSAlbumList that are playable and while browsing the content tree the
     MSAlbumList items returned to you are not playable.
+
+    .. note:: Wimp in some cases lists tracks that are not available. In these
+    cases, while it will correctly report these tracks as not being playable,
+    the containing data structure like e.g. the album they are on may report
+    that they are playable. Trying to add one of these to the queue will
+    return a SoCoUPnPException with error code '802'.
 
     """
 
@@ -275,7 +281,7 @@ class Wimp(SoCoPlugin):
 
         """
         # Check for correct service
-        if ms_item.service_id != self._service_id:
+        if ms_item is not None and ms_item.service_id != self._service_id:
             message = 'This music service item is not for this service'
             raise ValueError(message)
 
@@ -490,6 +496,8 @@ SOAP_ACTION = {
     'get_metadata': '"http://www.sonos.com/Services/1.1#getMetadata"',
     'search': '"http://www.sonos.com/Services/1.1#search"'
 }
+# Note UPnP exception 802 while trying to add a Wimp track indicates that these
+# are tracks that not available in Wimp. Do something with that.
 EXCEPTION_STR_TO_CODE = {
     'unknown': 20000,
     'ItemNotFound': 20001
