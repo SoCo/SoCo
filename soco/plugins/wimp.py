@@ -48,6 +48,7 @@ def _post(url, headers, body, retries=3, timeout=3.0):
         except (requests.exceptions.Timeout, socket.timeout) as exception:
             retry += 1
             if retry == retries:
+                # pytlint: disable=maybe-no-member
                 raise requests.exceptions.Timeout(exception.message)
     return out
 
