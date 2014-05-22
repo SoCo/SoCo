@@ -46,7 +46,7 @@ import logging
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
 from .utils import prettify, TimedCache
-from .events import event_listener
+from .events import Subscription
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -406,86 +406,40 @@ class Service(object):
             log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
-    def subscribe(self):
+    def subscribe(self, event_queue=None):
         """Subscribe to the service's events.
 
-        Returns a tuple containing the unique ID representing the subscription
-        and the number of seconds until the subscription expires (or None, if
-        the subscription never expires). Use `renew` to renew the subscription.
+        event_queue is a thread-safe queue object onto which events will
+        be put. If None, a Queue object will be created and used.
 
-         """
-        # The event listener must be running, so start it if not
-        if not event_listener.is_running:
-            event_listener.start(self.soco)
-        # an event subscription looks like this:
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # CALLBACK: <delivery URL>
-        # NT: upnp:event
-        # TIMEOUT: Second-requested subscription duration (optional)
-        # pylint: disable=unbalanced-tuple-unpacking
-        ipaddr, port = event_listener.address
-        headers = {
-            'Callback': '<http://{0}:{1}>'.format(ipaddr, port),
-            'NT': 'upnp:event'
-        }
-        response = requests.request(
-            'SUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        event_sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-XXX"
-        # where XXX is a number of seconds.  Sonos uses "Seconds-XXX"
-        # (with an 's') and a capital letter
-        if timeout.lower() == 'infinite':
-            timeout = None
-        else:
-            timeout = int(timeout.lstrip('Seconds-'))
-        return (event_sid, timeout)
+        Returns a subscription object, representing the new subscription
 
-    def renew_suscription(self, event_sid):
-        """Renew an event subscription
-
-        Arguments:
-
-            event_sid: The unique ID returned by `subscribe`
+        To unsubscribe, call the `unsubscribe` method on the returned object.
 
         """
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        # TIMEOUT: Second-requested subscription duration (optional)
+        subscription = Subscription(self, event_queue)
+        subscription.subscribe()
+        return subscription
 
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request(
-            'SUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
+    @staticmethod
+    def _update_cache_on_event(event):
+        """ Update the cache when an event is received.
 
-    def unsubscribe(self, event_sid):
-        """Unsubscribe from the service's events
+        This will be called before an event is put onto the event queue. Events
+        will often indicate that the Sonos device's state has changed, so this
+        opportunity is made availabe for the service to update its cache. The
+        event will be put onto the event queue once this method returns.
 
-        Arguments:
+        `event` is an Event namedtuple: ('sid', 'seq', 'service', 'variables')
 
-            event_sid: The unique ID returned by `subscribe`
+        ..  warning:: This method will not be called from the main thread but
+            by one or more threads, which handle the events as they come in.
+            You *must not* access any class, instance or global variables
+            without appropriate locks. Treat all parameters passed to this
+            method as read only.
 
         """
-        # UNSUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request(
-            'UNSUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
+        pass
 
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
