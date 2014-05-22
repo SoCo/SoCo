@@ -13,7 +13,6 @@ __license__ = 'MIT License'
 
 from .core import discover, SoCo, SonosDiscovery
 from .exceptions import SoCoException, UnknownSoCoException
-from .events import event_queue
 
 # You really should not `import *` - it is poor practice
 # but if you do, here is what you get:
@@ -23,7 +22,6 @@ __all__ = [
     'SoCo',
     'SoCoException',
     'UnknownSoCoException',
-    'event_queue',
     ]
 
 # http://docs.python.org/2/howto/logging.html#library-config

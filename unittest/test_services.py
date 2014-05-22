@@ -103,15 +103,17 @@ def test_method_dispatcher_function_creation(service):
 
 
 def test_method_dispatcher_arg_count(service):
-    """ _dispatcher should take zero or one arguments """
+    """ _dispatcher should pass its args to send_command """
     service.send_command = mock.Mock()
     # http://bugs.python.org/issue7688
     # __name__ must be a string in python 2
     method = service.__getattr__(str('test'))
     assert method('onearg')
+    service.send_command.assert_called_with('test', 'onearg')
     assert method()  # no args
-    with pytest.raises(TypeError):
-        method('two', 'args')
+    service.send_command.assert_called_with('test')
+    assert method('one', cache_timeout=4) # one arg + cache_timeout
+    service.send_command.assert_called_with('test', 'one', cache_timeout=4)
 
 
 def test_wrap(service):
@@ -150,23 +152,53 @@ def test_build_command(service):
 
 
 def test_send_command(service):
-    """ Calling a command should result in a http request """
-    with mock.patch('requests.post') as fake_post:
-        response = fake_post()
-        response.headers = {}
-        response.status_code = 200
-        response.text = DUMMY_VALID_RESPONSE
+    """ Calling a command should result in a http request, unless the cache
+    is hit """
+    response = mock.MagicMock()
+    response.headers = {}
+    response.status_code = 200
+    response.text = DUMMY_VALID_RESPONSE
+    with mock.patch('requests.post', return_value=response) as fake_post:
+        result = service.send_command('SetAVTransportURI', [
+            ('InstanceID', 0),
+            ('CurrentURI', 'URI'),
+            ('CurrentURIMetaData', ''),
+            ('Unicode', 'μИⅠℂ☺ΔЄ💋')
+            ], cache_timeout=2)
+        assert result == {'CurrentLEDState': 'On', 'Unicode': "μИⅠℂ☺ΔЄ💋"}
+        fake_post.assert_called_once_with(
+            'http://192.168.1.101:1400/Service/Control',
+            headers=mock.ANY, data=DUMMY_VALID_ACTION)
+        # Now the cache should be primed, so try it again
+        fake_post.reset_mock()
+        result = service.send_command('SetAVTransportURI', [
+            ('InstanceID', 0),
+            ('CurrentURI', 'URI'),
+            ('CurrentURIMetaData', ''),
+            ('Unicode', 'μИⅠℂ☺ΔЄ💋')
+            ], cache_timeout=0)
+        # The cache should be hit, so there should be no http request
+        assert not fake_post.called
+        # but this should not affefct a call with different params
+        fake_post.reset_mock()
+        result = service.send_command('SetAVTransportURI', [
+            ('InstanceID', 1),
+            ('CurrentURI', 'URI2'),
+            ('CurrentURIMetaData', 'abcd'),
+            ('Unicode', 'μИⅠℂ☺ΔЄ💋')
+            ])
+        assert fake_post.called
+        # calling again after the time interval will avoid the cache
+        fake_post.reset_mock()
+        import time
+        time.sleep(2)
         result = service.send_command('SetAVTransportURI', [
             ('InstanceID', 0),
             ('CurrentURI', 'URI'),
             ('CurrentURIMetaData', ''),
             ('Unicode', 'μИⅠℂ☺ΔЄ💋')
             ])
-        fake_post.assert_called_with(
-            'http://192.168.1.101:1400/Service/Control',
-            headers=mock.ANY, data=DUMMY_VALID_ACTION)
-        assert result == {'CurrentLEDState': 'On', 'Unicode': "μИⅠℂ☺ΔЄ💋"}
-
+        assert fake_post.called
 
 def test_handle_upnp_error(service):
     """ Check errors are extracted properly """

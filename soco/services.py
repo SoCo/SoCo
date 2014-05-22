@@ -45,8 +45,8 @@ import logging
 
 import requests
 from .exceptions import SoCoUPnPException, UnknownSoCoException
-from .utils import prettify
-from .events import event_listener
+from .utils import prettify, TimedCache
+from .events import Subscription
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -96,6 +96,9 @@ class Service(object):
         self.scpd_url = '/xml/{}{}.xml'.format(self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{}/Event'.format(self.service_type)
+        #: A cache for storing the result of network calls. By default, this is
+        #: TimedCache(default_timeout=0). See :class:`TimedCache`
+        self.cache = TimedCache(default_timeout=0)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
@@ -142,20 +145,10 @@ class Service(object):
         """
 
         # Define a function to be invoked as the method, which calls
-        # send_command. It should take 0 or one args
-        def _dispatcher(self, *args):
+        # send_command.
+        def _dispatcher(self, *args, **kwargs):
             """ Dispatch to send_command """
-            arg_number = len(args)
-            if arg_number > 1:
-                raise TypeError(
-                    "TypeError: {} takes 0 or 1 argument(s) ({} given)"
-                    .format(action, arg_number))
-            elif arg_number == 0:
-                args = None
-            else:
-                args = args[0]
-
-            return self.send_command(action, args)
+            return self.send_command(action, *args, **kwargs)
 
         # rename the function so it appears to be the called method. We
         # probably don't need this, but it doesn't harm
@@ -293,18 +286,36 @@ class Service(object):
                    'SOAPACTION': soap_action}
         return (headers, body)
 
-    def send_command(self, action, args=None):
+    def send_command(self, action, args=None, cache=None, cache_timeout=None):
         """ Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, send the command to the Sonos device. args
         can be empty.
+
+        A cache is operated so that the result will be stored for up to
+        `cache_timeout` seconds, and a subsequent call with the same arguments
+        within that period will be returned from the cache, saving a further
+        network call. The cache may be invalidated or even primed from another
+        thread (for example if a UPnP event is received to indicate that the
+        state of the Sonos device has changed). If `cache_timeout` is missing
+        or `None`, the cache will use a default value (which may be 0 - see
+        :attribute:`cache`). By default, the cache identified by the service's
+        :attribute:`cache` attribute will be used, but a different cache object
+        may be specified in the `cache` parameter.
+
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
 
         """
-
+        if cache is None:
+            cache = self.cache
+        result = cache.get(action, args)
+        if result is not None:
+            log.debug("Cache hit")
+            return result
+        # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
@@ -317,6 +328,9 @@ class Service(object):
             # NB an empty dict is a valid result. It just means that no
             # params are returned.
             result = self.unwrap_arguments(response.text) or True
+            # Store in the cache. There is no need to do this if there was an
+            # error, since we would want to try a network call again.
+            cache.put(result, action, args, timeout=cache_timeout)
             log.info(
                 "Received status %s from %s", status, self.soco.ip_address)
             return result
@@ -332,7 +346,6 @@ class Service(object):
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
-            # raise Exception('OOPS')
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
@@ -393,86 +406,39 @@ class Service(object):
             log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
-    def subscribe(self):
+    def subscribe(self, event_queue=None):
         """Subscribe to the service's events.
 
-        Returns a tuple containing the unique ID representing the subscription
-        and the number of seconds until the subscription expires (or None, if
-        the subscription never expires). Use `renew` to renew the subscription.
+        event_queue is a thread-safe queue object onto which events will
+        be put. If None, a Queue object will be created and used.
 
-         """
-        # The event listener must be running, so start it if not
-        if not event_listener.is_running:
-            event_listener.start(self.soco)
-        # an event subscription looks like this:
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # CALLBACK: <delivery URL>
-        # NT: upnp:event
-        # TIMEOUT: Second-requested subscription duration (optional)
-        # pylint: disable=unbalanced-tuple-unpacking
-        ipaddr, port = event_listener.address
-        headers = {
-            'Callback': '<http://{0}:{1}>'.format(ipaddr, port),
-            'NT': 'upnp:event'
-        }
-        response = requests.request(
-            'SUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        event_sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-XXX"
-        # where XXX is a number of seconds.  Sonos uses "Seconds-XXX"
-        # (with an 's') and a capital letter
-        if timeout.lower() == 'infinite':
-            timeout = None
-        else:
-            timeout = int(timeout.lstrip('Seconds-'))
-        return (event_sid, timeout)
+        Returns a subscription object, representing the new subscription
 
-    def renew_suscription(self, event_sid):
-        """Renew an event subscription
-
-        Arguments:
-
-            event_sid: The unique ID returned by `subscribe`
+        To unsubscribe, call the `unsubscribe` method on the returned object.
 
         """
-        # SUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        # TIMEOUT: Second-requested subscription duration (optional)
+        subscription = Subscription(self, event_queue)
+        subscription.subscribe()
+        return subscription
 
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request(
-            'SUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
+    def _update_cache_on_event(self, event):
+        """ Update the cache when an event is received.
 
-    def unsubscribe(self, event_sid):
-        """Unsubscribe from the service's events
+        This will be called before an event is put onto the event queue. Events
+        will often indicate that the Sonos device's state has changed, so this
+        opportunity is made availabe for the service to update its cache. The
+        event will be put onto the event queue once this method returns.
 
-        Arguments:
+        `event` is an Event namedtuple: ('sid', 'seq', 'service', 'variables')
 
-            event_sid: The unique ID returned by `subscribe`
+        ..  warning:: This method will not be called from the main thread but
+            by one or more threads, which handle the events as they come in.
+            You *must not* access any class, instance or global variables
+            without appropriate locks. Treat all parameters passed to this
+            method as read only.
 
         """
-        # UNSUBSCRIBE publisher path HTTP/1.1
-        # HOST: publisher host:publisher port
-        # SID: uuid:subscription UUID
-        headers = {
-            'SID': event_sid
-        }
-        response = requests.request(
-            'UNSUBSCRIBE',
-            self.base_url + self.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
+        pass
 
     def iter_actions(self):
         """ Yield the service's actions with their in_arguments (ie parameters
