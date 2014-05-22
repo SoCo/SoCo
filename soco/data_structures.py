@@ -756,10 +756,12 @@ class QueueItem(MusicInfoItem):
         return self.content.copy()
 
     @property
+    #pylint: disable=no-self-use
     def didl_metadata(self):
-        """Produce the DIDL metadata XML. CURRENTLY DISABLED."""
-        message = 'Queueitems cannot not yet form didl_metadata'
-        raise NotImplementedError(message)
+        """Produce the DIDL metadata XML."""
+        message = 'Queueitems are not meant to be re-added to the queue and '\
+            'therefore cannot create their own didl_metadata'
+        raise CannotCreateDIDLMetadata(message)
 
     @property
     def title(self):
@@ -949,6 +951,81 @@ class MusicServiceItem(MusicInfoItem):
         return self.content.copy()
 
     @property
+    def didl_metadata(self):
+        """Return the DIDL metadata for a Music Service Track
+
+        The metadata is on the form:
+
+        .. code :: xml
+
+         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
+              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+           <item id="...self.extended_id..."
+              parentID="...self.parent_id..."
+              restricted="true">
+             <dc:title>...self.title...</dc:title>
+             <upnp:class>...self.item_class...</upnp:class>
+             <desc id="cdudn"
+                nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+               self.content['description']
+             </desc>
+           </item>
+         </DIDL-Lite>
+        """
+        # Check if this item is meant to be played
+        if not self.can_play:
+            message = 'This item is not meant to be played and therefore also '\
+                'not to create its own didl_metadata'
+            raise CannotCreateDIDLMetadata(message)
+        # Check if we have the attributes to create the didl metadata:
+        for key in ['extended_id', 'title', 'item_class']:
+            if not hasattr(self, key):
+                message = 'The property \'{}\' is not present on this item. '\
+                    'This indicates that this item was not meast to create '\
+                    'didl_metadata'
+                raise CannotCreateDIDLMetadata(message)
+        if not 'description' in self.content:
+            message = 'The item for \'description\' is not present in '\
+                'self.content. This indicates that this item was not meant to '\
+                'create didl_metadata'
+            raise CannotCreateDIDLMetadata(message)
+
+        # Main element, ugly? yes! but I have given up on using namespaces
+        # with xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
+        # Item sub element
+        item_attrib = {
+            'parentID': '',
+            'restricted': 'true',
+            'id': self.extended_id
+        }
+        # Only add the parent_id if we have it
+        if self.parent_id:
+            item_attrib['parentID'] = self.parent_id
+        item = XML.SubElement(xml, 'item', item_attrib)
+
+        # Add title and class
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
+        # Add the desc element
+        desc_attrib = {
+            'id': 'cdudn',
+            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
+        }
+        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc.text = self.content['description']
+
+        return xml
+
+    @property
     def item_id(self):
         """Return the item id"""
         return self.content['item_id']
@@ -1009,63 +1086,6 @@ class MSTrack(MusicServiceItem):
         super(MSTrack, self).__init__(**content)
 
     @property
-    def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Track
-
-        The metadata is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-           <item id="...self.extended_id..."
-              parentID="...self.parent_id..."
-              restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-                nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               self.content['description']
-             </desc>
-           </item>
-         </DIDL-Lite>
-        """
-        # Main element, ugly? yes! but I have given up on using namespaces
-        # with xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
-        # Item sub element
-        item_attrib = {
-            'parentID': '',
-            'restricted': 'true',
-            'id': self.extended_id
-        }
-        # Only add the parent_id if we have it
-        if self.parent_id:
-            item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
-
-        # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
-        # Add the desc element
-        desc_attrib = {
-            'id': 'cdudn',
-            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-        }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
-        desc.text = self.content['description']
-
-        return xml
-
-    @property
     def album(self):
         """Return the album title if set, otherwise return None"""
         return self.content.get('album')
@@ -1110,64 +1130,6 @@ class MSAlbum(MusicServiceItem):
         super(MSAlbum, self).__init__(**content)
 
     @property
-    def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Album
-
-        The metadata is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-           <item id="...self.extended_id..."
-                parentID="...self.parent_id..."
-                restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-                  nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               self.content['description']
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        # Main element, ugly yes, but I have given up on using namespaces with
-        # xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
-        # Item sub element
-        item_attrib = {
-            'parentID': '',
-            'restricted': 'true',
-            'id': self.extended_id
-        }
-        # Only add the parent_id if we have it
-        if self.parent_id:
-            item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
-
-        # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
-        # Add the desc element
-        desc_attrib = {
-            'id': 'cdudn',
-            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-        }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
-        desc.text = self.content['description']
-
-        return xml
-
-    @property
     def artist(self):
         """Return the artist if set, otherwise return None"""
         return self.content.get('artist')
@@ -1201,63 +1163,6 @@ class MSAlbumList(MusicServiceItem):
         super(MSAlbumList, self).__init__(**content)
 
     @property
-    def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Album List
-
-        The metadata is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-           <item id="...self.extended_id..."
-                parentID="...self.parent_id..."
-                restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               self.content['description']
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        # Main element, ugly yes, but I have given up on using namespaces with
-        # xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
-        # Item sub element
-        item_attrib = {
-            'parentID': '',
-            'restricted': 'true',
-            'id': self.extended_id
-        }
-        if self.parent_id:
-            item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
-
-        # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
-        # Add the desc element
-        desc_attrib = {
-            'id': 'cdudn',
-            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-        }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
-        desc.text = self.content['description']
-
-        return xml
-
-    @property
     def uri(self):
         """Return the uri"""
         # x-rincon-cpcontainer:000d006cplaylistid_26b18dbb-fd35-40bd-8d4f-
@@ -1286,63 +1191,6 @@ class MSPlaylist(MusicServiceItem):
         super(MSPlaylist, self).__init__(**content)
 
     @property
-    def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Play List
-
-        The metadata is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-              xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-              xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-           <item id="...self.extended_id..."
-                parentID="...self.parent_id..."
-                restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               self.content['description']
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        # Main element, ugly yes, but I have given up on using namespaces with
-        # xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
-        # Item sub element
-        item_attrib = {
-            'parentID': '',
-            'restricted': 'true',
-            'id': self.extended_id
-        }
-        if self.parent_id:
-            item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
-
-        # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
-        # Add the desc element
-        desc_attrib = {
-            'id': 'cdudn',
-            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-        }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
-        desc.text = self.content['description']
-
-        return xml
-
-    @property
     def uri(self):
         """Return the uri"""
         # x-rincon-cpcontainer:000d006cplaylistid_c86ddf26-8ec5-483e-b292-
@@ -1368,62 +1216,6 @@ class MSArtistTracklist(MusicServiceItem):
         }
         content.update(kwargs)
         super(MSArtistTracklist, self).__init__(**content)
-
-    @property
-    def didl_metadata(self):
-        """Return the DIDL metadata for a Music Service Artist Track List
-
-        The metadata is on the form:
-
-        .. code :: xml
-
-         <DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-             xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-             xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-             xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-           <item id="...self.extended_id..."
-               parentID="...self.parent_id..." restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-                 nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               ...self.content['description']...
-             </desc>
-           </item>
-         </DIDL-Lite>
-
-        """
-        # Main element, ugly yes, but I have given up on using namespaces with
-        # xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
-        # Item sub element
-        item_attrib = {
-            'parentID': '',
-            'restricted': 'true',
-            'id': self.extended_id
-        }
-        if self.parent_id:
-            item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
-
-        # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
-        # Add the desc element
-        desc_attrib = {
-            'id': 'cdudn',
-            'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-        }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
-        desc.text = self.content['description']
-
-        return xml
 
     @property
     def uri(self):
