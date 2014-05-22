@@ -48,7 +48,7 @@ def _post(url, headers, body, retries=3, timeout=3.0):
         except (requests.exceptions.Timeout, socket.timeout) as exception:
             retry += 1
             if retry == retries:
-                raise(requests.exceptions.Timeout(exception.message))
+                raise requests.exceptions.Timeout(exception.message)
     return out
 
 
@@ -83,12 +83,13 @@ def _get_header(soap_action):
     else:
         language = language.replace('_', '-') + ', '
 
-    header = {'CONNECTION': 'close',
-              'ACCEPT-ENCODING': 'gzip',
-              'ACCEPT-LANGUAGE': '{}en-US;q=0.9'.format(language),
-              'Content-Type': 'text/xml; charset="utf-8"',
-              'SOAPACTION': SOAP_ACTION[soap_action]
-              }
+    header = {
+        'CONNECTION': 'close',
+        'ACCEPT-ENCODING': 'gzip',
+        'ACCEPT-LANGUAGE': '{}en-US;q=0.9'.format(language),
+        'Content-Type': 'text/xml; charset="utf-8"',
+        'SOAPACTION': SOAP_ACTION[soap_action]
+    }
     return header
 
 

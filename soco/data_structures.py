@@ -1,5 +1,6 @@
+# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302
 # -*- coding: utf-8 -*-
-# pylint: disable=R0903,W0142,R0913,C0302
+
 
 """ This module contains all the data structures for the information objects
 such as music tracks or genres
@@ -1199,8 +1200,7 @@ class MSArtistTracklist(MusicServiceItem):
     """Class that represents a Music Service Artist Track List"""
 
     item_class = 'object.container.playlistContainer.sameArtist'
-    valid_fields = ['id', 'title', 'item_type', 'can_play', 'album_art_uri',
-                    ]
+    valid_fields = ['id', 'title', 'item_type', 'can_play', 'album_art_uri']
     # IMPORTANT. Keep this list, __init__ args and content in __init__ in sync
     required_fields = ['title', 'item_id', 'extended_id', 'uri', 'description',
                        'service_id']
