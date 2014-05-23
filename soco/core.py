@@ -777,10 +777,9 @@ class SoCo(_SocoSingletonBase):
         groups have been defined.
 
         """
-
-        for zone in itertools.chain(*self.all_groups):
-            if zone is not self and zone.is_visible:
-                zone.join(self)
+        # Tell every other visible zone to join this one
+        [zone.join(self) for zone in self.visible_zones \
+            if zone is not self]
 
     def join(self, master):
         """ Join this speaker to another "master" speaker.
