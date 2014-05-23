@@ -58,8 +58,8 @@ def discover(timeout=1, include_invisible=False):
     # we care about is the IP address
     if response:
         _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query the topology
-        # to find the other players.
+        # Now we have an IP, we can build a SoCo instance and query the
+        # topology to find the other players.
         zone = SoCo(addr[0])
         if include_invisible:
             return zone.all_zones
