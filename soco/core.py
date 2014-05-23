@@ -239,7 +239,6 @@ class SoCo(_SocoSingletonBase):
         self._visible_zones = set()
         self._zgs_cache = None
 
-
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
 
@@ -256,7 +255,6 @@ class SoCo(_SocoSingletonBase):
         # and take advantage of any caching
         self._parse_zone_group_state()
         return self._player_name
-
 
         result = self.deviceProperties.GetZoneAttributes()
         return result["CurrentZoneName"]
@@ -285,7 +283,8 @@ class SoCo(_SocoSingletonBase):
         return self._uid
         # An alternative way of getting the uid is as follows:
         # self.device_description_url = \
-        #    'http://{}:1400/xml/device_description.xml'.format(self.ip_address)
+        #    'http://{}:1400/xml/device_description.xml'.format(
+        #     self.ip_address)
         # response = requests.get(self.device_description_url).text
         # tree = XML.fromstring(response.encode('utf-8'))
         # udn = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
@@ -778,7 +777,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         # Tell every other visible zone to join this one
-        [zone.join(self) for zone in self.visible_zones \
+        [zone.join(self) for zone in self.visible_zones
             if zone is not self]
 
     def join(self, master):
