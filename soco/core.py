@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0302,fixme
+# pylint: disable=C0302,fixme, protected-access
 """ The core module contains SonosDiscovery and SoCo classes that implement
 the main entry to the SoCo functionality
 """
@@ -255,9 +255,6 @@ class SoCo(_SocoSingletonBase):
         # and take advantage of any caching
         self._parse_zone_group_state()
         return self._player_name
-
-        result = self.deviceProperties.GetZoneAttributes()
-        return result["CurrentZoneName"]
 
     @player_name.setter
     def player_name(self, playername):
@@ -712,13 +709,13 @@ class SoCo(_SocoSingletonBase):
                 # before
                 zone._is_bridge = True if member_attribs.get(
                     'IsZoneBridge') == '1' else False
-                zone._is_visible = False if member_attribs.get(
+                is_visible = False if member_attribs.get(
                     'Invisible') == '1' else True
                 # add the zone to the members for this group, and to the set of
                 # all members, and to the set of visible members if appropriate
                 members.add(zone)
                 self._all_zones.add(zone)
-                if zone._is_visible:
+                if is_visible:
                     self._visible_zones.add(zone)
                 # Now create a ZoneGroup with this info and add it to the list
                 # of groups
@@ -726,9 +723,9 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_groups(self):
-        """  Return an iterable over all the available groups"""
+        """  Return a set of all the available groups"""
         self._parse_zone_group_state()
-        return (group for group in self._groups)
+        return self._groups
 
     @property
     def group(self):
@@ -754,15 +751,15 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_zones(self):
-        """ Return an iterable over all the available zones"""
+        """ Return a set of all the available zones"""
         self._parse_zone_group_state()
-        return (zone for zone in self._all_zones)
+        return self._all_zones
 
     @property
     def visible_zones(self):
-        """ Return an iterable over all visible zones"""
+        """ Return an set of all visible zones"""
         self._parse_zone_group_state()
-        return (zone for zone in self._visible_zones)
+        return self._visible_zones
 
     def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party
@@ -777,6 +774,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         # Tell every other visible zone to join this one
+        # pylint: disable = expression-not-assigned
         [zone.join(self) for zone in self.visible_zones if zone is not self]
 
     def join(self, master):
