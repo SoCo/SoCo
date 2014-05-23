@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0302,fixme
+# pylint: disable=C0302,fixme, protected-access
 """ The core module contains SonosDiscovery and SoCo classes that implement
 the main entry to the SoCo functionality
 """
@@ -187,10 +187,6 @@ class SoCo(_SocoSingletonBase):
         get_favorite_radio_shows -- Get favorite radio shows from Sonos'
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
-        get_group_coordinator -- Get the coordinator for a grouped
-                                 collection of Sonos units.
-        get_speakers_ip -- Get the IP addresses of all the Sonos
-                           speakers in the network.
 
     Properties::
 
@@ -211,10 +207,10 @@ class SoCo(_SocoSingletonBase):
         may be a good idea for you to cache the value in your own code.
 
     """
-    # Stores the IP addresses of all the speakers in a network
-    speakers_ip = []
 
     def __init__(self, ip_address):
+        # Note: Creation of a SoCo instance should be as cheap and quick as
+        # possible. Do not make any network calls here
         super(SoCo, self).__init__()
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
@@ -225,15 +221,23 @@ class SoCo(_SocoSingletonBase):
         #: The speaker's ip address
         self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
+
+        # The services which we use
         # pylint: disable=invalid-name
-        self.deviceProperties = DeviceProperties(self)
-        self.contentDirectory = ContentDirectory(self)
-        self.renderingControl = RenderingControl(self)
         self.avTransport = AVTransport(self)
+        self.contentDirectory = ContentDirectory(self)
+        self.deviceProperties = DeviceProperties(self)
+        self.renderingControl = RenderingControl(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
-        self.device_description_url = \
-            'http://{}:1400/xml/device_description.xml'.format(self.ip_address)
+
+        # Some private attributes
+        self._all_zones = set()
+        self._groups = set()
+        self._is_bridge = None
+        self._player_name = None
         self._uid = None
+        self._visible_zones = set()
+        self._zgs_cache = None
 
     def __str__(self):
         return "<SoCo object at ip {}>".format(self.ip_address)
@@ -244,8 +248,13 @@ class SoCo(_SocoSingletonBase):
     @property
     def player_name(self):
         """  The speaker's name. A string. """
-        result = self.deviceProperties.GetZoneAttributes()
-        return result["CurrentZoneName"]
+        # We could get the name like this:
+        # result = self.deviceProperties.GetZoneAttributes()
+        # return result["CurrentZoneName"]
+        # but it is probably quicker to get it from the group topology
+        # and take advantage of any caching
+        self._parse_zone_group_state()
+        return self._player_name
 
     @player_name.setter
     def player_name(self, playername):
@@ -259,17 +268,26 @@ class SoCo(_SocoSingletonBase):
     @property
     def uid(self):
         """ A unique identifier.  Looks like: RINCON_000XXXXXXXXXX1400 """
-        # This may have been set on discovery
+        # Since this does not change over time (?) check whether we already
+        # know the answer. If so, there is no need to go further
         if self._uid is not None:
             return self._uid
-        # if not, we have to get it from the device_description. Is there a
-        # better way?
-        response = requests.get(self.device_description_url).text
-        tree = XML.fromstring(response.encode('utf-8'))
-        udn = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
-        # the udn has a "uuid:" prefix before the uid, so we need to strip it
-        self._uid = uid = udn[5:]
-        return uid
+        # if not, we have to get it from the zone topology, which
+        # is probably quicker than any alternative, since the zgt is probably
+        # cached. This will set self._uid for us for next time, so we won't
+        # have to do this again
+        self._parse_zone_group_state()
+        return self._uid
+        # An alternative way of getting the uid is as follows:
+        # self.device_description_url = \
+        #    'http://{}:1400/xml/device_description.xml'.format(
+        #     self.ip_address)
+        # response = requests.get(self.device_description_url).text
+        # tree = XML.fromstring(response.encode('utf-8'))
+        # udn = tree.findtext('.//{urn:schemas-upnp-org:device-1-0}UDN')
+        # # the udn has a "uuid:" prefix before the uid, so we need to strip it
+        # self._uid = uid = udn[5:]
+        # return uid
 
     @property
     def is_visible(self):
@@ -279,8 +297,24 @@ class SoCo(_SocoSingletonBase):
         return True or False
 
         """
-        invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
-        return True if invisible == '0' else False
+        # We could do this:
+        # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
+        # but it is better to do it in the following way, which uses the
+        # zone group topology, to capitalise on any caching.
+        return self in self.visible_zones
+
+    @property
+    def is_bridge(self):
+        """ Is this zone a bridge? """
+        # Since this does not change over time (?) check whether we already
+        # know the answer. If so, there is no need to go further
+        if self._is_bridge is not None:
+            return self._is_bridge
+        # if not, we have to get it from the zone topology. This will set
+        # self._is_bridge for us for next time, so we won't have to do this
+        # again
+        self._parse_zone_group_state()
+        return self._is_bridge
 
     @property
     def play_mode(self):
@@ -591,11 +625,9 @@ class SoCo(_SocoSingletonBase):
             ('DesiredLoudness', loudness_value)
             ])
 
-    @property
-    def all_groups(self):
-        """ Obtain and parse Group topology information
-
-        Return an iterable over all the available groups"""
+    def _parse_zone_group_state(self):
+        """ The Zone Group State contains a lot of useful information. Retrieve
+        and parse it, and populate the relevant properties. """
 
 # zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like
 # this:
@@ -637,34 +669,97 @@ class SoCo(_SocoSingletonBase):
 # </ZoneGroups>
 #
 
-        zgs = self.zoneGroupTopology.GetZoneGroupState()['ZoneGroupState']
+        # This is called quite frequently, so it is worth optimising it.
+        # Maintain a private cache. If the zgt has not changed, there is no
+        # need to repeat all the XML parsing. In addition, switch on network
+        # caching for a short interval (5 secs).
+        zgs = self.zoneGroupTopology.GetZoneGroupState(
+            cache_timeout=5)['ZoneGroupState']
+        if zgs == self._zgs_cache:
+            return
+        self._zgs_cache = zgs
         tree = XML.fromstring(zgs.encode('utf-8'))
+        # Empty the set of all zone_groups
+        self._groups.clear()
+        # and the set of all members
+        self._all_zones.clear()
+        self._visible_zones.clear()
+        # Loop over each ZoneGroup Element
         for group_element in tree.iter('ZoneGroup'):
             coordinator_uid = group_element.attrib['Coordinator']
-            uid = group_element.attrib['ID']
+            group_uid = group_element.attrib['ID']
             members = set()
             for member_element in group_element.iter('ZoneGroupMember'):
-                ip_addr = member_element.attrib['Location'].\
+                # Create a SoCo instance for each member. Because SoCo
+                # instances are singletons, this is cheap if they have already
+                # been created, and useful if they haven't. We can then
+                # update various properties for that instance.
+                member_attribs = member_element.attrib
+                ip_addr = member_attribs['Location'].\
                     split('//')[1].split(':')[0]
                 zone = SoCo(ip_addr)
-                if member_element.attrib['UUID'] == coordinator_uid:
-                    coordinator = zone
+                zone._uid = member_attribs['UUID']
+                # If this element has the same UUID as the coordinator, it is
+                # the coordinator
+                if zone._uid == coordinator_uid:
+                    group_coordinator = zone
+                zone._player_name = member_attribs['ZoneName']
+                # uid and is_bridge do not change, but it does no real harm to
+                # set/reset them here, just in case the zone has not been seen
+                # before
+                zone._is_bridge = True if member_attribs.get(
+                    'IsZoneBridge') == '1' else False
+                is_visible = False if member_attribs.get(
+                    'Invisible') == '1' else True
+                # add the zone to the members for this group, and to the set of
+                # all members, and to the set of visible members if appropriate
                 members.add(zone)
-            yield ZoneGroup(uid, coordinator, members)
+                self._all_zones.add(zone)
+                if is_visible:
+                    self._visible_zones.add(zone)
+                # Now create a ZoneGroup with this info and add it to the list
+                # of groups
+            self._groups.add(ZoneGroup(group_uid, group_coordinator, members))
+
+    @property
+    def all_groups(self):
+        """  Return a set of all the available groups"""
+        self._parse_zone_group_state()
+        return self._groups
 
     @property
     def group(self):
         """The Zone Group of which this device is a member.
 
         group will be None if this zone is a slave in a stereo pair."""
-        current_group_id = self.zoneGroupTopology.GetZoneGroupAttributes()[
-            'CurrentZoneGroupID']
-        if current_group_id:
-            for group in self.all_groups:
-                if group.uid == current_group_id:
-                    return group
-        else:
-            return None
+
+        for group in self.all_groups:
+            if self in group:
+                return group
+        return None
+
+        # To get the group directly from the network, try the code below
+        # though it is probably slower than that above
+        # current_group_id = self.zoneGroupTopology.GetZoneGroupAttributes()[
+        #     'CurrentZoneGroupID']
+        # if current_group_id:
+        #     for group in self.all_groups:
+        #         if group.uid == current_group_id:
+        #             return group
+        # else:
+        #     return None
+
+    @property
+    def all_zones(self):
+        """ Return a set of all the available zones"""
+        self._parse_zone_group_state()
+        return self._all_zones
+
+    @property
+    def visible_zones(self):
+        """ Return an set of all visible zones"""
+        self._parse_zone_group_state()
+        return self._visible_zones
 
     def partymode(self):
         """ Put all the speakers in the network in the same group, a.k.a Party
@@ -678,10 +773,9 @@ class SoCo(_SocoSingletonBase):
         groups have been defined.
 
         """
-
-        for zone in itertools.chain(*self.all_groups):
-            if zone is not self and zone.is_visible:
-                zone.join(self)
+        # Tell every other visible zone to join this one
+        # pylint: disable = expression-not-assigned
+        [zone.join(self) for zone in self.visible_zones if zone is not self]
 
     def join(self, master):
         """ Join this speaker to another "master" speaker.
