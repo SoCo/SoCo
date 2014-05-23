@@ -20,24 +20,27 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem
-from .utils import really_unicode, really_utf8, camel_to_underscore
+from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 
 LOGGER = logging.getLogger(__name__)
 
 
-def discover():
+def discover(timeout=1, include_invisible=False):
     """ Discover Sonos zones on the local network.
 
-    Return an iterator providing SoCo instances for each zone found.
+    Return an set of visible SoCo instances for each zone found.
+    Include invisible zones (bridges and slave zones in stereo pairs if
+    `include_invisible` is True. Will block for up to `timeout` seconds, after
+    which return `None` if no zones found.
 
     """
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent("""\
+    PLAYER_SEARCH = dedent(b"""\
         M-SEARCH * HTTP/1.1
         HOST: 239.255.255.250:reservedSSDPport
-        MAN: ssdp:discover
+        MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
         """)
@@ -49,32 +52,21 @@ def discover():
     _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
-    while True:
-        response, _, _ = select.select([_sock], [], [], 1)
-        if response:
-            data, addr = _sock.recvfrom(2048)
-            # Look for the model in parentheses in a line like this
-            # SERVER: Linux UPnP/1.0 Sonos/22.0-65180 (ZPS5)
-            search = re.search(br'SERVER.*\((.*)\)', data)
-
-            try:
-                model = really_unicode(search.group(1))
-            except AttributeError:
-                model = None
-            # Extract the UID
-            uid = re.search(br'USN:\suuid:(.*?):', data).group(1)
-
-            # BR100 = Sonos Bridge,        ZPS3 = Zone Player 3
-            # ZP120 = Zone Player Amp 120, ZPS5 = Zone Player 5
-            # ZP90  = Sonos Connect,       ZPS1 = Zone Player 1
-            # If it's the bridge, then it's not a speaker and shouldn't
-            # be returned
-            if model and model != "BR100":
-                soco = SoCo(addr[0])
-                soco._uid = uid  # pylint: disable=protected-access
-                yield soco
+    response, _, _ = select.select([_sock], [], [], timeout)
+    # Only Zone Players will respond, given the value of ST in the
+    # PLAYER_SEARCH message. It doesn't matter what response they make. All
+    # we care about is the IP address
+    if response:
+        _, addr = _sock.recvfrom(1024)
+        # Now we have an IP, we can build a SoCo instance and query the topology
+        # to find the other players.
+        zone = SoCo(addr[0])
+        if include_invisible:
+            return zone.all_zones
         else:
-            break
+            return zone.visible_zones
+    else:
+        return None
 
 
 class SonosDiscovery(object):  # pylint: disable=R0903
