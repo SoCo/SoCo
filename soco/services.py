@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=fixme
+# pylint: disable=fixme, invalid-name
 
 """
 Classes representing Sonos UPnP services.
@@ -61,6 +61,7 @@ Argument = namedtuple('Argument', 'name, vartype')
 # another instance is asked. To do this we need a cache to be shared between
 # instances
 zone_group_state_shared_cache = TimedCache()
+
 
 # pylint: disable=too-many-instance-attributes
 class Service(object):
