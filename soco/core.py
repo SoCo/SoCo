@@ -209,6 +209,8 @@ class SoCo(_SocoSingletonBase):
     """
 
     def __init__(self, ip_address):
+        # Note: Creation of a SoCo instance should be as cheap and quick as
+        # possible. Do not make any network calls here
         super(SoCo, self).__init__()
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
@@ -250,7 +252,7 @@ class SoCo(_SocoSingletonBase):
         # We could get the name like this:
         # result = self.deviceProperties.GetZoneAttributes()
         # return result["CurrentZoneName"]
-        # but it is probably quicker to get ir from the group topology
+        # but it is probably quicker to get it from the group topology
         # and take advantage of any caching
         self._parse_zone_group_state()
         return self._player_name
@@ -696,21 +698,22 @@ class SoCo(_SocoSingletonBase):
                 # instances are singletons, this is cheap if they have already
                 # been created, and useful if they haven't. We can then
                 # update various properties for that instance.
-                ip_addr = member_element.attrib['Location'].\
+                member_attribs = member_element.attrib
+                ip_addr = member_attribs['Location'].\
                     split('//')[1].split(':')[0]
                 zone = SoCo(ip_addr)
-                zone._uid = member_element.attrib['UUID']
+                zone._uid = member_attribs['UUID']
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
                 if zone._uid == coordinator_uid:
                     group_coordinator = zone
-                zone._player_name = member_element.attrib['ZoneName']
+                zone._player_name = member_attribs['ZoneName']
                 # uid and is_bridge do not change, but it does no real harm to
                 # set/reset them here, just in case the zone has not been seen
                 # before
-                zone._is_bridge = True if member_element.attrib.get(
+                zone._is_bridge = True if member_attribs.get(
                     'IsZoneBridge') == '1' else False
-                zone._is_visible = False if member_element.attrib.get(
+                zone._is_visible = False if member_attribs.get(
                     'Invisible') == '1' else True
                 # add the zone to the members for this group, and to the set of
                 # all members, and to the set of visible members if appropriate
