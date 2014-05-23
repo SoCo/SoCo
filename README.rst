@@ -9,6 +9,13 @@ people`_ at its `GitHub repository`_
 For more background on the project, please see Rahim's `blog post
 <http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/>`_.
 
+.. image:: https://travis-ci.org/SoCo/SoCo.svg?branch=master
+   :target: https://travis-ci.org/SoCo/SoCo
+   :alt: Build Status
+
+.. image:: https://requires.io/github/SoCo/SoCo/requirements.png?branch=master
+   :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
+   :alt: Requirements Status
 
 Installation
 ------------
