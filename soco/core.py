@@ -187,10 +187,6 @@ class SoCo(_SocoSingletonBase):
         get_favorite_radio_shows -- Get favorite radio shows from Sonos'
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
-        get_group_coordinator -- Get the coordinator for a grouped
-                                 collection of Sonos units.
-        get_speakers_ip -- Get the IP addresses of all the Sonos
-                           speakers in the network.
 
     Properties::
 
@@ -211,8 +207,6 @@ class SoCo(_SocoSingletonBase):
         may be a good idea for you to cache the value in your own code.
 
     """
-    # Stores the IP addresses of all the speakers in a network
-    speakers_ip = []
 
     def __init__(self, ip_address):
         super(SoCo, self).__init__()
