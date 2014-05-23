@@ -29,8 +29,8 @@ Requests will be installed automatically for you. If not, you can use:
 Basic Usage
 -----------
 
-You can interact with a Sonos Zone Player through a SoCo object. If you know the
-IP address of a Zone Player, you can create a SoCo object directly:
+You can interact with a Sonos Zone Player through a SoCo object. If you know
+the IP address of a Zone Player, you can create a SoCo object directly:
 
 .. code:: python
 
@@ -42,9 +42,9 @@ IP address of a Zone Player, you can create a SoCo object directly:
     >>> my_zone.volume = 6
 
 
-But perhaps the easiest way is to use the module-level `discover` function. This
-will find all the Zone Players on your network, and return a python iterable
-containing them:
+But perhaps the easiest way is to use the module-level `discover` function.
+This will find all the Zone Players on your network, and return a python
+set containing them:
 
 .. code:: python
 
@@ -55,13 +55,13 @@ containing them:
     Kitchen
 
 
-If you prefer a list to an iterable:
+If you prefer a list to a set:
 
 .. code:: python
 
     >>> zone_list = list(soco.discover)
     >>> zone_list
-    SoCo("192.168.1.101"), SoCo("192.168.1.102")]
+    [SoCo("192.168.1.101"), SoCo("192.168.1.102")]
     >>> zone_list[0].mute()
 
 Of course, you can also play music!
@@ -75,8 +75,10 @@ Of course, you can also play music!
         sonos = SoCo('192.168.1.102') # Pass in the IP of your Sonos speaker
         # You could use the discover function instead, if you don't know the IP
 
-        # Pass in a URI to a media file to have it streamed through the Sonos speaker
-        sonos.play_uri('http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
+        # Pass in a URI to a media file to have it streamed through the Sonos 
+        # speaker
+        sonos.play_uri(
+            'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
 
         track = sonos.get_current_track_info()
 
@@ -91,7 +93,8 @@ Of course, you can also play music!
 Example Applications
 --------------------
 
-To show off what can be made with SoCo, a simple web application is included in the ``examples`` folder.
+To show off what can be made with SoCo, a simple web application is included in
+the ``examples`` folder.
 
 .. figure:: https://github.com/SoCo/SoCo/raw/master/examples/webapp/screenshot.png
    :alt: Screenshot of web app
