@@ -56,6 +56,11 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 Action = namedtuple('Action', 'name, in_args, out_args')
 Argument = namedtuple('Argument', 'name, vartype')
 
+# A shared cache for ZoneGroupState. Each zone has the same info, so when a
+# SoCo instance is asked for group info, we can cache it and return it when
+# another instance is asked. To do this we need a cache to be shared between
+# instances
+zone_group_state_shared_cache = TimedCache()
 
 # pylint: disable=too-many-instance-attributes
 class Service(object):
@@ -539,6 +544,12 @@ class ZoneGroupTopology(Service):
     topology, diagnostics and updates. """
     def __init__(self, soco):
         super(ZoneGroupTopology, self).__init__(soco)
+
+    def GetZoneGroupState(self, *args, **kwargs):
+        """ Overrides default handling to use the global shared zone group
+        state cache, unless another cache is speciified """
+        kwargs['cache'] = kwargs.get('cache', zone_group_state_shared_cache)
+        return self.send_command('GetZoneGroupState', *args, **kwargs)
 
 
 class GroupManagement(Service):
