@@ -777,8 +777,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         # Tell every other visible zone to join this one
-        [zone.join(self) for zone in self.visible_zones
-            if zone is not self]
+        [zone.join(self) for zone in self.visible_zones if zone is not self]
 
     def join(self, master):
         """ Join this speaker to another "master" speaker.
