@@ -59,7 +59,7 @@ If you prefer a list to a set:
 
 .. code:: python
 
-    >>> zone_list = list(soco.discover)
+    >>> zone_list = list(soco.discover())
     >>> zone_list
     [SoCo("192.168.1.101"), SoCo("192.168.1.102")]
     >>> zone_list[0].mute()
