@@ -77,7 +77,7 @@ def _get_header(soap_action):
     # This way of setting accepted language is obviously flawed, in that it
     # depends on the locale settings of the system. However, I'm unsure if
     # they are actually used. The character coding is set elsewhere and I think
-    # the available music in each contry is bound to the account.
+    # the available music in each country is bound to the account.
     language, _ = locale.getdefaultlocale()
     if language is None:
         language = ''
@@ -97,14 +97,14 @@ def _get_header(soap_action):
 class Wimp(SoCoPlugin):
     """Class that implements a Wimp plugin
 
-    .. note:: There is an (appearent) in-consistency in the use of one data
+    .. note:: There is an (apparent) in-consistency in the use of one data
     type from the Wimp service. When searching for playlists, the XML returned
     by the Wimp server indicates, that the type is an 'album list', and it
     thus suggest, that this type is used for a list of tracks (as expected for
     a playlist), and this data type is reported to be playable. However, when
     browsing the music tree, the Wimp server will return items of 'album list'
     type, but in this case it is used for a list of albums and it is not
-    playable. This plugin maintains this (appearent) in-consistency to stick
+    playable. This plugin maintains this (apparent) in-consistency to stick
     as close to the reported data as possible, so search for playlists returns
     MSAlbumList that are playable and while browsing the content tree the
     MSAlbumList items returned to you are not playable.
@@ -120,7 +120,7 @@ class Wimp(SoCoPlugin):
     def __init__(self, soco, username, retries=3, timeout=3.0):
         """ Initialize the plugin
 
-        :param soco: The soco instance to use get the session ID for the music
+        :param soco: The soco instance to retrieve the session ID for the music
             service
         :type: :py:class:`soco.SoCo`
         :param username: The username for the music service
@@ -135,7 +135,7 @@ class Wimp(SoCoPlugin):
 
         .. note:: If you are using a phone number as the username and are
         experiencing problems connecting, then try to prepend the area code
-        (no + or 00). I.e.  if yor phone number is 12345678 and you are from
+        (no + or 00). I.e. if your phone number is 12345678 and you are from
         denmark, then use 4512345678. This must be set up the same way in the
         Sonos device.  For details see:
         https://wimp.zendesk.com/entries/23198372-Hvorfor-kan-jeg-ikke-logge-

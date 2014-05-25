@@ -70,7 +70,8 @@ class MusicInfoItem(object):
         return self.content == playable_item.content
 
     def __ne__(self, playable_item):
-        """Return the equals comparison result to another ``playable_item``."""
+        """Return the not equals comparison result to another ``playable_item``.
+        """
         return self.content != playable_item.content
 
     def __repr__(self):
@@ -915,7 +916,7 @@ class MusicServiceItem(MusicInfoItem):
         # And get the extended id
         content['extended_id'] = service.id_to_extended_id(content['item_id'],
                                                            cls)
-        # Add uri if there is one for the relevant class
+        # Add URI if there is one for the relevant class
         uri = service.form_uri(content, cls)
         if uri:
             content['uri'] = uri
@@ -978,7 +979,7 @@ class MusicServiceItem(MusicInfoItem):
         for key in ['extended_id', 'title', 'item_class']:
             if not hasattr(self, key):
                 message = 'The property \'{}\' is not present on this item. '\
-                    'This indicates that this item was not meast to create '\
+                    'This indicates that this item was not meant to create '\
                     'didl_metadata'
                 raise CannotCreateDIDLMetadata(message)
         if 'description' not in self.content:
@@ -1097,7 +1098,7 @@ class MSTrack(MusicServiceItem):
 
     @property
     def uri(self):
-        """Return the uri"""
+        """Return the URI"""
         # x-sonos-http:trackid_19356232.mp4?sid=20&amp;flags=32
         return self.content['uri']
 
@@ -1131,7 +1132,7 @@ class MSAlbum(MusicServiceItem):
 
     @property
     def uri(self):
-        """Return the uri"""
+        """Return the URI"""
         # x-rincon-cpcontainer:0004002calbumid_22757081
         return self.content['uri']
 
@@ -1159,7 +1160,7 @@ class MSAlbumList(MusicServiceItem):
 
     @property
     def uri(self):
-        """Return the uri"""
+        """Return the URI"""
         # x-rincon-cpcontainer:000d006cplaylistid_26b18dbb-fd35-40bd-8d4f-
         # 8669bfc9f712
         return self.content['uri']
@@ -1187,7 +1188,7 @@ class MSPlaylist(MusicServiceItem):
 
     @property
     def uri(self):
-        """Return the uri"""
+        """Return the URI"""
         # x-rincon-cpcontainer:000d006cplaylistid_c86ddf26-8ec5-483e-b292-
         # abe18848e89e
         return self.content['uri']
@@ -1213,7 +1214,7 @@ class MSArtistTracklist(MusicServiceItem):
 
     @property
     def uri(self):
-        """Return the uri"""
+        """Return the URI"""
         # x-rincon-cpcontainer:100f006cartistpopsongsid_1566
         return 'x-rincon-cpcontainer:100f006c{}'.format(self.item_id)
 
