@@ -621,8 +621,8 @@ class MLSonosPlaylist(MusicLibraryItem):
 
     def __init__(self, uri, title,
                  item_class='object.container.playlistContainer'):
-        """ Instantiate the MLSonosPlaylist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
+        """ Instantiate the MLSonosPlaylist item by passing the arguments to
+        the super class :py:meth:`.MusicLibraryItem.__init__`.
 
         :param uri: The URI for the playlist
         :param title: The title of the playlist
