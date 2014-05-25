@@ -70,7 +70,7 @@ class MusicInfoItem(object):
         return self.content == playable_item.content
 
     def __ne__(self, playable_item):
-        """Return the not equals comparison result to another ``playable_item``.
+        """Return the not equals comparison result to another ``playable_item``
         """
         return self.content != playable_item.content
 
@@ -972,8 +972,8 @@ class MusicServiceItem(MusicInfoItem):
         """
         # Check if this item is meant to be played
         if not self.can_play:
-            message = 'This item is not meant to be played and therefore also '\
-                'not to create its own didl_metadata'
+            message = 'This item is not meant to be played and therefore '\
+                'also not to create its own didl_metadata'
             raise CannotCreateDIDLMetadata(message)
         # Check if we have the attributes to create the didl metadata:
         for key in ['extended_id', 'title', 'item_class']:
@@ -984,8 +984,8 @@ class MusicServiceItem(MusicInfoItem):
                 raise CannotCreateDIDLMetadata(message)
         if 'description' not in self.content:
             message = 'The item for \'description\' is not present in '\
-                'self.content. This indicates that this item was not meant to '\
-                'create didl_metadata'
+                'self.content. This indicates that this item was not meant '\
+                'to create didl_metadata'
             raise CannotCreateDIDLMetadata(message)
 
         # Main element, ugly? yes! but I have given up on using namespaces
