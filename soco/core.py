@@ -1066,6 +1066,18 @@ class SoCo(_SocoSingletonBase):
 
         return queue
 
+    def get_sonos_playlists(self, start=0, max_items=100):
+        """ Convenience method for:
+            get_music_library_information('sonos_playlists')
+            Refer to the docstring for that method
+
+        """
+        out = self.get_music_library_information(
+            'sonos_playlists',
+            start,
+            max_items)
+        return out
+
     def get_artists(self, start=0, max_items=100):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
@@ -1139,8 +1151,9 @@ class SoCo(_SocoSingletonBase):
 
         :param search_type: The kind of information to retrieve. Can be one of:
             'artists', 'album_artists', 'albums', 'genres', 'composers',
-            'tracks', 'share' and 'playlists', where playlists are the imported
-            file based playlists from the music library
+            'tracks', 'share', 'sonos_playlists', and 'playlists', where
+            playlists are the imported file based playlists from the
+            music library
         :param start: Starting number of returned matches
         :param max_items: Maximum number of returned matches. NOTE: The maximum
             may be restricted by the unit, presumably due to transfer
@@ -1156,7 +1169,8 @@ class SoCo(_SocoSingletonBase):
             :py:class:`~.soco.data_structures.MLGenre`,
             :py:class:`~.soco.data_structures.MLComposer`,
             :py:class:`~.soco.data_structures.MLTrack`,
-            :py:class:`~.soco.data_structures.MLShare` and
+            :py:class:`~.soco.data_structures.MLShare`,
+            :py:class:`~.soco.data_structures.MLSonosPlaylist and
             :py:class:`~.soco.data_structures.MLPlaylist` depending on the
             type of the search.
         :raises: :py:class:`SoCoException` upon errors
@@ -1175,7 +1189,8 @@ class SoCo(_SocoSingletonBase):
                               'album_artists': 'A:ALBUMARTIST',
                               'albums': 'A:ALBUM', 'genres': 'A:GENRE',
                               'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
-                              'playlists': 'A:PLAYLISTS', 'share': 'S:'}
+                              'playlists': 'A:PLAYLISTS', 'share': 'S:',
+                              'sonos_playlists': 'SQ:'}
         search = search_translation[search_type]
         response = self.contentDirectory.Browse([
             ('ObjectID', search),

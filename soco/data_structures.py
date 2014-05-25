@@ -607,6 +607,32 @@ class MLPlaylist(MusicLibraryItem):
         return out
 
 
+class MLSonosPlaylist(MusicLibraryItem):
+    """ Class that represents a sonos playlist.
+
+    :ivar parent_id: The parent ID for the MLSonosPlaylist is 'SQ:'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating MLSonosPlaylist from
+        XML is inherited from :py:class:`.MusicLibraryItem`.
+
+    """
+
+    parent_id = 'SQ:'
+
+    def __init__(self, uri, title,
+                 item_class='object.container.playlistContainer'):
+        """ Instantiate the MLSonosPlaylist item by passing the arguments to the
+        super class :py:meth:`.MusicLibraryItem.__init__`.
+
+        :param uri: The URI for the playlist
+        :param title: The title of the playlist
+        :param item_class: The UPnP class for the playlist. The default value
+            is: ``object.container.playlistContainer``
+
+        """
+        MusicLibraryItem.__init__(self, uri, title, item_class)
+
+
 class MLShare(MusicLibraryItem):
     """Class that represents a music library share.
 
@@ -1217,7 +1243,8 @@ class MSPlaylist(MusicServiceItem):
 PARENT_ID_TO_CLASS = {'A:TRACKS': MLTrack, 'A:ALBUM': MLAlbum,
                       'A:ARTIST': MLArtist, 'A:ALBUMARTIST': MLAlbumArtist,
                       'A:GENRE': MLGenre, 'A:COMPOSER': MLComposer,
-                      'A:PLAYLISTS': MLPlaylist, 'S:': MLShare}
+                      'A:PLAYLISTS': MLPlaylist, 'S:': MLShare,
+                      'SQ:': MLSonosPlaylist}
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
                     'albumList': MSPlaylist}

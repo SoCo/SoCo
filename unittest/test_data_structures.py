@@ -179,6 +179,21 @@ PLAYLIST_DICT = {
            'Trentem%c3%b8ller%20Chronicles/-%3dTrentem%c3%b8ller%20-%20The%20'
            'Trentem%c3%b8ller%20Chronicles%20(CD%201).m3u',
     'title': '-=Trentem\xf8ller - The Trentem\xf8ller Chronicles (CD 1).m3u'}
+SONOS_PLAYLIST_XML = """
+<container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+ id="file:///jffs/settings/savedqueues.rsq#13 title: Koop" parentID="SQ:"
+ restricted="true">
+  <res protocolInfo="x-file-cifs:*:audio/mpegurl:*">file:///jffs/settings/savedqueues.rsq#13 title: Koop</res>
+  <dc:title>Koop</dc:title>
+  <upnp:class>object.container.playlistContainer</upnp:class>
+</container>"""
+SONOS_PLAYLIST_XML = SONOS_PLAYLIST_XML.replace('\n', '')
+SONOS_PLAYLIST_DICT = {
+    'item_class': 'object.container.playlistContainer',
+    'uri': 'file:///jffs/settings/savedqueues.rsq#13 title: Koop',
+    'title': 'Koop'}
 SHARE_XML = """
 <container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -479,6 +494,18 @@ def test_mlplaylist():
                  'Trentem%c3%b8ller%20-%20The%20Trentem%c3%b8ller%20'
                  'Chronicles%20(CD%201).m3u', playlist, content,
                  PLAYLIST_XML, PLAYLIST_DICT)
+
+
+def test_mlsonosplaylist():
+    """Test the MLSonosPlaylist class"""
+    # Set the tests up
+    uri = 'file:///jffs/settings/savedqueues.rsq#13 title: Koop'
+    playlist = data_structures.MLSonosPlaylist(uri, TITLE, 'dummy.class')
+
+    # Run tests on inherited methods and attributes
+    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
+    common_tests('SQ:', '13 title: Koop',
+                 playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
 
 def test_mlshare():
