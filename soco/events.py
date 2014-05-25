@@ -15,6 +15,7 @@ import socket
 import logging
 import weakref
 from collections import namedtuple
+import time
 
 import requests
 
@@ -196,9 +197,21 @@ class Subscription(object):
         # A flag to make sure that an unsubscribed instance is not
         # resubscribed
         self._has_been_unsubscribed = False
+        # The time when the subscription was made
+        self._timestamp = None
 
-    def subscribe(self):
-        """ Subscribe to the service """
+    def subscribe(self, requested_timeout=None):
+        """ Subscribe to the service.
+
+        If requested_timeout is provided, a subscription valid for that number
+        of seconds will be requested, but not guaranteed. Check
+        :attrib:`timeout` on return to find out what period of validity is
+        actually allocated. """
+
+        # TIMEOUT is provided for in the UPnP spec, but it is not clear if
+        # Sonos pays any attention to it. A timeout of 86400 secs always seems
+        # to be allocated
+
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot resubscribe instance once unsubscribed')
@@ -219,6 +232,8 @@ class Subscription(object):
             'Callback': '<http://{0}:{1}>'.format(ip_address, port),
             'NT': 'upnp:event'
         }
+        if requested_timeout is not None:
+            headers["TIMEOUT"] = "Seconds-{}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE', service.base_url + service.event_subscription_url,
             headers=headers)
@@ -232,6 +247,7 @@ class Subscription(object):
             self.timeout = None
         else:
             self.timeout = int(timeout.lstrip('Seconds-'))
+        self._timestamp = time.time()
         self.is_subscribed = True
         log.debug(
             "Subscribed to %s, sid: %s",
@@ -244,7 +260,7 @@ class Subscription(object):
         with _sid_to_service_lock:
             _sid_to_service[self.sid] = self.service
 
-    def renew(self):
+    def renew(self, requested_timeout=None):
         """Renew the event subscription.
 
         You should not try to renew a subscription which has been
@@ -263,11 +279,23 @@ class Subscription(object):
         headers = {
             'SID': self.sid
         }
+        if requested_timeout is not None:
+            headers["TIMEOUT"] = "Seconds-{}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
             headers=headers)
         response.raise_for_status()
+        timeout = response.headers['timeout']
+        # According to the spec, timeout can be "infinite" or "second-123"
+        # where 123 is a number of seconds.  Sonos uses "Seconds-123" (with an
+        # 's') and a capital letter
+        if timeout.lower() == 'infinite':
+            self.timeout = None
+        else:
+            self.timeout = int(timeout.lstrip('Seconds-'))
+        self._timestamp = time.time()
+        self.is_subscribed = True
         log.debug(
             "Renewed subscription to %s, sid: %s",
             self.service.base_url + self.service.event_subscription_url,
@@ -291,6 +319,7 @@ class Subscription(object):
             headers=headers)
         response.raise_for_status()
         self.is_subscribed = False
+        self._timestamp = None
         log.debug(
             "Unsubscribed from %s, sid: %s",
             self.service.base_url + self.service.event_subscription_url,
@@ -307,6 +336,19 @@ class Subscription(object):
             except KeyError:
                 pass
         self._has_been_unsubscribed = True
+
+    @property
+    def time_left(self):
+        """
+        The amount of time left until the subscription expires, in seconds
+
+        If the subscription is unsubscribed (or not yet subscribed) return 0
+
+        """
+        if self._timestamp is None:
+            return 0
+        else:
+            return self.timeout-(time.time()-self._timestamp)
 
 # pylint: disable=C0103
 event_listener = EventListener()
