@@ -17,6 +17,14 @@ For more background on the project, please see Rahim's `blog post
    :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
    :alt: Requirements Status
 
+.. image:: https://pypip.in/download/soco/badge.png
+    :target: https://pypi.python.org/pypi/soco/
+    :alt: Latest PyPI version
+
+.. image:: https://pypip.in/version/soco/badge.png
+    :target: https://pypi.python.org/pypi/soco/
+    :alt: Number of PyPI downloads
+
 Installation
 ------------
 
