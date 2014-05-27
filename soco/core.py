@@ -310,7 +310,9 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def play_mode(self):
-        """ The queue's play mode. Case-insensitive options are::
+        """ The queue's play mode.
+
+        Case-insensitive options are:
 
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
@@ -941,12 +943,10 @@ class SoCo(_SocoSingletonBase):
     def get_speaker_info(self, refresh=False):
         """ Get information about the Sonos speaker.
 
-        Arguments:
-        refresh -- Refresh the speaker info cache.
+        :param refresh: Refresh the speaker info cache.
 
-        Returns:
-        Information about the Sonos speaker, such as the UID, MAC Address, and
-        Zone Name.
+        :return: Information about the Sonos speaker, such as the UID, MAC
+            Address, and Zone Name.
 
         """
         if self.speaker_info and refresh is False:
@@ -972,9 +972,10 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
 
     def get_group_coordinator(self, zone_name):
-        """     .. deprecated:: 0.8
-                   Use :meth:`group` or :meth:`all_groups` instead.
+        """ Returns the group coordinator
 
+        .. deprecated:: 0.8
+           Use :meth:`group` or :meth:`all_groups` instead.
         """
         import warnings
         warnings.warn(
@@ -989,15 +990,12 @@ class SoCo(_SocoSingletonBase):
     def get_speakers_ip(self, refresh=False):
         """ Get the IP addresses of all the Sonos speakers in the network.
 
-        Arguments:
-        refresh -- Refresh the speakers IP cache. Ignored. For backward
+        :param refresh: Refresh the speakers IP cache. Ignored. For backward
             compatibility only
 
-        Returns:
-        a set of IP addresses of the Sonos speakers.
+        :return: a set of IP addresses of the Sonos speakers.
 
         .. deprecated:: 0.8
-
 
         """
         # pylint: disable=star-args, unused-argument

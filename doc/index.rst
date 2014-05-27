@@ -15,12 +15,14 @@ Contents
    :maxdepth: 2
 
    tutorial
-   soco-mod
+   topology
+   events
+   services
    plugins
-   unittests
    data-structures-mod
    release_notes
-   release-howto
+   dev/index
+   modules/index
 
 
 Indices and tables

@@ -5,16 +5,24 @@ Plugins
 
 Plugins can extend the functionality of SoCo.
 
+Currently the following plugins are inluded in SoCo.
+
+* An Example plugin to show how to write plugins.
+* :class:`soco.plugins.spotify.Spotify` for `Spotify <http://spotify.com/>`_
+* :class:`soco.plugins.wimp.Wimp` for `WIMP <http://wimpmusic.com/>`_
+
+
 
 Creating a Plugin
 -----------------
 
-To write a plugin, simply extend the class ``soco.plugins.SoCoPlugin``.  The
-``__init__`` method of the plugin should accept an ``SoCo`` instance as the
-first positional argument, which it should pass to its ``super`` constructor.
+To write a plugin, simply extend the class :class:`soco.plugins.SoCoPlugin`.
+The ``__init__`` method of the plugin should accept an :class:`soco.SoCo`
+instance as the first positional argument, which it should pass to its
+``super`` constructor.
 
-The class ``soco.plugins.example.ExamplePlugin`` contains an example plugin
-implementation.
+The class :class:`soco.plugins.example.ExamplePlugin` contains an example
+plugin implementation.
 
 
 Using a Plugin
@@ -36,7 +44,7 @@ To use a plugin, it can be loaded and instantiated directly.
 
 
 Alternatively a plugin can also be loaded by its name using
-``SoCoPlugin.from_name()``.
+:meth:`soco.plugins.SoCoPlugin.from_name`.
 
 .. code-block:: python
 
@@ -47,11 +55,3 @@ Alternatively a plugin can also be loaded by its name using
     # do something with your plugin
     print 'Testing', myplugin.name
     myplugin.music_plugin_play()
-
-
-
-The ``SoCoPlugin`` class
-------------------------
-
-.. autoclass:: soco.plugins.SoCoPlugin
-   :members:
