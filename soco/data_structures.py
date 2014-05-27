@@ -854,7 +854,7 @@ class MusicServiceItem(MusicInfoItem):
             element. This service must contain ``id_to_extended_id`` and
             ``form_uri`` methods and ``description`` and ``service_id``
             attributes.
-        :type service: Instance ob sub-class of
+        :type service: Instance of sub-class of
             :class:`soco.plugins.SoCoPlugin`
         :param parent_id: The parent ID of the item, will either be the
             extended ID of another MusicServiceItem or of a search
@@ -980,7 +980,7 @@ class MusicServiceItem(MusicInfoItem):
             if not hasattr(self, key):
                 message = 'The property \'{}\' is not present on this item. '\
                     'This indicates that this item was not meant to create '\
-                    'didl_metadata'
+                    'didl_metadata'.format(key)
                 raise CannotCreateDIDLMetadata(message)
         if 'description' not in self.content:
             message = 'The item for \'description\' is not present in '\
