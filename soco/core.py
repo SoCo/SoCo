@@ -37,19 +37,23 @@ def discover(timeout=1, include_invisible=False):
     """
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent(b"""\
+    PLAYER_SEARCH = dedent("""\
         M-SEARCH * HTTP/1.1
-        HOST: 239.255.255.250:reservedSSDPport
+        HOST: 239.255.255.250:1900
         MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """)
+        """).encode('utf-8')
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
     _sock = socket.socket(
         socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+    # UPnP v1.0 requires a TTL of 4
+    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
+    # Send a few times. UDP is unreliable
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
     response, _, _ = select.select([_sock], [], [], timeout)
@@ -58,8 +62,10 @@ def discover(timeout=1, include_invisible=False):
     # we care about is the IP address
     if response:
         _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query the
-        # topology to find the other players.
+        # Now we have an IP, we can build a SoCo instance and query that player
+        # for the topology to find the other players. It is much more efficient
+        # to rely upon the Zone Player's ability to find the others, than to
+        # wait for query responses from them ourselves.
         zone = SoCo(addr[0])
         if include_invisible:
             return zone.all_zones
