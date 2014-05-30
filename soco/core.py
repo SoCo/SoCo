@@ -19,7 +19,7 @@ from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem
+from .data_structures import get_ml_item, QueueItem, URI
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 
@@ -173,6 +173,7 @@ class SoCo(_SocoSingletonBase):
         get_playlists -- Get playlists from the music library
         get_music_library_information -- Get information from the music library
         get_current_transport_info -- get speakers playing state
+        add_uri_to_queue -- Adds an URI to the queue
         add_to_queue -- Add a track to the end of the queue
         remove_from_queue -- Remove a track from the queue
         clear_queue -- Remove all tracks from queue
@@ -1215,6 +1216,15 @@ class SoCo(_SocoSingletonBase):
             out['item_list'].append(item)
 
         return out
+
+    def add_uri_to_queue(self, uri):
+        """Adds the URI to the queue
+
+        :param uri: The URI to be added to the queue
+        :type uri: str
+        """
+        item = URI(uri)
+        self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
