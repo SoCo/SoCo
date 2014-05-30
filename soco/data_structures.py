@@ -53,7 +53,7 @@ def tags_with_text(xml, tags=None):
         elif len(element) > 0:
             tags_with_text(element, tags)
         else:
-            message = 'Unknown XML structure: {}'.format(element)
+            message = 'Unknown XML structure: {0}'.format(element)
             raise ValueError(message)
     return tags
 
@@ -925,7 +925,7 @@ class MusicServiceItem(MusicInfoItem):
             tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
             if tag not in cls.valid_fields:
-                message = 'The info tag \'{}\' is not allowed for this item'.\
+                message = 'The info tag \'{0}\' is not allowed for this item'.\
                     format(tag)
                 raise ValueError(message)
             content[tag] = item.text
@@ -950,7 +950,7 @@ class MusicServiceItem(MusicInfoItem):
         # Check for all required values
         for key in cls.required_fields:
             if key not in content:
-                message = 'An XML field that correspond to the key \'{}\' is '\
+                message = 'An XML field that correspond to the key \'{0}\' is '\
                     'required. See the docstring for help.'.format(key)
 
         return cls.from_dict(content)
@@ -1004,7 +1004,7 @@ class MusicServiceItem(MusicInfoItem):
         # Check if we have the attributes to create the didl metadata:
         for key in ['extended_id', 'title', 'item_class']:
             if not hasattr(self, key):
-                message = 'The property \'{}\' is not present on this item. '\
+                message = 'The property \'{0}\' is not present on this item. '\
                     'This indicates that this item was not meant to create '\
                     'didl_metadata'.format(key)
                 raise CannotCreateDIDLMetadata(message)
@@ -1242,7 +1242,7 @@ class MSArtistTracklist(MusicServiceItem):
     def uri(self):
         """Return the URI"""
         # x-rincon-cpcontainer:100f006cartistpopsongsid_1566
-        return 'x-rincon-cpcontainer:100f006c{}'.format(self.item_id)
+        return 'x-rincon-cpcontainer:100f006c{0}'.format(self.item_id)
 
 
 class MSArtist(MusicServiceItem):
