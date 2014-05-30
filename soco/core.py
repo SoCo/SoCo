@@ -14,6 +14,7 @@ from textwrap import dedent
 import re
 import itertools
 import requests
+import sys
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -234,7 +235,6 @@ class SoCo(_SocoSingletonBase):
         self.xml_find_prefix = './/'
         if 'xml.etree.ElementTree' in sys.modules:
             self.xml_find_prefix = ''
-
 
     def __str__(self):
         return "<SoCo object at ip {0}>".format(self.ip_address)
