@@ -99,7 +99,8 @@ class Service(object):
         self.base_url = 'http://{0}:1400'.format(self.soco.ip_address)
         self.control_url = '/{0}/Control'.format(self.service_type)
         # Service control protocol description
-        self.scpd_url = '/xml/{0}{1}.xml'.format(self.service_type, self.version)
+        self.scpd_url = '/xml/{0}{1}.xml'.format(
+            self.service_type, self.version)
         # Eventing subscription
         self.event_subscription_url = '/{0}/Event'.format(self.service_type)
         #: A cache for storing the result of network calls. By default, this is
