@@ -141,7 +141,7 @@ class Resource(object):
 
         # Optional
         if self.import_uri:
-            root.attrib['importUri'] = self.importUri
+            root.attrib['importUri'] = self.import_uri
         if self.size:
             root.attrib['size'] = self.size
         if self.duration:
@@ -442,14 +442,14 @@ class Container(Object):
         """
         if item not in self.items:
             self.items.append(item)
-            item.parent_id = self.id
+            item.parent_id = self.object_id
 
     def add_container(self, c):
         """ Adds a container to the container.
         """
         if c not in self.containers:
             self.containers.append(c)
-            c.parent_id = self.id
+            c.parent_id = self.object_id
 
 
 class Item(Object):
@@ -513,8 +513,8 @@ class AudioItem(Item):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
-                 genres=None, description=None, long_description='', publishers=None,
-                 language=None, relations=None, rights=None):
+                 genres=None, description=None, long_description='',
+                 publishers=None, language=None, relations=None, rights=None):
         """ Constructor for the Item class.
 
         @param object_id: unique identifier for the object
@@ -615,10 +615,12 @@ STORAGE_MEDIUM_SACD, STORAGE_MEDIUM_MD_AUDIO, STORAGE_MEDIUM_MD_PICTURE,
 STORAGE_MEDIUM_DVD_ROM, STORAGE_MEDIUM_DVD_VIDEO, STORAGE_MEDIUM_DVD_R,
 STORAGE_MEDIUM_DVD_PLUS_RW, STORAGE_MEDIUM_DVD_RW, STORAGE_MEDIUM_DVD_RAM,
 STORAGE_MEDIUM_DVD_AUDIO, STORAGE_MEDIUM_DAT, STORAGE_MEDIUM_LD,
-STORAGE_MEDIUM_HDD) = ('UNKNOWN', 'DV', 'MINI-DV', 'VHS',
-'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA', 'CD-R',
-'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM', 'DVD-VIDEO',
-'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT', 'LD', 'HDD')
+STORAGE_MEDIUM_HDD) = (
+    'UNKNOWN', 'DV', 'MINI-DV', 'VHS',
+    'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA',
+    'CD-R', 'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM',
+    'DVD-VIDEO', 'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT',
+    'LD', 'HDD')
 
 
 class MusicTrack(AudioItem):
@@ -685,10 +687,11 @@ class MusicTrack(AudioItem):
         @type contributors: list
         @type date: string
         """
-        AudioItem.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, ref_id, genres, description,
-                           long_description, publishers, language, relations,
-                           rights)
+        AudioItem.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, ref_id, genres, description,
+            long_description, publishers, language, relations,
+            rights)
         self.artists = artists
         self.albums = albums
         self.original_track_number = original_track_number
@@ -800,10 +803,11 @@ class AudioBroadcast(AudioItem):
         @type radio_band: string
         @type channel_nr: int
         """
-        AudioItem.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, ref_id, genres, description,
-                           long_description, publishers, language, relations,
-                           rights)
+        AudioItem.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, ref_id, genres, description,
+            long_description, publishers, language, relations,
+            rights)
         self.region = region
         self.radio_call_sign = radio_call_sign
         self.radio_station_id = radio_station_id
@@ -916,7 +920,7 @@ class AudioBook(AudioItem):
                            long_description, publishers, language, relations,
                            rights)
         self.storage_medium = storage_medium
-        self.producer = producer
+        self.producers = producers
         self.contributors = contributors
         self.date = date
 
@@ -939,7 +943,7 @@ class AudioBook(AudioItem):
         """
         root = AudioItem.to_didl_element(self)
 
-        for p in self.producer:
+        for p in self.producers:
             ElementTree.SubElement(root, 'upnp:producer').text = p
         for c in self.contributors:
             ElementTree.SubElement(root, 'dc:contributor').text = c
@@ -1322,7 +1326,7 @@ class MusicAlbum(Album):
     """
     upnp_class = '%s%s' % (Album.upnp_class, '.musicAlbum')
 
-    def __init__(self,object_id='', parent_id='', title='', restricted=False,
+    def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
                  searchable=True, search_classes=[], create_classes=[],
                  storage_medium='', long_description='', description='',
@@ -1383,7 +1387,7 @@ class MusicAlbum(Album):
         @type album_art_uri: string
         @type toc: string
         """
-        Album.__init__(self,object_id, parent_id, title, restricted, creator,
+        Album.__init__(self, object_id, parent_id, title, restricted, creator,
                        write_status, searchable, search_classes,
                        create_classes, storage_medium, long_description,
                        description, publishers, contributors, date, relations,
@@ -1504,7 +1508,7 @@ class MusicGenre(Genre):
     upnp_class = '%s%s' % (Genre.upnp_class, '.musicGenre')
 
     def add_container(self, c):
-        if isinstance(c, MusicArtist) or ininstance(c, MusicAlbum) or\
+        if isinstance(c, MusicArtist) or isinstance(c, MusicAlbum) or\
             isinstance(c, self.__class__):
             Genre.add_container(self, c)
             return True
@@ -1525,7 +1529,7 @@ class PlaylistContainer(Container):
     """
     upnp_class = '%s%s' % (Container.upnp_class, '.playlistContainer')
 
-    def __init__(self,object_id='', parent_id='', title='', restricted=False,
+    def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
                  searchable=True, search_classes=[], create_classes=[],
                  artists=[], genres=[], long_description='', producers=[],
@@ -1578,7 +1582,7 @@ class PlaylistContainer(Container):
         @type languages: list
         @type rights: list
         """
-        Container.__init__(self,object_id, parent_id, title, restricted, creator,
+        Container.__init__(self, object_id, parent_id, title, restricted, creator,
                            write_status, searchable, search_classes,
                            create_classes)
         self.artists = artists
@@ -1699,7 +1703,7 @@ class Person(Container):
         return False
 
     def add_item(self, item):
-        if isinstance(c, Item):
+        if isinstance(item, Item):
             Container.add_item(self, item)
             return True
         return False
@@ -1958,6 +1962,9 @@ class StorageVolume(Container):
         @type storage_free: signed long
         @type storage_medium: string
         """
+        Container.__init__(self, object_id, parent_id, title, restricted, creator,
+                           write_status, searchable, search_classes,
+                           create_classes)
         self.storage_total = storage_total
         self.storage_used = storage_used
         self.storage_free = storage_free
@@ -2043,6 +2050,9 @@ class StorageFolder(Container):
         @type create_classes: list
         @type storage_used: signed long
         """
+        Container.__init__(self, object_id, parent_id, title, restricted, creator,
+                           write_status, searchable, search_classes,
+                           create_classes)
         self.storage_used = storage_used
 
     def from_element(self, elt):
@@ -2086,8 +2096,8 @@ class Element(_ElementInterface):
         self._items = []
 
     def add_container(self, object_id, parent_id, title, restricted=False):
-        e = Container(id, parent_id, title, restricted)
-        self.append(e.to_element())
+        e = Container(object_id, parent_id, title, restricted)
+        self.append(e.to_didl_element())
 
     def add_item(self, item):
         self.append(item.to_didl_element())
@@ -2106,12 +2116,11 @@ class Element(_ElementInterface):
     def from_string(cls, aString):
         instance = cls()
         elt = parse_xml(aString)
-        elt = elt
         add_item = instance.add_item
 
-        for node in elt.getchildren():
+        for node in elt:
             upnp_class_name = node.find(
-                ".//{urn:schemas-upnp-org:metadata-1-0/upnp/}class").text
+                "{urn:schemas-upnp-org:metadata-1-0/upnp/}class").text
             names = upnp_class_name.split('.')
             while names:
                 class_name = names[-1]
@@ -2124,7 +2133,7 @@ class Element(_ElementInterface):
                     break
                 except Exception as e:
                     names = names[:-1]
-                    log.debug('element from string critical bug: %s' % str(e))
+                    log.debug('element from string critical bug: %s', e)
                     continue
 
         return instance
