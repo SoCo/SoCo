@@ -233,7 +233,7 @@ class Subscription(object):
             'NT': 'upnp:event'
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Seconds-{}".format(requested_timeout)
+            headers["TIMEOUT"] = "Seconds-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE', service.base_url + service.event_subscription_url,
             headers=headers)
@@ -280,7 +280,7 @@ class Subscription(object):
             'SID': self.sid
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Seconds-{}".format(requested_timeout)
+            headers["TIMEOUT"] = "Seconds-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
