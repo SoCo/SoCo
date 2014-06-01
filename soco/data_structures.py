@@ -28,7 +28,23 @@ def get_ml_item(xml):
     PARENT_ID_TO_CLASS module variable dictionary.
 
     """
-    cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
+    # Add the option to auto detect if the given parent ID is not in
+    # the array (The case when you have a sub-category, because a
+    # request of A:GENRE/Pop will actually return Artists, not genres)
+    cls = MusicLibraryItem
+    if (xml.get('parentID') in PARENT_ID_TO_CLASS.keys()):
+        cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
+    else:
+        # Try and auto detect which type this is from the XML returned
+        classType = xml.findtext(ns_tag('upnp', 'class'))
+        
+        if classType != None:
+            if 'musicTrack' in classType:
+                cls = MLTrack
+            elif 'musicAlbum' in classType:
+                cls = MLAlbum
+            elif 'musicArtist' in classType:
+                cls = MLArtist
     return cls.from_xml(xml=xml)
 
 
