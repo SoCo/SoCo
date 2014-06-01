@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 import select
 import socket
 import logging
-import traceback
 from textwrap import dedent
 import re
 import itertools
@@ -907,7 +906,6 @@ class SoCo(_SocoSingletonBase):
                 track['title'] = trackinfo[index + 3:]
             else:
                 LOGGER.warning('Could not handle track info: "%s"', trackinfo)
-                LOGGER.warning(traceback.format_exc())
                 track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
