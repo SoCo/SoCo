@@ -2,12 +2,13 @@
 
 """ Provides general utility functions to be used across modules """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals, absolute_import, print_function
 
 import re
 import threading
 from time import time
 from .compat import StringType, UnicodeType, dumps
+from .xml import XML
 
 
 def really_unicode(in_string):
@@ -61,6 +62,12 @@ def prettify(unicode_text):
     import xml.dom.minidom
     reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
     return reparsed.toprettyxml(indent="  ", newl="\n")
+
+
+def show_xml(xml):
+    """Prettyprint xml"""
+    string = XML.tostring(xml)
+    print(prettify(string))
 
 
 class TimedCache(object):
