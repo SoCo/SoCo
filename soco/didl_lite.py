@@ -8,7 +8,7 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import logging
+import logging, sys
 from xml.etree.ElementTree import _ElementInterface
 from .xml import XML as ElementTree
 
@@ -2124,7 +2124,11 @@ class Element(_ElementInterface):
                 class_name = names[-1]
                 class_name = "%s%s" % (class_name[0].upper(), class_name[1:])
                 try:
-                    upnp_class = eval(class_name)
+                    # Get a reference to the current module
+                    my_module = sys.modules[cls.__module__]
+                    # and find a matching class in it
+                    upnp_class = getattr(my_module, class_name)
+                    # Create an instance and populate it
                     new_node = upnp_class()
                     new_node.from_element(node)
                     add_item(new_node)
