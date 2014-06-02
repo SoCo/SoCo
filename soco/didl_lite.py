@@ -22,7 +22,8 @@ log = logging.getLogger(__name__)
 ns = {'didl': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
       'dc': 'http://purl.org/dc/elements/1.1/',
       'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-      'dlna': 'urn:schemas-dlna-org:metadata-1-0'}
+      'dlna': 'urn:schemas-dlna-org:metadata-1-0',
+      'r': 'urn:schemas-rinconnetworks-com:metadata-1-0/'}
 
 
 def find(elt, namespace, key):
@@ -2134,6 +2135,7 @@ class Element(_ElementInterface):
         self.attrib['xmlns:dc'] = 'http://purl.org/dc/elements/1.1/'
         self.attrib['xmlns:upnp'] = 'urn:schemas-upnp-org:metadata-1-0/upnp/'
         self.attrib['xmlns:dlna'] = 'urn:schemas-dlna-org:metadata-1-0'
+        self.attrib['xmlns:r'] = 'urn:schemas-rinconnetworks-com:metadata-1-0/'
         self._items = []
 
     def add_container(self, object_id, parent_id, title, restricted=False):
