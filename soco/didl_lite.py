@@ -2,7 +2,8 @@
 # http://opensource.org/licenses/mit-license.php or see LICENSE file.
 # Copyright 2007-2008 Brisa Team <brisa-develop@garage.maemo.org>
 # pylint: disable=too-many-arguments,too-many-instance-attributes
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, invalid-name
+# pylint: disable=too-many-public-methods
 
 """ DIDL-Lite classes (object, items, containers and etc).
 """
@@ -252,7 +253,7 @@ class Object(object):
 
         # Optional
         write_status_elt = find(elt, 'upnp', 'writeStatus')
-        if write_status_elt:
+        if write_status_elt is not None:
             self.write_status = write_status_elt.text
         creator_elt = find(elt, 'dc', 'creator')
         if creator_elt is not None:
@@ -307,6 +308,7 @@ class SearchClass(object):
     """ Instances of this class may be passed to search_classes parameter of
     Container constructors.
     """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, class_name, include_derived=False,
                  class_friendly_name=''):
@@ -335,6 +337,8 @@ class CreateClass(SearchClass):
     """ Instances of this class may be passed to create_classes parameter of
     Container constructors.
     """
+
+    # pylint: disable=too-few-public-methods
 
     def get_element(self):
         if not self.include_derived:
@@ -521,7 +525,7 @@ class AudioItem(Item):
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
                  genres=None, description=None, long_description='',
-                 publishers=None, language=None, relations=None, rights=None):
+                 publishers=None, language='', relations=None, rights=None):
         """ Constructor for the Item class.
 
         @param object_id: unique identifier for the object
@@ -563,9 +567,9 @@ class AudioItem(Item):
         self.description = description
         self.long_description = long_description
         self.publishers = publishers if publishers else []
-        self.language = language if language else []
-        self.relations = relations
-        self.rights = rights
+        self.language = language
+        self.relations = relations if relations else []
+        self.rights = rights if rights else []
 
     def from_element(self, elt):
         """ Sets AudioItem properties from an element.
@@ -579,10 +583,10 @@ class AudioItem(Item):
         self.relations = [r.text for r in findall(elt, 'dc', 'relation')]
         self.rights = [r.text for r in findall(elt, 'dc', 'rights')]
 
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
 
-        if desc_elt:
+        if desc_elt is not None:
             self.description = desc_elt.text
 
     def to_didl_element(self):
@@ -612,21 +616,25 @@ class AudioItem(Item):
 
 
 # upnp:storageMedium possible values
-(STORAGE_MEDIUM_UNKNOWN, STORAGE_MEDIUM_DV, STORAGE_MEDIUM_MINI_DV,
- STORAGE_MEDIUM_VHS, STORAGE_MEDIUM_W_VHS, STORAGE_MEDIUM_S_VHS,
- STORAGE_MEDIUM_D_VHS, STORAGE_MEDIUM_VHSC, STORAGE_MEDIUM_VIDE08,
- STORAGE_MEDIUM_HI8, STORAGE_MEDIUM_CD_ROM, STORAGE_MEDIUM_CD_DA,
- STORAGE_MEDIUM_CD_R, STORAGE_MEDIUM_CD_RW, STORAGE_MEDIUM_VIDEO_CD,
- STORAGE_MEDIUM_SACD, STORAGE_MEDIUM_MD_AUDIO, STORAGE_MEDIUM_MD_PICTURE,
- STORAGE_MEDIUM_DVD_ROM, STORAGE_MEDIUM_DVD_VIDEO, STORAGE_MEDIUM_DVD_R,
- STORAGE_MEDIUM_DVD_PLUS_RW, STORAGE_MEDIUM_DVD_RW, STORAGE_MEDIUM_DVD_RAM,
- STORAGE_MEDIUM_DVD_AUDIO, STORAGE_MEDIUM_DAT, STORAGE_MEDIUM_LD,
- STORAGE_MEDIUM_HDD) = (
-     'UNKNOWN', 'DV', 'MINI-DV', 'VHS',
-     'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA',
-     'CD-R', 'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM',
-     'DVD-VIDEO', 'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT',
-     'LD', 'HDD')
+# pyling: disable=bad-continuation
+(
+    STORAGE_MEDIUM_UNKNOWN, STORAGE_MEDIUM_DV, STORAGE_MEDIUM_MINI_DV,
+    STORAGE_MEDIUM_VHS, STORAGE_MEDIUM_W_VHS, STORAGE_MEDIUM_S_VHS,
+    STORAGE_MEDIUM_D_VHS, STORAGE_MEDIUM_VHSC, STORAGE_MEDIUM_VIDE08,
+    STORAGE_MEDIUM_HI8, STORAGE_MEDIUM_CD_ROM, STORAGE_MEDIUM_CD_DA,
+    STORAGE_MEDIUM_CD_R, STORAGE_MEDIUM_CD_RW, STORAGE_MEDIUM_VIDEO_CD,
+    STORAGE_MEDIUM_SACD, STORAGE_MEDIUM_MD_AUDIO, STORAGE_MEDIUM_MD_PICTURE,
+    STORAGE_MEDIUM_DVD_ROM, STORAGE_MEDIUM_DVD_VIDEO, STORAGE_MEDIUM_DVD_R,
+    STORAGE_MEDIUM_DVD_PLUS_RW, STORAGE_MEDIUM_DVD_RW, STORAGE_MEDIUM_DVD_RAM,
+    STORAGE_MEDIUM_DVD_AUDIO, STORAGE_MEDIUM_DAT, STORAGE_MEDIUM_LD,
+    STORAGE_MEDIUM_HDD
+) = (
+    'UNKNOWN', 'DV', 'MINI-DV', 'VHS',
+    'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA',
+    'CD-R', 'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM',
+    'DVD-VIDEO', 'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT',
+    'LD', 'HDD'
+)
 
 
 class MusicTrack(AudioItem):
@@ -635,12 +643,13 @@ class MusicTrack(AudioItem):
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.musicTrack')
 
-    def __init__(self, object_id='', parent_id='', title='', restricted=False,
-                 creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
-                 genres=[], description='', long_description='', publishers=[],
-                 language='', relations=[], rights=[], artists=[], albums=[],
-                 original_track_number='', playlists=[], storage_medium='',
-                 contributors=[], date=''):
+    def __init__(
+            self, object_id='', parent_id='', title='', restricted=False,
+            creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
+            genres=None, description='', long_description='', publishers=None,
+            language='', relations=None, rights=None, artists=None,
+            albums=None, original_track_number='', playlists=None,
+            storage_medium='', contributors=None, date=''):
         """ Constructor for the Item class.
 
         @param id: unique identifier for the object
@@ -699,12 +708,12 @@ class MusicTrack(AudioItem):
             write_status, ref_id, genres, description,
             long_description, publishers, language, relations,
             rights)
-        self.artists = artists
-        self.albums = albums
+        self.artists = artists if artists else []
+        self.albums = albums if albums else []
         self.original_track_number = original_track_number
-        self.playlists = playlists
+        self.playlists = playlists if playlists else []
         self.storage_medium = storage_medium
-        self.contributors = contributors
+        self.contributors = contributors if contributors else []
         self.date = date
 
     def from_element(self, elt):
@@ -719,11 +728,11 @@ class MusicTrack(AudioItem):
         storage_elt = find(elt, 'upnp', 'storageMedium')
         date_elt = find(elt, 'dc', 'date')
 
-        if trackno_elt:
+        if trackno_elt is not None:
             self.original_track_number = trackno_elt.text
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -759,12 +768,13 @@ class AudioBroadcast(AudioItem):
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.audioBroadcast')
 
-    def __init__(self, object_id='', parent_id='', title='', restricted=False,
-                 creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
-                 genres=[], description='', long_description='', publishers=[],
-                 language='', relations=[], rights=[], region='',
-                 radio_call_sign='', radio_station_id='', radio_band='',
-                 channel_nr=None):
+    def __init__(
+            self, object_id='', parent_id='', title='', restricted=False,
+            creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
+            genres=None, description='', long_description='', publishers=None,
+            language='', relations=None, rights=None, region='',
+            radio_call_sign='', radio_station_id='', radio_band='',
+            channel_nr=None):
         """ Constructor for the AudioBroadcast class.
 
         @param id: unique identifier for the object
@@ -855,15 +865,15 @@ class AudioBroadcast(AudioItem):
         radio_band_elt = find(elt, 'upnp', 'radioBand')
         channel_elt = find(elt, 'upnp', 'channelNr')
 
-        if region_elt:
+        if region_elt is not None:
             self.region = region_elt.text
-        if radio_sign_elt:
+        if radio_sign_elt is not None:
             self.radio_call_sign = radio_sign_elt.text
-        if radio_sid_elt:
+        if radio_sid_elt is not None:
             self.radio_station_id = radio_sid_elt.text
-        if radio_band_elt:
+        if radio_band_elt is not None:
             self.radio_band = radio_band_elt.text
-        if channel_elt:
+        if channel_elt is not None:
             self.channel_nr = int(channel_elt.text)
 
 
@@ -873,11 +883,12 @@ class AudioBook(AudioItem):
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.audioBook')
 
-    def __init__(self, object_id='', parent_id='', title='', restricted=False,
-                 creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
-                 genres=[], description='', long_description='', publishers=[],
-                 language='', relations=[], rights=[], storage_medium='',
-                 producers=[], contributors=[], date=''):
+    def __init__(
+            self, object_id='', parent_id='', title='', restricted=False,
+            creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
+            genres=None, description='', long_description='', publishers=None,
+            language='', relations=None, rights=None, storage_medium='',
+            producers=None, contributors=None, date=''):
         """ Constructor for the AudioBook class.
 
         @param id: unique identifier for the object
@@ -930,8 +941,8 @@ class AudioBook(AudioItem):
             long_description, publishers, language, relations,
             rights)
         self.storage_medium = storage_medium
-        self.producers = producers
-        self.contributors = contributors
+        self.producers = producers if producers else []
+        self.contributors = contributors if contributors else []
         self.date = date
 
     def from_element(self, elt):
@@ -943,9 +954,9 @@ class AudioBook(AudioItem):
         date_elt = find(elt, 'dc', 'date')
         storage_elt = find(elt, 'upnp', 'storageMedium')
 
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -976,7 +987,7 @@ class ImageItem(Item):
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
                  long_description='', storage_medium='', rating='',
-                 description='', publishers=[], date='', rights=[]):
+                 description='', publishers=None, date='', rights=None):
         """ Constructor for the ImageItem class.
 
         @param id: unique identifier for the object
@@ -1020,8 +1031,9 @@ class ImageItem(Item):
         self.storage_medium = storage_medium
         self.rating = rating
         self.description = description
+        self.publishers = publishers if publishers else []
         self.date = date
-        self.rights = rights
+        self.rights = rights if rights else []
 
     def from_element(self, elt):
         """ Sets the resource properties from an element.
@@ -1034,15 +1046,15 @@ class ImageItem(Item):
         date_elt = find(elt, 'dc', 'date')
         self.rights = [r.text for r in findall(elt, 'dc', 'rights')]
 
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if rating_elt:
+        if rating_elt is not None:
             self.rating = rating_elt.text
-        if description_elt:
+        if description_elt is not None:
             self.description = description_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -1078,10 +1090,10 @@ class PlaylistItem(Item):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE, ref_id='',
-                 authors=[], protection='', long_description='',
-                 storage_medium='', rating='', description='', publishers=[],
-                 contributors=[], date='', relations=[], languages=[],
-                 rights=[]):
+                 authors=None, protection='', long_description='',
+                 storage_medium='', rating='', description='', publishers=None,
+                 contributors=None, date='', relations=None, languages=None,
+                 rights=None):
         """ Constructor for the PlaylistItem class.
 
         @param id: unique identifier for the object
@@ -1131,18 +1143,18 @@ class PlaylistItem(Item):
         """
         Item.__init__(self, object_id, parent_id, title, restricted, creator,
                       write_status, ref_id)
-        self.authors = authors
+        self.authors = authors if authors else []
         self.protection = protection
         self.long_description = long_description
         self.storage_medium = storage_medium
         self.rating = rating
         self.description = description
-        self.publishers = publishers
-        self.contributors = contributors
+        self.publishers = publishers if publishers else []
+        self.contributors = contributors if contributors else []
         self.date = date
-        self.relations = relations
-        self.languages = languages
-        self.rights = rights
+        self.relations = relations if relations else []
+        self.languages = languages if languages else []
+        self.rights = rights if rights else []
 
     def from_element(self, elt):
         """ Sets the resource properties from an element.
@@ -1162,17 +1174,17 @@ class PlaylistItem(Item):
         self.languages = [l.text for l in findall(elt, 'dc', 'language')]
         self.rights = [r.text for r in findall(elt, 'dc', 'rights')]
 
-        if protection_elt:
+        if protection_elt is not None:
             self.protection = protection_elt.text
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if rating_elt:
+        if rating_elt is not None:
             self.rating = rating_elt.text
-        if description_elt:
+        if description_elt is not None:
             self.description = description_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -1222,10 +1234,10 @@ class Album(Container):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
+                 searchable=True, search_classes=None, create_classes=None,
                  storage_medium='', long_description='', description='',
-                 publishers=[], contributors=[], date='', relations=[],
-                 rights=[]):
+                 publishers=None, contributors=None, date='', relations=None,
+                 rights=None):
         """ Constructor for the Album class.
 
         @param id: unique identifier for the object
@@ -1277,11 +1289,11 @@ class Album(Container):
         self.storage_medium = storage_medium
         self.long_description = long_description
         self.description = description
-        self.publishers = publishers
-        self.contributors = contributors
+        self.publishers = publishers if publishers else []
+        self.contributors = contributors if contributors else []
         self.date = date
-        self.relations = relations
-        self.rights = rights
+        self.relations = relations if relations else []
+        self.rights = rights if rights else []
 
     def from_element(self, elt):
         """ Sets the resource properties from an element.
@@ -1297,13 +1309,13 @@ class Album(Container):
         self.relations = [r.text for r in findall(elt, 'dc', 'relation')]
         self.rights = [r.text for r in findall(elt, 'dc', 'rights')]
 
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
-        if description_elt:
+        if description_elt is not None:
             self.description = description_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -1343,11 +1355,11 @@ class MusicAlbum(Album):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
+                 searchable=True, search_classes=None, create_classes=None,
                  storage_medium='', long_description='', description='',
-                 publishers=[], contributors=[], date='', relations=[],
-                 rights=[], artists=[], genres=[], producers=[],
-                 album_art_uri=[], toc=''):
+                 publishers=None, contributors=None, date='', relations=None,
+                 rights=None, artists=None, genres=None, producers=None,
+                 album_art_uri=None, toc=''):
         """ Constructor for the MusicAlbum class.
 
         @param id: unique identifier for the object
@@ -1407,9 +1419,9 @@ class MusicAlbum(Album):
                        create_classes, storage_medium, long_description,
                        description, publishers, contributors, date, relations,
                        rights)
-        self.artists = artists
-        self.genres = genres
-        self.producers = producers
+        self.artists = artists if artists else None
+        self.genres = genres if genres else None
+        self.producers = producers if producers else None
         self.album_art_uri = album_art_uri
         self.toc = toc
 
@@ -1424,9 +1436,9 @@ class MusicAlbum(Album):
         self.genres = [g.text for g in find(elt, 'upnp', 'genre')]
         self.producers = [p.text for p in findall(elt, 'upnp', 'producer')]
 
-        if album_art_uri_elt:
+        if album_art_uri_elt is not None:
             self.album_art_uri = album_art_uri_elt.text
-        if toc_elt:
+        if toc_elt is not None:
             self.toc = toc_elt.text
 
     def to_didl_element(self):
@@ -1457,7 +1469,7 @@ class Genre(Container):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
+                 searchable=True, search_classes=None, create_classes=None,
                  long_description='', description=''):
         """ Constructor for the Container class.
 
@@ -1498,9 +1510,9 @@ class Genre(Container):
         long_desc_elt = find(elt, 'upnp', 'longDescription')
         desc_elt = find(elt, 'dc', 'description')
 
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
-        if desc_elt:
+        if desc_elt is not None:
             self.description = desc_elt.text
 
     def to_didl_element(self):
@@ -1546,12 +1558,13 @@ class PlaylistContainer(Container):
     """
     upnp_class = '%s%s' % (Container.upnp_class, '.playlistContainer')
 
-    def __init__(self, object_id='', parent_id='', title='', restricted=False,
-                 creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
-                 artists=[], genres=[], long_description='', producers=[],
-                 storage_medium='', description='', contributors=[], date='',
-                 languages=[], rights=[]):
+    def __init__(
+            self, object_id='', parent_id='', title='', restricted=False,
+            creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
+            searchable=True, search_classes=None, create_classes=None,
+            artists=None, genres=None, long_description='', producers=None,
+            storage_medium='', description='', contributors=None, date='',
+            languages=None, rights=None):
         """ Constructor for the PlaylistContainer class.
 
         @param id: unique identifier for the object
@@ -1603,16 +1616,16 @@ class PlaylistContainer(Container):
             self, object_id, parent_id, title, restricted, creator,
             write_status, searchable, search_classes,
             create_classes)
-        self.artists = artists
-        self.genres = genres
+        self.artists = artists if artists else []
+        self.genres = genres if genres else []
         self.long_description = long_description
-        self.producers = producers
+        self.producers = producers if producers else []
         self.storage_medium = storage_medium
         self.description = description
-        self.contributors = contributors
+        self.contributors = contributors if contributors else []
         self.date = date
-        self.languages = languages
-        self.rights = rights
+        self.languages = languages if languages else []
+        self.rights = rights if rights else []
 
     def from_element(self, elt):
         """ Sets the resource properties from an element.
@@ -1622,8 +1635,6 @@ class PlaylistContainer(Container):
         storage_elt = find(elt, 'upnp', 'storageMedium')
         desc_elt = find(elt, 'dc', 'description')
         date_elt = find(elt, 'dc', 'date')
-        languages_elt = findall(elt, 'dc', 'language')
-        rights_elt = findall(elt, 'dc', 'rights')
 
         self.artists = [a.text for a in find(elt, 'upnp', 'artist')]
         self.genres = [g.text for g in find(elt, 'upnp', 'genre')]
@@ -1632,13 +1643,13 @@ class PlaylistContainer(Container):
         self.languages = [l.text for l in findall(elt, 'dc', 'language')]
         self.rights = [r.text for r in findall(elt, 'dc', 'rights')]
 
-        if long_desc_elt:
+        if long_desc_elt is not None:
             self.long_description = long_desc_elt.text
-        if storage_elt:
+        if storage_elt is not None:
             self.storage_medium = storage_elt.text
-        if desc_elt:
+        if desc_elt is not None:
             self.description = desc_elt.text
-        if date_elt:
+        if date_elt is not None:
             self.date = date_elt.text
 
     def to_didl_element(self):
@@ -1681,8 +1692,8 @@ class Person(Container):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
-                 languages=[]):
+                 searchable=True, search_classes=None, create_classes=None,
+                 languages=None):
         """ Constructor for the Person class.
 
         @param id: unique identifier for the object
@@ -1714,7 +1725,7 @@ class Person(Container):
             self, object_id, parent_id, title, restricted, creator,
             write_status, searchable, search_classes,
             create_classes)
-        self.languages = languages
+        self.languages = languages if languages else []
 
     def add_container(self, c):
         if isinstance(c, Album) or isinstance(c, PlaylistContainer):
@@ -1753,8 +1764,8 @@ class MusicArtist(Person):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
-                 languages=[], genres=[], artist_discography_uri=''):
+                 searchable=True, search_classes=None, create_classes=None,
+                 languages=None, genres=None, artist_discography_uri=''):
         """ Constructor for the MusicArtist class.
 
         @param id: unique identifier for the object
@@ -1789,7 +1800,7 @@ class MusicArtist(Person):
         Person.__init__(self, object_id, parent_id, title, restricted, creator,
                         write_status, searchable, search_classes,
                         create_classes, languages)
-        self.genres = genres
+        self.genres = genres if genres else []
         self.artist_discography_uri = artist_discography_uri
 
     def from_element(self, elt):
@@ -1800,7 +1811,7 @@ class MusicArtist(Person):
 
         self.genres = [g.text for g in find(elt, 'upnp', 'genre')]
 
-        if artist_disc_uri:
+        if artist_disc_uri is not None:
             self.artist_discography_uri = artist_disc_uri.text
 
     def to_didl_element(self):
@@ -1827,7 +1838,7 @@ class StorageSystem(Container):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
+                 searchable=True, search_classes=None, create_classes=None,
                  storage_total=0, storage_used=0, storage_free=0,
                  storage_max_partition=0, storage_medium=''):
         """ Constructor for the StorageSystem class.
@@ -1898,7 +1909,8 @@ class StorageSystem(Container):
         max_part = find(elt, 'upnp', 'storageMaxPartition')
         medium = find(elt, 'upnp', 'storageMedium')
 
-        if not all([total, used, free, max_part, medium]):
+        if not all(i is not None for i in
+                   [total, used, free, max_part, medium]):
             raise Exception('Could not set StorageSystem properties '
                             'from element: missing required properties.')
 
@@ -1939,11 +1951,12 @@ class StorageVolume(Container):
     """
     upnp_class = '%s%s' % (Container.upnp_class, '.storageVolume')
 
-    def __init__(self, object_id='', parent_id='', title='', restricted=False,
-                 creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
-                 storage_total=0, storage_used=0, storage_free=0,
-                 storage_medium=''):
+    def __init__(
+            self, object_id='', parent_id='', title='', restricted=False,
+            creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
+            searchable=True, search_classes=None, create_classes=None,
+            storage_total=0, storage_used=0, storage_free=0,
+            storage_medium=''):
         """ Constructor for the StorageVolume class.
 
         @param id: unique identifier for the object
@@ -2004,7 +2017,7 @@ class StorageVolume(Container):
         free = find(elt, 'upnp', 'storageFree')
         medium = find(elt, 'upnp', 'storageMedium')
 
-        if not all([total, used, free, medium]):
+        if not all(i is not None for i in [total, used, free, medium]):
             raise Exception('Could not set StorageVolume properties '
                             'from element: missing required properties.')
 
@@ -2044,7 +2057,7 @@ class StorageFolder(Container):
 
     def __init__(self, object_id='', parent_id='', title='', restricted=False,
                  creator='', write_status=WRITE_STATUS_NOT_WRITABLE,
-                 searchable=True, search_classes=[], create_classes=[],
+                 searchable=True, search_classes=None, create_classes=None,
                  storage_used=''):
         """ Constructor for the StorageFolder class.
 
@@ -2088,7 +2101,7 @@ class StorageFolder(Container):
         Container.from_element(self, elt)
         used = find(elt, 'upnp', 'storageUsed')
 
-        if not used:
+        if used is None:
             raise Exception('Could not set StorageFolder properties '
                             'from element: missing required properties.')
 
