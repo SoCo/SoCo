@@ -2,10 +2,14 @@ import soco
 
 from soco.utils import prettify
 from soco.xml import XML
+from soco import didl_lite
 from soco.didl_lite import Element
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+
+logging.basicConfig()
+l = logging.getLogger('soco.didl_lite')
+l.setLevel(logging.DEBUG)
 
 # pick a device
 device = list(soco.discover())[0]
@@ -39,11 +43,12 @@ response = device.contentDirectory.Browse([
     ])
 result = response['Result']
 
-# print prettify(result) # <-- uncomment this to print returned DIDL
+print prettify(result) # <-- uncomment this to print returned DIDL
 o = Element.from_string(result)
 for item in o.get_items():
+    print item.creator
     print item.title + ": " + item.albums[0]
-    print item.resources[0].value
+    print item.uri
 
 
 # Now do the same for Shares
@@ -63,4 +68,3 @@ o = Element.from_string(result)
 for item in o.get_items():
     print str(item)
     print item.title
-

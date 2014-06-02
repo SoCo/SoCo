@@ -23,8 +23,6 @@ ns = {'didl': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
 
 def find(elt, namespace, key):
     f = elt.find('{%s}%s' % (ns[namespace], key))
-    if f is None:
-        return ()
     return f
 
 
@@ -252,7 +250,7 @@ class Object(object):
         if write_status_elt:
             self.write_status = write_status_elt.text
         creator_elt = find(elt, 'dc', 'creator')
-        if creator_elt:
+        if creator_elt is not None:
             self.creator = creator_elt.text
 
         for res in findall(elt, 'didl', 'res'):
