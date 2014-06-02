@@ -75,5 +75,5 @@ class ZoneGroup(object):
         return member in self.members
 
     def __repr__(self):
-        return "{1}(uid='{2}', coordinator={3!r}, members={4!r})".format(
+        return "{0}(uid='{1}', coordinator={2!r}, members={3!r})".format(
             self.__class__.__name__, self.uid, self.coordinator, self.members)
