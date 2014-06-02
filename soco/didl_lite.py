@@ -1,6 +1,8 @@
 # Licensed under the MIT license
 # http://opensource.org/licenses/mit-license.php or see LICENSE file.
 # Copyright 2007-2008 Brisa Team <brisa-develop@garage.maemo.org>
+# pylint: disable=too-many-arguments,too-many-instance-attributes
+# pylint: disable=too-many-locals
 
 """ DIDL-Lite classes (object, items, containers and etc).
 """
@@ -8,7 +10,8 @@
 from __future__ import unicode_literals
 from __future__ import absolute_import
 
-import logging, sys
+import logging
+import sys
 from xml.etree.ElementTree import _ElementInterface
 from .xml import XML as ElementTree
 
@@ -45,6 +48,7 @@ def parse_xml(data):
 
 
 class Resource(object):
+
     """Represents a resource. Used for generating the DIDL XML messages.
     """
 
@@ -98,7 +102,7 @@ class Resource(object):
         """ Sets the resource properties from an element.
         """
         if 'protocolInfo' not in elt.attrib:
-            raise Exception('Could not create Resource from Element: '\
+            raise Exception('Could not create Resource from Element: '
                             'protocolInfo not found (required).')
 
         # Required
@@ -130,7 +134,7 @@ class Resource(object):
         """ Returns an Element based on this Resource.
         """
         if not self.protocol_info:
-            raise Exception('Could not create Element for this resource: '\
+            raise Exception('Could not create Element for this resource: '
                             'protocolInfo not set (required).')
         root = ElementTree.Element('res')
 
@@ -165,12 +169,14 @@ class Resource(object):
 
 
 # upnp:writeStatus possible values
-WRITE_STATUS_NOT_WRITABLE, WRITE_STATUS_WRITABLE, WRITE_STATUS_PROTECTED, \
-WRITE_STATUS_UNKNOWN, WRITE_STATUS_MIXED = ('NOT_WRITABLE', 'WRITABLE',
-'PROTECTED', 'UNKNOWN', 'MIXED')
+(
+    WRITE_STATUS_NOT_WRITABLE, WRITE_STATUS_WRITABLE, WRITE_STATUS_PROTECTED,
+    WRITE_STATUS_UNKNOWN, WRITE_STATUS_MIXED
+) = ('NOT_WRITABLE', 'WRITABLE', 'PROTECTED', 'UNKNOWN', 'MIXED')
 
 
 class Object(object):
+
     """ Root class and most basic class of the content directory class
     hierarchy.
     """
@@ -206,7 +212,6 @@ class Object(object):
         self.restricted = restricted
         self.write_status = write_status
 
-
     def add_resource(self, res):
         """ Adds a resource to the object.
         """
@@ -241,7 +246,7 @@ class Object(object):
         self.object_id = elt.attrib['id']
         self.parent_id = elt.attrib['parentID']
         self.restricted = {True: 'true', False: 'false'}\
-                           .get(elt.attrib['restricted'], True)
+            .get(elt.attrib['restricted'], True)
         self.upnp_class = upnp_class_elt.text
         self.title = title_elt.text
 
@@ -254,7 +259,7 @@ class Object(object):
             self.creator = creator_elt.text
 
         for res in findall(elt, 'didl', 'res'):
-            self.resources.append(\
+            self.resources.append(
                 Resource.from_string(ElementTree.tostring(res)))
 
     @classmethod
@@ -298,6 +303,7 @@ class Object(object):
 
 
 class SearchClass(object):
+
     """ Instances of this class may be passed to search_classes parameter of
     Container constructors.
     """
@@ -310,12 +316,12 @@ class SearchClass(object):
 
     def get_element(self):
         if not self.include_derived:
-            raise Exception('Could not create Element from SearchClass: '\
+            raise Exception('Could not create Element from SearchClass: '
                             'includeDerived attribute missing (required).')
 
         elt = ElementTree.Element('upnp:searchClass')
         elt.attrib['includeDerived'] = {True: 'true', False: 'false'}\
-                                       .get(self.include_derived, False)
+            .get(self.include_derived, False)
 
         if self.class_friendly_name:
             elt.attrib['name'] = self.class_friendly_name
@@ -325,18 +331,19 @@ class SearchClass(object):
 
 
 class CreateClass(SearchClass):
+
     """ Instances of this class may be passed to create_classes parameter of
     Container constructors.
     """
 
     def get_element(self):
         if not self.include_derived:
-            raise Exception('Could not create Element from CreateClass: '\
+            raise Exception('Could not create Element from CreateClass: '
                             'includeDerived attribute missing (required).')
 
         elt = ElementTree.Element('upnp:createClass')
         elt.attrib['includeDerived'] = {True: 'true', False: 'false'}\
-                                       .get(self.include_derived, False)
+            .get(self.include_derived, False)
 
         if self.class_friendly_name:
             elt.attrib['name'] = self.class_friendly_name
@@ -346,6 +353,7 @@ class CreateClass(SearchClass):
 
 
 class Container(Object):
+
     """ An object that can contain other objects.
     """
 
@@ -406,7 +414,7 @@ class Container(Object):
         Object.from_element(self, elt)
         self.child_count = int(elt.attrib.get('childCount', '0'))
         self.searchable = elt.attrib.get('searchable', '0') in \
-                                    ['True', 'true', '1']
+            ['True', 'true', '1']
         self.search_classes = []
 
         for s in findall(elt, 'upnp', 'searchClass'):
@@ -431,7 +439,7 @@ class Container(Object):
             root.append(c.get_element())
 
         root.attrib['searchable'] = {True: 'true', False: 'false'}\
-                                    .get(self.searchable)
+            .get(self.searchable)
 
         return root
 
@@ -451,6 +459,7 @@ class Container(Object):
 
 
 class Item(Object):
+
     """ A class used to represent atomic (non-container) content
     objects.
     """
@@ -484,7 +493,6 @@ class Item(Object):
                         write_status)
         self.ref_id = ref_id
 
-
     def from_element(self, elt):
         """ Sets the resource properties from an element.
         """
@@ -505,6 +513,7 @@ class Item(Object):
 
 
 class AudioItem(Item):
+
     """ A piece of content that when rendered generates audio.
     """
     upnp_class = '%s%s' % (Item.upnp_class, '.audioItem')
@@ -558,7 +567,6 @@ class AudioItem(Item):
         self.relations = relations
         self.rights = rights
 
-
     def from_element(self, elt):
         """ Sets AudioItem properties from an element.
         """
@@ -605,23 +613,24 @@ class AudioItem(Item):
 
 # upnp:storageMedium possible values
 (STORAGE_MEDIUM_UNKNOWN, STORAGE_MEDIUM_DV, STORAGE_MEDIUM_MINI_DV,
-STORAGE_MEDIUM_VHS, STORAGE_MEDIUM_W_VHS, STORAGE_MEDIUM_S_VHS,
-STORAGE_MEDIUM_D_VHS, STORAGE_MEDIUM_VHSC, STORAGE_MEDIUM_VIDE08,
-STORAGE_MEDIUM_HI8, STORAGE_MEDIUM_CD_ROM, STORAGE_MEDIUM_CD_DA,
-STORAGE_MEDIUM_CD_R, STORAGE_MEDIUM_CD_RW, STORAGE_MEDIUM_VIDEO_CD,
-STORAGE_MEDIUM_SACD, STORAGE_MEDIUM_MD_AUDIO, STORAGE_MEDIUM_MD_PICTURE,
-STORAGE_MEDIUM_DVD_ROM, STORAGE_MEDIUM_DVD_VIDEO, STORAGE_MEDIUM_DVD_R,
-STORAGE_MEDIUM_DVD_PLUS_RW, STORAGE_MEDIUM_DVD_RW, STORAGE_MEDIUM_DVD_RAM,
-STORAGE_MEDIUM_DVD_AUDIO, STORAGE_MEDIUM_DAT, STORAGE_MEDIUM_LD,
-STORAGE_MEDIUM_HDD) = (
-    'UNKNOWN', 'DV', 'MINI-DV', 'VHS',
-    'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA',
-    'CD-R', 'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM',
-    'DVD-VIDEO', 'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT',
-    'LD', 'HDD')
+ STORAGE_MEDIUM_VHS, STORAGE_MEDIUM_W_VHS, STORAGE_MEDIUM_S_VHS,
+ STORAGE_MEDIUM_D_VHS, STORAGE_MEDIUM_VHSC, STORAGE_MEDIUM_VIDE08,
+ STORAGE_MEDIUM_HI8, STORAGE_MEDIUM_CD_ROM, STORAGE_MEDIUM_CD_DA,
+ STORAGE_MEDIUM_CD_R, STORAGE_MEDIUM_CD_RW, STORAGE_MEDIUM_VIDEO_CD,
+ STORAGE_MEDIUM_SACD, STORAGE_MEDIUM_MD_AUDIO, STORAGE_MEDIUM_MD_PICTURE,
+ STORAGE_MEDIUM_DVD_ROM, STORAGE_MEDIUM_DVD_VIDEO, STORAGE_MEDIUM_DVD_R,
+ STORAGE_MEDIUM_DVD_PLUS_RW, STORAGE_MEDIUM_DVD_RW, STORAGE_MEDIUM_DVD_RAM,
+ STORAGE_MEDIUM_DVD_AUDIO, STORAGE_MEDIUM_DAT, STORAGE_MEDIUM_LD,
+ STORAGE_MEDIUM_HDD) = (
+     'UNKNOWN', 'DV', 'MINI-DV', 'VHS',
+     'W-VHS', 'S-VHS', 'D-VHS', 'VHSC', 'VIDE08', 'HI8', 'CD-ROM', 'CD-DA',
+     'CD-R', 'CD-RW', 'VIDEO-CD', 'SACD', 'MD-AUDIO', 'MD-PICTURE', 'DVD-ROM',
+     'DVD-VIDEO', 'DVD-R', 'DVD+RW', 'DVD-RW', 'DVD-RAM', 'DVD-AUDIO', 'DAT',
+     'LD', 'HDD')
 
 
 class MusicTrack(AudioItem):
+
     """ A discrete piece of audio that should be interpreted as music.
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.musicTrack')
@@ -745,6 +754,7 @@ class MusicTrack(AudioItem):
 
 
 class AudioBroadcast(AudioItem):
+
     """ A continuous stream of audio.
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.audioBroadcast')
@@ -858,6 +868,7 @@ class AudioBroadcast(AudioItem):
 
 
 class AudioBook(AudioItem):
+
     """ Discrete piece of audio that should be interpreted as a book.
     """
     upnp_class = '%s%s' % (AudioItem.upnp_class, '.audioBook')
@@ -913,10 +924,11 @@ class AudioBook(AudioItem):
         @type contributors: list
         @type date: string
         """
-        AudioItem.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, ref_id, genres, description,
-                           long_description, publishers, language, relations,
-                           rights)
+        AudioItem.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, ref_id, genres, description,
+            long_description, publishers, language, relations,
+            rights)
         self.storage_medium = storage_medium
         self.producers = producers
         self.contributors = contributors
@@ -955,6 +967,7 @@ class AudioBook(AudioItem):
 
 
 class ImageItem(Item):
+
     """ An image representation. Content that when rendered generates some
     image.
     """
@@ -1057,6 +1070,7 @@ class ImageItem(Item):
 
 
 class PlaylistItem(Item):
+
     """ Represents a playable sequence of resources (audio, video, image). Must
     have a resource element added for playback of the whole sequence.
     """
@@ -1115,7 +1129,7 @@ class PlaylistItem(Item):
         @type languages: list
         @type rights: list
         """
-        Item.__init__(self,object_id, parent_id, title, restricted, creator,
+        Item.__init__(self, object_id, parent_id, title, restricted, creator,
                       write_status, ref_id)
         self.authors = authors
         self.protection = protection
@@ -1200,6 +1214,7 @@ class PlaylistItem(Item):
 
 
 class Album(Container):
+
     """ Ordered collection of objects. Rendering the album has the semantics of
     rendering each object in sequence.
     """
@@ -1255,9 +1270,10 @@ class Album(Container):
         @type relations: list
         @type rights: list
         """
-        Container.__init__(self,object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.storage_medium = storage_medium
         self.long_description = long_description
         self.description = description
@@ -1320,6 +1336,7 @@ class Album(Container):
 
 
 class MusicAlbum(Album):
+
     """ A music album representation.
     """
     upnp_class = '%s%s' % (Album.upnp_class, '.musicAlbum')
@@ -1433,6 +1450,7 @@ class MusicAlbum(Album):
 
 
 class Genre(Container):
+
     """ A container with a name denoting a genre.
     """
     upnp_class = '%s%s' % (Container.upnp_class, '.genre')
@@ -1466,9 +1484,10 @@ class Genre(Container):
         @type search_classes: list
         @type create_classes: list
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.long_description = long_description
         self.description = description
 
@@ -1500,6 +1519,7 @@ class Genre(Container):
 
 
 class MusicGenre(Genre):
+
     """ Style of music. Can contain objects of class MusicArtist, MusicAlbum,
     AudioItem, MusicGenre.
     """
@@ -1507,7 +1527,7 @@ class MusicGenre(Genre):
 
     def add_container(self, c):
         if isinstance(c, MusicArtist) or isinstance(c, MusicAlbum) or\
-            isinstance(c, self.__class__):
+                isinstance(c, self.__class__):
             Genre.add_container(self, c)
             return True
         return False
@@ -1519,9 +1539,8 @@ class MusicGenre(Genre):
         return False
 
 
-
-
 class PlaylistContainer(Container):
+
     """ A collection of objects. May mix audio, video and image items and is
     typically created by users.
     """
@@ -1580,9 +1599,10 @@ class PlaylistContainer(Container):
         @type languages: list
         @type rights: list
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.artists = artists
         self.genres = genres
         self.long_description = long_description
@@ -1654,6 +1674,7 @@ class PlaylistContainer(Container):
 
 
 class Person(Container):
+
     """ Unordered collection of objects that belong to a person.
     """
     upnp_class = '%s%s' % (Container.upnp_class, '.person')
@@ -1689,9 +1710,10 @@ class Person(Container):
         @type create_classes: list
         @type languages: list
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.languages = languages
 
     def add_container(self, c):
@@ -1724,6 +1746,7 @@ class Person(Container):
 
 
 class MusicArtist(Person):
+
     """ Person which should be interpreted as a music artist.
     """
     upnp_class = '%s%s' % (Person.upnp_class, '.musicArtist')
@@ -1796,6 +1819,7 @@ class MusicArtist(Person):
 
 
 class StorageSystem(Container):
+
     """ Heterogeneous collection of storage media. May only be child of the
     root container or another StorageSystem container.
     """
@@ -1854,9 +1878,10 @@ class StorageSystem(Container):
         @type storage_max_partition: signed long
         @type storage_medium: string
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.storage_total = storage_total
         self.storage_used = storage_used
         self.storage_free = storage_free
@@ -1874,7 +1899,7 @@ class StorageSystem(Container):
         medium = find(elt, 'upnp', 'storageMedium')
 
         if not all([total, used, free, max_part, medium]):
-            raise Exception('Could not set StorageSystem properties '\
+            raise Exception('Could not set StorageSystem properties '
                             'from element: missing required properties.')
 
         self.storage_total = total.text
@@ -1890,7 +1915,7 @@ class StorageSystem(Container):
 
         if not all([self.storage_total, self.storage_used, self.storage_free,
                     self.storage_max_partition, self.storage_medium]):
-            raise Exception('Could not create DIDL Element: missing required '\
+            raise Exception('Could not create DIDL Element: missing required '
                             'properties.')
 
         ElementTree.SubElement(root, 'upnp:storageTotal').text = \
@@ -1908,6 +1933,7 @@ class StorageSystem(Container):
 
 
 class StorageVolume(Container):
+
     """ Some physical storage unit of a single type. May only be a child of the
     root container or a StorageSystem container.
     """
@@ -1960,9 +1986,10 @@ class StorageVolume(Container):
         @type storage_free: signed long
         @type storage_medium: string
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.storage_total = storage_total
         self.storage_used = storage_used
         self.storage_free = storage_free
@@ -1978,7 +2005,7 @@ class StorageVolume(Container):
         medium = find(elt, 'upnp', 'storageMedium')
 
         if not all([total, used, free, medium]):
-            raise Exception('Could not set StorageVolume properties '\
+            raise Exception('Could not set StorageVolume properties '
                             'from element: missing required properties.')
 
         self.storage_total = total.text
@@ -1993,7 +2020,7 @@ class StorageVolume(Container):
 
         if not all([self.storage_total, self.storage_used, self.storage_free,
                     self.storage_medium]):
-            raise Exception('Could not create DIDL Element: missing required '\
+            raise Exception('Could not create DIDL Element: missing required '
                             'properties.')
 
         ElementTree.SubElement(root, 'upnp:storageTotal').text = \
@@ -2009,6 +2036,7 @@ class StorageVolume(Container):
 
 
 class StorageFolder(Container):
+
     """ Collection of objects stored on some storage medium. May only be a
     child of the root container or another storage container.
     """
@@ -2048,9 +2076,10 @@ class StorageFolder(Container):
         @type create_classes: list
         @type storage_used: signed long
         """
-        Container.__init__(self, object_id, parent_id, title, restricted, creator,
-                           write_status, searchable, search_classes,
-                           create_classes)
+        Container.__init__(
+            self, object_id, parent_id, title, restricted, creator,
+            write_status, searchable, search_classes,
+            create_classes)
         self.storage_used = storage_used
 
     def from_element(self, elt):
@@ -2060,7 +2089,7 @@ class StorageFolder(Container):
         used = find(elt, 'upnp', 'storageUsed')
 
         if not used:
-            raise Exception('Could not set StorageFolder properties '\
+            raise Exception('Could not set StorageFolder properties '
                             'from element: missing required properties.')
 
         self.storage_used = used.text
@@ -2071,7 +2100,7 @@ class StorageFolder(Container):
         root = Container.to_didl_element(self)
 
         if not self.storage_used:
-            raise Exception('Could not create DIDL Element: missing required '\
+            raise Exception('Could not create DIDL Element: missing required '
                             'properties.')
 
         ElementTree.SubElement(root, 'upnp:storageUsed').text = \
@@ -2081,6 +2110,7 @@ class StorageFolder(Container):
 
 
 class Element(_ElementInterface):
+
     """ Wrapper for elements. Can mount a complete tree of DIDL UPnP classes
     from a string and also mount the string from a complete tree.
     """
