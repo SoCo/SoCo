@@ -87,7 +87,7 @@ def _get_header(soap_action):
     header = {
         'CONNECTION': 'close',
         'ACCEPT-ENCODING': 'gzip',
-        'ACCEPT-LANGUAGE': '{}en-US;q=0.9'.format(language),
+        'ACCEPT-LANGUAGE': '{0}en-US;q=0.9'.format(language),
         'Content-Type': 'text/xml; charset="utf-8"',
         'SOAPACTION': SOAP_ACTION[soap_action]
     }
@@ -162,7 +162,7 @@ class Wimp(SoCoPlugin):
     @property
     def name(self):
         """Return the human read-able name for the plugin"""
-        return 'Wimp Plugin for {}'.format(self._username)
+        return 'Wimp Plugin for {0}'.format(self._username)
 
     @property
     def username(self):
@@ -179,7 +179,7 @@ class Wimp(SoCoPlugin):
         """Return the music service description for the DIDL metadata on the
         form SA_RINCON5127_...self.username...
         """
-        return 'SA_RINCON5127_{}'.format(self._username)
+        return 'SA_RINCON5127_{0}'.format(self._username)
 
     def get_tracks(self, search, start=0, max_items=100):
         """Search for tracks
@@ -235,11 +235,11 @@ class Wimp(SoCoPlugin):
         """
         # Check input
         if search_type not in ['artists', 'albums', 'tracks', 'playlists']:
-            message = 'The requested search {} is not valid'\
+            message = 'The requested search {0} is not valid'\
                 .format(search_type)
             raise ValueError(message)
         # Transform search: tracks -> tracksearch
-        search_type = '{}earch'.format(search_type)
+        search_type = '{0}earch'.format(search_type)
         parent_id = SEARCH_PREFIX.format(search_type=search_type,
                                          search=search)
 
@@ -481,7 +481,7 @@ class Wimp(SoCoPlugin):
             fault = error_dom.find('.//' + _ns_tag('s', 'Fault'))
             error_description = fault.find('faultstring').text
             error_code = EXCEPTION_STR_TO_CODE[error_description]
-            message = 'UPnP Error {} received: {} from {}'.format(
+            message = 'UPnP Error {0} received: {1} from {2}'.format(
                 error_code, error_description, self._url)
             raise SoCoUPnPException(
                 message=message,

@@ -14,7 +14,6 @@ from textwrap import dedent
 import re
 import itertools
 import requests
-import sys
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -231,10 +230,6 @@ class SoCo(_SocoSingletonBase):
         self._uid = None
         self._visible_zones = set()
         self._zgs_cache = None
-
-        self.xml_find_prefix = './/'
-        if 'xml.etree.ElementTree' in sys.modules:
-            self.xml_find_prefix = ''
 
     def __str__(self):
         return "<SoCo object at ip {0}>".format(self.ip_address)
@@ -1064,7 +1059,7 @@ class SoCo(_SocoSingletonBase):
             return queue
 
         result_dom = XML.fromstring(really_utf8(result))
-        for element in result_dom.findall(self.xml_find_prefix +
+        for element in result_dom.findall(
                 '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
             item = QueueItem.from_xml(element)
             queue.append(item)
@@ -1345,12 +1340,12 @@ class SoCo(_SocoSingletonBase):
             # Favorites are returned in DIDL-Lite format
             metadata = XML.fromstring(really_utf8(results_xml))
 
-            for item in metadata.findall(self.xml_find_prefix +
+            for item in metadata.findall(
                     '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
-                favorite['title'] = item.findtext(self.xml_find_prefix +
+                favorite['title'] = item.findtext(
                     '{http://purl.org/dc/elements/1.1/}title')
-                favorite['uri'] = item.findtext(self.xml_find_prefix +
+                favorite['uri'] = item.findtext(
                     '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
                 favorites.append(favorite)
 
