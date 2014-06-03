@@ -26,3 +26,13 @@ try:  # python 2.7 - this has to be done the other way rund
     from cPickle import dumps  # nopep8
 except ImportError:  # python 3
     from pickle import dumps  # nopep8
+
+# Support Python 2.6
+try:  # Python 2.7+
+    from logging import NullHandler  # nopep8
+except ImportError:
+    import logging
+    class NullHandler(logging.Handler):
+        """Create a null handler if using Python 2.6"""
+        def emit(self, record):
+            pass

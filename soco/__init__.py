@@ -30,14 +30,6 @@ __all__ = [
 # http://docs.python.org/2/howto/logging.html#library-config
 # Avoids spurious error messages if no logger is configured by the user
 import logging
-
-# Support Python 2.6
-try:  # Python 2.7+
-    from logging import NullHandler
-except ImportError:
-    class NullHandler(logging.Handler):
-        """Create a null handler if using Python 2.6"""
-        def emit(self, record):
-            pass
+from .compat import NullHandler
 
 logging.getLogger(__name__).addHandler(NullHandler())
