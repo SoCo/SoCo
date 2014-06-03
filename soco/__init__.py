@@ -36,6 +36,7 @@ try:  # Python 2.7+
     from logging import NullHandler
 except ImportError:
     class NullHandler(logging.Handler):
+        """Create a null handler if using Python 2.6"""
         def emit(self, record):
             pass
 

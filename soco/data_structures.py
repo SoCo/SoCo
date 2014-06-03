@@ -1007,8 +1007,8 @@ class MusicServiceItem(MusicInfoItem):
         # Check for all required values
         for key in cls.required_fields:
             if key not in content:
-                message = 'An XML field that correspond to the key \'{0}\' is '\
-                    'required. See the docstring for help.'.format(key)
+                message = 'An XML field that correspond to the key \'{0}\' '\
+                    'is required. See the docstring for help.'.format(key)
 
         return cls.from_dict(content)
 
