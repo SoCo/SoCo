@@ -34,8 +34,10 @@ def parse_event_xml(xml_event):
 
     result = {}
     tree = XML.fromstring(xml_event.encode('utf-8'))
-    properties = tree.iterfind(
-        './/{urn:schemas-upnp-org:event-1-0}property')
+    # property values are just under the propertyset, which
+    # uses this namespace
+    properties = tree.findall(
+        '{urn:schemas-upnp-org:event-1-0}property')
     for prop in properties:
         for variable in prop:
             result[variable.tag] = variable.text
