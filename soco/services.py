@@ -246,7 +246,7 @@ class Service(object):
         # is carried out for us by elementree.
         action_response = tree.find(
             ".//{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
-        return {i.tag: i.text or "" for i in action_response}
+        return dict((i.tag, i.text or "") for i in action_response)
 
     def build_command(self, action, args=None):
         """ Build a SOAP request.
