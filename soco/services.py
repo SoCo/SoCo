@@ -245,7 +245,7 @@ class Service(object):
         # children of this into a {tagname, content} dict. XML unescaping
         # is carried out for us by elementree.
         action_response = tree.find(
-            ".//{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
+            "{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
         return dict((i.tag, i.text or "") for i in action_response)
 
     def build_command(self, action, args=None):
