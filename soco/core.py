@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 import select
 import socket
 import logging
-import traceback
 from textwrap import dedent
 import re
 import itertools
@@ -19,7 +18,7 @@ from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem
+from .data_structures import get_ml_item, QueueItem, URI
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 
@@ -37,19 +36,23 @@ def discover(timeout=1, include_invisible=False):
     """
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent(b"""\
+    PLAYER_SEARCH = dedent("""\
         M-SEARCH * HTTP/1.1
-        HOST: 239.255.255.250:reservedSSDPport
+        HOST: 239.255.255.250:1900
         MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """)
+        """).encode('utf-8')
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
     _sock = socket.socket(
         socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+    # UPnP v1.0 requires a TTL of 4
+    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
+    # Send a few times. UDP is unreliable
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
     response, _, _ = select.select([_sock], [], [], timeout)
@@ -58,8 +61,10 @@ def discover(timeout=1, include_invisible=False):
     # we care about is the IP address
     if response:
         _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query the
-        # topology to find the other players.
+        # Now we have an IP, we can build a SoCo instance and query that player
+        # for the topology to find the other players. It is much more efficient
+        # to rely upon the Zone Player's ability to find the others, than to
+        # wait for query responses from them ourselves.
         zone = SoCo(addr[0])
         if include_invisible:
             return zone.all_zones
@@ -173,6 +178,7 @@ class SoCo(_SocoSingletonBase):
         get_playlists -- Get playlists from the music library
         get_music_library_information -- Get information from the music library
         get_current_transport_info -- get speakers playing state
+        add_uri_to_queue -- Adds an URI to the queue
         add_to_queue -- Add a track to the end of the queue
         remove_from_queue -- Remove a track from the queue
         clear_queue -- Remove all tracks from queue
@@ -900,7 +906,6 @@ class SoCo(_SocoSingletonBase):
                 track['title'] = trackinfo[index + 3:]
             else:
                 LOGGER.warning('Could not handle track info: "%s"', trackinfo)
-                LOGGER.warning(traceback.format_exc())
                 track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
@@ -1215,6 +1220,15 @@ class SoCo(_SocoSingletonBase):
             out['item_list'].append(item)
 
         return out
+
+    def add_uri_to_queue(self, uri):
+        """Adds the URI to the queue
+
+        :param uri: The URI to be added to the queue
+        :type uri: str
+        """
+        item = URI(uri)
+        self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """

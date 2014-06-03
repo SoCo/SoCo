@@ -666,6 +666,63 @@ class MLShare(MusicLibraryItem):
 
 
 ###############################################################################
+# MUSIC LIBRARY                                                               #
+###############################################################################
+class URI(MusicInfoItem):
+    """General purpose class that represents a audio file URI"""
+
+    valid_fields = ['uri']
+    # Note, keep this list sorted with the args to __init__
+    required_fields = ['uri']
+
+    def __init__(self, uri):
+        """Init method for the URI object"""
+        super(URI, self).__init__()
+        self.content.update({'uri': uri})
+
+    @classmethod
+    def from_dict(cls, dict_in):
+        """Initialize a URI item from a dict"""
+        # Copy before we modify
+        kwargs = dict_in.copy()
+        # Check input
+        for key in kwargs.keys():
+            if key not in cls.valid_fields:
+                message = 'The key \'{}\' is not allowed as an argument. '\
+                    'Only these keys are allowed: {}'.format(key,
+                                                             cls.valid_fields)
+                raise ValueError(message)
+        for key in cls.required_fields:
+            if key not in kwargs.keys():
+                message = 'There must be an \'{}\' item in the input dict'\
+                    .format(key)
+                raise ValueError(message)
+        args = [kwargs.pop(key) for key in cls.required_fields]
+        return cls(*args)
+
+    @property
+    def uri(self):
+        """Return the URI of the object"""
+        return self.content['uri']
+
+    @property
+    # pylint: disable=no-self-use
+    def didl_metadata(self):
+        """Return the DIDL metadata for a URI
+
+        It is not yet know how to structure the metadata for URIs, so at the
+        moment the metadata consist purely of an empty DIDL-Lite container:
+
+        .. code :: xml
+
+         <DIDL-Lite/>
+
+        """
+        xml = XML.Element('DIDL-Lite')
+        return xml
+
+
+###############################################################################
 # QUEUE                                                                       #
 ###############################################################################
 class QueueItem(MusicInfoItem):
