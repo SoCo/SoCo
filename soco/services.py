@@ -474,16 +474,16 @@ class Service(object):
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
-        statevars = tree.iterfind('.//{0}stateVariable'.format(ns))
+        statevars = tree.findall('{0}stateVariable'.format(ns))
         vartypes = {}
         for state in statevars:
             name = state.findtext('{0}name'.format(ns))
             vartypes[name] = state.findtext('{0}dataType'.format(ns))
         # find all the actions
-        actions = tree.iterfind('.//{0}action'.format(ns))
+        actions = tree.findall('{0}action'.format(ns))
         for i in actions:
             action_name = i.findtext('{0}name'.format(ns))
-            args_iter = i.iterfind('.//{0}argument'.format(ns))
+            args_iter = i.findall('{0}argument'.format(ns))
             in_args = []
             out_args = []
             for arg in args_iter:
@@ -510,7 +510,7 @@ class Service(object):
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
-        statevars = tree.iterfind('.//{0}stateVariable'.format(ns))
+        statevars = tree.findall('{0}stateVariable'.format(ns))
         for state in statevars:
             # We are only interested if 'sendEvents' is 'yes', i.e this
             # is an eventable variable
