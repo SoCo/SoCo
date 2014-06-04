@@ -344,7 +344,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def cross_fade(self):
-        """ The speaker's cross fade state. True if enabled, False otherwise """
+        """ The speaker's cross fade state.
+        True if enabled, False otherwise """
 
         response = self.avTransport.GetCrossfadeMode([
             ('InstanceID', 0),
