@@ -474,29 +474,35 @@ class Service(object):
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
-        statevars = tree.findall('{0}stateVariable'.format(ns))
         vartypes = {}
-        for state in statevars:
-            name = state.findtext('{0}name'.format(ns))
-            vartypes[name] = state.findtext('{0}dataType'.format(ns))
+        srvStateTables = tree.findall('{0}serviceStateTable'.format(ns))
+        for srvStateTable in srvStateTables:
+            statevars = srvStateTable.findall('{0}stateVariable'.format(ns))
+            for state in statevars:
+                name = state.findtext('{0}name'.format(ns))
+                vartypes[name] = state.findtext('{0}dataType'.format(ns))
         # find all the actions
-        actions = tree.findall('{0}action'.format(ns))
-        for i in actions:
-            action_name = i.findtext('{0}name'.format(ns))
-            args_iter = i.findall('{0}argument'.format(ns))
-            in_args = []
-            out_args = []
-            for arg in args_iter:
-                arg_name = arg.findtext('{0}name'.format(ns))
-                direction = arg.findtext('{0}direction'.format(ns))
-                related_variable = arg.findtext(
-                    '{0}relatedStateVariable'.format(ns))
-                vartype = vartypes[related_variable]
-                if direction == "in":
-                    in_args.append(Argument(arg_name, vartype))
-                else:
-                    out_args.append(Argument(arg_name, vartype))
-            yield Action(action_name, in_args, out_args)
+        actionLists = tree.findall('{0}actionList'.format(ns))
+        for actionList in actionLists:
+            actions = actionList.findall('{0}action'.format(ns))
+            for i in actions:
+                action_name = i.findtext('{0}name'.format(ns))
+                argLists = i.findall('{0}argumentList'.format(ns))
+                for argList in argLists:
+                    args_iter = argList.findall('{0}argument'.format(ns))
+                    in_args = []
+                    out_args = []
+                    for arg in args_iter:
+                        arg_name = arg.findtext('{0}name'.format(ns))
+                        direction = arg.findtext('{0}direction'.format(ns))
+                        related_variable = arg.findtext(
+                            '{0}relatedStateVariable'.format(ns))
+                        vartype = vartypes[related_variable]
+                        if direction == "in":
+                            in_args.append(Argument(arg_name, vartype))
+                        else:
+                            out_args.append(Argument(arg_name, vartype))
+                    yield Action(action_name, in_args, out_args)
 
     def iter_event_vars(self):
         """ Yield an iterator over the services eventable variables.
