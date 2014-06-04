@@ -343,6 +343,24 @@ class SoCo(_SocoSingletonBase):
             ])
 
     @property
+    def cross_fade(self):
+        """ The speaker's cross fade state. True if enabled, False otherwise """
+
+        response = self.avTransport.GetCrossfadeMode([
+            ('InstanceID', 0),
+            ])
+        cross_fade_state = response['CrossfadeMode']
+        return True if int(cross_fade_state) else False
+
+    @cross_fade.setter
+    def cross_fade(self, crossfade):
+        crossfade_value = '1' if crossfade else '0'
+        self.avTransport.SetCrossfadeMode([
+            ('InstanceID', 0),
+            ('CrossfadeMode', crossfade_value)
+            ])
+
+    @property
     def speaker_ip(self):
         """Retained for backward compatibility only. Will be removed in future
         releases
