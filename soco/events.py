@@ -29,11 +29,11 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 def parse_event_xml(xml_event):
-    """ Parse a unicode xml_event and return a dict with keys representing the
-    event properties"""
+    """ Parse an xml_event passed as bytes and return a dict with keys
+    representing the event properties"""
 
     result = {}
-    tree = XML.fromstring(xml_event.encode('utf-8'))
+    tree = XML.fromstring(xml_event)
     properties = tree.iterfind(
         './/{urn:schemas-upnp-org:event-1-0}property')
     for prop in properties:
