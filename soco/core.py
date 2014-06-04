@@ -1006,7 +1006,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         # pylint: disable=star-args, unused-argument
-        return dict(z.ip_address for z in itertools.chain(*self.all_groups))
+        return set(z.ip_address for z in itertools.chain(*self.all_groups))
 
     def get_current_transport_info(self):
         """ Get the current playback state
