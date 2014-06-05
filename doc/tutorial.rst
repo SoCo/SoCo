@@ -10,22 +10,34 @@ library.
 Discovery
 ---------
 
-For discovering the Sonos devices in your network, use the ``SonosDiscovery``
-class.
+For discovering the Sonos devices in your network, use :meth:`soco.discover`.
 
 .. code-block:: python
 
-    sd = SonosDiscovery()
-    ips = sd.get_speaker_ips()
+    >>> import soco
+    >>> speakers = soco.discover()
+
+It returns a :class:`set` of :class:`soco.SoCo` instances, each representing a
+speaker in your network.
 
 
 Music
 -----
 
-Once one of the available devices is selected, the ``SoCo`` class can be used
-to control it. Have a look at the :ref:`soco-mod` for all available commands.
+You can use those SoCo instances to inspect and interact with your speakers.
 
 .. code-block:: python
 
-    sonos = SoCo(ip)
-    sonos.partymode()
+    >>> speaker = speakers.pop()
+    >>> speaker.player_name
+    'Living Room'
+    >>> speaker.ip_address
+    u'192.168.0.129'
+
+    >>> speaker.volume
+    10
+    >>> speaker.volume = 15
+    >>> speaker.play()
+
+
+See for :class:`soco.SoCo` for all methods that are available for a speaker.

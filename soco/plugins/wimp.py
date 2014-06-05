@@ -177,7 +177,7 @@ class Wimp(SoCoPlugin):
     @property
     def description(self):
         """Return the music service description for the DIDL metadata on the
-        form SA_RINCON5127_...self.username...
+        form 'SA_RINCON5127_<username>'
         """
         return 'SA_RINCON5127_{}'.format(self._username)
 

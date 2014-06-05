@@ -205,7 +205,7 @@ class Subscription(object):
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
-        :attrib:`timeout` on return to find out what period of validity is
+        :attr:`timeout` on return to find out what period of validity is
         actually allocated. """
 
         # TIMEOUT is provided for in the UPnP spec, but it is not clear if

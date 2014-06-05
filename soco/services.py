@@ -305,11 +305,11 @@ class Service(object):
         within that period will be returned from the cache, saving a further
         network call. The cache may be invalidated or even primed from another
         thread (for example if a UPnP event is received to indicate that the
-        state of the Sonos device has changed). If `cache_timeout` is missing
-        or `None`, the cache will use a default value (which may be 0 - see
-        :attribute:`cache`). By default, the cache identified by the service's
-        :attribute:`cache` attribute will be used, but a different cache object
-        may be specified in the `cache` parameter.
+        state of the Sonos device has changed). If `cache_timeout` is
+        missing or `None`, the cache will use a default value (which may be 0 -
+        see :attribute::`cache`). By default, the cache identified by
+        the service's :attribute::`cache` attribute will be used, but a
+        different cache object may be specified in the `cache` parameter.
 
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
@@ -417,7 +417,7 @@ class Service(object):
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
-        :attrib:`Subscription.timeout` on return to find out what period of
+        :attribute::`Subscription.timeout` on return to find out what period of
         validity is actually allocated.
 
         event_queue is a thread-safe queue object onto which events will be
@@ -458,12 +458,14 @@ class Service(object):
 
         Each action is an Action namedtuple, consisting of action_name (a
         string), in_args (a list of Argument namedtuples consisting of name and
-        argtype), and out_args (ditto), eg:
+        argtype), and out_args (ditto), eg ::
 
-        Action(name='SetFormat',
-            in_args=[Argument(name='DesiredTimeFormat', vartype='string'),
-                     Argument(name='DesiredDateFormat', vartype='string')],
-            out_args=[]) """
+            Action(name='SetFormat',
+                in_args=[Argument(name='DesiredTimeFormat', vartype='string'),
+                         Argument(name='DesiredDateFormat', vartype='string')],
+                out_args=[])
+
+        """
 
         # pylint: disable=too-many-locals
         # TODO: Provide for Allowed value list, Allowed value range,
