@@ -28,7 +28,7 @@ import soco
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.intersphinx',
-              'sphinx.ext.inheritance_diagram']
+              'sphinx.ext.inheritance_diagram', 'sphinxcontrib-napoleon']
 intersphinx_mapping = {'python': ('http://docs.python.org/2', None)}
 
 # Add any paths that contain templates here, relative to this directory.
