@@ -290,7 +290,7 @@ def get_alarms(soco=None):
 
         instance.start_time = datetime.strptime(
             values['StartTime'], "%H:%M:%S").time()  # NB StartTime, not
-            # StartLocalTime, which is used by CreateAlarm
+        # StartLocalTime, which is used by CreateAlarm
         instance.duration = None if values['Duration'] == '' else\
             datetime.strptime(values['Duration'], "%H:%M:%S").time()
         instance.recurrence = values['Recurrence']
