@@ -13,4 +13,7 @@ install:
 
 script:
   - make lint
-  - py.test .
+  - py.test --cov-config .coveragerc --cov soco .
+
+after_script:
+  - coveralls
