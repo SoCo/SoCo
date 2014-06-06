@@ -29,11 +29,11 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 def parse_event_xml(xml_event):
-    """ Parse a unicode xml_event and return a dict with keys representing the
-    event properties"""
+    """ Parse an xml_event passed as bytes and return a dict with keys
+    representing the event properties"""
 
     result = {}
-    tree = XML.fromstring(xml_event.encode('utf-8'))
+    tree = XML.fromstring(xml_event)
     # property values are just under the propertyset, which
     # uses this namespace
     properties = tree.findall(
@@ -243,12 +243,12 @@ class Subscription(object):
         self.sid = response.headers['sid']
         timeout = response.headers['timeout']
         # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Seconds-123" (with an
-        # 's') and a capital letter
+        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
+        # capital letter)
         if timeout.lower() == 'infinite':
             self.timeout = None
         else:
-            self.timeout = int(timeout.lstrip('Seconds-'))
+            self.timeout = int(timeout.lstrip('Second-'))
         self._timestamp = time.time()
         self.is_subscribed = True
         log.debug(
@@ -266,12 +266,15 @@ class Subscription(object):
         """Renew the event subscription.
 
         You should not try to renew a subscription which has been
-        unsubscribed
+        unsubscribed, or once it has expired.
 
         """
         if self._has_been_unsubscribed:
             raise SoCoException(
-                'Cannot renew instance once unsubscribed')
+                'Cannot renew subscription once unsubscribed')
+        if self.time_left == 0:
+            raise SoCoException(
+                'Cannot renew subscription after expiry')
 
         # SUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
@@ -282,7 +285,7 @@ class Subscription(object):
             'SID': self.sid
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Seconds-{0}".format(requested_timeout)
+            headers["TIMEOUT"] = "Second-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
@@ -290,12 +293,12 @@ class Subscription(object):
         response.raise_for_status()
         timeout = response.headers['timeout']
         # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Seconds-123" (with an
-        # 's') and a capital letter
+        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
+        # a capital letter)
         if timeout.lower() == 'infinite':
             self.timeout = None
         else:
-            self.timeout = int(timeout.lstrip('Seconds-'))
+            self.timeout = int(timeout.lstrip('Second-'))
         self._timestamp = time.time()
         self.is_subscribed = True
         log.debug(
@@ -350,7 +353,8 @@ class Subscription(object):
         if self._timestamp is None:
             return 0
         else:
-            return self.timeout-(time.time()-self._timestamp)
+            time_left = self.timeout-(time.time()-self._timestamp)
+            return time_left if time_left > 0 else 0
 
 # pylint: disable=C0103
 event_listener = EventListener()

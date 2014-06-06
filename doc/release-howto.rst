@@ -51,6 +51,9 @@ Create and Publish
 
     python setup.py sdist bdist_wheel upload
 
+* Enable doc builds for the newly released version on `Read the Docs
+  <https://readthedocs.org/dashboard/soco/versions/>`_.
+
 
 Wrap-Up
 -------
