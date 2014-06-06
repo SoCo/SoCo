@@ -238,10 +238,10 @@ class SoCo(_SocoSingletonBase):
         self._zgs_cache = None
 
     def __str__(self):
-        return "<SoCo object at ip {}>".format(self.ip_address)
+        return "<SoCo object at ip {0}>".format(self.ip_address)
 
     def __repr__(self):
-        return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
+        return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
 
     @property
     def player_name(self):
@@ -278,7 +278,7 @@ class SoCo(_SocoSingletonBase):
         return self._uid
         # An alternative way of getting the uid is as follows:
         # self.device_description_url = \
-        #    'http://{}:1400/xml/device_description.xml'.format(
+        #    'http://{0}:1400/xml/device_description.xml'.format(
         #     self.ip_address)
         # response = requests.get(self.device_description_url).text
         # tree = XML.fromstring(response.encode('utf-8'))
@@ -703,7 +703,7 @@ class SoCo(_SocoSingletonBase):
         self._all_zones.clear()
         self._visible_zones.clear()
         # Loop over each ZoneGroup Element
-        for group_element in tree.iter('ZoneGroup'):
+        for group_element in tree.findall('ZoneGroup'):
             coordinator_uid = group_element.attrib['Coordinator']
             group_uid = group_element.attrib['ID']
             members = set()
@@ -805,7 +805,7 @@ class SoCo(_SocoSingletonBase):
         """
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon:{}'.format(master.uid)),
+            ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -843,7 +843,7 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon-stream:{}'.format(self.uid)),
+            ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -863,7 +863,7 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-sonos-htastream:{}:spdif'.format(self.uid)),
+            ('CurrentURI', 'x-sonos-htastream:{0}:spdif'.format(self.uid)),
             ('CurrentURIMetaData', '')
             ])
 
@@ -1026,7 +1026,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         # pylint: disable=star-args, unused-argument
-        return {zone.ip_address for zone in itertools.chain(*self.all_groups)}
+        return set(z.ip_address for z in itertools.chain(*self.all_groups))
 
     def get_current_transport_info(self):
         """ Get the current playback state
@@ -1085,7 +1085,7 @@ class SoCo(_SocoSingletonBase):
 
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
-                './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
             item = QueueItem.from_xml(element)
             queue.append(item)
 
@@ -1255,7 +1255,7 @@ class SoCo(_SocoSingletonBase):
         # Check if teh required attributes are there
         for attribute in ['didl_metadata', 'uri']:
             if not hasattr(queueable_item, attribute):
-                message = 'queueable_item has no attribute {}'.\
+                message = 'queueable_item has no attribute {0}'.\
                     format(attribute)
                 raise AttributeError(message)
         # Get the metadata
@@ -1359,7 +1359,7 @@ class SoCo(_SocoSingletonBase):
             favorite_type = RADIO_STATIONS
 
         response = self.contentDirectory.Browse([
-            ('ObjectID', 'R:0/{}'.format(favorite_type)),
+            ('ObjectID', 'R:0/{0}'.format(favorite_type)),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', start),
@@ -1375,12 +1375,12 @@ class SoCo(_SocoSingletonBase):
             metadata = XML.fromstring(really_utf8(results_xml))
 
             for item in metadata.findall(
-                    './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
+                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
                 favorite['title'] = item.findtext(
-                    './/{http://purl.org/dc/elements/1.1/}title')
+                    '{http://purl.org/dc/elements/1.1/}title')
                 favorite['uri'] = item.findtext(
-                    './/{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
                 favorites.append(favorite)
 
         result['total'] = response['TotalMatches']

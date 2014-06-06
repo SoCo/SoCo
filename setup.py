@@ -64,6 +64,14 @@ with open('README.rst') as file:
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
+# For some versions of python (2.6) we need the importlib
+# as it is not in the standard install
+try:
+    import importlib
+except ImportError:
+    REQUIREMENTS.append('importlib')
+
+
 setup(name=NAME,
       version=VERSION,
       description=DESCRIPTION,

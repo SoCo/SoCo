@@ -527,7 +527,7 @@ def test_ns_tag():
                   'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/']
     for ns_in, namespace in zip(['dc', 'upnp', ''], namespaces):
         res = data_structures.ns_tag(ns_in, 'testtag')
-        correct = '{{{}}}{}'.format(namespace, 'testtag')
+        correct = '{{{0}}}{1}'.format(namespace, 'testtag')
         assert res == correct
 
 

@@ -34,8 +34,10 @@ def parse_event_xml(xml_event):
 
     result = {}
     tree = XML.fromstring(xml_event)
-    properties = tree.iterfind(
-        './/{urn:schemas-upnp-org:event-1-0}property')
+    # property values are just under the propertyset, which
+    # uses this namespace
+    properties = tree.findall(
+        '{urn:schemas-upnp-org:event-1-0}property')
     for prop in properties:
         for variable in prop:
             result[variable.tag] = variable.text
@@ -233,7 +235,7 @@ class Subscription(object):
             'NT': 'upnp:event'
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
+            headers["TIMEOUT"] = "Seconds-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE', service.base_url + service.event_subscription_url,
             headers=headers)
@@ -283,7 +285,7 @@ class Subscription(object):
             'SID': self.sid
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
+            headers["TIMEOUT"] = "Second-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
