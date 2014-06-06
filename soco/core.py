@@ -1189,7 +1189,7 @@ class SoCo(_SocoSingletonBase):
         return out
 
     def get_music_library_information(self, search_type, start=0,
-                                      max_items=100):
+                                      max_items=100, sub_category=''):
         """ Retrieve information about the music library
 
         :param search_type: The kind of information to retrieve. Can be one of:
@@ -1202,6 +1202,9 @@ class SoCo(_SocoSingletonBase):
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
+        :param sub_category: Sub category to allow you to refine your search under
+            the given search type, allowing you to look for things like all the
+            artists under a given genre (e.g. A:GENRE/Pop)
         :returns: A dictionary with metadata for the search, with the
             keys 'number_returned', 'update_id', 'total_matches' and an
             'item_list' list with the search results. The search results
@@ -1235,6 +1238,13 @@ class SoCo(_SocoSingletonBase):
                               'playlists': 'A:PLAYLISTS', 'share': 'S:',
                               'sonos_playlists': 'SQ:'}
         search = search_translation[search_type]
+
+        # Added sub-category suport, extend the search into a subcategory
+        if (sub_category != ''):
+            if (sub_category[0] != '/'):
+                sub_category = '/' + sub_category
+            search = search + sub_category
+
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
             ('BrowseFlag', 'BrowseDirectChildren'),
