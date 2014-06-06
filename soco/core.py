@@ -232,6 +232,7 @@ class SoCo(_SocoSingletonBase):
         self._all_zones = set()
         self._groups = set()
         self._is_bridge = None
+        self._is_coordinator = False
         self._player_name = None
         self._uid = None
         self._visible_zones = set()
@@ -313,6 +314,20 @@ class SoCo(_SocoSingletonBase):
         # again
         self._parse_zone_group_state()
         return self._is_bridge
+
+    @property
+    def is_coordinator(self):
+        """ Return True if this zone is a group coordinator, otherwise False.
+
+        return True or False
+
+        """
+        # We could do this:
+        # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
+        # but it is better to do it in the following way, which uses the
+        # zone group topology, to capitalise on any caching.
+        self._parse_zone_group_state()
+        return self._is_coordinator
 
     @property
     def play_mode(self):
@@ -721,6 +736,9 @@ class SoCo(_SocoSingletonBase):
                 # the coordinator
                 if zone._uid == coordinator_uid:
                     group_coordinator = zone
+                    zone._is_coordinator = True
+                else:
+                    zone._is_coordinator = False
                 zone._player_name = member_attribs['ZoneName']
                 # uid and is_bridge do not change, but it does no real harm to
                 # set/reset them here, just in case the zone has not been seen
