@@ -37,13 +37,13 @@ def get_ml_item(xml):
         cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
     else:
         # Try and auto detect which type this is from the XML returned
-        classType = xml.findtext(ns_tag('upnp', 'class'))
-        if classType is not None:
-            if 'musicTrack' in classType:
+        class_type = xml.findtext(ns_tag('upnp', 'class'))
+        if class_type is not None:
+            if 'musicTrack' in class_type:
                 cls = MLTrack
-            elif 'musicAlbum' in classType:
+            elif 'musicAlbum' in class_type:
                 cls = MLAlbum
-            elif 'musicArtist' in classType:
+            elif 'musicArtist' in class_type:
                 cls = MLArtist
 
     return cls.from_xml(xml=xml)
