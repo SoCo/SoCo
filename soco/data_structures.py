@@ -33,12 +33,12 @@ def get_ml_item(xml):
     # the array (The case when you have a sub-category, because a
     # request of A:GENRE/Pop will actually return Artists, not genres)
     cls = MusicLibraryItem
-    if (xml.get('parentID') in PARENT_ID_TO_CLASS.keys()):
+    if xml.get('parentID') in PARENT_ID_TO_CLASS.keys():
         cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
     else:
         # Try and auto detect which type this is from the XML returned
         classType = xml.findtext(ns_tag('upnp', 'class'))
-        if classType != None:
+        if classType is not None:
             if 'musicTrack' in classType:
                 cls = MLTrack
             elif 'musicAlbum' in classType:
