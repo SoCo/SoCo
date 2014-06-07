@@ -28,7 +28,6 @@ def get_ml_item(xml):
     PARENT_ID_TO_CLASS module variable dictionary.
 
     """
-    cls = PARENT_ID_TO_CLASS[xml.get('parentID')]
     # Add the option to auto detect if the given parent ID is not in
     # the array (The case when you have a sub-category, because a
     # request of A:GENRE/Pop will actually return Artists, not genres)
@@ -92,7 +91,7 @@ class MusicInfoItem(object):
         """Return the not equals comparison result to another ``playable_item``
         """
         if playable_item is None:
-            return False
+            return True
         return self.content != playable_item.content
 
     def __repr__(self):
