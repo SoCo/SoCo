@@ -1241,7 +1241,7 @@ class SoCo(_SocoSingletonBase):
 
         # Added sub-category suport, extend the search into a subcategory
         if sub_category != '':
-            if sub_category.startswith('/'):
+            if not sub_category.startswith('/'):
                 sub_category = '/' + sub_category
             search = search + sub_category
 
