@@ -1202,9 +1202,9 @@ class SoCo(_SocoSingletonBase):
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
-        :param sub_category: Sub category to allow you to refine your search under
-            the given search type, allowing you to look for things like all the
-            artists under a given genre (e.g. A:GENRE/Pop)
+        :param sub_category: Sub category to allow you to refine your search
+            under the given search type, allowing you to look for things like
+            all the artists under a given genre (e.g. A:GENRE/Pop)
         :returns: A dictionary with metadata for the search, with the
             keys 'number_returned', 'update_id', 'total_matches' and an
             'item_list' list with the search results. The search results
