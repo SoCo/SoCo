@@ -250,7 +250,8 @@ class SoCo(_SocoSingletonBase):
         self._zgs_cache = None
 
     def __str__(self):
-        return "<SoCo object at ip {0}>".format(self.ip_address)
+        return "<{0} object at ip {1}>".format(
+            self.__class__.__name__, self.ip_address)
 
     def __repr__(self):
         return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
