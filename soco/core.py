@@ -97,10 +97,12 @@ class SonosDiscovery(object):  # pylint: disable=R0903
 
 class _ArgsSingleton(type):
     """ A metaclass which permits only a single instance of each derived class
-    to exist for any given set of positional arguments.
+    sharing the same `_class_group` class attribute to exist for any given set
+    of positional arguments.
 
-    Attempts to instantiate a second instance of a derived class will return
-    the existing instance.
+    Attempts to instantiate a second instance of a derived class, or another
+    class with the same `_class_group`, with the same args will return the
+    existing instance.
 
     For example:
 
@@ -108,23 +110,30 @@ class _ArgsSingleton(type):
     ...     __metaclass__ = _ArgsSingleton
     ...
     >>> class First(ArgsSingletonBase):
+    ...     _class_group = "greeting"
     ...     def __init__(self, param):
     ...         pass
     ...
+    >>> class Second(ArgsSingletonBase):
+    ...     _class_group = "greeting"
+    ...     def __init__(self, param):
+    ...         pass
     >>> assert First('hi') is First('hi')
     >>> assert First('hi') is First('bye')
     AssertionError
+    >>> assert First('hi') is Second('hi')
 
      """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = {}
-        if args not in cls._instances[cls]:
-            cls._instances[cls][args] = super(_ArgsSingleton, cls).__call__(
+        key = cls._class_group if hasattr(cls, '_class_group') else cls
+        if key not in cls._instances:
+            cls._instances[key] = {}
+        if args not in cls._instances[key]:
+            cls._instances[key][args] = super(_ArgsSingleton, cls).__call__(
                 *args, **kwargs)
-        return cls._instances[cls][args]
+        return cls._instances[key][args]
 
 
 class _SocoSingletonBase(  # pylint: disable=too-few-public-methods
@@ -205,6 +214,8 @@ class SoCo(_SocoSingletonBase):
         may be a good idea for you to cache the value in your own code.
 
     """
+
+    _class_group = 'SoCo'
 
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
