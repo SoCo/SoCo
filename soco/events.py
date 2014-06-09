@@ -235,7 +235,7 @@ class Subscription(object):
             'NT': 'upnp:event'
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Seconds-{0}".format(requested_timeout)
+            headers["TIMEOUT"] = "Second-{0}".format(requested_timeout)
         response = requests.request(
             'SUBSCRIBE', service.base_url + service.event_subscription_url,
             headers=headers)
