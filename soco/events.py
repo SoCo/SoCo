@@ -16,6 +16,7 @@ import logging
 import weakref
 from collections import namedtuple
 import time
+import atexit
 
 import requests
 
@@ -216,19 +217,37 @@ class Subscription(object):
         :attrib:`timeout` on return to find out what period of validity is
         actually allocated.
 
+        Note:
+            SoCo will try to unsubscribe any subscriptions which are still
+            subscribed on program termination, but it is good practice for
+            you to clean up by making sure that you call :meth:`unsubscribe`
+            yourself.
+
         Args:
             requested_timeout(int, optional): The timeout to be requested
             auto_renew:(bool, optional): If True, renew the subscription
                 automatically shortly before timeout. Default False
         """
 
-        def _auto_renew(self, interval):
+        class AutoRenewThread(threading.Thread):
             """ Used by the auto_renew code to renew a subscription from
-            within a thread.
-            """
-            while not self._auto_renew_thread_flag.wait(interval):
-                log.debug("Autorenewing subscription %s", self.sid)
-                self.renew()
+                within a thread.
+                """
+
+            def __init__(self, interval, stop_flag, sub, *args, **kwargs):
+                super(AutoRenewThread, self).__init__(*args, **kwargs)
+                self.interval = interval
+                self.sub = sub
+                self.stop_flag = stop_flag
+                self.daemon = True
+
+            def run(self):
+                sub = self.sub
+                stop_flag = self.stop_flag
+                interval = self.interval
+                while not stop_flag.wait(interval):
+                    log.debug("Autorenewing subscription %s", sub.sid)
+                    sub.renew()
 
         # TIMEOUT is provided for in the UPnP spec, but it is not clear if
         # Sonos pays any attention to it. A timeout of 86400 secs always seems
@@ -281,17 +300,19 @@ class Subscription(object):
         # And do the same for the sid to service mapping
         with _sid_to_service_lock:
             _sid_to_service[self.sid] = self.service
+        # Register this subscription to be unsubscribed at exit if still alive
+        # This will not happen if exit is abnormal (eg in response to a
+        # signal or fatal interpreter error - see the docs for `atexit`).
+        atexit.register(self.unsubscribe)
 
         # Set up auto_renew
         if not auto_renew:
             return
         # Autorenew just before expiry, say at 85% of self.timeout seconds
         interval = self.timeout * 85/100
-        log.debug(interval)
-        auto_renew_thread = threading.Thread(target=_auto_renew(
-            self, interval))
-        auto_renew_thread.daemon = True
-        auto_renew_thread.run()
+        auto_renew_thread = AutoRenewThread(
+            interval, self._auto_renew_thread_flag, self)
+        auto_renew_thread.start()
 
     def renew(self, requested_timeout=None):
         """Renew the event subscription.
@@ -307,9 +328,13 @@ class Subscription(object):
         """
         # NB This code is sometimes called from a separate thread (when
         # subscriptions are auto-renewed. Be careful to ensure thread-safety
+
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot renew subscription once unsubscribed')
+        if not self.is_subscribed:
+            raise SoCoException(
+                'Cannot renew subscription before subscribing')
         if self.time_left == 0:
             raise SoCoException(
                 'Cannot renew subscription after expiry')
@@ -351,6 +376,11 @@ class Subscription(object):
         Once unsubscribed, a Subscription instance should not be reused
 
         """
+        # Trying to unsubscribe if already unsubscribed, or not yet
+        # subscribed, fails silently
+        if self._has_been_unsubscribed or not self.is_subscribed:
+            return
+
         # Cancel any auto renew
         self._auto_renew_thread_flag.set()
         # Send an unsubscribe request like this:
