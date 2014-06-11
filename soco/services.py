@@ -413,13 +413,15 @@ class Service(object):
             log.error("Unknown error received from %s", self.soco.ip_address)
             raise UnknownSoCoException(xml_error)
 
-    def subscribe(self, requested_timeout=None, event_queue=None):
+    def subscribe(
+            self, requested_timeout=None, auto_renew=False, event_queue=None):
         """Subscribe to the service's events.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
         :attrib:`Subscription.timeout` on return to find out what period of
-        validity is actually allocated.
+        validity is actually allocated. If auto_renew is True, the subscription
+        will be automatically renewed just before it expires, if possible
 
         event_queue is a thread-safe queue object onto which events will be
         put. If None, a Queue object will be created and used.
@@ -431,7 +433,8 @@ class Service(object):
         """
         subscription = Subscription(
             self, event_queue)
-        subscription.subscribe(requested_timeout=requested_timeout)
+        subscription.subscribe(
+            requested_timeout=requested_timeout, auto_renew=auto_renew)
         return subscription
 
     def _update_cache_on_event(self, event):

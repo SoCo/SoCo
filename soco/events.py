@@ -182,6 +182,7 @@ class Subscription(object):
     """ A class representing the subscription to a UPnP event
 
     """
+# pylint: disable=too-many-instance-attributes
 
     def __init__(self, service, event_queue=None):
         """ Pass a SoCo Service instance as a parameter. If event_queue is
@@ -196,24 +197,43 @@ class Subscription(object):
         self.is_subscribed = False
         #: A queue of events received
         self.events = Queue() if event_queue is None else event_queue
+        #: The period for which the subscription is requested
+        self.requested_timeout = None
         # A flag to make sure that an unsubscribed instance is not
         # resubscribed
         self._has_been_unsubscribed = False
         # The time when the subscription was made
         self._timestamp = None
+        # Used to keep track of the auto_renew thread
+        self._auto_renew_thread = None
+        self._auto_renew_thread_flag = threading.Event()
 
-    def subscribe(self, requested_timeout=None):
+    def subscribe(self, requested_timeout=None, auto_renew=False):
         """ Subscribe to the service.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
         :attrib:`timeout` on return to find out what period of validity is
-        actually allocated. """
+        actually allocated.
+
+        Args:
+            requested_timeout(int, optional): The timeout to be requested
+            auto_renew:(bool, optional): If True, renew the subscription
+                automatically shortly before timeout. Default False
+        """
+
+        def _auto_renew(self, interval):
+            """ Used by the auto_renew code to renew a subscription from
+            within a thread.
+            """
+            while not self._auto_renew_thread_flag.wait(interval):
+                log.debug("Autorenewing subscription %s", self.sid)
+                self.renew()
 
         # TIMEOUT is provided for in the UPnP spec, but it is not clear if
         # Sonos pays any attention to it. A timeout of 86400 secs always seems
         # to be allocated
-
+        self.requested_timeout = requested_timeout
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot resubscribe instance once unsubscribed')
@@ -262,13 +282,31 @@ class Subscription(object):
         with _sid_to_service_lock:
             _sid_to_service[self.sid] = self.service
 
+        # Set up auto_renew
+        if not auto_renew:
+            return
+        # Autorenew just before expiry, say at 85% of self.timeout seconds
+        interval = self.timeout * 85/100
+        log.debug(interval)
+        auto_renew_thread = threading.Thread(target=_auto_renew(
+            self, interval))
+        auto_renew_thread.daemon = True
+        auto_renew_thread.run()
+
     def renew(self, requested_timeout=None):
         """Renew the event subscription.
 
         You should not try to renew a subscription which has been
         unsubscribed, or once it has expired.
 
+        Args:
+            requested_timeout (int, optional): The period for which a renewal
+                request should be made. If None (the default), use the timeout
+                requested on subscription.
+
         """
+        # NB This code is sometimes called from a separate thread (when
+        # subscriptions are auto-renewed. Be careful to ensure thread-safety
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot renew subscription once unsubscribed')
@@ -280,10 +318,11 @@ class Subscription(object):
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
         # TIMEOUT: Second-requested subscription duration (optional)
-
         headers = {
             'SID': self.sid
         }
+        if requested_timeout is None:
+            requested_timeout = self.requested_timeout
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{0}".format(requested_timeout)
         response = requests.request(
@@ -312,6 +351,9 @@ class Subscription(object):
         Once unsubscribed, a Subscription instance should not be reused
 
         """
+        # Cancel any auto renew
+        self._auto_renew_thread_flag.set()
+        # Send an unsubscribe request like this:
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
