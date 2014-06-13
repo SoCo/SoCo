@@ -334,9 +334,8 @@ class SoCo(_SocoSingletonBase):
     @play_mode.setter
     def play_mode(self, playmode):
         """ Set the speaker's mode """
-        modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
-        if playmode not in modes:
+        if playmode not in PLAY_MODES:
             raise KeyError("'%s' is not a valid play mode" % playmode)
 
         self.avTransport.SetPlayMode([
@@ -1380,3 +1379,5 @@ RADIO_SHOWS = 1
 NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
       '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
+# Valid play modes
+PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')

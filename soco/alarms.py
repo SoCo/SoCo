@@ -8,10 +8,11 @@ import logging
 from datetime import datetime
 import re
 import weakref
-from .core import discover
+from .core import discover, PLAY_MODES
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
+TIME_FORMAT = "%H:%M:%S"
 
 
 def is_valid_recurrence(text):
@@ -64,13 +65,13 @@ class Alarm(object):
 
     # pylint: disable=too-many-arguments
     def __init__(
-            self, room, start_time=None, duration=None,
+            self, zone, start_time=None, duration=None,
             recurrence='DAILY', enabled=True,
             program_uri=None, program_metadata='',
             play_mode='NORMAL', volume=20, include_linked_zones=False):
         """
         Args:
-            room (SoCo): The soco instance which will play the alarm.
+            zone (SoCo): The soco instance which will play the alarm.
             start_time (datetime.time, optional): The alarm's start time.
                 Specify hours, minutes and seconds only. Defaults to the
                 current time
@@ -98,7 +99,7 @@ class Alarm(object):
         """
 
         super(Alarm, self).__init__()
-        self.room = room
+        self.zone = zone
         if start_time is None:
             start_time = datetime.now().time()
         self.start_time = start_time
@@ -114,7 +115,7 @@ class Alarm(object):
         self._alarm_id = None
 
     def __repr__(self):
-        middle = str(self.start_time.strftime('%H:%M:%S'))
+        middle = str(self.start_time.strftime(TIME_FORMAT))
         return "<{0} id:{1}@{2} at {3}>".format(
             self.__class__.__name__, self._alarm_id, middle, hex(id(self)))
 
@@ -132,8 +133,7 @@ class Alarm(object):
     def play_mode(self, play_mode):
         """Set the play mode."""
         play_mode = play_mode.upper()
-        if play_mode not in (
-                'NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL'):
+        if play_mode not in PLAY_MODES:
             raise KeyError("'%s' is not a valid play mode" % play_mode)
         self._play_mode = play_mode
 
@@ -180,12 +180,12 @@ class Alarm(object):
         """
         # pylint: disable=bad-continuation
         args = [
-            ('StartLocalTime', self.start_time.strftime('%H:%M:%S')),
+            ('StartLocalTime', self.start_time.strftime(TIME_FORMAT)),
             ('Duration', '' if self.duration is None else
-                self.duration.strftime('%H:%M:%S')),
+                self.duration.strftime(TIME_FORMAT)),
             ('Recurrence', self.recurrence),
             ('Enabled', '1' if self.enabled else '0'),
-            ('RoomUUID', self.room.uid),
+            ('RoomUUID', self.zone.uid),
             ('ProgramURI', "x-rincon-buzzer:0" if self.program_uri is None
                 else self.program_uri),
             ('ProgramMetaData', self.program_metadata),
@@ -194,13 +194,13 @@ class Alarm(object):
             ('IncludeLinkedZones', '1' if self.include_linked_zones else '0')
             ]
         if self._alarm_id is None:
-            response = self.room.alarmClock.CreateAlarm(args)
+            response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response['AssignedID']
             Alarm._all_alarms[self._alarm_id] = self
         else:
             # The alarm has been saved before. Update it instead.
             args.insert(0, ('ID', self._alarm_id))
-            self.room.alarmClock.UpdateAlarm(args)
+            self.zone.alarmClock.UpdateAlarm(args)
 
     def remove(self):
         """Removes the alarm.
@@ -210,7 +210,7 @@ class Alarm(object):
         saved back to Sonos again if desired.
 
         """
-        self.room.alarmClock.DestroyAlarm([
+        self.zone.alarmClock.DestroyAlarm([
             ('ID', self._alarm_id)
         ])
         alarm_id = self._alarm_id
@@ -280,16 +280,15 @@ def get_alarms(soco=None):
         instance.duration = None if values['Duration'] == '' else\
             datetime.strptime(values['Duration'], "%H:%M:%S").time()
         instance.recurrence = values['Recurrence']
-        instance.enabled = True if values['Enabled'] == '1' else False
-        instance.room = [room for room in soco.all_zones
-                         if room.uid == values['RoomUUID']][0]
+        instance.enabled = values['Enabled'] == '1'
+        instance.zone = [zone for zone in soco.all_zones
+                         if zone.uid == values['RoomUUID']][0]
         instance.program_uri = None if values['ProgramURI'] ==\
             "x-rincon-buzzer:0" else values['ProgramURI']
         instance.program_metadata = values['ProgramMetaData']
         instance.play_mode = values['PlayMode']
         instance.volume = values['Volume']
-        instance.include_linked_zones = True if \
-            values['IncludeLinkedZones'] == '1' else False
+        instance.include_linked_zones = values['IncludeLinkedZones'] == '1'
 
         result.add(instance)
     return result
