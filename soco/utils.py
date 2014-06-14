@@ -209,7 +209,7 @@ class deprecated(object):
 
         docs = "\n\n  .. deprecated:: {0}\n".format(self.since_version)
         if self.will_be_removed_in is not None:
-            docs += "\n     Will be removed in version {}.".format(
+            docs += "\n     Will be removed in version {0}.".format(
                 self.will_be_removed_in)
         if self.alternative is not None:
             docs += "\n     Use {0} instead.".format(self.alternative)
