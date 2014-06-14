@@ -18,11 +18,32 @@ TIME_FORMAT = "%H:%M:%S"
 def is_valid_recurrence(text):
     """Check that text is a valid recurrence string.
 
+    A valid recurrence string is  'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or
+    of the form 'ON_DDDDDD' where D is a number from 0-7 representing a day
+    of the week (Sunday is 0), e.g. 'ON_034' meaning Sunday, Wednesday and
+    Thursday
+
     Arg:
         text(str): the recurrence string to check
 
     Returns:
         bool: True if the recurrence string is valid, else False
+
+    Examples:
+        ::
+            >>> from soco.alarms import is_valid_recurrence
+            >>> is_valid_recurrence('WEEKENDS')
+            True
+            >>> is_valid_recurrence('')
+            False
+            >>> is_valid_recurrence('ON_132')  # Mon, Tue, Wed
+            True
+            >>> is_valid_recurrence('ON_777')  # Sat
+            True
+            >>> is_valid_recurrence('ON_3421') # Mon, Tue, Wed, Thur
+            True
+            >>> is_valid_recurrence('ON_123456789') # Too many digits
+            False
 
     """
     if text in ("DAILY", "ONCE", "WEEKDAYS", "WEEKENDS"):
