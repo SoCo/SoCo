@@ -174,7 +174,7 @@ class deprecated(object):
         alternative (str, optional): The name of an alternative object to use
 
     Example:
-    
+
         ::
 
             @deprecated(since="0.7", alternative="new_function")
@@ -186,9 +186,10 @@ class deprecated(object):
     # pylint really doesn't like decorators!
     # pylint: disable=invalid-name, too-few-public-methods
     # pylint: disable=no-member, missing-docstring
-    def __init__(self, since, alternative=None):
+    def __init__(self, since, alternative=None, will_be_removed_in=None):
         self.since_version = since
         self.alternative = alternative
+        self.will_be_removed_in = will_be_removed_in
 
     def __call__(self, deprecated_fn):
 
@@ -197,13 +198,19 @@ class deprecated(object):
 
             message = "Call to deprecated function {0}.".format(
                 deprecated_fn.__name__)
+            if self.will_be_removed_in is not None:
+                message += " Will be removed in version {0}.".format(
+                    self.will_be_removed_in)
             if self.alternative is not None:
                 message += " Use {0} instead.".format(self.alternative)
             warnings.warn(message, stacklevel=2)
 
             return deprecated_fn(*args, **kwargs)
 
-        docs = "\n\n  .. deprecated:: {0}\n     ".format(self.since_version)
+        docs = "\n\n  .. deprecated:: {0}\n".format(self.since_version)
+        if self.will_be_removed_in is not None:
+            docs += "\n     Will be removed in version {}.".format(
+                self.will_be_removed_in)
         if self.alternative is not None:
             docs += "\n     Use {0} instead.".format(self.alternative)
         if decorated.__doc__ is None:
