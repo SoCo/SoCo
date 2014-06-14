@@ -734,7 +734,7 @@ class SoCo(_SocoSingletonBase):
             coordinator_uid = group_element.attrib['Coordinator']
             group_uid = group_element.attrib['ID']
             members = set()
-            for member_element in group_element.iter('ZoneGroupMember'):
+            for member_element in group_element.findall('ZoneGroupMember'):
                 # Create a SoCo instance for each member. Because SoCo
                 # instances are singletons, this is cheap if they have already
                 # been created, and useful if they haven't. We can then
