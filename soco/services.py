@@ -44,8 +44,9 @@ from xml.sax.saxutils import escape
 import logging
 
 import requests
+from .cache import Cache
 from .exceptions import SoCoUPnPException, UnknownSoCoException
-from .utils import prettify, TimedCache
+from .utils import prettify
 from .events import Subscription
 from .xml import XML
 
@@ -60,7 +61,7 @@ Argument = namedtuple('Argument', 'name, vartype')
 # SoCo instance is asked for group info, we can cache it and return it when
 # another instance is asked. To do this we need a cache to be shared between
 # instances
-zone_group_state_shared_cache = TimedCache()
+zone_group_state_shared_cache = Cache()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -105,7 +106,7 @@ class Service(object):
         self.event_subscription_url = '/{0}/Event'.format(self.service_type)
         #: A cache for storing the result of network calls. By default, this is
         #: TimedCache(default_timeout=0). See :class:`TimedCache`
-        self.cache = TimedCache(default_timeout=0)
+        self.cache = Cache(default_timeout=0)
         log.debug(
             "Created service %s, ver %s, id %s, base_url %s, control_url %s",
             self.service_type, self.version, self.service_id, self.base_url,
