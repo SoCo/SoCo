@@ -183,6 +183,8 @@ class MusicLibraryItem(MusicInfoItem):
             result = xml.find(ns_tag(*value))
             if result is None:
                 content[key] = None
+            elif result.text is None:
+                content[key] = None
             else:
                 # The xml objects should contain utf-8 internally
                 content[key] = really_unicode(result.text)
