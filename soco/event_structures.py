@@ -1,6 +1,4 @@
-# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302
 # -*- coding: utf-8 -*-
-
 
 """ This module contains all the event structures for the events that
 can be returned
@@ -12,7 +10,8 @@ from .xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-class LastChangeEvent():
+# pylint: disable=too-many-public-methods,too-many-statements,invalid-name
+class LastChangeEvent(object):
     """
     Class to handle the Last Change event XML
     """
@@ -24,116 +23,117 @@ class LastChangeEvent():
         """
         self.content = contents
 
+    # pylint: disable=bare-except,broad-except,too-many-locals
     @classmethod
-    def from_xml(cls, xmlStr):
+    def from_xml(cls, xmlstr):
         """Return an instance of this class, created from xml.
 
         :param xmlStr: The xml in string form to create the class from
         """
         try:
             # Read in the XML
-            lastChangeXml = XML.fromstring(xmlStr)
+            last_change_xml = XML.fromstring(xmlstr)
         except Exception as exc:
             # Not valid XML
-            log.exception(xmlStr)
+            log.exception(xmlstr)
             log.exception(str(exc))
             return None
 
         # All the namespaces used in the event XML
-        ns = '{urn:schemas-upnp-org:metadata-1-0/AVT/}'
+        avtns = '{urn:schemas-upnp-org:metadata-1-0/AVT/}'
         didlns = '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'
         rns = '{urn:schemas-rinconnetworks-com:metadata-1-0/}'
         upnpns = '{urn:schemas-upnp-org:metadata-1-0/upnp/}'
         nsdc = '{http://purl.org/dc/elements/1.1/}'
 
-        instanceId = lastChangeXml.find('{0}InstanceID'.format(ns))
-        if instanceId is None:
+        instanceid = last_change_xml.find('{0}InstanceID'.format(avtns))
+        if instanceid is None:
             return None
 
         result = {}
-        result['transportState'] = LastChangeEvent.getValData(
-            ns, instanceId, 'TransportState')
-        result['currentPlayMode'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentPlayMode')
-        result['currentCrossfadeMode'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentCrossfadeMode')
-        result['numberOfTracks'] = LastChangeEvent.getValData(
-            ns, instanceId, 'NumberOfTracks')
-        result['currentTrack'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentTrack')
-        result['currentSection'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentSection')
-        result['currentTrackURI'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentTrackURI')
-        result['currentTrackDuration'] = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentTrackDuration')
+        result['transportState'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'TransportState')
+        result['currentPlayMode'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentPlayMode')
+        result['currentCrossfadeMode'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentCrossfadeMode')
+        result['numberOfTracks'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'NumberOfTracks')
+        result['currentTrack'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentTrack')
+        result['currentSection'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentSection')
+        result['currentTrackURI'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentTrackURI')
+        result['currentTrackDuration'] = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentTrackDuration')
 
         # The current track meta data is embedded XML
-        currentTrackMetaData = LastChangeEvent.getValData(
-            ns, instanceId, 'CurrentTrackMetaData')
-        if currentTrackMetaData is not None:
+        current_track_metadata = LastChangeEvent._getValData(
+            avtns, instanceid, 'CurrentTrackMetaData')
+        if current_track_metadata is not None:
             try:
-                currentTrackMetaDataXml = XML.fromstring(currentTrackMetaData)
+                ctrack_metadata_xml = XML.fromstring(current_track_metadata)
             except Exception as exc:
                 # Not valid XML
-                log.exception(currentTrackMetaData)
+                log.exception(current_track_metadata)
                 log.exception(str(exc))
                 return None
 
-            item = currentTrackMetaDataXml.find('{0}item'.format(didlns))
+            item = ctrack_metadata_xml.find('{0}item'.format(didlns))
 
             if item is not None:
-                result['title'] = LastChangeEvent.getElementData(
+                result['title'] = LastChangeEvent._getElementData(
                     nsdc, item, 'title')
-                result['creator'] = LastChangeEvent.getElementData(
+                result['creator'] = LastChangeEvent._getElementData(
                     nsdc, item, 'creator')
-                result['album'] = LastChangeEvent.getElementData(
+                result['album'] = LastChangeEvent._getElementData(
                     upnpns, item, 'album')
                 result['originalTrackNumber'] =\
-                    LastChangeEvent.getElementData(
+                    LastChangeEvent._getElementData(
                         upnpns, item, 'originalTrackNumber')
-                result['albumArtist'] = LastChangeEvent.getElementData(
+                result['albumArtist'] = LastChangeEvent._getElementData(
                     rns, item, 'albumArtist')
-                result['albumArtURI'] = LastChangeEvent.getElementData(
+                result['albumArtURI'] = LastChangeEvent._getElementData(
                     upnpns, item, 'albumArtURI')
-                result['radioShowMd'] = LastChangeEvent.getElementData(
+                result['radioShowMd'] = LastChangeEvent._getElementData(
                     rns, item, 'radioShowMd')
 
-        result['nextTrackURI'] = LastChangeEvent.getValData(
-            rns, instanceId, 'NextTrackURI')
+        result['nextTrackURI'] = LastChangeEvent._getValData(
+            rns, instanceid, 'NextTrackURI')
 
         # The next track meta data is embedded XML
-        nextTrackMetaData = LastChangeEvent.getValData(
-            rns, instanceId, 'NextTrackMetaData')
-        if nextTrackMetaData is not None:
+        next_track_metadata = LastChangeEvent._getValData(
+            rns, instanceid, 'NextTrackMetaData')
+        if next_track_metadata is not None:
             try:
-                nextTrackMetaDataXml = XML.fromstring(nextTrackMetaData)
+                next_track_metadata_xml = XML.fromstring(next_track_metadata)
             except Exception as exc:
                 # Not valid XML
-                log.exception(nextTrackMetaData)
+                log.exception(next_track_metadata)
                 log.exception(str(exc))
                 return None
 
-            item = nextTrackMetaDataXml.find('{0}item'.format(didlns))
+            item = next_track_metadata_xml.find('{0}item'.format(didlns))
 
             if item is not None:
-                result['nextTitle'] = LastChangeEvent.getElementData(
+                result['nextTitle'] = LastChangeEvent._getElementData(
                     nsdc, item, 'title')
-                result['nextCreator'] = LastChangeEvent.getElementData(
+                result['nextCreator'] = LastChangeEvent._getElementData(
                     nsdc, item, 'creator')
-                result['nextAlbum'] = LastChangeEvent.getElementData(
+                result['nextAlbum'] = LastChangeEvent._getElementData(
                     upnpns, item, 'album')
                 result['nextOriginalTrackNumber'] =\
-                    LastChangeEvent.getElementData(
+                    LastChangeEvent._getElementData(
                         upnpns, item, 'originalTrackNumber')
-                result['nextAlbumArtist'] = LastChangeEvent.getElementData(
+                result['nextAlbumArtist'] = LastChangeEvent._getElementData(
                     rns, item, 'albumArtist')
-                result['nextAlbumArtURI'] = LastChangeEvent.getElementData(
+                result['nextAlbumArtURI'] = LastChangeEvent._getElementData(
                     upnpns, item, 'albumArtURI')
 
         # The transport meta data is embedded XML
-        transportMetaData = LastChangeEvent.getValData(
-            rns, instanceId, 'EnqueuedTransportURIMetaData')
+        transportMetaData = LastChangeEvent._getValData(
+            rns, instanceid, 'EnqueuedTransportURIMetaData')
         if transportMetaData is not None:
             try:
                 transportMetaDataXml = XML.fromstring(transportMetaData)
@@ -146,165 +146,164 @@ class LastChangeEvent():
             item = transportMetaDataXml.find('{0}item'.format(didlns))
 
             if item is not None:
-                result['transportTitle'] = LastChangeEvent.getElementData(
+                result['transportTitle'] = LastChangeEvent._getElementData(
                     nsdc, item, 'title')
 
         return cls(result)
 
     @staticmethod
-    def getValData(ns, container, elemName):
+    def _getValData(namesp, container, elem_name):
         """Returns the string from the val attribute
 
         :param ns: Namespace the element is in
         :param container: Parent object the element is in
-        :param elemName: Name of the to get the attribute of
+        :param elem_name: Name of the to get the attribute of
         """
         value = None
         if container is not None:
-            element = container.find('{0}{1}'.format(ns, elemName))
+            element = container.find('{0}{1}'.format(namesp, elem_name))
             if element is not None:
                 value = element.get('val')
         return value
 
     @staticmethod
-    def getElementData(ns, container, elemName):
+    def _getElementData(namesp, container, elem_name):
         """Returns the string from the element
 
         :param ns: Namespace the element is in
         :param container: Parent object the element is in
-        :param elemName: Name of the to get the value of
+        :param elem_name: Name of the to get the value of
         """
         value = None
         if container is not None:
-            element = container.find('{0}{1}'.format(ns, elemName))
+            element = container.find('{0}{1}'.format(namesp, elem_name))
             if element is not None:
                 value = element.text
         return value
 
-    def getContent(self, keyVal):
+    def _getContent(self, keyval):
         """Gets the content value if it is set"""
-        if keyVal not in self.content:
-            print "no key " + keyVal
+        if keyval not in self.content:
             return None
-        return self.content[keyVal]
+        return self.content[keyval]
 
-    def getIntegerContent(self, key):
+    def _getIntegerContent(self, keyval):
         """Gets the content value as an integer"""
-        intVal = self.getContent(key)
-        if intVal is not None:
+        int_val = self._getContent(keyval)
+        if int_val is not None:
             try:
                 # Try and convert to an integer
-                intVal = int(intVal)
+                int_val = int(int_val)
             except:
                 pass
-        return intVal
+        return int_val
 
     @property
     def transportState(self):
         """Get the transport state"""
-        return self.getContent('transportState')
+        return self._getContent('transportState')
 
     @property
     def currentPlayMode(self):
         """Get the current play mode"""
-        return self.getContent('currentPlayMode')
+        return self._getContent('currentPlayMode')
 
     @property
     def currentCrossfadeMode(self):
         """Get the current cross fade mode"""
-        return self.getContent('currentCrossfadeMode')
+        return self._getContent('currentCrossfadeMode')
 
     @property
     def numberOfTracks(self):
         """Get the number of tracks"""
-        return self.getIntegerContent('numberOfTracks')
+        return self._getIntegerContent('numberOfTracks')
 
     @property
     def currentTrack(self):
         """Get the current track number"""
-        return self.getIntegerContent('currentTrack')
+        return self._getIntegerContent('currentTrack')
 
     @property
     def currentTrackURI(self):
         """Get the track URI"""
-        return self.getContent('currentTrackURI')
+        return self._getContent('currentTrackURI')
 
     @property
     def currentTrackDuration(self):
         """Get the current track duration"""
-        return self.getContent('currentTrackDuration')
+        return self._getContent('currentTrackDuration')
 
     @property
     def title(self):
         """Get the title"""
-        return self.getContent('title')
+        return self._getContent('title')
 
     @property
     def creator(self):
         """Get the creator"""
-        return self.getContent('creator')
+        return self._getContent('creator')
 
     @property
     def album(self):
         """Get the album"""
-        return self.getContent('album')
+        return self._getContent('album')
 
     @property
     def originalTrackNumber(self):
         """Get the original track number"""
-        return self.getIntegerContent('originalTrackNumber')
+        return self._getIntegerContent('originalTrackNumber')
 
     @property
     def albumArtist(self):
         """Get the album artist"""
-        return self.getContent('albumArtist')
+        return self._getContent('albumArtist')
 
     @property
     def albumArtURI(self):
         """Get the albumArtURI"""
-        return self.getContent('albumArtURI')
+        return self._getContent('albumArtURI')
 
     @property
     def radioShowMd(self):
         """Get the radio show name"""
-        return self.getContent('radioShowMd')
+        return self._getContent('radioShowMd')
 
     @property
     def nextTrackURI(self):
         """Get the next track URI"""
-        return self.getContent('nextTrackURI')
+        return self._getContent('nextTrackURI')
 
     @property
     def nextTitle(self):
         """Get the next title"""
-        return self.getContent('nextTitle')
+        return self._getContent('nextTitle')
 
     @property
     def nextCreator(self):
         """Get the next creator"""
-        return self.getContent('nextCreator')
+        return self._getContent('nextCreator')
 
     @property
     def nextAlbum(self):
         """Get the next album name"""
-        return self.getContent('nextAlbum')
+        return self._getContent('nextAlbum')
 
     @property
     def nextOriginalTrackNumber(self):
         """Get the next original track number"""
-        return self.getIntegerContent('nextOriginalTrackNumber')
+        return self._getIntegerContent('nextOriginalTrackNumber')
 
     @property
     def nextAlbumArtist(self):
         """Get the next album artist"""
-        return self.getContent('nextAlbumArtist')
+        return self._getContent('nextAlbumArtist')
 
     @property
     def nextAlbumArtURI(self):
         """Get the next albumArtURI"""
-        return self.getContent('nextAlbumArtURI')
+        return self._getContent('nextAlbumArtURI')
 
     @property
     def transportTitle(self):
         """Get the transport title"""
-        return self.getContent('transportTitle')
+        return self._getContent('transportTitle')
