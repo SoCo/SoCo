@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302
+# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302,E126
 # -*- coding: utf-8 -*-
 
 
@@ -49,7 +49,7 @@ class LastChangeEvent():
         instanceId = lastChangeXml.find('{0}InstanceID'.format(ns))
         if instanceId is None:
             return None
-        
+
         result = {}
         result['transportState'] = LastChangeEvent.getValData(
                                     ns, instanceId, 'TransportState')
@@ -81,7 +81,7 @@ class LastChangeEvent():
                 return None
 
             item = currentTrackMetaDataXml.find('{0}item'.format(didlns))
-            
+
             if item is not None:
                 result['title'] = LastChangeEvent.getElementData(
                                             nsdc, item, 'title')
@@ -98,10 +98,10 @@ class LastChangeEvent():
                                             upnpns, item, 'albumArtURI')
                 result['radioShowMd'] = LastChangeEvent.getElementData(
                                             rns, item, 'radioShowMd')
-        
+
         result['nextTrackURI'] = LastChangeEvent.getValData(
                                             rns, instanceId, 'NextTrackURI')
-        
+
         # The next track meta data is embedded XML
         nextTrackMetaData = LastChangeEvent.getValData(
                                         rns, instanceId, 'NextTrackMetaData')
@@ -115,7 +115,7 @@ class LastChangeEvent():
                 return None
 
             item = nextTrackMetaDataXml.find('{0}item'.format(didlns))
-            
+
             if item is not None:
                 result['nextTitle'] = LastChangeEvent.getElementData(
                                                 nsdc, item, 'title')
@@ -130,7 +130,7 @@ class LastChangeEvent():
                                                 rns, item, 'albumArtist')
                 result['nextAlbumArtURI'] = LastChangeEvent.getElementData(
                                                 upnpns, item, 'albumArtURI')
-            
+
         # The transport meta data is embedded XML
         transportMetaData = LastChangeEvent.getValData(
                             rns, instanceId, 'EnqueuedTransportURIMetaData')
@@ -144,7 +144,7 @@ class LastChangeEvent():
                 return None
 
             item = transportMetaDataXml.find('{0}item'.format(didlns))
-            
+
             if item is not None:
                 result['transportTitle'] = LastChangeEvent.getElementData(
                                                 nsdc, item, 'title')
@@ -157,26 +157,26 @@ class LastChangeEvent():
 
         :param ns: Namespace the element is in
         :param container: Parent object the element is in
-        :param elemName: Name of the to get the attribute of   
+        :param elemName: Name of the to get the attribute of
         """
         value = None
         if container is not None:
-            element = container.find('{0}{1}'.format(ns,elemName))
+            element = container.find('{0}{1}'.format(ns, elemName))
             if element is not None:
                 value = element.get('val')
         return value
-    
+
     @staticmethod
     def getElementData(ns, container, elemName):
         """Returns the string from the element
 
         :param ns: Namespace the element is in
         :param container: Parent object the element is in
-        :param elemName: Name of the to get the value of   
+        :param elemName: Name of the to get the value of
         """
         value = None
         if container is not None:
-            element = container.find('{0}{1}'.format(ns,elemName))
+            element = container.find('{0}{1}'.format(ns, elemName))
             if element is not None:
                 value = element.text
         return value
@@ -308,4 +308,3 @@ class LastChangeEvent():
     def transportTitle(self):
         """Get the transport title"""
         return self.getContent('transportTitle')
-
