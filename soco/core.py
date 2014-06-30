@@ -1288,7 +1288,7 @@ class SoCo(_SocoSingletonBase):
         :type uri: str
         """
         item = URI(uri)
-        self.add_to_queue(item)
+        return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
