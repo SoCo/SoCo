@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302,E126
+# pylint: disable=too-many-lines,R0903,W0142,R0913,C0302
 # -*- coding: utf-8 -*-
 
 
@@ -52,25 +52,25 @@ class LastChangeEvent():
 
         result = {}
         result['transportState'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'TransportState')
+            ns, instanceId, 'TransportState')
         result['currentPlayMode'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentPlayMode')
+            ns, instanceId, 'CurrentPlayMode')
         result['currentCrossfadeMode'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentCrossfadeMode')
+            ns, instanceId, 'CurrentCrossfadeMode')
         result['numberOfTracks'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'NumberOfTracks')
+            ns, instanceId, 'NumberOfTracks')
         result['currentTrack'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentTrack')
+            ns, instanceId, 'CurrentTrack')
         result['currentSection'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentSection')
+            ns, instanceId, 'CurrentSection')
         result['currentTrackURI'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentTrackURI')
+            ns, instanceId, 'CurrentTrackURI')
         result['currentTrackDuration'] = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentTrackDuration')
+            ns, instanceId, 'CurrentTrackDuration')
 
         # The current track meta data is embedded XML
         currentTrackMetaData = LastChangeEvent.getValData(
-                                    ns, instanceId, 'CurrentTrackMetaData')
+            ns, instanceId, 'CurrentTrackMetaData')
         if currentTrackMetaData is not None:
             try:
                 currentTrackMetaDataXml = XML.fromstring(currentTrackMetaData)
@@ -84,27 +84,27 @@ class LastChangeEvent():
 
             if item is not None:
                 result['title'] = LastChangeEvent.getElementData(
-                                            nsdc, item, 'title')
+                    nsdc, item, 'title')
                 result['creator'] = LastChangeEvent.getElementData(
-                                            nsdc, item, 'creator')
+                    nsdc, item, 'creator')
                 result['album'] = LastChangeEvent.getElementData(
-                                            upnpns, item, 'album')
+                    upnpns, item, 'album')
                 result['originalTrackNumber'] =\
-                                LastChangeEvent.getElementData(
-                                    upnpns, item, 'originalTrackNumber')
+                    LastChangeEvent.getElementData(
+                        upnpns, item, 'originalTrackNumber')
                 result['albumArtist'] = LastChangeEvent.getElementData(
-                                            rns, item, 'albumArtist')
+                    rns, item, 'albumArtist')
                 result['albumArtURI'] = LastChangeEvent.getElementData(
-                                            upnpns, item, 'albumArtURI')
+                    upnpns, item, 'albumArtURI')
                 result['radioShowMd'] = LastChangeEvent.getElementData(
-                                            rns, item, 'radioShowMd')
+                    rns, item, 'radioShowMd')
 
         result['nextTrackURI'] = LastChangeEvent.getValData(
-                                            rns, instanceId, 'NextTrackURI')
+            rns, instanceId, 'NextTrackURI')
 
         # The next track meta data is embedded XML
         nextTrackMetaData = LastChangeEvent.getValData(
-                                        rns, instanceId, 'NextTrackMetaData')
+            rns, instanceId, 'NextTrackMetaData')
         if nextTrackMetaData is not None:
             try:
                 nextTrackMetaDataXml = XML.fromstring(nextTrackMetaData)
@@ -118,22 +118,22 @@ class LastChangeEvent():
 
             if item is not None:
                 result['nextTitle'] = LastChangeEvent.getElementData(
-                                                nsdc, item, 'title')
+                    nsdc, item, 'title')
                 result['nextCreator'] = LastChangeEvent.getElementData(
-                                                nsdc, item, 'creator')
+                    nsdc, item, 'creator')
                 result['nextAlbum'] = LastChangeEvent.getElementData(
-                                                upnpns, item, 'album')
+                    upnpns, item, 'album')
                 result['nextOriginalTrackNumber'] =\
                     LastChangeEvent.getElementData(
-                            upnpns, item, 'originalTrackNumber')
+                        upnpns, item, 'originalTrackNumber')
                 result['nextAlbumArtist'] = LastChangeEvent.getElementData(
-                                                rns, item, 'albumArtist')
+                    rns, item, 'albumArtist')
                 result['nextAlbumArtURI'] = LastChangeEvent.getElementData(
-                                                upnpns, item, 'albumArtURI')
+                    upnpns, item, 'albumArtURI')
 
         # The transport meta data is embedded XML
         transportMetaData = LastChangeEvent.getValData(
-                            rns, instanceId, 'EnqueuedTransportURIMetaData')
+            rns, instanceId, 'EnqueuedTransportURIMetaData')
         if transportMetaData is not None:
             try:
                 transportMetaDataXml = XML.fromstring(transportMetaData)
@@ -147,7 +147,7 @@ class LastChangeEvent():
 
             if item is not None:
                 result['transportTitle'] = LastChangeEvent.getElementData(
-                                                nsdc, item, 'title')
+                    nsdc, item, 'title')
 
         return cls(result)
 
