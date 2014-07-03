@@ -314,7 +314,7 @@ class MusicLibraryItem(MusicInfoItem):
         return self.content['parent_id']
 
     @parent_id.setter
-    def parent_id(self, parent_id):
+    def parent_id(self, parent_id):  # pylint: disable=C0111
         self.content['parent_id'] = parent_id
 
 

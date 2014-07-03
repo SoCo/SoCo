@@ -101,7 +101,6 @@ RINCON_000E5884455C01400#A:ARTIST/10%20Years</res>
 </container>"""
 ARTIST_XML = ARTIST_XML.replace('\n', '')
 ARTIST_DICT = {
-    #'item_class': 'object.container.person.musicArtist',
     'parent_id': 'A:ARTIST',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ARTIST/10%20Years',
     'title': '10 Years'
@@ -206,11 +205,11 @@ ALBUMLIST_XML = """
 000E5884455C01400#A:ALBUM</res>
 </container>
 """
-ALBUMLIST_XML= ALBUMLIST_XML.replace('\n', '')
+ALBUMLIST_XML = ALBUMLIST_XML.replace('\n', '')
 ALBUMLIST_DICT = {
-    u'parent_id': 'A:',
-    u'uri': u'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM',
-    u'title': u'Albums'
+    'parent_id': 'A:',
+    'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM',
+    'title': 'Albums'
 }
 QUEUE_XML1 = """
 <item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
@@ -233,7 +232,7 @@ QUEUE_DICT1 = {
     'title': 'Airworthy',
     'uri': 'x-sonos-mms:AnyArtistTrack%3a126778459?sid=50&flags=32',
     'album_art_uri': '/getaa?s=1&u=x-sonos-mms%3aAnyArtistTrack%253a126778459'
-    '%3fsid%3d50%26flags%3d32',
+                     '%3fsid%3d50%26flags%3d32',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': None
 }
@@ -262,10 +261,10 @@ QUEUE_DICT2 = {
     'creator': 'Agnes Obel',
     'title': 'Falling, Catching',
     'uri': 'x-file-cifs://TLE-SERVER/share/flac/Agnes%20Obel%20-%20'
-    'Philharmonics/1%20-%20Falling,%20Catching.flac',
+           'Philharmonics/1%20-%20Falling,%20Catching.flac',
     'album_art_uri': '/getaa?u=x-file-cifs%3a%2f%2fTLE-SERVER%2fshare%2fflac'
-    '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-%2520Falling,'
-    '%2520Catching.flac&v=2',
+                     '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-'
+                     '%2520Falling,%2520Catching.flac&v=2',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': 1
 }
@@ -318,7 +317,7 @@ def common_tests(item_class, item_id, instance, content, item_xml, item_dict):
     title = 'Dummy title with non ascii chars &#230;&#248;&#229;'
     xml = XML_TEMPLATE.format(item_class=item_class, item_id=item_id,
                               title=title, **content1)
-    
+
     assert XML.tostring(instance.didl_metadata).decode() == xml
 
     # Test common attributes
