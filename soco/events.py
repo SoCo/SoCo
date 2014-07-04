@@ -16,6 +16,7 @@ import logging
 import weakref
 from collections import namedtuple
 import time
+import atexit
 
 import requests
 
@@ -182,6 +183,7 @@ class Subscription(object):
     """ A class representing the subscription to a UPnP event
 
     """
+# pylint: disable=too-many-instance-attributes
 
     def __init__(self, service, event_queue=None):
         """ Pass a SoCo Service instance as a parameter. If event_queue is
@@ -196,24 +198,61 @@ class Subscription(object):
         self.is_subscribed = False
         #: A queue of events received
         self.events = Queue() if event_queue is None else event_queue
+        #: The period for which the subscription is requested
+        self.requested_timeout = None
         # A flag to make sure that an unsubscribed instance is not
         # resubscribed
         self._has_been_unsubscribed = False
         # The time when the subscription was made
         self._timestamp = None
+        # Used to keep track of the auto_renew thread
+        self._auto_renew_thread = None
+        self._auto_renew_thread_flag = threading.Event()
 
-    def subscribe(self, requested_timeout=None):
+    def subscribe(self, requested_timeout=None, auto_renew=False):
         """ Subscribe to the service.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
         :attrib:`timeout` on return to find out what period of validity is
-        actually allocated. """
+        actually allocated.
+
+        Note:
+            SoCo will try to unsubscribe any subscriptions which are still
+            subscribed on program termination, but it is good practice for
+            you to clean up by making sure that you call :meth:`unsubscribe`
+            yourself.
+
+        Args:
+            requested_timeout(int, optional): The timeout to be requested
+            auto_renew:(bool, optional): If True, renew the subscription
+                automatically shortly before timeout. Default False
+        """
+
+        class AutoRenewThread(threading.Thread):
+            """ Used by the auto_renew code to renew a subscription from
+                within a thread.
+                """
+
+            def __init__(self, interval, stop_flag, sub, *args, **kwargs):
+                super(AutoRenewThread, self).__init__(*args, **kwargs)
+                self.interval = interval
+                self.sub = sub
+                self.stop_flag = stop_flag
+                self.daemon = True
+
+            def run(self):
+                sub = self.sub
+                stop_flag = self.stop_flag
+                interval = self.interval
+                while not stop_flag.wait(interval):
+                    log.debug("Autorenewing subscription %s", sub.sid)
+                    sub.renew()
 
         # TIMEOUT is provided for in the UPnP spec, but it is not clear if
         # Sonos pays any attention to it. A timeout of 86400 secs always seems
         # to be allocated
-
+        self.requested_timeout = requested_timeout
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot resubscribe instance once unsubscribed')
@@ -261,6 +300,19 @@ class Subscription(object):
         # And do the same for the sid to service mapping
         with _sid_to_service_lock:
             _sid_to_service[self.sid] = self.service
+        # Register this subscription to be unsubscribed at exit if still alive
+        # This will not happen if exit is abnormal (eg in response to a
+        # signal or fatal interpreter error - see the docs for `atexit`).
+        atexit.register(self.unsubscribe)
+
+        # Set up auto_renew
+        if not auto_renew:
+            return
+        # Autorenew just before expiry, say at 85% of self.timeout seconds
+        interval = self.timeout * 85/100
+        auto_renew_thread = AutoRenewThread(
+            interval, self._auto_renew_thread_flag, self)
+        auto_renew_thread.start()
 
     def renew(self, requested_timeout=None):
         """Renew the event subscription.
@@ -268,10 +320,21 @@ class Subscription(object):
         You should not try to renew a subscription which has been
         unsubscribed, or once it has expired.
 
+        Args:
+            requested_timeout (int, optional): The period for which a renewal
+                request should be made. If None (the default), use the timeout
+                requested on subscription.
+
         """
+        # NB This code is sometimes called from a separate thread (when
+        # subscriptions are auto-renewed. Be careful to ensure thread-safety
+
         if self._has_been_unsubscribed:
             raise SoCoException(
                 'Cannot renew subscription once unsubscribed')
+        if not self.is_subscribed:
+            raise SoCoException(
+                'Cannot renew subscription before subscribing')
         if self.time_left == 0:
             raise SoCoException(
                 'Cannot renew subscription after expiry')
@@ -280,10 +343,11 @@ class Subscription(object):
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
         # TIMEOUT: Second-requested subscription duration (optional)
-
         headers = {
             'SID': self.sid
         }
+        if requested_timeout is None:
+            requested_timeout = self.requested_timeout
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{0}".format(requested_timeout)
         response = requests.request(
@@ -312,6 +376,14 @@ class Subscription(object):
         Once unsubscribed, a Subscription instance should not be reused
 
         """
+        # Trying to unsubscribe if already unsubscribed, or not yet
+        # subscribed, fails silently
+        if self._has_been_unsubscribed or not self.is_subscribed:
+            return
+
+        # Cancel any auto renew
+        self._auto_renew_thread_flag.set()
+        # Send an unsubscribe request like this:
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
         # SID: uuid:subscription UUID
