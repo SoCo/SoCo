@@ -270,7 +270,7 @@ class SoCo(_SocoSingletonBase):
     @player_name.setter
     def player_name(self, playername):
         """ Set the speaker's name """
-        self.deviceProperties.SetZoneAtrributes([
+        self.deviceProperties.SetZoneAttributes([
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')

@@ -328,7 +328,7 @@ class TestDeviceProperties:
 
     def test_soco_set_player_name(self, moco):
         moco.player_name = 'μИⅠℂ☺ΔЄ💋'
-        moco.deviceProperties.SetZoneAtrributes.assert_called_once_with(
+        moco.deviceProperties.SetZoneAttributes.assert_called_once_with(
             [('DesiredZoneName', 'μИⅠℂ☺ΔЄ💋'),
                 ('DesiredIcon', ''),
                 ('DesiredConfiguration', '')]
