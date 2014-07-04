@@ -16,6 +16,7 @@ import requests
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
+from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI
@@ -238,6 +239,7 @@ class SoCo(_SocoSingletonBase):
         self.deviceProperties = DeviceProperties(self)
         self.renderingControl = RenderingControl(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
+        self.alarmClock = AlarmClock(self)
 
         # Some private attributes
         self._all_zones = set()
@@ -359,10 +361,9 @@ class SoCo(_SocoSingletonBase):
     @play_mode.setter
     def play_mode(self, playmode):
         """ Set the speaker's mode """
-        modes = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
         playmode = playmode.upper()
-        if playmode not in modes:
-            raise KeyError('invalid play mode')
+        if playmode not in PLAY_MODES:
+            raise KeyError("'%s' is not a valid play mode" % playmode)
 
         self.avTransport.SetPlayMode([
             ('InstanceID', 0),
@@ -1429,3 +1430,5 @@ RADIO_SHOWS = 1
 NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
       '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
+# Valid play modes
+PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')

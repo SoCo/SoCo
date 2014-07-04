@@ -533,6 +533,10 @@ class AlarmClock(Service):
     """ Sonos alarm service, for setting and getting time and alarms. """
     def __init__(self, soco):
         super(AlarmClock, self).__init__(soco)
+        self.UPNP_ERRORS.update(
+            {
+                801: 'Already an alarm for this time',
+            })
 
 
 class MusicServices(Service):
