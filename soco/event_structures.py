@@ -50,7 +50,7 @@ class LastChangeEvent(object):
 
         instanceid = last_change_xml.find('{0}InstanceID'.format(avtns))
         if instanceid is None:
-            log.debug("No InstanceID found %s" % xmlstr)
+            log.debug("No InstanceID found %s", xmlstr)
             return None
 
         result = {}
@@ -75,7 +75,7 @@ class LastChangeEvent(object):
         current_track_md = LastChangeEvent._get_val_data(
             avtns, instanceid, 'CurrentTrackMetaData')
         if (current_track_md is not None) and (current_track_md != ""):
-            log.debug("CurrentTrackMetaData: %s" % current_track_md)
+            log.debug("CurrentTrackMetaData: %s", current_track_md)
 
             try:
                 ctrack_metadata_xml = XML.fromstring(current_track_md)
@@ -111,7 +111,7 @@ class LastChangeEvent(object):
         next_track_metadata = LastChangeEvent._get_val_data(
             rns, instanceid, 'NextTrackMetaData')
         if (next_track_metadata is not None) and (next_track_metadata != ""):
-            log.debug("NextTrackMetaData: %s" % next_track_metadata)
+            log.debug("NextTrackMetaData: %s", next_track_metadata)
             try:
                 next_track_metadata_xml = XML.fromstring(next_track_metadata)
             except Exception as exc:
@@ -141,7 +141,7 @@ class LastChangeEvent(object):
         transportmetadata = LastChangeEvent._get_val_data(
             rns, instanceid, 'EnqueuedTransportURIMetaData')
         if (transportmetadata is not None) and (transportmetadata != ""):
-            log.debug("EnqueuedTransportURIMetaData: %s" % transportmetadata)
+            log.debug("EnqueuedTransportURIMetaData: %s", transportmetadata)
             try:
                 transport_xml = XML.fromstring(transportmetadata)
             except Exception as exc:
