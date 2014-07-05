@@ -65,7 +65,15 @@ def prettify(unicode_text):
 
 
 def show_xml(xml):
-    """Prettyprint xml"""
+    """Pretty print an ElementTree XML object
+
+    Args:
+        xml (ElementTree): The :py:class:`xml.etree.ElementTree` to pretty
+            print
+
+    NOTE: This function is a convenience function used during development, it
+    is not used anywhere in the main code base
+    """
     string = XML.tostring(xml)
     print(prettify(string))
 

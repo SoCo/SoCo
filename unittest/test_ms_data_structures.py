@@ -4,13 +4,11 @@
 """Unit tests for the music service data structures"""
 
 from __future__ import unicode_literals
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
-
-import pytest
 from xml.sax.saxutils import escape
+import pytest
+
+from soco.xml import XML
+
 from soco.data_structures import MSTrack, MSAlbum, MSArtist, \
     MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
 from soco.exceptions import CannotCreateDIDLMetadata
