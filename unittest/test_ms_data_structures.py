@@ -182,7 +182,7 @@ MS_PLAYLIST_SEARCH_DICT = {
 class FakeMusicService(object):
     """A fake music service"""
     def __init__(self, username):
-        self.description = 'SA_RINCON5127_{}'.format(username)
+        self.description = 'SA_RINCON5127_{0}'.format(username)
         self.service_id = 20
 
     @staticmethod
