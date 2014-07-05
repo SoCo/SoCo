@@ -50,6 +50,7 @@ class LastChangeEvent(object):
 
         instanceid = last_change_xml.find('{0}InstanceID'.format(avtns))
         if instanceid is None:
+            log.debug("No InstanceID found %s" % xmlstr)
             return None
 
         result = {}
@@ -71,14 +72,16 @@ class LastChangeEvent(object):
             avtns, instanceid, 'CurrentTrackDuration')
 
         # The current track meta data is embedded XML
-        current_track_metadata = LastChangeEvent._get_val_data(
+        current_track_md = LastChangeEvent._get_val_data(
             avtns, instanceid, 'CurrentTrackMetaData')
-        if current_track_metadata is not None:
+        if (current_track_md is not None) and (current_track_md != ""):
+            log.debug("CurrentTrackMetaData: %s" % current_track_md)
+
             try:
-                ctrack_metadata_xml = XML.fromstring(current_track_metadata)
+                ctrack_metadata_xml = XML.fromstring(current_track_md)
             except Exception as exc:
                 # Not valid XML
-                log.exception(current_track_metadata)
+                log.exception(current_track_md)
                 log.exception(str(exc))
                 return None
 
@@ -107,7 +110,8 @@ class LastChangeEvent(object):
         # The next track meta data is embedded XML
         next_track_metadata = LastChangeEvent._get_val_data(
             rns, instanceid, 'NextTrackMetaData')
-        if next_track_metadata is not None:
+        if (next_track_metadata is not None) and (next_track_metadata != ""):
+            log.debug("NextTrackMetaData: %s" % next_track_metadata)
             try:
                 next_track_metadata_xml = XML.fromstring(next_track_metadata)
             except Exception as exc:
@@ -136,7 +140,8 @@ class LastChangeEvent(object):
         # The transport meta data is embedded XML
         transportmetadata = LastChangeEvent._get_val_data(
             rns, instanceid, 'EnqueuedTransportURIMetaData')
-        if transportmetadata is not None:
+        if (transportmetadata is not None) and (transportmetadata != ""):
+            log.debug("EnqueuedTransportURIMetaData: %s" % transportmetadata)
             try:
                 transport_xml = XML.fromstring(transportmetadata)
             except Exception as exc:
