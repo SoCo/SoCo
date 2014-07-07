@@ -567,6 +567,33 @@ class MLAlbumList(MusicLibraryItem):
     item_class = 'object.container.albumlist'
 
 
+class MLSameArtist(MusicLibraryItem):
+    """Class that represents all by the artist.
+
+    This type is returned by browsing an artist or a composer
+
+    :ivar item_class: The item_class for MLSameArtist is
+        'object.container.playlistContainer.sameArtist'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLSameArtist from XML is
+        inherited from :py:class:`.MusicLibraryItem`.
+
+    """
+
+    item_class = 'object.container.playlistContainer.sameArtist'
+
+    def __init__(self, uri, title, parent_id):
+        """Instantiate the MLSameArtist item by passing the arguments to the
+        super class :py:meth:`.MusicLibraryItem.__init__`.
+
+        :param uri: The URI for the composer
+        :param title: The title of the composer
+        :param item_class: The parent ID for the composer
+
+        """
+        MusicLibraryItem.__init__(self, uri, title, parent_id)
+
+
 ###############################################################################
 # MUSIC LIBRARY                                                               #
 ###############################################################################
@@ -1267,7 +1294,9 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container.person.composer': MLComposer,
                        'object.container.playlistContainer': MLPlaylist,
                        'object.container': MLShare,
-                       'object.container.albumlist': MLAlbumList}
+                       'object.container.albumlist': MLAlbumList,
+                       'object.container.playlistContainer.sameArtist':
+                           MLSameArtist}
 
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
