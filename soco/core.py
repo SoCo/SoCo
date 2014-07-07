@@ -1253,23 +1253,12 @@ class SoCo(_SocoSingletonBase):
                               'sonos_playlists': 'SQ:',
                               'categories': 'A:'}
         search = search_translation[search_type]
-        response = self.contentDirectory.Browse([
-            ('ObjectID', search),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', start),
-            ('RequestedCount', max_items),
-            ('SortCriteria', '')
-            ])
-
-        dom = XML.fromstring(really_utf8(response['Result']))
-
-        # Get result information
-        out = {'item_list': [], 'search_type': search_type}
-        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
-            out[camel_to_underscore(tag)] = int(response[tag])
+        response, out = self._music_lib_search(search, start, max_items)
+        out['search_type'] = search_type
+        out['item_list'] = []
 
         # Parse the results
+        dom = XML.fromstring(really_utf8(response['Result']))
         for container in dom:
             if search_type == 'sonos_playlists':
                 item = MLSonosPlaylist.from_xml(container)
@@ -1279,6 +1268,71 @@ class SoCo(_SocoSingletonBase):
             out['item_list'].append(item)
 
         return out
+
+    def browse(self, ml_item=None, start=0, max_items=100):
+        """Browse (get sub-elements) a music library item
+
+        Keyword arguments:
+            ml_item (MusicLibraryItem): The MusicLibraryItem to browse, if left
+                out or passed None, the items at the base level will be
+                returned
+            start (int): The starting index of the results
+            max_items (int): The maximum number of items to return
+
+        Returns:
+            dict: A dictionary with metadata for the search, with the
+                keys 'number_returned', 'update_id', 'total_matches' and an
+                'item_list' list with the search results.
+
+        Raises:
+            AttributeError: If ``ml_item`` has no ``item_id`` attribute
+            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
+                browsed
+        """
+        if ml_item is None:
+            search = 'A:'
+        else:
+            search = ml_item.item_id
+
+        response, out = self._music_lib_search(search, start, max_items)
+        out['search_type'] = 'browse'
+        out['item_list'] = []
+
+        # Parse the results
+        dom = XML.fromstring(really_utf8(response['Result']))
+        for container in dom:
+            item = get_ml_item(container)
+            out['item_list'].append(item)
+
+        return out
+
+    def _music_lib_search(self, search, start, max_items):
+        """Perform a music library search and extract search numbers
+
+        Args:
+            search (str): The ID to search
+            start: The index of the forst item to return
+            max_items: The maximum number of items to return
+
+        Returns:
+            tuple: (response, metadata) where response is the returned metadata
+                and metadata is a dict with the 'number_returned',
+                'total_matches' and 'update_id' integers
+        """
+        response = self.contentDirectory.Browse([
+            ('ObjectID', search),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', start),
+            ('RequestedCount', max_items),
+            ('SortCriteria', '')
+            ])
+
+        # Get result information
+        metadata = {}
+        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+            metadata[camel_to_underscore(tag)] = int(response[tag])
+        return response, metadata
 
     def add_uri_to_queue(self, uri):
         """Adds the URI to the queue
