@@ -351,21 +351,6 @@ class MLTrack(MusicLibraryItem):
         'original_track_number': ('upnp', 'originalTrackNumber')
     }
 
-    def __init__(self, uri, title, parent_id, **kwargs):
-        r"""Instantiate the MLTrack item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the track
-        :param title: The title of the track
-        :param item_class: The UPnP class for the track. The default value is:
-            ``object.item.audioItem.musicTrack``
-        :param \*\*kwargs: Optional extra information items, valid keys are:
-            ``album``, ``album_art_uri``, ``creator``,
-            ``original_track_number``. ``original_track_number`` is an ``int``.
-            All other values are unicode objects.
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id, **kwargs)
-
     @property
     def item_id(self):  # pylint: disable=C0103
         """Return the id."""
@@ -447,19 +432,6 @@ class MLAlbum(MusicLibraryItem):
         'uri': ('', 'res')
     }
 
-    def __init__(self, uri, title, parent_id, **kwargs):
-        r"""Instantiate the MLAlbum item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the alum
-        :param title: The title of the album
-        :param parent_id: The parent ID for the album
-        :param \*\*kwargs: Optional extra information items, valid keys are:
-            ``album_art_uri`` and ``creator``. All value should be unicode
-            objects.
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id, **kwargs)
-
     @property
     def creator(self):
         """Get and set the creator as an unicode object."""
@@ -515,17 +487,6 @@ class MLGenre(MusicLibraryItem):
 
     item_class = 'object.container.genre.musicGenre'
 
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLGenre item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the genre
-        :param title: The title of the genre
-        :param parent_id: The parent ID for the genre
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
-
 
 class MLComposer(MusicLibraryItem):
     """Class that represents a music library composer.
@@ -540,17 +501,6 @@ class MLComposer(MusicLibraryItem):
 
     item_class = 'object.container.person.composer'
 
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLComposer item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the composer
-        :param title: The title of the composer
-        :param item_class: The parent ID for the composer
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
-
 
 class MLPlaylist(MusicLibraryItem):
     """Class that represents a music library play list.
@@ -564,17 +514,6 @@ class MLPlaylist(MusicLibraryItem):
     """
 
     item_class = 'object.container.playlistContainer'
-
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLPlaylist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the playlist
-        :param title: The title of the playlist
-        :param parent_id: The parent ID for the playlist
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
 
     @property
     def item_id(self):  # pylint: disable=C0103
@@ -600,17 +539,6 @@ class MLSonosPlaylist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer'
 
-    def __init__(self, uri, title, parent_id):
-        """ Instantiate the MLSonosPlaylist item by passing the arguments to
-        the super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the playlist
-        :param title: The title of the playlist
-        :param parent_id: The parent_id for the playlist
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
-
 
 class MLShare(MusicLibraryItem):
     """Class that represents a music library share.
@@ -623,17 +551,6 @@ class MLShare(MusicLibraryItem):
     """
 
     item_class = 'object.container'
-
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLShare item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the share
-        :param title: The title of the share
-        :param parent_id: The parent ID for the share
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
 class MLAlbumList(MusicLibraryItem):
@@ -648,17 +565,6 @@ class MLAlbumList(MusicLibraryItem):
     """
 
     item_class = 'object.container.albumlist'
-
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLAlbumList item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the composer
-        :param title: The title of the composer
-        :param item_class: The parent ID for the composer
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
 ###############################################################################
