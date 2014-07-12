@@ -1309,6 +1309,20 @@ class SoCo(_SocoSingletonBase):
     def _music_lib_search(self, search, start, max_items):
         """Perform a music library search and extract search numbers
 
+        You can get an overview of all the relevant search prefixes (like
+        'A:') and their meaning with the request:
+
+        .. code ::
+
+         response = device.contentDirectory.Browse([
+             ('ObjectID', '0'),
+             ('BrowseFlag', 'BrowseDirectChildren'),
+             ('Filter', '*'),
+             ('StartingIndex', 0),
+             ('RequestedCount', 100),
+             ('SortCriteria', '')
+         ])
+
         Args:
             search (str): The ID to search
             start: The index of the forst item to return
