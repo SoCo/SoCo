@@ -30,7 +30,9 @@ XML_TEMPLATE = """
     """
 XML_TEMPLATE = textwrap.dedent(XML_TEMPLATE).replace('\n', '').strip()
 
-# Example XML and the content dict to compare with
+##############################################################################
+# Example XML and the content dict to compare with for ML items              #
+##############################################################################
 TRACK_XML = """
 <item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -210,6 +212,10 @@ SHARE_DICT = {
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#S://TLE-SERVER/share',
     'title': '//TLE-SERVER/share'
 }
+
+##############################################################################
+# Example XML and the content dict to compare with for Queue item            #
+##############################################################################
 QUEUE_XML1 = """
 <item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -269,6 +275,7 @@ QUEUE_DICT2 = {
 }
 
 
+
 # Helper test functions
 def set_and_get_test(instance, content, key):
     """Test get and set of a single unicode attribute
@@ -316,49 +323,6 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
     xml = XML_TEMPLATE.format(parent_id=parent_id, item_id=item_id,
                               title=title, **content1)
     assert XML.tostring(instance.didl_metadata).decode() == xml
-
-    # Test common attributes
-    for key in ['uri', 'title', 'item_class']:
-        set_and_get_test(instance, content, key)
-
-    # Test equals (should fail if we change any attribute)
-    assert instance == instance3
-    for key in content.keys():
-        original = getattr(instance3, key)
-        if key == 'original_track_number':
-            setattr(instance3, key, original + 1)
-        else:
-            setattr(instance3, key, original + '!addition¡')
-        assert instance != instance3
-        setattr(instance3, key, original)
-
-    # Test default class and None for un-assigned attributes
-    instance4 = instance.__class__(content['uri'], content['title'])
-    assert instance4.item_class == item_dict['item_class']
-    for key in content.keys():
-        if key not in ['uri', 'title', 'item_class']:
-            assert getattr(instance4, key) is None
-
-
-def common_tests_queue(parent_id, instance, content, item_xml,
-                       item_dict):
-    """Test all the common methods inherited from MusicLibraryItem
-
-    :param parent_id: The parent ID of the class
-    :param item_id: The expected item_id result for instance
-    :param instance: The main object to be tested
-    :param content: The content dict that corresponds to instance
-    :param item_xml: A real XML example for from_xml
-    :param item_dict: The content dict result corresponding to item_xml
-    """
-    # from_xml, this test uses real data examples
-    instance2 = instance.__class__.from_xml(
-        XML.fromstring(item_xml.encode('utf8')))
-    assert instance2.to_dict == item_dict
-
-    # from_dict and to_dict
-    instance3 = instance.__class__.from_dict(content)
-    assert instance3.to_dict == content
 
     # Test common attributes
     for key in ['uri', 'title', 'item_class']:
@@ -555,8 +519,36 @@ def test_queue_item():
     content.update(kwargs)
     track = data_structures.QueueItem(uri, TITLE, 'dummy.class', **kwargs)
 
-    # Run tests on inherited methods and attributes
-    common_tests_queue('Q:0', track, content, QUEUE_XML1, QUEUE_DICT1)
+    # from_xml, this test uses real data examples
+    instance2 = track.__class__.from_xml(
+        XML.fromstring(QUEUE_XML1.encode('utf8')))
+    assert instance2.to_dict == QUEUE_DICT1
+
+    # from_dict and to_dict
+    instance3 = track.__class__.from_dict(content)
+    assert instance3.to_dict == content
+
+    # Test common attributes
+    for key in ['uri', 'title', 'item_class']:
+        set_and_get_test(track, content, key)
+
+    # Test equals (should fail if we change any attribute)
+    assert track == instance3
+    for key in content.keys():
+        original = getattr(instance3, key)
+        if key == 'original_track_number':
+            setattr(instance3, key, original + 1)
+        else:
+            setattr(instance3, key, original + '!addition¡')
+        assert track != instance3
+        setattr(instance3, key, original)
+
+    # Test default class and None for un-assigned attributes
+    instance4 = track.__class__(content['uri'], content['title'])
+    assert instance4.item_class == QUEUE_DICT1['item_class']
+    for key in content.keys():
+        if key not in ['uri', 'title', 'item_class']:
+            assert getattr(instance4, key) is None
 
     # Test class specific attributes
     for key in ['album', 'album_art_uri', 'creator']:

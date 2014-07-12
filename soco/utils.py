@@ -2,7 +2,7 @@
 
 """ Provides general utility functions to be used across modules """
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import unicode_literals, absolute_import, print_function
 
 import re
 import threading
@@ -10,6 +10,7 @@ import functools
 import warnings
 from time import time
 from .compat import StringType, UnicodeType, dumps
+from .xml import XML
 
 
 def really_unicode(in_string):
@@ -63,6 +64,20 @@ def prettify(unicode_text):
     import xml.dom.minidom
     reparsed = xml.dom.minidom.parseString(unicode_text.encode('utf-8'))
     return reparsed.toprettyxml(indent="  ", newl="\n")
+
+
+def show_xml(xml):
+    """Pretty print an ElementTree XML object
+
+    Args:
+        xml (ElementTree): The :py:class:`xml.etree.ElementTree` to pretty
+            print
+
+    NOTE: This function is a convenience function used during development, it
+    is not used anywhere in the main code base
+    """
+    string = XML.tostring(xml)
+    print(prettify(string))
 
 
 class TimedCache(object):
