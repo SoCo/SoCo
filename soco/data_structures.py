@@ -553,6 +553,19 @@ class MLShare(MusicLibraryItem):
     item_class = 'object.container'
 
 
+class MLCategory(MusicLibraryItem):
+    """Class that represents a music library category.
+
+    :ivar item_class: The item_class for the MLCategory is 'object.container'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLCategory from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+
+    """
+
+    item_class = 'object.container'
+
+
 class MLAlbumList(MusicLibraryItem):
     """Class that represents a music library album list.
 
@@ -1293,7 +1306,7 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container.genre.musicGenre': MLGenre,
                        'object.container.person.composer': MLComposer,
                        'object.container.playlistContainer': MLPlaylist,
-                       'object.container': MLShare,
+                       'object.container': MLCategory,
                        'object.container.albumlist': MLAlbumList,
                        'object.container.playlistContainer.sameArtist':
                            MLSameArtist}

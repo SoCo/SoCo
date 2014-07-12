@@ -19,7 +19,8 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist
+from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
+    MLShare
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 
@@ -1262,6 +1263,8 @@ class SoCo(_SocoSingletonBase):
         for container in dom:
             if search_type == 'sonos_playlists':
                 item = MLSonosPlaylist.from_xml(container)
+            elif search_type == 'share':
+                item = MLShare.from_xml(container)
             else:
                 item = get_ml_item(container)
             # Append the item to the list
