@@ -8,6 +8,7 @@ from __future__ import unicode_literals
 
 import logging
 from .xml import XML
+from .utils import really_utf8
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -33,6 +34,8 @@ class LastChangeEvent(object):
         :param xmlStr: The xml in string form to create the class from
         """
         try:
+            # Need to handle character encoding
+            xmlstr = really_utf8(xmlstr)
             # Read in the XML
             last_change_xml = XML.fromstring(xmlstr)
         except Exception as exc:
@@ -76,8 +79,8 @@ class LastChangeEvent(object):
             avtns, instanceid, 'CurrentTrackMetaData')
         if (current_track_md is not None) and (current_track_md != ""):
             log.debug("CurrentTrackMetaData: %s", current_track_md)
-
             try:
+                current_track_md = current_track_md.encode('utf-8')
                 ctrack_metadata_xml = XML.fromstring(current_track_md)
             except Exception as exc:
                 # Not valid XML
@@ -113,6 +116,7 @@ class LastChangeEvent(object):
         if (next_track_metadata is not None) and (next_track_metadata != ""):
             log.debug("NextTrackMetaData: %s", next_track_metadata)
             try:
+                next_track_metadata = next_track_metadata.encode('utf-8')
                 next_track_metadata_xml = XML.fromstring(next_track_metadata)
             except Exception as exc:
                 # Not valid XML
@@ -143,6 +147,7 @@ class LastChangeEvent(object):
         if (transportmetadata is not None) and (transportmetadata != ""):
             log.debug("EnqueuedTransportURIMetaData: %s", transportmetadata)
             try:
+                transportmetadata = transportmetadata.encode('utf-8')
                 transport_xml = XML.fromstring(transportmetadata)
             except Exception as exc:
                 # Not valid XML
