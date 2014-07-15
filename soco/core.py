@@ -1091,11 +1091,13 @@ class SoCo(_SocoSingletonBase):
 
         return playstate
 
-    def get_queue(self, start=0, max_items=100):
+    def get_queue(self, start=0, max_items=100, full_album_art_uri=False):
         """ Get information about the queue
 
         :param start: Starting number of returned matches
         :param max_items: Maximum number of returned matches
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
         :returns: A list of :py:class:`~.soco.data_structures.QueueItem`.
 
         This method is heavly based on Sam Soffes (aka soffes) ruby
@@ -1119,6 +1121,9 @@ class SoCo(_SocoSingletonBase):
         for element in result_dom.findall(
                 '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
             item = QueueItem.from_xml(element)
+            # Check if the album art URI should be fully qualified
+            if full_album_art_uri:
+                self._update_album_art_to_full_uri(item)
             queue.append(item)
 
         return queue
@@ -1203,7 +1208,7 @@ class SoCo(_SocoSingletonBase):
         return out
 
     def get_music_library_information(self, search_type, start=0,
-                                      max_items=100):
+                                      max_items=100, full_album_art_uri=False):
         """ Retrieve information about the music library
 
         :param search_type: The kind of information to retrieve. Can be one of:
@@ -1216,6 +1221,8 @@ class SoCo(_SocoSingletonBase):
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
         :returns: A dictionary with metadata for the search, with the
             keys 'number_returned', 'update_id', 'total_matches' and an
             'item_list' list with the search results. The search results
@@ -1268,6 +1275,9 @@ class SoCo(_SocoSingletonBase):
         # Parse the results
         for container in dom:
             item = get_ml_item(container)
+            # Check if the album art URI should be fully qualified
+            if full_album_art_uri:
+                self._update_album_art_to_full_uri(item)
             # Append the item to the list
             out['item_list'].append(item)
 
@@ -1420,6 +1430,21 @@ class SoCo(_SocoSingletonBase):
         result['favorites'] = favorites
 
         return result
+
+    def _update_album_art_to_full_uri(self, item):
+        """Updated the Album Art URI to be fully qualified
+
+        :param item: The item to update the URI for
+        """
+        if not hasattr(item, 'album_art_uri'):
+            return
+
+        # Add on the full album art link, as the URI version
+        # does not include the ipaddress
+        if (item.album_art_uri is not None) and (item.album_art_uri != ""):
+            if not item.album_art_uri.startswith(('http:', 'https:')):
+                item.album_art_uri = 'http://' + self.ip_address +\
+                    ':1400' + item.album_art_uri
 
 
 # definition section
