@@ -4,13 +4,14 @@ from __future__ import unicode_literals
 from mock import patch, Mock
 
 from soco import discover
+from soco import config
 
 IP_ADDR = '192.168.1.101'
 TIMEOUT = 5
 
 @patch('socket.socket', spec=True)
 @patch('select.select', spec=True)
-@patch('soco.core.SoCo')
+@patch('soco.config.SOCO_CLASS')
 class TestDiscover:
     def test_discover(self, mock_soco, mock_select, mock_socket):
         socket = mock_socket.return_value
