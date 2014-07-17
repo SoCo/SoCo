@@ -22,6 +22,7 @@ from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
+from soco import config
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +67,7 @@ def discover(timeout=1, include_invisible=False):
         # for the topology to find the other players. It is much more efficient
         # to rely upon the Zone Player's ability to find the others, than to
         # wait for query responses from them ourselves.
-        zone = SoCo(addr[0])
+        zone = config.SOCO_CLASS(addr[0])
         if include_invisible:
             return zone.all_zones
         else:
@@ -743,7 +744,7 @@ class SoCo(_SocoSingletonBase):
                 member_attribs = member_element.attrib
                 ip_addr = member_attribs['Location'].\
                     split('//')[1].split(':')[0]
-                zone = SoCo(ip_addr)
+                zone = config.SOCO_CLASS(ip_addr)
                 zone._uid = member_attribs['UUID']
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
@@ -1432,3 +1433,6 @@ NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
 # Valid play modes
 PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
+
+if config.SOCO_CLASS is None:
+    config.SOCO_CLASS = SoCo
