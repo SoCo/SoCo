@@ -9,6 +9,7 @@ import functools
 import warnings
 
 from .compat import StringType, UnicodeType
+from .xml import XML
 
 
 def really_unicode(in_string):
