@@ -62,7 +62,7 @@ TRACK_DICT = {
                      '\n%2fshare%2fogg%2fMozart%2520-%2520Orpheus%2520'
                      'Orchestra_convert%2f5-Mozart-\n...%2520-II%2520'
                      'Adagio.ogg&v=2',
-    'item_class': 'object.item.audioItem.musicTrack',
+    'parent_id': 'A:TRACKS',
     'original_track_number': 5}
 ALBUM_XML = """
 <container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
@@ -82,7 +82,7 @@ ogg&amp;v=2</upnp:albumArtURI>
 ALBUM_XML = ALBUM_XML.replace('\n', '')
 ALBUM_DICT = {
     'title': '...and Justice for All',
-    'item_class': 'object.container.album.musicAlbum',
+    'parent_id': 'A:ALBUM',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM/...and%20'
            'Justice%20for%20All',
     'album_art_uri': '/getaa?u=x-file-cifs%3a%2f%2fTLE-SERVER%2fshare%2fogg'
@@ -101,27 +101,9 @@ RINCON_000E5884455C01400#A:ARTIST/10%20Years</res>
 </container>"""
 ARTIST_XML = ARTIST_XML.replace('\n', '')
 ARTIST_DICT = {
-    'item_class': 'object.container.person.musicArtist',
+    'parent_id': 'A:ARTIST',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ARTIST/10%20Years',
     'title': '10 Years'
-}
-ALBUMARTIST_XML = """
-<container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
- xmlns:dc="http://purl.org/dc/elements/1.1/"
- xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
- id="A:ALBUMARTIST/3%20Doors%20Down" parentID="A:ALBUMARTIST"
- restricted="true">
-  <dc:title>3 Doors Down</dc:title>
-  <upnp:class>object.container.person.musicArtist</upnp:class>
-  <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_
-000E5884455C01400#A:ALBUMARTIST/3%20Doors%20Down</res>
-</container>"""
-ALBUMARTIST_XML = ALBUMARTIST_XML.replace('\n', '')
-ALBUMARTIST_DICT = {
-    'item_class': 'object.container.person.musicArtist',
-    'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUMARTIST/'
-           '3%20Doors%20Down',
-    'title': '3 Doors Down'
 }
 GENRE_XML = """
 <container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
@@ -135,7 +117,7 @@ RINCON_000E5884455C01400#A:GENRE/Acid</res>
 </container>"""
 GENRE_XML = GENRE_XML.replace('\n', '')
 GENRE_DICT = {
-    'item_class': 'object.container.genre.musicGenre',
+    'parent_id': 'A:GENRE',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:GENRE/Acid',
     'title': 'Acid'
 }
@@ -153,7 +135,7 @@ Smith</res>
 </container>"""
 COMPOSER_XML = COMPOSER_XML.replace('\n', '')
 COMPOSER_DICT = {
-    'item_class': 'object.container.person.composer',
+    'parent_id': 'A:COMPOSER',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:COMPOSER/'
            'A.%20Kiedis%2fFlea%2fJ.%20Frusciante%2fC.%20Smith',
     'title': 'A. Kiedis/Flea/J. Frusciante/C. Smith'
@@ -176,7 +158,7 @@ share/mp3/Trentem%c3%b8ller%20-%20The%20Trentem%c3%b8ller%20Chronicles/
 </container>"""
 PLAYLIST_XML = PLAYLIST_XML.replace('\n', '')
 PLAYLIST_DICT = {
-    'item_class': 'object.container.playlistContainer',
+    'parent_id': 'A:PLAYLISTS',
     'uri': 'x-file-cifs://TLE-SERVER/share/mp3/Trentem%c3%b8ller%20-%20The%20'
            'Trentem%c3%b8ller%20Chronicles/-%3dTrentem%c3%b8ller%20-%20The%20'
            'Trentem%c3%b8ller%20Chronicles%20(CD%201).m3u',
@@ -193,7 +175,7 @@ SONOS_PLAYLIST_XML = """
 </container>"""
 SONOS_PLAYLIST_XML = SONOS_PLAYLIST_XML.replace('\n', '')
 SONOS_PLAYLIST_DICT = {
-    'item_class': 'object.container.playlistContainer',
+    'parent_id': 'SQ:',
     'uri': 'file:///jffs/settings/savedqueues.rsq#13 title: Koop',
     'title': 'Koop'}
 SHARE_XML = """
@@ -208,14 +190,27 @@ SHARE_XML = """
 </container>"""
 SHARE_XML = SHARE_XML.replace('\n', '')
 SHARE_DICT = {
-    'item_class': 'object.container',
+    'parent_id': 'S:',
     'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#S://TLE-SERVER/share',
     'title': '//TLE-SERVER/share'
 }
-
-##############################################################################
-# Example XML and the content dict to compare with for Queue item            #
-##############################################################################
+ALBUMLIST_XML = """
+<container xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" id="A:ALBUM"
+ parentID="A:" restricted="true">
+  <dc:title>Albums</dc:title>
+  <upnp:class>object.container.albumlist</upnp:class>
+  <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_
+000E5884455C01400#A:ALBUM</res>
+</container>
+"""
+ALBUMLIST_XML = ALBUMLIST_XML.replace('\n', '')
+ALBUMLIST_DICT = {
+    'parent_id': 'A:',
+    'uri': 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM',
+    'title': 'Albums'
+}
 QUEUE_XML1 = """
 <item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
  xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -237,7 +232,7 @@ QUEUE_DICT1 = {
     'title': 'Airworthy',
     'uri': 'x-sonos-mms:AnyArtistTrack%3a126778459?sid=50&flags=32',
     'album_art_uri': '/getaa?s=1&u=x-sonos-mms%3aAnyArtistTrack%253a126778459'
-    '%3fsid%3d50%26flags%3d32',
+                     '%3fsid%3d50%26flags%3d32',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': None
 }
@@ -266,10 +261,10 @@ QUEUE_DICT2 = {
     'creator': 'Agnes Obel',
     'title': 'Falling, Catching',
     'uri': 'x-file-cifs://TLE-SERVER/share/flac/Agnes%20Obel%20-%20'
-    'Philharmonics/1%20-%20Falling,%20Catching.flac',
+           'Philharmonics/1%20-%20Falling,%20Catching.flac',
     'album_art_uri': '/getaa?u=x-file-cifs%3a%2f%2fTLE-SERVER%2fshare%2fflac'
-    '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-%2520Falling,'
-    '%2520Catching.flac&v=2',
+                     '%2fAgnes%2520Obel%2520-%2520Philharmonics%2f1%2520-'
+                     '%2520Falling,%2520Catching.flac&v=2',
     'item_class': 'object.item.audioItem.musicTrack',
     'original_track_number': 1
 }
@@ -294,7 +289,7 @@ def set_and_get_test(instance, content, key):
     setattr(instance, key, original)
 
 
-def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
+def common_tests(item_class, item_id, instance, content, item_xml, item_dict):
     """Test all the common methods inherited from MusicLibraryItem
 
     :param parent_id: The parent ID of the class
@@ -320,12 +315,13 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
     content1 = content.copy()
     content1.pop('title')
     title = 'Dummy title with non ascii chars &#230;&#248;&#229;'
-    xml = XML_TEMPLATE.format(parent_id=parent_id, item_id=item_id,
+    xml = XML_TEMPLATE.format(item_class=item_class, item_id=item_id,
                               title=title, **content1)
+
     assert XML.tostring(instance.didl_metadata).decode() == xml
 
     # Test common attributes
-    for key in ['uri', 'title', 'item_class']:
+    for key in ['uri', 'title', 'parent_id']:
         set_and_get_test(instance, content, key)
 
     # Test equals (should fail if we change any attribute)
@@ -339,11 +335,11 @@ def common_tests(parent_id, item_id, instance, content, item_xml, item_dict):
         assert instance != instance3
         setattr(instance3, key, original)
 
-    # Test default class and None for un-assigned attributes
-    instance4 = instance.__class__(content['uri'], content['title'])
-    assert instance4.item_class == item_dict['item_class']
+    # Test None for un-assigned attributes
+    instance4 = instance.__class__(content['uri'], content['title'],
+                                   content['parent_id'])
     for key in content.keys():
-        if key not in ['uri', 'title', 'item_class']:
+        if key not in ['uri', 'title', 'parent_id']:
             assert getattr(instance4, key) is None
 
 
@@ -354,13 +350,13 @@ def test_mltrack():
     uri = 'x-file-cifs://dummy_uri'
     kwargs = {'album': ALBUM, 'album_art_uri': ART_URI, 'creator': CREATOR,
               'original_track_number': 47}
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:TRACKS'}
     content.update(kwargs)
-    track = data_structures.MLTrack(uri, TITLE, 'dummy.class', **kwargs)
+    track = data_structures.MLTrack(uri, TITLE, 'A:TRACKS', **kwargs)
 
     # Run tests on inherited methods and attributes
-    common_tests('A:TRACKS', 'S://dummy_uri', track, content, TRACK_XML,
-                 TRACK_DICT)
+    common_tests('object.item.audioItem.musicTrack', 'S://dummy_uri',
+                 track, content, TRACK_XML, TRACK_DICT)
 
     # Test class specific attributes
     for key in ['album', 'album_art_uri', 'creator']:
@@ -377,13 +373,13 @@ def test_mlalbum():
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM/dummy_album'
     kwargs = {'album_art_uri': ART_URI, 'creator': CREATOR}
-    album = data_structures.MLAlbum(uri, TITLE, 'dummy.class', **kwargs)
+    album = data_structures.MLAlbum(uri, TITLE, 'A:ALBUM', **kwargs)
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:ALBUM'}
     content.update(kwargs)
-    common_tests('A:ALBUM', 'A:ALBUM/dummy_album', album, content, ALBUM_XML,
-                 ALBUM_DICT)
+    common_tests('object.container.album.musicAlbum', 'A:ALBUM/dummy_album',
+                 album, content, ALBUM_XML, ALBUM_DICT)
 
     # Test class specific attributes
     for key in ['album_art_uri', 'creator']:
@@ -394,37 +390,24 @@ def test_mlartist():
     """Test the MLArtist class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ARTIST/10%20Years'
-    artist = data_structures.MLArtist(uri, TITLE, 'dummy.class')
+    artist = data_structures.MLArtist(uri, TITLE, 'A:ARTIST')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('A:ARTIST', 'A:ARTIST/10%20Years', artist, content,
-                 ARTIST_XML, ARTIST_DICT)
-
-
-def test_mlalbumartist():
-    """Test the MLAlbumArtist class"""
-    # Set the tests up
-    uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUMARTIST/'\
-          '3%20Doors%20Down'
-    albumartist = data_structures.MLAlbumArtist(uri, TITLE, 'dummy.class')
-
-    # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('A:ALBUMARTIST', 'A:ALBUMARTIST/3%20Doors%20Down',
-                 albumartist, content, ALBUMARTIST_XML, ALBUMARTIST_DICT)
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:ARTIST'}
+    common_tests('object.container.person.musicArtist', 'A:ARTIST/10%20Years',
+                 artist, content, ARTIST_XML, ARTIST_DICT)
 
 
 def test_mlgenre():
     """Test the MLGenre class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:GENRE/Acid'
-    genre = data_structures.MLGenre(uri, TITLE, 'dummy.class')
+    genre = data_structures.MLGenre(uri, TITLE, 'A:GENRE')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('A:GENRE', 'A:GENRE/Acid', genre, content,
-                 GENRE_XML, GENRE_DICT)
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:GENRE'}
+    common_tests('object.container.genre.musicGenre', 'A:GENRE/Acid', genre,
+                 content, GENRE_XML, GENRE_DICT)
 
 
 def test_mlcomposer():
@@ -432,12 +415,12 @@ def test_mlcomposer():
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:COMPOSER/A.%20Kiedis'\
           '%2fFlea%2fJ.%20Frusciante%2fC.%20Smith'
-    composer = data_structures.MLComposer(uri, TITLE, 'dummy.class')
+    composer = data_structures.MLComposer(uri, TITLE, 'A:COMPOSER')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:COMPOSER'}
     common_tests(
-        'A:COMPOSER',
+        'object.container.person.composer',
         'A:COMPOSER/A.%20Kiedis%2fFlea%2fJ.%20Frusciante%2fC.%20Smith',
         composer, content, COMPOSER_XML, COMPOSER_DICT
     )
@@ -449,11 +432,12 @@ def test_mlplaylist():
     uri = 'x-file-cifs://TLE-SERVER/share/mp3/Trentem%c3%b8ller%20-%20The%20'\
           'Trentem%c3%b8ller%20Chronicles/-%3dTrentem%c3%b8ller%20-%20The%20'\
           'Trentem%c3%b8ller%20Chronicles%20(CD%201).m3u'
-    playlist = data_structures.MLPlaylist(uri, TITLE, 'dummy.class')
+    playlist = data_structures.MLPlaylist(uri, TITLE, 'A:PLAYLISTS')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('A:PLAYLISTS', 'S://TLE-SERVER/share/mp3/Trentem%c3%b8ller'
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:PLAYLISTS'}
+    common_tests('object.container.playlistContainer',
+                 'S://TLE-SERVER/share/mp3/Trentem%c3%b8ller'
                  '%20-%20The%20Trentem%c3%b8ller%20Chronicles/-%3d'
                  'Trentem%c3%b8ller%20-%20The%20Trentem%c3%b8ller%20'
                  'Chronicles%20(CD%201).m3u', playlist, content,
@@ -464,11 +448,11 @@ def test_mlsonosplaylist():
     """Test the MLSonosPlaylist class"""
     # Set the tests up
     uri = 'file:///jffs/settings/savedqueues.rsq#13 title: Koop'
-    playlist = data_structures.MLSonosPlaylist(uri, TITLE, 'dummy.class')
+    playlist = data_structures.MLSonosPlaylist(uri, TITLE, 'SQ:')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('SQ:', '13 title: Koop',
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'SQ:'}
+    common_tests('object.container.playlistContainer', '13 title: Koop',
                  playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
 
@@ -476,12 +460,24 @@ def test_mlshare():
     """Test the MLShare class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#S://TLE-SERVER/share'
-    share = data_structures.MLShare(uri, TITLE, 'dummy.class')
+    share = data_structures.MLShare(uri, TITLE, 'S:')
 
     # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    common_tests('S:', 'S://TLE-SERVER/share', share, content,
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'S:'}
+    common_tests('object.container', 'S://TLE-SERVER/share', share, content,
                  SHARE_XML, SHARE_DICT)
+
+
+def test_mlalbumlist():
+    """Test the MLAlbumList class"""
+    # Sets the tests up
+    uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM'
+    albumlist = data_structures.MLAlbumList(uri, TITLE, 'A:')
+
+    # Run tests on inherited methods and attributes
+    content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:'}
+    common_tests('object.container.albumlist', 'A:ALBUM', albumlist, content,
+                 ALBUMLIST_XML, ALBUMLIST_DICT)
 
 
 def test_ns_tag():
@@ -497,12 +493,20 @@ def test_ns_tag():
 
 def test_get_ml_item():
     """Test the get_ml_item medule function"""
-    xmls = [TRACK_XML, ALBUM_XML, ARTIST_XML, ALBUMARTIST_XML, GENRE_XML,
-            COMPOSER_XML, PLAYLIST_XML, SHARE_XML]
-    classes = [data_structures.MLTrack, data_structures.MLAlbum,
-               data_structures.MLArtist, data_structures.MLAlbumArtist,
-               data_structures.MLGenre, data_structures.MLComposer,
-               data_structures.MLPlaylist, data_structures.MLShare]
+    xmls = [TRACK_XML,
+            ALBUM_XML,
+            ARTIST_XML,
+            GENRE_XML,
+            COMPOSER_XML,
+            PLAYLIST_XML,
+            SHARE_XML]
+    classes = [data_structures.MLTrack,
+               data_structures.MLAlbum,
+               data_structures.MLArtist,
+               data_structures.MLGenre,
+               data_structures.MLComposer,
+               data_structures.MLPlaylist,
+               data_structures.MLShare]
     for xml, class_ in zip(xmls, classes):
         etree = XML.fromstring(xml.encode('utf-8'))
         item = data_structures.get_ml_item(etree)

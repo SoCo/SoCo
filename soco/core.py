@@ -19,7 +19,7 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem, URI
+from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 
@@ -1244,10 +1244,14 @@ class SoCo(_SocoSingletonBase):
         """
         search_translation = {'artists': 'A:ARTIST',
                               'album_artists': 'A:ALBUMARTIST',
-                              'albums': 'A:ALBUM', 'genres': 'A:GENRE',
-                              'composers': 'A:COMPOSER', 'tracks': 'A:TRACKS',
-                              'playlists': 'A:PLAYLISTS', 'share': 'S:',
-                              'sonos_playlists': 'SQ:'}
+                              'albums': 'A:ALBUM',
+                              'genres': 'A:GENRE',
+                              'composers': 'A:COMPOSER',
+                              'tracks': 'A:TRACKS',
+                              'playlists': 'A:PLAYLISTS',
+                              'share': 'S:',
+                              'sonos_playlists': 'SQ:',
+                              'categories': 'A:'}
         search = search_translation[search_type]
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
@@ -1267,7 +1271,10 @@ class SoCo(_SocoSingletonBase):
 
         # Parse the results
         for container in dom:
-            item = get_ml_item(container)
+            if search_type == 'sonos_playlists':
+                item = MLSonosPlaylist.from_xml(container)
+            else:
+                item = get_ml_item(container)
             # Append the item to the list
             out['item_list'].append(item)
 
