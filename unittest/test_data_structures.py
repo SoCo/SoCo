@@ -498,15 +498,13 @@ def test_get_ml_item():
             ARTIST_XML,
             GENRE_XML,
             COMPOSER_XML,
-            PLAYLIST_XML,
-            SHARE_XML]
+            PLAYLIST_XML]
     classes = [data_structures.MLTrack,
                data_structures.MLAlbum,
                data_structures.MLArtist,
                data_structures.MLGenre,
                data_structures.MLComposer,
-               data_structures.MLPlaylist,
-               data_structures.MLShare]
+               data_structures.MLPlaylist]
     for xml, class_ in zip(xmls, classes):
         etree = XML.fromstring(xml.encode('utf-8'))
         item = data_structures.get_ml_item(etree)
