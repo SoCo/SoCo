@@ -1539,6 +1539,26 @@ class SoCo(_SocoSingletonBase):
             item.album_art_uri = 'http://' + self.ip_address + ':1400' +\
                 item.album_art_uri
 
+    def create_sonos_playlist(self, title):
+        """ Create a new Sonos' playlist .
+
+        :params title: Name of the playlist
+
+        :returns: An instance of
+            :py:class:`~.soco.data_structures.MLSonosPlaylist`
+        """
+
+        response = self.avTransport.CreateSavedQueue([
+            ('InstanceID', 0),
+            ('Title', title),
+            ('EnqueuedURI', ''),
+            ('EnqueuedURIMetaData', ''),
+            ])
+
+        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(
+                response['AssignedObjectID'].split(':', 2)[1])
+
+        return MLSonosPlaylist(uri, title, 'SQ:')
 
 # definition section
 
