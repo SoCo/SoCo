@@ -1555,15 +1555,16 @@ class SoCo(_SocoSingletonBase):
             ('EnqueuedURIMetaData', ''),
             ])
 
-        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(
-                response['AssignedObjectID'].split(':', 2)[1])
+        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(obj_id)
 
         return MLSonosPlaylist(uri, title, 'SQ:')
 
     def add_track_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
         :param queueable_item: the item to add to the Sonos' playlist
-        :param sonos_playlist: the Sonos' playlist to which the item should be added
+        :param sonos_playlist: the Sonos' playlist to which the item should
+                               be added
         """
 
         # Check if the required attributes are there
@@ -1583,7 +1584,9 @@ class SoCo(_SocoSingletonBase):
         if isinstance(metadata, str):
             metadata = metadata.encode('utf-8')
 
-        update_id = self._music_lib_search(sonos_playlist.item_id, 0, 1)[0]['UpdateID']
+        update_id = self._music_lib_search(sonos_playlist.item_id,
+                                           0,
+                                           1)[0]['UpdateID']
         self.avTransport.AddURIToSavedQueue([
             ('InstanceID', 0),
             ('UpdateID', update_id),
