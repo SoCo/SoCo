@@ -196,6 +196,9 @@ class SoCo(_SocoSingletonBase):
         get_favorite_radio_shows -- Get favorite radio shows from Sonos'
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
+        create_sonos_playlist -- Creates a new Sonos' playlist
+        add_track_to_sonos_playlist -- Adds a queueable item to a Sonos'
+                                       playlist
 
     Properties::
 
@@ -1546,8 +1549,8 @@ class SoCo(_SocoSingletonBase):
 
         :returns: An instance of
             :py:class:`~.soco.data_structures.MLSonosPlaylist`
-        """
 
+        """
         response = self.avTransport.CreateSavedQueue([
             ('InstanceID', 0),
             ('Title', title),
@@ -1565,8 +1568,8 @@ class SoCo(_SocoSingletonBase):
         :param queueable_item: the item to add to the Sonos' playlist
         :param sonos_playlist: the Sonos' playlist to which the item should
                                be added
-        """
 
+        """
         # Check if the required attributes are there
         for attribute in ['didl_metadata', 'uri']:
             if not hasattr(queueable_item, attribute):
