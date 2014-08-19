@@ -1223,7 +1223,6 @@ class SoCo(_SocoSingletonBase):
             'item_list' list with the search results. The search results
             are instances of one of
             :py:class:`~.soco.data_structures.MLArtist`,
-            :py:class:`~.soco.data_structures.MLAlbumArtist`,
             :py:class:`~.soco.data_structures.MLAlbum`,
             :py:class:`~.soco.data_structures.MLGenre`,
             :py:class:`~.soco.data_structures.MLComposer`,
