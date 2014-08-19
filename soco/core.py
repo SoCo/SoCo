@@ -180,7 +180,6 @@ class SoCo(_SocoSingletonBase):
         join -- Join this speaker to another "master" speaker.
         unjoin -- Remove this speaker from a group.
         get_queue -- Get information about the queue.
-        get_folders -- Get search folders from the music library
         get_artists -- Get artists from the music library
         get_album_artists -- Get album artists from the music library
         get_albums -- Get albums from the music library
