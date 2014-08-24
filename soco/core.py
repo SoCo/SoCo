@@ -20,7 +20,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare
+    MLShare, SearchResult
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1271,12 +1271,12 @@ class SoCo(_SocoSingletonBase):
                               'sonos_playlists': 'SQ:',
                               'categories': 'A:'}
         search = search_translation[search_type]
-        response, out = self._music_lib_search(search, start, max_items)
-        out['search_type'] = search_type
-        out['item_list'] = []
+        response, metadata = self._music_lib_search(search, start, max_items)
+        metadata['search_type'] = search_type
 
         # Parse the results
         dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
         for container in dom:
             if search_type == 'sonos_playlists':
                 item = MLSonosPlaylist.from_xml(container)
@@ -1288,9 +1288,10 @@ class SoCo(_SocoSingletonBase):
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
             # Append the item to the list
-            out['item_list'].append(item)
+            item_list.append(item)
 
-        return out
+        # pylint: disable=star-args
+        return SearchResult(item_list, **metadata)
 
     def browse(self, ml_item=None, start=0, max_items=100,
                full_album_art_uri=False):
@@ -1320,20 +1321,21 @@ class SoCo(_SocoSingletonBase):
         else:
             search = ml_item.item_id
 
-        response, out = self._music_lib_search(search, start, max_items)
-        out['search_type'] = 'browse'
-        out['item_list'] = []
+        response, metadata = self._music_lib_search(search, start, max_items)
+        metadata['search_type'] = 'browse'
 
         # Parse the results
         dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
         for container in dom:
             item = get_ml_item(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
-            out['item_list'].append(item)
-
-        return out
+    	    item_list.append(item)
+    	    
+        # pylint: disable=star-args
+        return SearchResult(item_list, **metadata)
 
     def _music_lib_search(self, search, start, max_items):
         """Perform a music library search and extract search numbers
