@@ -58,21 +58,27 @@ def discover(timeout=1, include_invisible=False):
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
-    response, _, _ = select.select([_sock], [], [], timeout)
-    # Only Zone Players will respond, given the value of ST in the
-    # PLAYER_SEARCH message. It doesn't matter what response they make. All
-    # we care about is the IP address
-    if response:
-        _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query that player
-        # for the topology to find the other players. It is much more efficient
-        # to rely upon the Zone Player's ability to find the others, than to
-        # wait for query responses from them ourselves.
-        zone = config.SOCO_CLASS(addr[0])
-        if include_invisible:
-            return zone.all_zones
+    while True:
+        response, _, _ = select.select([_sock], [], [], timeout)
+        # Only Zone Players will respond, given the value of ST in the
+        # PLAYER_SEARCH message. It doesn't matter what response they make. All
+        # we care about is the IP address
+        if response:
+            data, addr = _sock.recvfrom(1024)
+            if not "Sonos" in data:
+                continue
+            
+            # Now we have an IP, we can build a SoCo instance and query that player
+            # for the topology to find the other players. It is much more efficient
+            # to rely upon the Zone Player's ability to find the others, than to
+            # wait for query responses from them ourselves.
+            zone = config.SOCO_CLASS(addr[0])
+            if include_invisible:
+                return zone.all_zones
+            else:
+                return zone.visible_zones
         else:
-            return zone.visible_zones
+            return None
     else:
         return None
 
