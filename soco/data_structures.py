@@ -7,7 +7,7 @@ such as music tracks or genres
 
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 from .xml import XML
 from .exceptions import CannotCreateDIDLMetadata
@@ -1334,7 +1334,7 @@ class TupleOfMusicInfoItems(tuple):
                     'deprecated way of retrieving the metadata will be '\
                     'removed from the third release after 0.8'.format(
                         key, self.__class__.__name__)
-            print 'DEPRECATION WARNING: {0}'.format(message)
+            print('DEPRECATION WARNING: {0}'.format(message))
             return self._metadata[key]
         else:
             return super(TupleOfMusicInfoItems, self).__getitem__(key)
