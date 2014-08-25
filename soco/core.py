@@ -197,7 +197,7 @@ class SoCo(_SocoSingletonBase):
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
         create_sonos_playlist -- Creates a new Sonos' playlist
-        add_track_to_sonos_playlist -- Adds a queueable item to a Sonos'
+        add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
 
     Properties::
@@ -1563,7 +1563,7 @@ class SoCo(_SocoSingletonBase):
 
         return MLSonosPlaylist(uri, title, 'SQ:')
 
-    def add_track_to_sonos_playlist(self, queueable_item, sonos_playlist):
+    def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
         :param queueable_item: the item to add to the Sonos' playlist
         :param sonos_playlist: the Sonos' playlist to which the item should
@@ -1587,16 +1587,17 @@ class SoCo(_SocoSingletonBase):
         if isinstance(metadata, str):
             metadata = metadata.encode('utf-8')
 
-        update_id = self._music_lib_search(sonos_playlist.item_id,
-                                           0,
-                                           1)[0]['UpdateID']
+        response, _ = self._music_lib_search(sonos_playlist.item_id, 0, 1)
+        update_id = response['UpdateID']
         self.avTransport.AddURIToSavedQueue([
             ('InstanceID', 0),
             ('UpdateID', update_id),
             ('ObjectID', sonos_playlist.item_id),
             ('EnqueuedURI', queueable_item.uri),
             ('EnqueuedURIMetaData', metadata),
-            ('AddAtIndex', 4294967295)
+            ('AddAtIndex', 4294967295)  # this field has always this value, we
+                                        # do not known the meaning of this
+                                        # "magic" number.
             ])
 
 # definition section

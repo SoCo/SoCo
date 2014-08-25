@@ -251,7 +251,7 @@ class TestAVTransport:
         assert playlist.uri == expected_uri
         assert playlist.parent_id == "SQ:"
 
-    def test_add_track_to_sonos_playlist(self, moco):
+    def test_add_item_to_sonos_playlist(self, moco):
         playlist = mock.Mock()
         playlist.item_id = 7
 
@@ -260,11 +260,11 @@ class TestAVTransport:
         track.didl_metadata = XML.Element('a')
 
         update_id = 100
-        moco._music_lib_search = mock.Mock(return_value=[{
-            'UpdateID': update_id
-        }])
+        moco._music_lib_search = mock.Mock(return_value=(
+            {'UpdateID': update_id},
+            None))
 
-        moco.add_track_to_sonos_playlist(track, playlist)
+        moco.add_item_to_sonos_playlist(track, playlist)
         moco._music_lib_search.assert_called_once_with(playlist.item_id, 0, 1)
         moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
             [('InstanceID', 0),
