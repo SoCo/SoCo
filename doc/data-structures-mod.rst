@@ -120,14 +120,6 @@ MLArtist
    :special-members:
    :show-inheritance:
 
-MLAlbumArtist
-=============
-
-.. autoclass:: soco.data_structures.MLAlbumArtist
-   :members:
-   :special-members:
-   :show-inheritance:
-
 MLGenre
 =======
 

@@ -180,7 +180,6 @@ class SoCo(_SocoSingletonBase):
         join -- Join this speaker to another "master" speaker.
         unjoin -- Remove this speaker from a group.
         get_queue -- Get information about the queue.
-        get_folders -- Get search folders from the music library
         get_artists -- Get artists from the music library
         get_album_artists -- Get album artists from the music library
         get_albums -- Get albums from the music library
@@ -1223,7 +1222,6 @@ class SoCo(_SocoSingletonBase):
             'item_list' list with the search results. The search results
             are instances of one of
             :py:class:`~.soco.data_structures.MLArtist`,
-            :py:class:`~.soco.data_structures.MLAlbumArtist`,
             :py:class:`~.soco.data_structures.MLAlbum`,
             :py:class:`~.soco.data_structures.MLGenre`,
             :py:class:`~.soco.data_structures.MLComposer`,
