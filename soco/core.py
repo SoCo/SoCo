@@ -60,9 +60,24 @@ def discover(timeout=1, include_invisible=False):
 
     while True:
         response, _, _ = select.select([_sock], [], [], timeout)
-        # Only Zone Players will respond, given the value of ST in the
-        # PLAYER_SEARCH message. It doesn't matter what response they make. All
-        # we care about is the IP address
+        # Only Zone Players should respond, given the value of ST in the
+        # PLAYER_SEARCH message. However, to prevent misbehaved devices 
+        # on the network to disrupt the discovery process, we check that 
+        # the response contains the "Sonos" string; otherwise we keep
+        # waiting for a correct response.
+        #
+        # Here is a sample response from a real Sonos device (actual numbers 
+        # have been redacted):
+        # HTTP/1.1 200 OK
+        # CACHE-CONTROL: max-age = 1800
+        # EXT:
+        # LOCATION: http://***.***.***.***:1400/xml/device_description.xml
+        # SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)
+        # ST: urn:schemas-upnp-org:device:ZonePlayer:1
+        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:ZonePlayer:1
+        # X-RINCON-BOOTSEQ: 3
+        # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
+  
         if response:
             data, addr = _sock.recvfrom(1024)
             if not "Sonos" in data:
