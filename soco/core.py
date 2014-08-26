@@ -139,7 +139,7 @@ class _ArgsSingleton(type):
         return cls._instances[key][args]
 
 
-class _SocoSingletonBase(  # pylint: disable=too-few-public-methods
+class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
         _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
     """ The base class for the SoCo class.
 
@@ -219,6 +219,7 @@ class SoCo(_SocoSingletonBase):
 
     _class_group = 'SoCo'
 
+    # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
