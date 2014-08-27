@@ -60,13 +60,14 @@ def discover(timeout=1, include_invisible=False):
 
     while True:
         response, _, _ = select.select([_sock], [], [], timeout)
+        # pylint: disable=C0301
         # Only Zone Players should respond, given the value of ST in the
-        # PLAYER_SEARCH message. However, to prevent misbehaved devices 
-        # on the network to disrupt the discovery process, we check that 
+        # PLAYER_SEARCH message. However, to prevent misbehaved devices
+        # on the network to disrupt the discovery process, we check that
         # the response contains the "Sonos" string; otherwise we keep
         # waiting for a correct response.
         #
-        # Here is a sample response from a real Sonos device (actual numbers 
+        # Here is a sample response from a real Sonos device (actual numbers
         # have been redacted):
         # HTTP/1.1 200 OK
         # CACHE-CONTROL: max-age = 1800
@@ -80,13 +81,14 @@ def discover(timeout=1, include_invisible=False):
   
         if response:
             data, addr = _sock.recvfrom(1024)
-            if not "Sonos" in data:
+            if "Sonos" not in data:
                 continue
             
-            # Now we have an IP, we can build a SoCo instance and query that player
-            # for the topology to find the other players. It is much more efficient
-            # to rely upon the Zone Player's ability to find the others, than to
-            # wait for query responses from them ourselves.
+            # Now we have an IP, we can build a SoCo instance and query that
+            # player for the topology to find the other players. It is much
+            # more efficient to rely upon the Zone Player's ability to find
+            # the others, than to wait for query responses from them 
+            # ourselves.
             zone = config.SOCO_CLASS(addr[0])
             if include_invisible:
                 return zone.all_zones
