@@ -1332,8 +1332,8 @@ class SoCo(_SocoSingletonBase):
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
-    	    item_list.append(item)
-    	    
+            item_list.append(item)
+
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
