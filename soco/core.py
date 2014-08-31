@@ -1359,7 +1359,7 @@ class SoCo(_SocoSingletonBase):
         """
         search = self.search_translation[search_type]
 
-        search_uri = "#%s%s" % (search, idstring)
+        search_uri = "#{0}{1}".format(search, idstring)
         search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
 
         # Call the base version
