@@ -205,6 +205,7 @@ class SoCo(_SocoSingletonBase):
         bass -- The speaker's bass EQ.
         treble -- The speaker's treble EQ.
         loudness -- The status of the speaker's loudness compensation.
+        crossfade -- The status of the speaker's crossfade.
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
@@ -671,6 +672,24 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
+            ])
+
+    @property
+    def crossfade(self):
+        """ The Sonos speaker's crossfade. True if on, otherwise False. """
+        response = self.avTransport.GetCrossfadeMode([
+            ('InstanceID', 0)
+            ])
+        crossfade = response["CrossfadeMode"]
+        return True if int(crossfade) else False
+
+    @crossfade.setter
+    def crossfade(self, crossfade):
+        """ Switch on/off the speaker's crossfade """
+        crossfade_value = '1' if crossfade else '0'
+        self.avTransport.SetCrossfadeMode([
+            ('InstanceID', 0),
+            ('CrossfadeMode', crossfade_value),
             ])
 
     def _parse_zone_group_state(self):
