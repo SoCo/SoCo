@@ -1359,7 +1359,13 @@ class SoCo(_SocoSingletonBase):
         """
         search = self.search_translation[search_type]
 
+        # Check if the string ID already has the type, if so we do not want to
+        # add one
+        if idstring.startswith(search):
+            search = ""
+
         search_uri = "#{0}{1}".format(search, idstring)
+
         search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
 
         # Call the base version
