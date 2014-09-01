@@ -7,7 +7,11 @@ such as music tracks or genres
 
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
+
+import warnings
+warnings.simplefilter('always', DeprecationWarning)
+import textwrap
 
 from .xml import XML
 from .exceptions import CannotCreateDIDLMetadata
@@ -1298,6 +1302,87 @@ class MSCollection(MusicServiceItem):
                    'extended_id': extended_id, 'service_id': service_id}
         content.update(kwargs)
         super(MSCollection, self).__init__(**content)
+
+
+###############################################################################
+# CONTAINERS                                                                  #
+###############################################################################
+class ListOfMusicInfoItems(list):
+    """Abstract container class for a list of music information items"""
+
+    def __init__(self, items):
+        super(ListOfMusicInfoItems, self).__init__(items)
+        self._metadata = {'item_list': list(items)}
+
+    def __getitem__(self, key):
+        """Legacy get metadata by string key or list item(s) by index
+
+        DEPRECATION: This overriding form of __getitem__ will be removed in
+        the 3rd release after 0.8. The metadata can be fetched via the named
+        attributes
+        """
+        if key in self._metadata:
+            if key == 'item_list':
+                message = """
+                Calling [\'item_list\'] on search results to obtain the objects
+                is no longer necessary, since the object returned from searches
+                now is a list. This deprecated way of getting the items will
+                be removed from the third release after 0.8."""
+            else:
+                message = """
+                Getting metadata items by indexing the search result like a
+                dictionary [\'{0}\'] is deprecated. Please use the named
+                attribute {1}.{0} instead. The deprecated way of retrieving the
+                metadata will be removed from the third release after
+                0.8""".format(key, self.__class__.__name__)
+            message = textwrap.dedent(message).replace('\n', ' ').lstrip()
+            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            return self._metadata[key]
+        else:
+            return super(ListOfMusicInfoItems, self).__getitem__(key)
+
+
+class SearchResult(ListOfMusicInfoItems):
+    """Container class that represents a search or browse result
+
+    (browse is just a special case of search)
+    """
+
+    def __init__(self, items, search_type, number_returned,
+                 total_matches, update_id):
+        super(SearchResult, self).__init__(items)
+        self._metadata.update({
+            'search_type': search_type,
+            'number_returned': number_returned,
+            'total_matches': total_matches,
+            'update_id': update_id,
+            })
+
+    def __repr__(self):
+        return '{0}(items={1}, search_type=\'{2}\')'.format(
+            self.__class__.__name__,
+            super(SearchResult, self).__repr__(),
+            self.search_type)
+
+    @property
+    def search_type(self):
+        """The search type"""
+        return self._metadata['search_type']
+
+    @property
+    def number_returned(self):
+        """The number of returned matches"""
+        return self._metadata['number_returned']
+
+    @property
+    def total_matches(self):
+        """The number of total matches"""
+        return self._metadata['total_matches']
+
+    @property
+    def update_id(self):
+        """The update ID"""
+        return self._metadata['update_id']
 
 
 DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
