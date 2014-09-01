@@ -236,7 +236,7 @@ class TestAVTransport:
         playlist_name = "cool music"
         playlist_id = 1
         moco.avTransport.CreateSavedQueue.return_value = {
-            'AssignedObjectID': 'SQ:{}'.format(playlist_id)
+            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
         }
         playlist = moco.create_sonos_playlist(playlist_name)
         moco.avTransport.CreateSavedQueue.assert_called_once_with(
@@ -246,7 +246,7 @@ class TestAVTransport:
              ('EnqueuedURIMetaData', '')]
         )
         assert playlist.title == playlist_name
-        expected_uri = "file:///jffs/settings/savedqueues.rsq#{}".format(
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
             playlist_id)
         assert playlist.uri == expected_uri
         assert playlist.parent_id == "SQ:"

@@ -1559,7 +1559,7 @@ class SoCo(_SocoSingletonBase):
             ])
 
         obj_id = response['AssignedObjectID'].split(':', 2)[1]
-        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(obj_id)
+        uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
         return MLSonosPlaylist(uri, title, 'SQ:')
 
