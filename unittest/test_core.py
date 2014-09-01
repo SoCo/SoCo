@@ -231,6 +231,18 @@ class TestAVTransport:
                 ('CurrentURIMetaData', '')]
         )
 
+    def test_soco_crossfade(self, moco):
+        moco.avTransport.GetCrossfadeMode.return_value = {
+            'CrossfadeMode': '1'}
+        assert moco.crossfade
+        moco.avTransport.GetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        moco.crossfade = False
+        moco.avTransport.SetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0), ('CrossfadeMode', '0')]
+        )
+
 
 class TestRenderingControl:
 
