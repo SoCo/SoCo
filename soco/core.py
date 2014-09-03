@@ -20,7 +20,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult
+    MLShare, SearchResult, Queue
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1119,8 +1119,15 @@ class SoCo(_SocoSingletonBase):
             ('SortCriteria', '')
             ])
         result = response['Result']
+
+        metadata = {}
+        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+            metadata[camel_to_underscore(tag)] = int(response[tag])
+
+        # I'm not sure this necessary (any more). Even with an empty queue,
+        # there is still a result object. This shoud be investigated.
         if not result:
-            return queue
+            return Queue(queue, **metadata)
 
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
@@ -1131,7 +1138,7 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             queue.append(item)
 
-        return queue
+        return Queue(queue, **metadata)
 
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
