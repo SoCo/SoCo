@@ -452,7 +452,7 @@ def test_mlsonosplaylist():
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'SQ:'}
-    common_tests('object.container.playlistContainer', '13 title: Koop',
+    common_tests('object.container.playlistContainer', 'SQ:13 title: Koop',
                  playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
 

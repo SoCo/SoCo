@@ -543,6 +543,12 @@ class MLSonosPlaylist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer'
 
+    @property
+    def item_id(self):  # pylint: disable=C0103
+        """Returns the id."""
+        out = 'SQ:' + super(MLSonosPlaylist, self).item_id
+        return out
+
 
 class MLShare(MusicLibraryItem):
     """Class that represents a music library share.

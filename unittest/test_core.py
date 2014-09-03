@@ -6,6 +6,7 @@ import mock
 
 from soco import SoCo
 from soco.groups import ZoneGroup
+from soco.xml import XML
 
 IP_ADDR = '192.168.1.101'
 
@@ -229,6 +230,49 @@ class TestAVTransport:
             [('InstanceID', 0),
                 ('CurrentURI', 'x-sonos-htastream:RINCON_000XXX1400:spdif'),
                 ('CurrentURIMetaData', '')]
+        )
+
+    def test_create_sonos_playlist(self, moco):
+        playlist_name = "cool music"
+        playlist_id = 1
+        moco.avTransport.CreateSavedQueue.return_value = {
+            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
+        }
+        playlist = moco.create_sonos_playlist(playlist_name)
+        moco.avTransport.CreateSavedQueue.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Title', playlist_name),
+             ('EnqueuedURI', ''),
+             ('EnqueuedURIMetaData', '')]
+        )
+        assert playlist.title == playlist_name
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
+            playlist_id)
+        assert playlist.uri == expected_uri
+        assert playlist.parent_id == "SQ:"
+
+    def test_add_item_to_sonos_playlist(self, moco):
+        playlist = mock.Mock()
+        playlist.item_id = 7
+
+        track = mock.Mock()
+        track.uri = 'fake_uri'
+        track.didl_metadata = XML.Element('a')
+
+        update_id = 100
+        moco._music_lib_search = mock.Mock(return_value=(
+            {'UpdateID': update_id},
+            None))
+
+        moco.add_item_to_sonos_playlist(track, playlist)
+        moco._music_lib_search.assert_called_once_with(playlist.item_id, 0, 1)
+        moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
+            [('InstanceID', 0),
+             ('UpdateID', update_id),
+             ('ObjectID', playlist.item_id),
+             ('EnqueuedURI', track.uri),
+             ('EnqueuedURIMetaData', XML.tostring(track.didl_metadata)),
+             ('AddAtIndex', 4294967295)]
         )
 
 
