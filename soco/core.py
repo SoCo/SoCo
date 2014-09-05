@@ -223,6 +223,18 @@ class SoCo(_SocoSingletonBase):
 
     _class_group = 'SoCo'
 
+    # Key words used when performing searches
+    SEARCH_TRANSLATION = {'artists': 'A:ARTIST',
+                          'album_artists': 'A:ALBUMARTIST',
+                          'albums': 'A:ALBUM',
+                          'genres': 'A:GENRE',
+                          'composers': 'A:COMPOSER',
+                          'tracks': 'A:TRACKS',
+                          'playlists': 'A:PLAYLISTS',
+                          'share': 'S:',
+                          'sonos_playlists': 'SQ:',
+                          'categories': 'A:'}
+
     # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
@@ -256,18 +268,6 @@ class SoCo(_SocoSingletonBase):
         self._uid = None
         self._visible_zones = set()
         self._zgs_cache = None
-
-        # Key words used when performing searches
-        self.search_translation = {'artists': 'A:ARTIST',
-                                   'album_artists': 'A:ALBUMARTIST',
-                                   'albums': 'A:ALBUM',
-                                   'genres': 'A:GENRE',
-                                   'composers': 'A:COMPOSER',
-                                   'tracks': 'A:TRACKS',
-                                   'playlists': 'A:PLAYLISTS',
-                                   'share': 'S:',
-                                   'sonos_playlists': 'SQ:',
-                                   'categories': 'A:'}
 
     def __str__(self):
         return "<{0} object at ip {1}>".format(
@@ -1273,7 +1273,7 @@ class SoCo(_SocoSingletonBase):
         project.
 
         """
-        search = self.search_translation[search_type]
+        search = self.SEARCH_TRANSLATION[search_type]
         response, metadata = self._music_lib_search(search, start, max_items)
         metadata['search_type'] = search_type
 
@@ -1338,8 +1338,9 @@ class SoCo(_SocoSingletonBase):
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
+    # pylint: disable=too-many-arguments
     def browse_by_idstring(self, search_type, idstring, start=0,
-                           max_items=100):
+                           max_items=100, full_album_art_uri=False):
         """Browse (get sub-elements) a given type
 
         :param search_type: The kind of information to retrieve. Can be one of:
@@ -1353,11 +1354,13 @@ class SoCo(_SocoSingletonBase):
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
+        :param full_album_art_uri: If the album art URI should include the
+                IP address
         :returns: A dictionary with metadata for the search, with the
             keys 'number_returned', 'update_id', 'total_matches' and an
             'item_list' list with the search results.
         """
-        search = self.search_translation[search_type]
+        search = self.SEARCH_TRANSLATION[search_type]
 
         # Check if the string ID already has the type, if so we do not want to
         # add one
@@ -1369,7 +1372,7 @@ class SoCo(_SocoSingletonBase):
         search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
 
         # Call the base version
-        return self.browse(search_item, start, max_items)
+        return self.browse(search_item, start, max_items, full_album_art_uri)
 
     def _music_lib_search(self, search, start, max_items):
         """Perform a music library search and extract search numbers
