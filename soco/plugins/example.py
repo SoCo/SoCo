@@ -24,7 +24,7 @@ class ExamplePlugin(SoCoPlugin):
 
     @property
     def name(self):
-        return 'Example Plugin for {name}'.format(name=self.username)
+        return 'Example Plugin for {0}'.format(self.username)
 
     def music_plugin_play(self):
         """ Play some music

@@ -20,7 +20,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare
+    MLShare, SearchResult
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -196,6 +196,9 @@ class SoCo(_SocoSingletonBase):
         get_favorite_radio_shows -- Get favorite radio shows from Sonos'
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
+        create_sonos_playlist -- Creates a new Sonos' playlist
+        add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
+                                       playlist
 
     Properties::
 
@@ -1272,12 +1275,12 @@ class SoCo(_SocoSingletonBase):
                               'sonos_playlists': 'SQ:',
                               'categories': 'A:'}
         search = search_translation[search_type]
-        response, out = self._music_lib_search(search, start, max_items)
-        out['search_type'] = search_type
-        out['item_list'] = []
+        response, metadata = self._music_lib_search(search, start, max_items)
+        metadata['search_type'] = search_type
 
         # Parse the results
         dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
         for container in dom:
             if search_type == 'sonos_playlists':
                 item = MLSonosPlaylist.from_xml(container)
@@ -1289,9 +1292,10 @@ class SoCo(_SocoSingletonBase):
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
             # Append the item to the list
-            out['item_list'].append(item)
+            item_list.append(item)
 
-        return out
+        # pylint: disable=star-args
+        return SearchResult(item_list, **metadata)
 
     def browse(self, ml_item=None, start=0, max_items=100,
                full_album_art_uri=False):
@@ -1321,20 +1325,21 @@ class SoCo(_SocoSingletonBase):
         else:
             search = ml_item.item_id
 
-        response, out = self._music_lib_search(search, start, max_items)
-        out['search_type'] = 'browse'
-        out['item_list'] = []
+        response, metadata = self._music_lib_search(search, start, max_items)
+        metadata['search_type'] = 'browse'
 
         # Parse the results
         dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
         for container in dom:
             item = get_ml_item(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
-            out['item_list'].append(item)
+            item_list.append(item)
 
-        return out
+        # pylint: disable=star-args
+        return SearchResult(item_list, **metadata)
 
     def _music_lib_search(self, search, start, max_items):
         """Perform a music library search and extract search numbers
@@ -1540,6 +1545,63 @@ class SoCo(_SocoSingletonBase):
             item.album_art_uri = 'http://' + self.ip_address + ':1400' +\
                 item.album_art_uri
 
+    def create_sonos_playlist(self, title):
+        """ Create a new Sonos' playlist .
+
+        :params title: Name of the playlist
+
+        :returns: An instance of
+            :py:class:`~.soco.data_structures.MLSonosPlaylist`
+
+        """
+        response = self.avTransport.CreateSavedQueue([
+            ('InstanceID', 0),
+            ('Title', title),
+            ('EnqueuedURI', ''),
+            ('EnqueuedURIMetaData', ''),
+            ])
+
+        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
+
+        return MLSonosPlaylist(uri, title, 'SQ:')
+
+    def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
+        """ Adds a queueable item to a Sonos' playlist
+        :param queueable_item: the item to add to the Sonos' playlist
+        :param sonos_playlist: the Sonos' playlist to which the item should
+                               be added
+
+        """
+        # Check if the required attributes are there
+        for attribute in ['didl_metadata', 'uri']:
+            if not hasattr(queueable_item, attribute):
+                message = 'queueable_item has no attribute {0}'.\
+                    format(attribute)
+                raise AttributeError(message)
+        # Get the metadata
+        try:
+            metadata = XML.tostring(queueable_item.didl_metadata)
+        except CannotCreateDIDLMetadata as exception:
+            message = ('The queueable item could not be enqueued, because it '
+                       'raised a CannotCreateDIDLMetadata exception with the '
+                       'following message:\n{0}').format(str(exception))
+            raise ValueError(message)
+        if isinstance(metadata, str):
+            metadata = metadata.encode('utf-8')
+
+        response, _ = self._music_lib_search(sonos_playlist.item_id, 0, 1)
+        update_id = response['UpdateID']
+        self.avTransport.AddURIToSavedQueue([
+            ('InstanceID', 0),
+            ('UpdateID', update_id),
+            ('ObjectID', sonos_playlist.item_id),
+            ('EnqueuedURI', queueable_item.uri),
+            ('EnqueuedURIMetaData', metadata),
+            ('AddAtIndex', 4294967295)  # this field has always this value, we
+                                        # do not known the meaning of this
+                                        # "magic" number.
+            ])
 
 # definition section
 
