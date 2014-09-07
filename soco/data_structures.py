@@ -1355,14 +1355,14 @@ class SearchResult(ListOfMusicInfoItems):
     """
 
     def __init__(self, items, search_type, number_returned,
-                 total_matches, update_id, child_count = None):
+                 total_matches, update_id, child_count=None):
         super(SearchResult, self).__init__(items)
         self._metadata.update({
             'search_type': search_type,
             'number_returned': number_returned,
             'total_matches': total_matches,
             'update_id': update_id,
-            'child_count' : child_count,
+            'child_count': child_count,
             })
 
     def __repr__(self):

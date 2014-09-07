@@ -151,6 +151,17 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
     pass
 
 
+def _set_child_count(dom, metadata):
+    """ Get the child count metadata from a response DOM """
+    container = dom.find(
+        '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
+    if container is not None:
+        child_count = container.get('childCount')
+        if child_count is not None:
+            metadata['child_count'] = int(child_count)
+    return metadata
+
+
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
     """A simple class for controlling a Sonos speaker.
@@ -1112,7 +1123,7 @@ class SoCo(_SocoSingletonBase):
         queue = []
         get_metadata = (max_items == 0)
         response, metadata = self._music_lib_search('Q:0', start, max_items,
-                                                    get_metadata = get_metadata)
+                                                    get_metadata=get_metadata)
         metadata['search_type'] = 'queue'
 
         result = response['Result']
@@ -1129,7 +1140,7 @@ class SoCo(_SocoSingletonBase):
             queue.append(item)
 
         # Get child count
-        metadata = self._music_lib_update_count(result_dom, metadata)
+        metadata = _set_child_count(result_dom, metadata)
 
         # pylint: disable=star-args
         return SearchResult(queue, **metadata)
@@ -1277,7 +1288,7 @@ class SoCo(_SocoSingletonBase):
         search = search_translation[search_type]
         get_metadata = (max_items == 0)
         response, metadata = self._music_lib_search(search, start, max_items,
-                                                    get_metadata = get_metadata)
+                                                    get_metadata=get_metadata)
         metadata['search_type'] = search_type
 
         # Parse the results
@@ -1297,7 +1308,7 @@ class SoCo(_SocoSingletonBase):
             item_list.append(item)
 
         # Get child count
-        metadata = self._music_lib_update_count(dom, metadata)
+        metadata = _set_child_count(dom, metadata)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
@@ -1344,12 +1355,12 @@ class SoCo(_SocoSingletonBase):
             item_list.append(item)
 
         # Get child count
-        metadata = self._music_lib_update_count(dom, metadata)
+        metadata = _set_child_count(dom, metadata)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
-    def _music_lib_search(self, search, start, max_items, get_metadata = False):
+    def _music_lib_search(self, search, start, max_items, get_metadata=False):
         """Perform a music library search and extract search numbers
 
         You can get an overview of all the relevant search prefixes (like
@@ -1377,7 +1388,8 @@ class SoCo(_SocoSingletonBase):
                 and metadata is a dict with the 'number_returned',
                 'total_matches' and 'update_id' integers
         """
-        browse_flag = 'BrowseMetadata' if get_metadata else 'BrowseDirectChildren'
+        browse_flag = 'BrowseMetadata' if get_metadata else \
+                      'BrowseDirectChildren'
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
             ('BrowseFlag', browse_flag),
@@ -1392,16 +1404,6 @@ class SoCo(_SocoSingletonBase):
         for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
             metadata[camel_to_underscore(tag)] = int(response[tag])
         return response, metadata
-
-    def _music_lib_update_count(self, dom, metadata):
-        """ Get the child count metadata from a response DOM """
-        container = dom.find(
-            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
-        if container is not None:
-            e = container.get('childCount')
-            if e is not None:
-                metadata['child_count'] = int(e)
-        return metadata
 
     def add_uri_to_queue(self, uri):
         """Adds the URI to the queue
