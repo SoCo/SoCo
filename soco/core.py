@@ -1111,7 +1111,9 @@ class SoCo(_SocoSingletonBase):
         """ Get information about the queue
 
         :param start: Starting number of returned matches
-        :param max_items: Maximum number of returned matches
+        :param max_items: Maximum number of returned matches.  If max_items
+            is 0, returns metadata about the queue and child_count property
+            is valid.
         :param full_album_art_uri: If the album art URI should include the
             IP address
         :returns: A list of :py:class:`~.soco.data_structures.QueueItem`.
