@@ -1110,14 +1110,11 @@ class SoCo(_SocoSingletonBase):
 
         """
         queue = []
-        response = self.contentDirectory.Browse([
-            ('ObjectID', 'Q:0'),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', start),
-            ('RequestedCount', max_items),
-            ('SortCriteria', '')
-            ])
+        get_metadata = (max_items == 0)
+        response, metadata = self._music_lib_search('Q:0', start, max_items,
+                                                    get_metadata = get_metadata)
+        metadata['search_type'] = 'queue'
+
         result = response['Result']
         if not result:
             return queue
@@ -1131,7 +1128,11 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             queue.append(item)
 
-        return queue
+        # Get child count
+        metadata = self._music_lib_update_count(result_dom, metadata)
+
+        # pylint: disable=star-args
+        return SearchResult(queue, **metadata)
 
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
@@ -1274,7 +1275,9 @@ class SoCo(_SocoSingletonBase):
                               'sonos_playlists': 'SQ:',
                               'categories': 'A:'}
         search = search_translation[search_type]
-        response, metadata = self._music_lib_search(search, start, max_items)
+        get_metadata = (max_items == 0)
+        response, metadata = self._music_lib_search(search, start, max_items,
+                                                    get_metadata = get_metadata)
         metadata['search_type'] = search_type
 
         # Parse the results
@@ -1292,6 +1295,9 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             # Append the item to the list
             item_list.append(item)
+
+        # Get child count
+        metadata = self._music_lib_update_count(dom, metadata)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
@@ -1337,10 +1343,13 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             item_list.append(item)
 
+        # Get child count
+        metadata = self._music_lib_update_count(dom, metadata)
+
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
-    def _music_lib_search(self, search, start, max_items):
+    def _music_lib_search(self, search, start, max_items, get_metadata = False):
         """Perform a music library search and extract search numbers
 
         You can get an overview of all the relevant search prefixes (like
@@ -1361,15 +1370,17 @@ class SoCo(_SocoSingletonBase):
             search (str): The ID to search
             start: The index of the forst item to return
             max_items: The maximum number of items to return
+            get_metadata: Get only metadata not the results
 
         Returns:
             tuple: (response, metadata) where response is the returned metadata
                 and metadata is a dict with the 'number_returned',
                 'total_matches' and 'update_id' integers
         """
+        browse_flag = 'BrowseMetadata' if get_metadata else 'BrowseDirectChildren'
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
-            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('BrowseFlag', browse_flag),
             ('Filter', '*'),
             ('StartingIndex', start),
             ('RequestedCount', max_items),
@@ -1381,6 +1392,16 @@ class SoCo(_SocoSingletonBase):
         for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
             metadata[camel_to_underscore(tag)] = int(response[tag])
         return response, metadata
+
+    def _music_lib_update_count(self, dom, metadata):
+        """ Get the child count metadata from a response DOM """
+        container = dom.find(
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
+        if container is not None:
+            e = container.get('childCount')
+            if e is not None:
+                metadata['child_count'] = int(e)
+        return metadata
 
     def add_uri_to_queue(self, uri):
         """Adds the URI to the queue
