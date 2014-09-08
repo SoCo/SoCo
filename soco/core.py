@@ -60,7 +60,6 @@ def discover(timeout=1, include_invisible=False):
 
     while True:
         response, _, _ = select.select([_sock], [], [], timeout)
-        # pylint: disable=C0301
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
         # on the network to disrupt the discovery process, we check that
@@ -75,7 +74,8 @@ def discover(timeout=1, include_invisible=False):
         # LOCATION: http://***.***.***.***:1400/xml/device_description.xml
         # SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)
         # ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:ZonePlayer:1
+        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:
+        #                                                     ZonePlayer:1
         # X-RINCON-BOOTSEQ: 3
         # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
   
