@@ -15,7 +15,7 @@ TIMEOUT = 5
 class TestDiscover:
     def test_discover(self, mock_soco, mock_select, mock_socket):
         socket = mock_socket.return_value
-        socket.recvfrom.return_value = ('data', [IP_ADDR])  # (data,
+        socket.recvfrom.return_value = ('SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)', [IP_ADDR])  # (data,
         # address)
         mock_select.return_value = (1, 1, 1)
         # set timeout
