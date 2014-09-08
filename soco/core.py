@@ -78,16 +78,16 @@ def discover(timeout=1, include_invisible=False):
         #                                                     ZonePlayer:1
         # X-RINCON-BOOTSEQ: 3
         # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
-  
+
         if response:
             data, addr = _sock.recvfrom(1024)
             if "Sonos" not in data:
                 continue
-            
+
             # Now we have an IP, we can build a SoCo instance and query that
             # player for the topology to find the other players. It is much
             # more efficient to rely upon the Zone Player's ability to find
-            # the others, than to wait for query responses from them 
+            # the others, than to wait for query responses from them
             # ourselves.
             zone = config.SOCO_CLASS(addr[0])
             if include_invisible:
