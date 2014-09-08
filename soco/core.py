@@ -96,9 +96,6 @@ def discover(timeout=1, include_invisible=False):
                 return zone.visible_zones
         else:
             return None
-    else:
-        return None
-
 
 class SonosDiscovery(object):  # pylint: disable=R0903
     """Retained for backward compatibility only. Will be removed in future
