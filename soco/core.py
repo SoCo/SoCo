@@ -97,6 +97,7 @@ def discover(timeout=1, include_invisible=False):
         else:
             return None
 
+
 class SonosDiscovery(object):  # pylint: disable=R0903
     """Retained for backward compatibility only. Will be removed in future
     releases
