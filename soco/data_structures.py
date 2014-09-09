@@ -1316,9 +1316,14 @@ class MSCollection(MusicServiceItem):
 class ListOfMusicInfoItems(list):
     """Abstract container class for a list of music information items"""
 
-    def __init__(self, items):
+    def __init__(self, items, number_returned, total_matches, update_id):
         super(ListOfMusicInfoItems, self).__init__(items)
-        self._metadata = {'item_list': list(items)}
+        self._metadata = {
+            'item_list': list(items),
+            'number_returned': number_returned,
+            'total_matches': total_matches,
+            'update_id': update_id,
+        }
 
     def __getitem__(self, key):
         """Legacy get metadata by string key or list item(s) by index
@@ -1347,34 +1352,6 @@ class ListOfMusicInfoItems(list):
         else:
             return super(ListOfMusicInfoItems, self).__getitem__(key)
 
-
-class SearchResult(ListOfMusicInfoItems):
-    """Container class that represents a search or browse result
-
-    (browse is just a special case of search)
-    """
-
-    def __init__(self, items, search_type, number_returned,
-                 total_matches, update_id):
-        super(SearchResult, self).__init__(items)
-        self._metadata.update({
-            'search_type': search_type,
-            'number_returned': number_returned,
-            'total_matches': total_matches,
-            'update_id': update_id,
-            })
-
-    def __repr__(self):
-        return '{0}(items={1}, search_type=\'{2}\')'.format(
-            self.__class__.__name__,
-            super(SearchResult, self).__repr__(),
-            self.search_type)
-
-    @property
-    def search_type(self):
-        """The search type"""
-        return self._metadata['search_type']
-
     @property
     def number_returned(self):
         """The number of returned matches"""
@@ -1389,6 +1366,46 @@ class SearchResult(ListOfMusicInfoItems):
     def update_id(self):
         """The update ID"""
         return self._metadata['update_id']
+
+
+class SearchResult(ListOfMusicInfoItems):
+    """Container class that represents a search or browse result
+
+    (browse is just a special case of search)
+    """
+
+    def __init__(self, items, search_type, number_returned,
+                 total_matches, update_id):
+        super(SearchResult, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+        self._metadata['search_type'] = search_type
+
+    def __repr__(self):
+        return '{0}(items={1}, search_type=\'{2}\')'.format(
+            self.__class__.__name__,
+            super(SearchResult, self).__repr__(),
+            self.search_type)
+
+    @property
+    def search_type(self):
+        """The search type"""
+        return self._metadata['search_type']
+
+
+class Queue(ListOfMusicInfoItems):
+    """Container class that represents a queue"""
+
+    def __init__(self, items, number_returned, total_matches, update_id):
+        super(Queue, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+
+    def __repr__(self):
+        return '{0}(items={1})'.format(
+            self.__class__.__name__,
+            super(Queue, self).__repr__(),
+            )
 
 
 DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
