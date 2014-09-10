@@ -7,7 +7,11 @@ such as music tracks or genres
 
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
+
+import warnings
+warnings.simplefilter('always', DeprecationWarning)
+import textwrap
 
 from .xml import XML
 from .exceptions import CannotCreateDIDLMetadata
@@ -539,6 +543,12 @@ class MLSonosPlaylist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer'
 
+    @property
+    def item_id(self):  # pylint: disable=C0103
+        """Returns the id."""
+        out = 'SQ:' + super(MLSonosPlaylist, self).item_id
+        return out
+
 
 class MLShare(MusicLibraryItem):
     """Class that represents a music library share.
@@ -546,6 +556,19 @@ class MLShare(MusicLibraryItem):
     :ivar item_class: The item_class for the MLShare is 'object.container'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLShare from XML is inherited
+        from :py:class:`.MusicLibraryItem`.
+
+    """
+
+    item_class = 'object.container'
+
+
+class MLCategory(MusicLibraryItem):
+    """Class that represents a music library category.
+
+    :ivar item_class: The item_class for the MLCategory is 'object.container'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLCategory from XML is inherited
         from :py:class:`.MusicLibraryItem`.
 
     """
@@ -565,6 +588,33 @@ class MLAlbumList(MusicLibraryItem):
     """
 
     item_class = 'object.container.albumlist'
+
+
+class MLSameArtist(MusicLibraryItem):
+    """Class that represents all by the artist.
+
+    This type is returned by browsing an artist or a composer
+
+    :ivar item_class: The item_class for MLSameArtist is
+        'object.container.playlistContainer.sameArtist'
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLSameArtist from XML is
+        inherited from :py:class:`.MusicLibraryItem`.
+
+    """
+
+    item_class = 'object.container.playlistContainer.sameArtist'
+
+    def __init__(self, uri, title, parent_id):
+        """Instantiate the MLSameArtist item by passing the arguments to the
+        super class :py:meth:`.MusicLibraryItem.__init__`.
+
+        :param uri: The URI for the composer
+        :param title: The title of the composer
+        :param item_class: The parent ID for the composer
+
+        """
+        MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
 ###############################################################################
@@ -1260,14 +1310,114 @@ class MSCollection(MusicServiceItem):
         super(MSCollection, self).__init__(**content)
 
 
+###############################################################################
+# CONTAINERS                                                                  #
+###############################################################################
+class ListOfMusicInfoItems(list):
+    """Abstract container class for a list of music information items"""
+
+    def __init__(self, items, number_returned, total_matches, update_id):
+        super(ListOfMusicInfoItems, self).__init__(items)
+        self._metadata = {
+            'item_list': list(items),
+            'number_returned': number_returned,
+            'total_matches': total_matches,
+            'update_id': update_id,
+        }
+
+    def __getitem__(self, key):
+        """Legacy get metadata by string key or list item(s) by index
+
+        DEPRECATION: This overriding form of __getitem__ will be removed in
+        the 3rd release after 0.8. The metadata can be fetched via the named
+        attributes
+        """
+        if key in self._metadata:
+            if key == 'item_list':
+                message = """
+                Calling [\'item_list\'] on search results to obtain the objects
+                is no longer necessary, since the object returned from searches
+                now is a list. This deprecated way of getting the items will
+                be removed from the third release after 0.8."""
+            else:
+                message = """
+                Getting metadata items by indexing the search result like a
+                dictionary [\'{0}\'] is deprecated. Please use the named
+                attribute {1}.{0} instead. The deprecated way of retrieving the
+                metadata will be removed from the third release after
+                0.8""".format(key, self.__class__.__name__)
+            message = textwrap.dedent(message).replace('\n', ' ').lstrip()
+            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            return self._metadata[key]
+        else:
+            return super(ListOfMusicInfoItems, self).__getitem__(key)
+
+    @property
+    def number_returned(self):
+        """The number of returned matches"""
+        return self._metadata['number_returned']
+
+    @property
+    def total_matches(self):
+        """The number of total matches"""
+        return self._metadata['total_matches']
+
+    @property
+    def update_id(self):
+        """The update ID"""
+        return self._metadata['update_id']
+
+
+class SearchResult(ListOfMusicInfoItems):
+    """Container class that represents a search or browse result
+
+    (browse is just a special case of search)
+    """
+
+    def __init__(self, items, search_type, number_returned,
+                 total_matches, update_id):
+        super(SearchResult, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+        self._metadata['search_type'] = search_type
+
+    def __repr__(self):
+        return '{0}(items={1}, search_type=\'{2}\')'.format(
+            self.__class__.__name__,
+            super(SearchResult, self).__repr__(),
+            self.search_type)
+
+    @property
+    def search_type(self):
+        """The search type"""
+        return self._metadata['search_type']
+
+
+class Queue(ListOfMusicInfoItems):
+    """Container class that represents a queue"""
+
+    def __init__(self, items, number_returned, total_matches, update_id):
+        super(Queue, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+
+    def __repr__(self):
+        return '{0}(items={1})'.format(
+            self.__class__.__name__,
+            super(Queue, self).__repr__(),
+            )
+
+
 DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container.album.musicAlbum': MLAlbum,
                        'object.container.person.musicArtist': MLArtist,
                        'object.container.genre.musicGenre': MLGenre,
                        'object.container.person.composer': MLComposer,
                        'object.container.playlistContainer': MLPlaylist,
-                       'object.container': MLShare,
-                       'object.container.albumlist': MLAlbumList}
+                       'object.container': MLCategory,
+                       'object.container.albumlist': MLAlbumList,
+                       'object.container.playlistContainer.sameArtist':
+                           MLSameArtist}
 
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,

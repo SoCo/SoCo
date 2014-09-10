@@ -239,6 +239,7 @@ class Wimp(SoCoPlugin):
                 .format(search_type)
             raise ValueError(message)
         # Transform search: tracks -> tracksearch
+        # pylint: disable=bad-format-string
         search_type = '{0}earch'.format(search_type)
         parent_id = SEARCH_PREFIX.format(search_type=search_type,
                                          search=search)
