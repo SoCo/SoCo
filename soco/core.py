@@ -20,7 +20,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult
+    MLShare, SearchResult, Queue
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1116,7 +1116,7 @@ class SoCo(_SocoSingletonBase):
             is valid.
         :param full_album_art_uri: If the album art URI should include the
             IP address
-        :returns: A list of :py:class:`~.soco.data_structures.QueueItem`.
+        :returns: A :py:class:`~.soco.data_structures.Queue` object
 
         This method is heavly based on Sam Soffes (aka soffes) ruby
         implementation
@@ -1130,7 +1130,8 @@ class SoCo(_SocoSingletonBase):
 
         result = response['Result']
         if not result:
-            return queue
+            # pylint: disable=star-args            
+            return Queue(queue, **metadata)
 
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
@@ -1145,7 +1146,7 @@ class SoCo(_SocoSingletonBase):
         metadata = _set_child_count(result_dom, metadata)
 
         # pylint: disable=star-args
-        return SearchResult(queue, **metadata)
+        return Queue(queue, **metadata)
 
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
@@ -1252,19 +1253,7 @@ class SoCo(_SocoSingletonBase):
             requested.
         :param full_album_art_uri: If the album art URI should include the
             IP address
-        :returns: A dictionary with metadata for the search, with the
-            keys 'number_returned', 'update_id', 'total_matches' and an
-            'item_list' list with the search results. The search results
-            are instances of one of
-            :py:class:`~.soco.data_structures.MLArtist`,
-            :py:class:`~.soco.data_structures.MLAlbum`,
-            :py:class:`~.soco.data_structures.MLGenre`,
-            :py:class:`~.soco.data_structures.MLComposer`,
-            :py:class:`~.soco.data_structures.MLTrack`,
-            :py:class:`~.soco.data_structures.MLShare`,
-            :py:class:`~.soco.data_structures.MLSonosPlaylist and
-            :py:class:`~.soco.data_structures.MLPlaylist` depending on the
-            type of the search.
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object
         :raises: :py:class:`SoCoException` upon errors
 
         NOTE: The playlists that are returned with the 'playlists' search, are
@@ -1329,9 +1318,7 @@ class SoCo(_SocoSingletonBase):
                 IP address
 
         Returns:
-            dict: A dictionary with metadata for the search, with the
-                keys 'number_returned', 'update_id', 'total_matches' and an
-                'item_list' list with the search results.
+            dict: A :py:class:`~.soco.data_structures.SearchResult` object
 
         Raises:
             AttributeError: If ``ml_item`` has no ``item_id`` attribute

@@ -1316,7 +1316,7 @@ class MSCollection(MusicServiceItem):
 class ListOfMusicInfoItems(list):
     """Abstract container class for a list of music information items"""
 
-    def __init__(self, items):
+    def __init__(self, items, number_returned, total_matches, update_id):
         super(ListOfMusicInfoItems, self).__init__(items)
         self._metadata = {'item_list': list(items)}
 
