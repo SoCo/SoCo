@@ -24,6 +24,7 @@ from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
 from .exceptions import SoCoException
+from .utils import camel_to_underscore
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -43,7 +44,46 @@ def parse_event_xml(xml_event):
             itself be a dict containing the volume for each channel:
             `{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}` )
         * an instance of a MusicInfoItem subclass (eg if it represents track
-            metadata) [Not yet implemented].
+            metadata) [Not yet implemented - at present the raw DIDL-Lite
+            string is returned].
+
+    Example:
+
+        Run this code, and change your volume, tracks etc
+
+        from __future__ import print_function
+        try:
+            from queue import Empty
+        except:  # Py2.7
+            from Queue import Empty
+
+        import soco
+        from pprint import pprint
+        from soco.events import event_listener
+        # pick a device at random
+        device = soco.discover().pop()
+        print (device.player_name)
+        sub = device.renderingControl.subscribe()
+        sub2 = device.avTransport.subscribe()
+
+        while True:
+            try:
+                event = sub.events.get(timeout=0.5)
+                pprint (event.variables)
+            except Empty:
+                pass
+            try:
+                event = sub2.events.get(timeout=0.5)
+                pprint (event.variables)
+            except Empty:
+                pass
+
+            except KeyboardInterrupt:
+                sub.unsubscribe()
+                sub2.unsubscribe()
+                event_listener.stop()
+                break
+
 
     """
 
@@ -78,6 +118,8 @@ def parse_event_xml(xml_event):
                     # Remove any namespaces from the tags
                     if tag.startswith('{'):
                         tag = tag.split('}', 1)[1]
+                    # Un-camel case it
+                    tag = camel_to_underscore(tag)
                     # Now extract the relevant value for the variable.
                     # The UPnP specs suggest that the value of any variable
                     # evented via a LastChange Event will be in the 'val'
@@ -88,6 +130,8 @@ def parse_event_xml(xml_event):
                     value = last_change_var.get('val')
                     if value is None:
                         value = last_change_var.text
+                    if value.startswith('<DIDL-Lite'):
+                        pass
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
@@ -96,7 +140,7 @@ def parse_event_xml(xml_event):
                     else:
                         result[tag] = value
             else:
-                result[variable.tag] = variable.text
+                result[camel_to_underscore(variable.tag)] = variable.text
     return result
 
 
