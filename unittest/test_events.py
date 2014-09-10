@@ -64,7 +64,7 @@ DUMMY_EVENT = """
 
 def test_event_parsing():
     event_dict = parse_event_xml(DUMMY_EVENT)
-    assert event_dict['ZoneGroupState']
-    assert event_dict['AlarmRunSequence'] == 'RINCON_000EXXXXXX0:56:0'
-    assert event_dict['ZoneGroupID'] == "RINCON_000XXXX01400:57"
+    assert event_dict['zone_group_state']
+    assert event_dict['alarm_run_sequence'] == 'RINCON_000EXXXXXX0:56:0'
+    assert event_dict['zone_group_id'] == "RINCON_000XXXX01400:57"
 
