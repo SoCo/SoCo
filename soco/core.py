@@ -1130,7 +1130,7 @@ class SoCo(_SocoSingletonBase):
 
         result = response['Result']
         if not result:
-            # pylint: disable=star-args            
+            # pylint: disable=star-args
             return Queue(queue, **metadata)
 
         result_dom = XML.fromstring(really_utf8(result))

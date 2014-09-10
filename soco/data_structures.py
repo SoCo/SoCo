@@ -1318,7 +1318,12 @@ class ListOfMusicInfoItems(list):
 
     def __init__(self, items, number_returned, total_matches, update_id):
         super(ListOfMusicInfoItems, self).__init__(items)
-        self._metadata = {'item_list': list(items)}
+        self._metadata = {
+            'item_list': list(items),
+            'number_returned': number_returned,
+            'total_matches': total_matches,
+            'update_id': update_id,
+        }
 
     def __getitem__(self, key):
         """Legacy get metadata by string key or list item(s) by index
@@ -1347,6 +1352,20 @@ class ListOfMusicInfoItems(list):
         else:
             return super(ListOfMusicInfoItems, self).__getitem__(key)
 
+    @property
+    def number_returned(self):
+        """The number of returned matches"""
+        return self._metadata['number_returned']
+
+    @property
+    def total_matches(self):
+        """The number of total matches"""
+        return self._metadata['total_matches']
+
+    @property
+    def update_id(self):
+        """The update ID"""
+        return self._metadata['update_id']
 
 class SearchResult(ListOfMusicInfoItems):
     """Container class that represents a search or browse result
@@ -1356,14 +1375,11 @@ class SearchResult(ListOfMusicInfoItems):
 
     def __init__(self, items, search_type, number_returned,
                  total_matches, update_id, child_count=None):
-        super(SearchResult, self).__init__(items)
-        self._metadata.update({
-            'search_type': search_type,
-            'number_returned': number_returned,
-            'total_matches': total_matches,
-            'update_id': update_id,
-            'child_count': child_count,
-            })
+                 total_matches, update_id):
+        super(SearchResult, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+        self._metadata['search_type'] = search_type
 
     def __repr__(self):
         return '{0}(items={1}, search_type=\'{2}\')'.format(
