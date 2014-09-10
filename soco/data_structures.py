@@ -1367,6 +1367,7 @@ class ListOfMusicInfoItems(list):
         """The update ID"""
         return self._metadata['update_id']
 
+
 class SearchResult(ListOfMusicInfoItems):
     """Container class that represents a search or browse result
 
@@ -1374,7 +1375,6 @@ class SearchResult(ListOfMusicInfoItems):
     """
 
     def __init__(self, items, search_type, number_returned,
-                 total_matches, update_id, child_count=None):
                  total_matches, update_id):
         super(SearchResult, self).__init__(
             items, number_returned, total_matches, update_id
@@ -1411,6 +1411,20 @@ class SearchResult(ListOfMusicInfoItems):
     def child_count(self):
         """The number of child items"""
         return self._metadata['child_count']
+
+class Queue(ListOfMusicInfoItems):
+    """Container class that represents a queue"""
+
+    def __init__(self, items, number_returned, total_matches, update_id):
+        super(Queue, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+
+    def __repr__(self):
+        return '{0}(items={1})'.format(
+            self.__class__.__name__,
+            super(Queue, self).__repr__(),
+            )
 
 
 DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
