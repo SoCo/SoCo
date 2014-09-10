@@ -24,6 +24,7 @@ from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
 from .xml import XML
 from .exceptions import SoCoException
 from .utils import camel_to_underscore
+from .data_structures import get_ml_item
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -43,8 +44,7 @@ def parse_event_xml(xml_event):
             itself be a dict containing the volume for each channel:
             `{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}` )
         * an instance of a MusicInfoItem subclass (eg if it represents track
-            metadata) [Not yet implemented - at present the raw DIDL-Lite
-            string is returned].
+            metadata)
 
     Example:
 
@@ -129,8 +129,16 @@ def parse_event_xml(xml_event):
                     value = last_change_var.get('val')
                     if value is None:
                         value = last_change_var.text
+                    # If DIDL metadata is returned, convert it to a music
+                    # library data structure
                     if value.startswith('<DIDL-Lite'):
-                        pass
+                        didl_xml = XML.fromstring(value)
+                        # Get the item sub-element
+                        item_xml = didl_xml.find(
+                            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}"
+                            "item"
+                            )
+                        value = get_ml_item(item_xml)
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
