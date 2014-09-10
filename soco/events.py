@@ -14,7 +14,6 @@ import threading
 import socket
 import logging
 import weakref
-from collections import namedtuple
 import time
 import atexit
 
@@ -144,15 +143,53 @@ def parse_event_xml(xml_event):
     return result
 
 
-Event = namedtuple('Event', ['sid', 'seq', 'service', 'variables'])
-# pylint: disable=pointless-string-statement
-""" A namedtuple representing a received event.
+class Event(object):
+    """ A read-only object representing a received event
 
-sid is the subscription id
-seq is the event sequence number for that subscription
-service is the service which is subscribed to the event
-variables is a dict containing the {names: values} of the evented variables
-"""
+    The values of the evented variables can be accessed via the `variables`
+    dict, or as attributes on the instance itself. You should treat all
+    attributes as read-only.
+
+    Args:
+        sid (str): the subscription id
+        seq (str): the event sequence number for that subscription
+        service (str): the service which is subscribed to the event
+        variables (dict): contains the {names: values} of the evented variables
+
+    Example:
+        >>> print event.variables['transport_state']
+        'STOPPED'
+        >>> print event.transport_state
+        'STOPPED'
+
+    Note:
+        Not all attributes are returned with each event. An `AttributeError`
+        will be raised if you attempt to access as an attribute a variable
+        which was not returned in the event.
+
+    """
+    # pylint: disable=too-few-public-methods
+    def __init__(self, sid, seq, service, variables=None):
+        # Initialisation has to be done like this, because __setattr__ is
+        # overridden, and will not allow direct setting of attributes
+        self.__dict__['sid'] = sid
+        self.__dict__['seq'] = seq
+        self.__dict__['service'] = service
+        self.__dict__['variables'] = variables if variables is not None else {}
+
+    def __getattr__(self, name):
+        if name in self.variables:
+            return self.variables[name]
+        else:
+            raise AttributeError('No such attribute: %s' % name)
+
+    def __setattr__(self, name, value):
+        """ Disables (most) attempts to set attributes
+
+        This is not completely foolproof. It just acts as a warning!
+        """
+        # pylint: disable=unused-argument, no-self-use
+        raise TypeError('Event object does not support attribute assignment')
 
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -176,7 +213,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         with _sid_to_service_lock:
             service = _sid_to_service.get(sid)
         variables = parse_event_xml(content)
-        # Build the Event tuple
+        # Build the Event object
         event = Event(sid, seq, service, variables)
         # pass the event details on to the service so it can update its cache.
         if service is not None:  # It might have been removed by another thread

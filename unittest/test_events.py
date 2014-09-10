@@ -2,7 +2,8 @@
 """ Tests for the services module """
 
 from __future__ import unicode_literals
-from soco.events import parse_event_xml
+import pytest
+from soco.events import parse_event_xml, Event
 
 DUMMY_EVENT = """
 <e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
@@ -60,6 +61,25 @@ DUMMY_EVENT = """
     </e:property>
 </e:propertyset>
 """
+
+
+def test_event_object():
+    # Basic initialisation
+    dummy_event = Event('123', '456', 'dummy', {'zone': 'kitchen'})
+    assert dummy_event.sid == '123'
+    assert dummy_event.seq == '456'
+    assert dummy_event.service =='dummy'
+    assert dummy_event.variables == {'zone':'kitchen'}
+    # attribute access
+    assert dummy_event.zone == 'kitchen'
+    # Should not access non-existent attributes
+    with pytest.raises(AttributeError):
+        var = dummy_event.non_existent
+    # Should be read only
+    with pytest.raises(TypeError):
+        dummy_event.new_var = 4
+    with pytest.raises(TypeError):
+        dummy_event.sid = 4
 
 
 def test_event_parsing():
