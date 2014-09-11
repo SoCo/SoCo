@@ -48,40 +48,40 @@ def parse_event_xml(xml_event):
 
     Example:
 
-        Run this code, and change your volume, tracks etc
+        Run this code, and change your volume, tracks etc::
 
-        from __future__ import print_function
-        try:
-            from queue import Empty
-        except:  # Py2.7
-            from Queue import Empty
-
-        import soco
-        from pprint import pprint
-        from soco.events import event_listener
-        # pick a device at random
-        device = soco.discover().pop()
-        print (device.player_name)
-        sub = device.renderingControl.subscribe()
-        sub2 = device.avTransport.subscribe()
-
-        while True:
+            from __future__ import print_function
             try:
-                event = sub.events.get(timeout=0.5)
-                pprint (event.variables)
-            except Empty:
-                pass
-            try:
-                event = sub2.events.get(timeout=0.5)
-                pprint (event.variables)
-            except Empty:
-                pass
+                from queue import Empty
+            except:  # Py2.7
+                from Queue import Empty
 
-            except KeyboardInterrupt:
-                sub.unsubscribe()
-                sub2.unsubscribe()
-                event_listener.stop()
-                break
+            import soco
+            from pprint import pprint
+            from soco.events import event_listener
+            # pick a device at random
+            device = soco.discover().pop()
+            print (device.player_name)
+            sub = device.renderingControl.subscribe()
+            sub2 = device.avTransport.subscribe()
+
+            while True:
+                try:
+                    event = sub.events.get(timeout=0.5)
+                    pprint (event.variables)
+                except Empty:
+                    pass
+                try:
+                    event = sub2.events.get(timeout=0.5)
+                    pprint (event.variables)
+                except Empty:
+                    pass
+
+                except KeyboardInterrupt:
+                    sub.unsubscribe()
+                    sub2.unsubscribe()
+                    event_listener.stop()
+                    break
 
 
     """
@@ -165,10 +165,12 @@ class Event(object):
         variables (dict): contains the {names: values} of the evented variables
 
     Example:
-        >>> print event.variables['transport_state']
-        'STOPPED'
-        >>> print event.transport_state
-        'STOPPED'
+        ::
+
+            >>> print event.variables['transport_state']
+            'STOPPED'
+            >>> print event.transport_state
+            'STOPPED'
 
     Note:
         Not all attributes are returned with each event. An `AttributeError`
@@ -281,9 +283,10 @@ class EventListener(object):
 
         Make sure that your firewall allows connections to this port
 
-        any_zone is any Sonos device on the network. It does not matter which
-        device. It is used only to find a local IP address reachable by the
-        Sonos net.
+        Args:
+            any_zone (SoCo): Any Sonos device on the network. It does not
+                matter which device. It is used only to find a local IP address
+                reachable by the Sonos net.
 
         """
 
@@ -370,7 +373,7 @@ class Subscription(object):
         Args:
             requested_timeout(int, optional): The timeout to be requested
             auto_renew:(bool, optional): If True, renew the subscription
-                automatically shortly before timeout. Default False
+            automatically shortly before timeout. Default False
         """
 
         class AutoRenewThread(threading.Thread):
