@@ -147,6 +147,10 @@ class TestAVTransport:
             ('CurrentURIMetaData', '')
         ])
 
+        moco.avTransport.Play.assert_called_once_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
+
     def test_soco_pause(self, moco):
         moco.pause()
         moco.avTransport.Pause.assert_called_once_with(
