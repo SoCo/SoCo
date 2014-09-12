@@ -147,7 +147,11 @@ class TestAVTransport:
             ('CurrentURIMetaData', '')
         ])
 
-        moco.avTransport.Play.assert_called_once_with(
+    def test_soco_play_uri_calls_play(self, moco):
+        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+
+        moco.avTransport.Play.assert_called_with(
             [('InstanceID', 0), ('Speed', 1)]
         )
 
