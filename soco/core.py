@@ -963,6 +963,9 @@ class SoCo(_SocoSingletonBase):
         track['position'] = response['RelTime']
 
         metadata = response['TrackMetaData']
+        # Store the entire Metadata entry in the track, this can then be
+        # used if needed by the client to restart a given URI
+        track['metadata'] = metadata
         # Duration seems to be '0:00:00' when listening to radio
         if metadata != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(really_utf8(metadata))
