@@ -13,6 +13,7 @@ from textwrap import dedent
 import re
 import itertools
 import requests
+import time
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -58,7 +59,18 @@ def discover(timeout=1, include_invisible=False):
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
+    t0 = time.time()
     while True:
+        # Check if the timeout is exceeded. We could do this check just
+        # before the currently only continue statement of this loop,
+        # but I feel it is safer to do it here, so that we do not forget
+        # to do it if/when another continue statement is added later.
+        # Note: this is sensitive to clock adjustments. AFAIK there
+        # is no monotonic timer available before Python 3.3.
+        t1 = time.time()
+        if t1-t0 > timeout:
+            return None
+        
         response, _, _ = select.select([_sock], [], [], timeout)
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
