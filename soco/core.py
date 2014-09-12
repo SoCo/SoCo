@@ -492,6 +492,38 @@ class SoCo(_SocoSingletonBase):
         # The track is enqueued, now play it.
         return self.play()
 
+    def play_uri_with_title(self, uri='', title=''):
+        """ Play a given stream without constructed meta data for a title.
+        This is often the case if you have a custom stream, it will need
+        at least the title in the metadata in order to play.
+        Pauses the queue.
+
+        Arguments:
+        uri -- URI of a stream to be played.
+        title -- The track title to show in the player.
+
+        Returns:
+        True if the Sonos speaker successfully started playing the track.
+
+        Raises SoCoException (or a subclass) upon errors.
+
+        """
+        meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/'\
+            '1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '\
+            'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '\
+            'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'\
+            '<item id="R:0/0/0" parentID="R:0/0" restricted="true">'\
+            '<dc:title>{title}</dc:title><upnp:class>'\
+            'object.item.audioItem.audioBroadcast</upnp:class><desc '\
+            'id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:'\
+            'metadata-1-0/">{service}</desc></item></DIDL-Lite>'
+        tunein_service = 'SA_RINCON65031_'
+        # Radio stations need to have at least a title to play
+        metadata = meta_template.format(title=title, service=tunein_service)
+
+        # Now play the track
+        return self.play_uri(uri, metadata)
+
     def pause(self):
         """ Pause the currently playing track.
 
