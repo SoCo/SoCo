@@ -70,7 +70,7 @@ def discover(timeout=1, include_invisible=False):
         t1 = time.time()
         if t1-t0 > timeout:
             return None
-        
+
         response, _, _ = select.select([_sock], [], [], timeout)
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
