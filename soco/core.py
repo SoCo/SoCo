@@ -20,7 +20,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult, Queue
+    MLShare, SearchResult, Queue, MusicLibraryItem
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -200,6 +200,7 @@ class SoCo(_SocoSingletonBase):
         get_playlists -- Get playlists from the music library
         get_music_library_information -- Get information from the music library
         get_current_transport_info -- get speakers playing state
+        browse_by_idstring -- Browse (get sub-elements) a given type
         add_uri_to_queue -- Adds an URI to the queue
         add_to_queue -- Add a track to the end of the queue
         remove_from_queue -- Remove a track from the queue
@@ -232,6 +233,18 @@ class SoCo(_SocoSingletonBase):
     """
 
     _class_group = 'SoCo'
+
+    # Key words used when performing searches
+    SEARCH_TRANSLATION = {'artists': 'A:ARTIST',
+                          'album_artists': 'A:ALBUMARTIST',
+                          'albums': 'A:ALBUM',
+                          'genres': 'A:GENRE',
+                          'composers': 'A:COMPOSER',
+                          'tracks': 'A:TRACKS',
+                          'playlists': 'A:PLAYLISTS',
+                          'share': 'S:',
+                          'sonos_playlists': 'SQ:',
+                          'categories': 'A:'}
 
     # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
@@ -1129,6 +1142,13 @@ class SoCo(_SocoSingletonBase):
         metadata['search_type'] = 'queue'
 
         result = response['Result']
+
+        metadata = {}
+        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+            metadata[camel_to_underscore(tag)] = int(response[tag])
+
+        # I'm not sure this necessary (any more). Even with an empty queue,
+        # there is still a result object. This shoud be investigated.
         if not result:
             # pylint: disable=star-args
             return Queue(queue, **metadata)
@@ -1348,6 +1368,42 @@ class SoCo(_SocoSingletonBase):
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
+
+    # pylint: disable=too-many-arguments
+    def browse_by_idstring(self, search_type, idstring, start=0,
+                           max_items=100, full_album_art_uri=False):
+        """Browse (get sub-elements) a given type
+
+        :param search_type: The kind of information to retrieve. Can be one of:
+            'artists', 'album_artists', 'albums', 'genres', 'composers',
+            'tracks', 'share', 'sonos_playlists', and 'playlists', where
+            playlists are the imported file based playlists from the
+            music library
+        :param idstring: String ID to search for
+        :param start: Starting number of returned matches
+        :param max_items: Maximum number of returned matches. NOTE: The maximum
+            may be restricted by the unit, presumably due to transfer
+            size consideration, so check the returned number against the
+            requested.
+        :param full_album_art_uri: If the album art URI should include the
+                IP address
+        :returns: A dictionary with metadata for the search, with the
+            keys 'number_returned', 'update_id', 'total_matches' and an
+            'item_list' list with the search results.
+        """
+        search = self.SEARCH_TRANSLATION[search_type]
+
+        # Check if the string ID already has the type, if so we do not want to
+        # add one
+        if idstring.startswith(search):
+            search = ""
+
+        search_uri = "#{0}{1}".format(search, idstring)
+
+        search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
+
+        # Call the base version
+        return self.browse(search_item, start, max_items, full_album_art_uri)
 
     def _music_lib_search(self, search, start, max_items, get_metadata=False):
         """Perform a music library search and extract search numbers

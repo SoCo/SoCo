@@ -1392,20 +1392,20 @@ class SearchResult(ListOfMusicInfoItems):
         """The search type"""
         return self._metadata['search_type']
 
-    @property
-    def number_returned(self):
-        """The number of returned matches"""
-        return self._metadata['number_returned']
 
-    @property
-    def total_matches(self):
-        """The number of total matches"""
-        return self._metadata['total_matches']
+class Queue(ListOfMusicInfoItems):
+    """Container class that represents a queue"""
 
-    @property
-    def update_id(self):
-        """The update ID"""
-        return self._metadata['update_id']
+    def __init__(self, items, number_returned, total_matches, update_id):
+        super(Queue, self).__init__(
+            items, number_returned, total_matches, update_id
+        )
+
+    def __repr__(self):
+        return '{0}(items={1})'.format(
+            self.__class__.__name__,
+            super(Queue, self).__repr__(),
+            )
 
     @property
     def child_count(self):
