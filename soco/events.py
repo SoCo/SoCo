@@ -14,7 +14,6 @@ import threading
 import socket
 import logging
 import weakref
-from collections import namedtuple
 import time
 import atexit
 
@@ -24,14 +23,68 @@ from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
 from .exceptions import SoCoException
+from .utils import camel_to_underscore
+from .data_structures import get_ml_item
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 def parse_event_xml(xml_event):
-    """ Parse an xml_event passed as bytes and return a dict with keys
-    representing the event properties"""
+    """ Parse the body of a UPnP event
+
+    Arg:
+        xml_event (str): a byte string containing the body of the event
+
+    Returns:
+        A dict with keys representing the evented variables. The relevant value
+        will usually be a string representation of the variable's value, but
+        may on occasion be:
+        *  a dict (eg when the volume changes, the value will
+            itself be a dict containing the volume for each channel:
+            `{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}` )
+        * an instance of a MusicInfoItem subclass (eg if it represents track
+            metadata)
+
+    Example:
+
+        Run this code, and change your volume, tracks etc::
+
+            from __future__ import print_function
+            try:
+                from queue import Empty
+            except:  # Py2.7
+                from Queue import Empty
+
+            import soco
+            from pprint import pprint
+            from soco.events import event_listener
+            # pick a device at random
+            device = soco.discover().pop()
+            print (device.player_name)
+            sub = device.renderingControl.subscribe()
+            sub2 = device.avTransport.subscribe()
+
+            while True:
+                try:
+                    event = sub.events.get(timeout=0.5)
+                    pprint (event.variables)
+                except Empty:
+                    pass
+                try:
+                    event = sub2.events.get(timeout=0.5)
+                    pprint (event.variables)
+                except Empty:
+                    pass
+
+                except KeyboardInterrupt:
+                    sub.unsubscribe()
+                    sub2.unsubscribe()
+                    event_listener.stop()
+                    break
+
+
+    """
 
     result = {}
     tree = XML.fromstring(xml_event)
@@ -41,19 +94,112 @@ def parse_event_xml(xml_event):
         '{urn:schemas-upnp-org:event-1-0}property')
     for prop in properties:
         for variable in prop:
-            result[variable.tag] = variable.text
+            # Special handling for a LastChange event specially. For details on
+            # LastChange events, see
+            # http://upnp.org/specs/av/UPnP-av-RenderingControl-v1-Service.pdf
+            # and http://upnp.org/specs/av/UPnP-av-AVTransport-v1-Service.pdf
+            if variable.tag == "LastChange":
+                last_change_tree = XML.fromstring(
+                    variable.text.encode('utf-8'))
+                # We assume there is only one InstanceID tag. This is true for
+                # Sonos, as far as we know.
+                # InstanceID can be in one of two namespaces, depending on
+                # whether we are looking at an avTransport event or a
+                # renderingControl event, so we need to look for both
+                instance = last_change_tree.find(
+                    "{urn:schemas-upnp-org:metadata-1-0/AVT/}InstanceID")
+                if instance is None:
+                    instance = last_change_tree.find(
+                        "{urn:schemas-upnp-org:metadata-1-0/RCS/}InstanceID")
+                # Look at each variable within the LastChange event
+                for last_change_var in instance:
+                    tag = last_change_var.tag
+                    # Remove any namespaces from the tags
+                    if tag.startswith('{'):
+                        tag = tag.split('}', 1)[1]
+                    # Un-camel case it
+                    tag = camel_to_underscore(tag)
+                    # Now extract the relevant value for the variable.
+                    # The UPnP specs suggest that the value of any variable
+                    # evented via a LastChange Event will be in the 'val'
+                    # attribute, but audio related variables may also have a
+                    # 'channel' attribute. In addition, it seems that Sonos
+                    # sometimes uses a text value instead: see
+                    # http://forums.sonos.com/showthread.php?t=34663
+                    value = last_change_var.get('val')
+                    if value is None:
+                        value = last_change_var.text
+                    # If DIDL metadata is returned, convert it to a music
+                    # library data structure
+                    if value.startswith('<DIDL-Lite'):
+                        didl_xml = XML.fromstring(value)
+                        # Get the item sub-element
+                        item_xml = didl_xml.find(
+                            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}"
+                            "item"
+                            )
+                        value = get_ml_item(item_xml)
+                    channel = last_change_var.get('channel')
+                    if channel is not None:
+                        if result.get(tag) is None:
+                            result[tag] = {}
+                        result[tag][channel] = value
+                    else:
+                        result[tag] = value
+            else:
+                result[camel_to_underscore(variable.tag)] = variable.text
     return result
 
 
-Event = namedtuple('Event', ['sid', 'seq', 'service', 'variables'])
-# pylint: disable=pointless-string-statement
-""" A namedtuple representing a received event.
+class Event(object):
+    """ A read-only object representing a received event
 
-sid is the subscription id
-seq is the event sequence number for that subscription
-service is the service which is subscribed to the event
-variables is a dict containing the {names: values} of the evented variables
-"""
+    The values of the evented variables can be accessed via the `variables`
+    dict, or as attributes on the instance itself. You should treat all
+    attributes as read-only.
+
+    Args:
+        sid (str): the subscription id
+        seq (str): the event sequence number for that subscription
+        service (str): the service which is subscribed to the event
+        variables (dict): contains the {names: values} of the evented variables
+
+    Example:
+        ::
+
+            >>> print event.variables['transport_state']
+            'STOPPED'
+            >>> print event.transport_state
+            'STOPPED'
+
+    Note:
+        Not all attributes are returned with each event. An `AttributeError`
+        will be raised if you attempt to access as an attribute a variable
+        which was not returned in the event.
+
+    """
+    # pylint: disable=too-few-public-methods
+    def __init__(self, sid, seq, service, variables=None):
+        # Initialisation has to be done like this, because __setattr__ is
+        # overridden, and will not allow direct setting of attributes
+        self.__dict__['sid'] = sid
+        self.__dict__['seq'] = seq
+        self.__dict__['service'] = service
+        self.__dict__['variables'] = variables if variables is not None else {}
+
+    def __getattr__(self, name):
+        if name in self.variables:
+            return self.variables[name]
+        else:
+            raise AttributeError('No such attribute: %s' % name)
+
+    def __setattr__(self, name, value):
+        """ Disables (most) attempts to set attributes
+
+        This is not completely foolproof. It just acts as a warning!
+        """
+        # pylint: disable=unused-argument, no-self-use
+        raise TypeError('Event object does not support attribute assignment')
 
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -77,7 +223,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         with _sid_to_service_lock:
             service = _sid_to_service.get(sid)
         variables = parse_event_xml(content)
-        # Build the Event tuple
+        # Build the Event object
         event = Event(sid, seq, service, variables)
         # pass the event details on to the service so it can update its cache.
         if service is not None:  # It might have been removed by another thread
@@ -137,9 +283,10 @@ class EventListener(object):
 
         Make sure that your firewall allows connections to this port
 
-        any_zone is any Sonos device on the network. It does not matter which
-        device. It is used only to find a local IP address reachable by the
-        Sonos net.
+        Args:
+            any_zone (SoCo): Any Sonos device on the network. It does not
+                matter which device. It is used only to find a local IP address
+                reachable by the Sonos net.
 
         """
 
@@ -226,7 +373,7 @@ class Subscription(object):
         Args:
             requested_timeout(int, optional): The timeout to be requested
             auto_renew:(bool, optional): If True, renew the subscription
-                automatically shortly before timeout. Default False
+            automatically shortly before timeout. Default False
         """
 
         class AutoRenewThread(threading.Thread):
