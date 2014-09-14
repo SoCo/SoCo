@@ -232,6 +232,23 @@ class TestAVTransport:
                 ('CurrentURIMetaData', '')]
         )
 
+    def test_is_playing_tv(self, moco):
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'x-sonos-htastream:RINCON_00012345678901234:spdif'
+        }
+        playing_tv = moco.is_playing_tv
+        assert playing_tv
+        moco.avTransport.GetPositionInfo.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Channel', 'Master')]
+        )
+
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'not-tv',
+        }
+        playing_tv = moco.is_playing_tv
+        assert not playing_tv
+
     def test_create_sonos_playlist(self, moco):
         playlist_name = "cool music"
         playlist_id = 1

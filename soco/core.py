@@ -212,6 +212,7 @@ class SoCo(_SocoSingletonBase):
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
+        is_playing_tv -- Is the speaker input from TV?
 
     .. warning::
 
@@ -896,6 +897,19 @@ class SoCo(_SocoSingletonBase):
             ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
             ('CurrentURIMetaData', '')
             ])
+
+    @property
+    def is_playing_tv(self):
+        """ Is the speaker input from TV?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+            ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-sonos-htastream:', track_uri) is not None
 
     def switch_to_tv(self):
         """ Switch the speaker's input to TV.
