@@ -180,6 +180,7 @@ class SoCo(_SocoSingletonBase):
         join -- Join this speaker to another "master" speaker.
         unjoin -- Remove this speaker from a group.
         get_queue -- Get information about the queue.
+        get_queue_size -- Get size of queue.
         get_artists -- Get artists from the music library
         get_album_artists -- Get album artists from the music library
         get_albums -- Get albums from the music library
@@ -1154,6 +1155,30 @@ class SoCo(_SocoSingletonBase):
 
         # pylint: disable=star-args
         return Queue(queue, **metadata)
+
+    @property
+    def get_queue_size(self):
+        """ Get size of queue """
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseMetadata'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', '')
+            ])
+        dom = XML.fromstring(really_utf8(response['Result']))
+
+        queue_size = None
+        container = dom.find(
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
+        if container is not None:
+            child_count = container.get('childCount')
+            if child_count is not None:
+                queue_size = int(child_count)
+
+        return queue_size
+
 
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
