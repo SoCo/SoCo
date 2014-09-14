@@ -151,17 +151,6 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
     pass
 
 
-def _set_child_count(dom, metadata):
-    """ Get the child count metadata from a response DOM """
-    container = dom.find(
-        '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
-    if container is not None:
-        child_count = container.get('childCount')
-        if child_count is not None:
-            metadata['child_count'] = int(child_count)
-    return metadata
-
-
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
     """A simple class for controlling a Sonos speaker.
@@ -1124,9 +1113,7 @@ class SoCo(_SocoSingletonBase):
         """ Get information about the queue
 
         :param start: Starting number of returned matches
-        :param max_items: Maximum number of returned matches.  If max_items
-            is 0, returns metadata about the queue and child_count property
-            is valid.
+        :param max_items: Maximum number of returned matches
         :param full_album_art_uri: If the album art URI should include the
             IP address
         :returns: A :py:class:`~.soco.data_structures.Queue` object
@@ -1136,11 +1123,14 @@ class SoCo(_SocoSingletonBase):
 
         """
         queue = []
-        get_metadata = (max_items == 0)
-        response, metadata = self._music_lib_search('Q:0', start, max_items,
-                                                    get_metadata=get_metadata)
-        metadata['search_type'] = 'queue'
-
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', start),
+            ('RequestedCount', max_items),
+            ('SortCriteria', '')
+            ])
         result = response['Result']
 
         metadata = {}
@@ -1161,9 +1151,6 @@ class SoCo(_SocoSingletonBase):
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
             queue.append(item)
-
-        # Get child count
-        metadata = _set_child_count(result_dom, metadata)
 
         # pylint: disable=star-args
         return Queue(queue, **metadata)
@@ -1286,20 +1273,8 @@ class SoCo(_SocoSingletonBase):
         project.
 
         """
-        search_translation = {'artists': 'A:ARTIST',
-                              'album_artists': 'A:ALBUMARTIST',
-                              'albums': 'A:ALBUM',
-                              'genres': 'A:GENRE',
-                              'composers': 'A:COMPOSER',
-                              'tracks': 'A:TRACKS',
-                              'playlists': 'A:PLAYLISTS',
-                              'share': 'S:',
-                              'sonos_playlists': 'SQ:',
-                              'categories': 'A:'}
-        search = search_translation[search_type]
-        get_metadata = (max_items == 0)
-        response, metadata = self._music_lib_search(search, start, max_items,
-                                                    get_metadata=get_metadata)
+        search = self.SEARCH_TRANSLATION[search_type]
+        response, metadata = self._music_lib_search(search, start, max_items)
         metadata['search_type'] = search_type
 
         # Parse the results
@@ -1317,9 +1292,6 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             # Append the item to the list
             item_list.append(item)
-
-        # Get child count
-        metadata = _set_child_count(dom, metadata)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
@@ -1363,9 +1335,6 @@ class SoCo(_SocoSingletonBase):
                 self._update_album_art_to_full_uri(item)
             item_list.append(item)
 
-        # Get child count
-        metadata = _set_child_count(dom, metadata)
-
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
@@ -1405,7 +1374,7 @@ class SoCo(_SocoSingletonBase):
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
 
-    def _music_lib_search(self, search, start, max_items, get_metadata=False):
+    def _music_lib_search(self, search, start, max_items):
         """Perform a music library search and extract search numbers
 
         You can get an overview of all the relevant search prefixes (like
@@ -1426,18 +1395,15 @@ class SoCo(_SocoSingletonBase):
             search (str): The ID to search
             start: The index of the forst item to return
             max_items: The maximum number of items to return
-            get_metadata: Get only metadata not the results
 
         Returns:
             tuple: (response, metadata) where response is the returned metadata
                 and metadata is a dict with the 'number_returned',
                 'total_matches' and 'update_id' integers
         """
-        browse_flag = 'BrowseMetadata' if get_metadata else \
-                      'BrowseDirectChildren'
         response = self.contentDirectory.Browse([
             ('ObjectID', search),
-            ('BrowseFlag', browse_flag),
+            ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', start),
             ('RequestedCount', max_items),

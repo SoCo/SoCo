@@ -1407,25 +1407,6 @@ class Queue(ListOfMusicInfoItems):
             super(Queue, self).__repr__(),
             )
 
-    @property
-    def child_count(self):
-        """The number of child items"""
-        return self._metadata['child_count']
-
-class Queue(ListOfMusicInfoItems):
-    """Container class that represents a queue"""
-
-    def __init__(self, items, number_returned, total_matches, update_id):
-        super(Queue, self).__init__(
-            items, number_returned, total_matches, update_id
-        )
-
-    def __repr__(self):
-        return '{0}(items={1})'.format(
-            self.__class__.__name__,
-            super(Queue, self).__repr__(),
-            )
-
 
 DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container.album.musicAlbum': MLAlbum,
