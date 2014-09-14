@@ -1179,7 +1179,6 @@ class SoCo(_SocoSingletonBase):
 
         return queue_size
 
-
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
         """ Convenience method for:
