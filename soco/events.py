@@ -101,6 +101,7 @@ def parse_event_xml(xml_event):
             if variable.tag == "LastChange":
                 last_change_tree = XML.fromstring(
                     variable.text.encode('utf-8'))
+                result['last_change_xml_tree'] = last_change_tree
                 # We assume there is only one InstanceID tag. This is true for
                 # Sonos, as far as we know.
                 # InstanceID can be in one of two namespaces, depending on
