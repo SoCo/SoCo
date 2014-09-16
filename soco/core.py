@@ -172,7 +172,7 @@ class SoCo(_SocoSingletonBase):
         next -- Go to the next track.
         previous -- Go back to the previous track.
         switch_to_line_in -- Switch the speaker's input to line-in.
-        switch_to_tv -- Switch the speaker's input to TV.
+        switch_to_tv -- Switch the playbar speaker's input to TV.
         get_current_track_info -- Get information about the currently playing
                                   track.
         get_speaker_info -- Get information about the Sonos speaker.
@@ -212,7 +212,7 @@ class SoCo(_SocoSingletonBase):
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
-        is_playing_tv -- Is the speaker input from TV?
+        is_playing_tv -- Is the playbar speaker input from TV?
 
     .. warning::
 
@@ -900,7 +900,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_tv(self):
-        """ Is the speaker input from TV?
+        """ Is the playbar speaker input from TV?
 
         return True or False
         """
@@ -912,7 +912,7 @@ class SoCo(_SocoSingletonBase):
         return re.match(r'^x-sonos-htastream:', track_uri) is not None
 
     def switch_to_tv(self):
-        """ Switch the speaker's input to TV.
+        """ Switch the playbar speaker's input to TV.
 
         Returns:
         True if the Sonos speaker successfully switched to TV.
