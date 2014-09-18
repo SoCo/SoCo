@@ -123,6 +123,7 @@ class Snapshot(object):
         # return if device is a coordinator (helps usage)
         return self.is_coordinator
 
+    # pylint: disable=too-many-branches
     def restore(self, fade=False):
         """ Restores the state of a device that was previously saved
 
