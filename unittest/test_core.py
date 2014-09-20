@@ -420,3 +420,9 @@ class TestZoneGroupTopology:
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
+
+    def test_group_label(self, moco_zgs):
+        assert moco_zgs.group.label == "Kitchen, Living Room"
+
+    def test_group_short_label(self, moco_zgs):
+        assert moco_zgs.group.short_label == "Kitchen + 1"
