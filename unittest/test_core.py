@@ -29,44 +29,45 @@ def moco():
         patch.stop()
 
 
+ZGS = """<ZoneGroups>
+      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+        <ZoneGroupMember
+            BootSeq="33"
+            Configuration="1"
+            Icon="x-rincon-roomicon:zoneextender"
+            Invisible="1"
+            IsZoneBridge="1"
+            Location="http://192.168.1.100:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000ZZZ1400"
+            ZoneName="BRIDGE"/>
+      </ZoneGroup>
+      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
+        <ZoneGroupMember
+            BootSeq="44"
+            Configuration="1"
+            Icon="x-rincon-roomicon:living"
+            Location="http://192.168.1.101:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000XXX1400"
+            ZoneName="Living Room"/>
+        <ZoneGroupMember
+            BootSeq="52"
+            Configuration="1"
+            Icon="x-rincon-roomicon:kitchen"
+            Location="http://192.168.1.102:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000YYY1400"
+            ZoneName="Kitchen"/>
+      </ZoneGroup>
+    </ZoneGroups>"""
+
 @pytest.yield_fixture
 def moco_zgs(moco):
     """A mock soco with zone group state"""
-    ZGS = """<ZoneGroups>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
-            <ZoneGroupMember
-                BootSeq="33"
-                Configuration="1"
-                Icon="x-rincon-roomicon:zoneextender"
-                Invisible="1"
-                IsZoneBridge="1"
-                Location="http://192.168.1.100:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000ZZZ1400"
-                ZoneName="BRIDGE"/>
-          </ZoneGroup>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
-            <ZoneGroupMember
-                BootSeq="44"
-                Configuration="1"
-                Icon="x-rincon-roomicon:living"
-                Location="http://192.168.1.101:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000XXX1400"
-                ZoneName="Living Room"/>
-            <ZoneGroupMember
-                BootSeq="52"
-                Configuration="1"
-                Icon="x-rincon-roomicon:kitchen"
-                Location="http://192.168.1.102:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000YYY1400"
-                ZoneName="Kitchen"/>
-          </ZoneGroup>
-        </ZoneGroups>"""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {
         'ZoneGroupState': ZGS
     }
@@ -421,8 +422,22 @@ class TestZoneGroupTopology:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
-    def test_group_label(self, moco_zgs):
-        assert moco_zgs.group.label == "Kitchen, Living Room"
+    def test_group_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.label == "Kitchen, Living Room"
 
-    def test_group_short_label(self, moco_zgs):
-        assert moco_zgs.group.short_label == "Kitchen + 1"
+    def test_group_short_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.short_label == "Kitchen + 1"
