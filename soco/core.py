@@ -787,6 +787,19 @@ class SoCo(_SocoSingletonBase):
                 self._all_zones.add(zone)
                 if is_visible:
                     self._visible_zones.add(zone)
+                # Loop over Satellite elements if present, and process as for
+                # ZoneGroup elements
+                for satellite_element in member_element.findall('Satellite'):
+                    satellite_attribs = satellite_element.attrib
+                    ip_addr = satellite_attribs['Location'].\
+                        split('//')[1].split(':')[0]
+                    unit = config.SOCO_CLASS(ip_addr)
+                    unit._uid = satellite_attribs['UUID']
+                    unit._player_name = satellite_attribs['ZoneName']
+                    # Assume a satellite can't be a bridge, coordinator or
+                    # visible, so no need to alter defaults.
+                    members.add(unit)
+                    self._all_zones.add(unit)
                 # Now create a ZoneGroup with this info and add it to the list
                 # of groups
             self._groups.add(ZoneGroup(group_uid, group_coordinator, members))
