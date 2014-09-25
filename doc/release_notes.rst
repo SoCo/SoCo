@@ -64,7 +64,7 @@ Improvements
 ------------
 
 * Improved test coverage (`#159 <https://github.com/SoCo/SoCo/pull/159>`_,
-  `#184 <https://github.com/SoCo/SoCo/pull/184>`)
+  `#184 <https://github.com/SoCo/SoCo/pull/184>`_)
 
 * Fixes for Python 2.6 support (`#175
   <https://github.com/SoCo/SoCo/pull/175>`_)
@@ -73,10 +73,10 @@ Improvements
   <https://github.com/SoCo/SoCo/pull/179>`_)
 
 * The ``SoCo`` class can replaced by a custom implementation (`#180
-  <https://github.com/SoCo/SoCo/pull/180>`)
+  <https://github.com/SoCo/SoCo/pull/180>`_)
 
 * The cache can be globally disabled (`#180
-  <https://github.com/SoCo/SoCo/pull/180>`)
+  <https://github.com/SoCo/SoCo/pull/180>`_)
 
 * Music Library data structures are constructed for DIDL XML content (`#191
   <https://github.com/SoCo/SoCo/pull/191>`_).
