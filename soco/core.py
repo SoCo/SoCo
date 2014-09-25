@@ -180,7 +180,6 @@ class SoCo(_SocoSingletonBase):
         join -- Join this speaker to another "master" speaker.
         unjoin -- Remove this speaker from a group.
         get_queue -- Get information about the queue.
-        get_queue_size -- Get size of queue.
         get_artists -- Get artists from the music library
         get_album_artists -- Get album artists from the music library
         get_albums -- Get albums from the music library
@@ -214,6 +213,7 @@ class SoCo(_SocoSingletonBase):
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
+        get_queue_size -- Get size of queue.
 
     .. warning::
 
