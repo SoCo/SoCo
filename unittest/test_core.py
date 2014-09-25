@@ -401,6 +401,10 @@ class TestZoneGroupTopology:
         for group in groups:
             assert isinstance(group, ZoneGroup)
 
+    def test_all_groups_have_coordinator(self, moco_zgs):
+        for group in moco_zgs.all_groups:
+            assert group.coordinator is not None
+
     def test_group(self, moco_zgs):
         assert isinstance(moco_zgs.group, ZoneGroup)
         assert moco_zgs in moco_zgs.group
