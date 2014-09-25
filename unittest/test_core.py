@@ -218,13 +218,13 @@ class TestAVTransport:
         assert len(queue) == 1
         moco.contentDirectory.reset_mock()
 
-    def test_soco_get_queue_size(self, moco):
+    def test_soco_queue_size(self, moco):
         moco.contentDirectory.Browse.return_value = {
             'NumberReturned': '1',
             'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="Q:0" parentID="Q:" restricted="true" childCount="384"><dc:title>Queue Instance 0</dc:title><upnp:class>object.container.playlistContainer</upnp:class><res protocolInfo="x-rincon-queue:*:*:*">x-rincon-queue:RINCON_00012345678901400#0</res></container></DIDL-Lite>',
             'TotalMatches': '1',
             'UpdateID': '1'}
-        queue_size = moco.get_queue_size
+        queue_size = moco.queue_size
         moco.contentDirectory.Browse.assert_called_once_with([
             ('ObjectID', 'Q:0'),
             ('BrowseFlag', 'BrowseMetadata'),

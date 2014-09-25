@@ -213,7 +213,7 @@ class SoCo(_SocoSingletonBase):
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
-        get_queue_size -- Get size of queue.
+        queue_size -- Get size of queue.
 
     .. warning::
 
@@ -1158,7 +1158,7 @@ class SoCo(_SocoSingletonBase):
         return Queue(queue, **metadata)
 
     @property
-    def get_queue_size(self):
+    def queue_size(self):
         """ Get size of queue """
         response = self.contentDirectory.Browse([
             ('ObjectID', 'Q:0'),
