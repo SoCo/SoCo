@@ -33,7 +33,7 @@ def moco():
 def moco_zgs(moco):
     """A mock soco with zone group state"""
     ZGS = """<ZoneGroups>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+          <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
             <ZoneGroupMember
                 BootSeq="33"
                 Configuration="1"
