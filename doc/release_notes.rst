@@ -1,6 +1,25 @@
 Release notes
 *************
 
+
+Version 0.10
+============
+
+Release notes for the upcoming release.
+
+New Features
+------------
+
+
+Improvements
+------------
+
+
+Backwards Compatability
+-----------------------
+
+
+
 Version 0.9
 ===========
 
