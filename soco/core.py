@@ -210,6 +210,7 @@ class SoCo(_SocoSingletonBase):
         bass -- The speaker's bass EQ.
         treble -- The speaker's treble EQ.
         loudness -- The status of the speaker's loudness compensation.
+        cross_fade -- The status of the speaker's crossfade.
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.

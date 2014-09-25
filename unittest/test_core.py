@@ -312,6 +312,18 @@ class TestAVTransport:
              ('AddAtIndex', 4294967295)]
         )
 
+    def test_soco_cross_fade(self, moco):
+        moco.avTransport.GetCrossfadeMode.return_value = {
+            'CrossfadeMode': '1'}
+        assert moco.cross_fade
+        moco.avTransport.GetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        moco.cross_fade = False
+        moco.avTransport.SetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0), ('CrossfadeMode', '0')]
+        )
+
 
 class TestRenderingControl:
 
