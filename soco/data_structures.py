@@ -617,6 +617,106 @@ class MLSameArtist(MusicLibraryItem):
         MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
+class MLItem(MusicLibraryItem):
+    """Class that represents an audio broadcast.
+
+    :ivar parent_id: The parent ID for the MLItem is ??????
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLItem from XML.
+        The value is shown below
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+             _translation = {
+                'title': ('dc', 'title'),
+                'stream_content': ('r', 'streamContent'),
+                'radio_show': ('r', 'radioShowMd'),
+                'album_art_uri': ('upnp', 'albumArtURI'),
+                'uri': ('', 'res')
+            }
+
+    """
+
+    item_class = 'object.item.audioItem.stream'
+    # name: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'stream_content': ('r', 'streamContent'),
+        'radio_show': ('r', 'radioShowMd'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res')
+    }
+
+    @property
+    def stream_content(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('stream_content')
+
+    @stream_content.setter
+    def stream_content(self, stream_content):  # pylint: disable=C0111
+        self.content['stream_content'] = stream_content
+
+    @property
+    def radio_show(self):
+        """Get and set the radio_show as an unicode object."""
+        return self.content.get('radio_show')#.split(',')[0]
+
+    @radio_show.setter
+    def radio_show(self, radio_show):  # pylint: disable=C0111
+        self.content['radio_show'] = radio_show
+
+    @property
+    def album_art_uri(self):
+        """Get and set the album art URI as an unicode object."""
+        return self.content.get('album_art_uri')
+
+    @album_art_uri.setter
+    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
+        self.content['album_art_uri'] = album_art_uri
+
+
+class MLAudiobroadcast(MusicLibraryItem):
+    """Class that represents an audio broadcast.
+
+    :ivar parent_id: The parent ID for the MLAudiobroadcast is ????
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLAudiobroadcast from XML.
+
+        Only use radio station title
+
+        The value is shown below
+        (note uri in not in this class but needed to make super class work)
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+             _translation = {
+                'station_title': ('dc', 'title'),
+                'desc': ('r', 'desc')
+                'uri': ('', 'res')
+            }
+
+    """
+
+    item_class = 'object.item.audioItem.stream'
+    # name: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'desc': ('r', 'desc'),
+        'uri': ('', 'res')
+    }
+
+    @property
+    def desc(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('desc')
+
+    @desc.setter
+    def stream_content(self, desc):  # pylint: disable=C0111
+        self.content['stream_content'] = desc
+
+
 ###############################################################################
 # MUSIC LIBRARY                                                               #
 ###############################################################################
@@ -1417,7 +1517,10 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container': MLCategory,
                        'object.container.albumlist': MLAlbumList,
                        'object.container.playlistContainer.sameArtist':
-                           MLSameArtist}
+                           MLSameArtist,
+                       'object.item': MLItem,
+                       'object.item.audioItem.audioBroadcast': MLAudiobroadcast
+                       }
 
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
@@ -1429,5 +1532,6 @@ NS = {
     'dc': 'http://purl.org/dc/elements/1.1/',
     'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
     '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-    'ms': 'http://www.sonos.com/Services/1.1'
+    'ms': 'http://www.sonos.com/Services/1.1',
+    'r': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
 }
