@@ -163,10 +163,11 @@ class MusicLibraryItem(MusicInfoItem):
 
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
-                     'item_id' : item_id}
+                     'item_id': item_id}
         arguments.update(kwargs)
         for key, value in arguments.items():
-            if key in self._translation or key == 'parent_id' or key == 'item_id':
+            if key in self._translation or key == 'parent_id' \
+                    or key == 'item_id':
                 self.content[key] = value
             else:
                 raise ValueError(
@@ -221,7 +222,8 @@ class MusicLibraryItem(MusicInfoItem):
         """
         # Make a copy since this method will modify the input dict
         content_in = content.copy()
-        args = [content_in.pop(arg) for arg in ['uri', 'title', 'parent_id', 'item_id']]
+        args = [content_in.pop(arg) for arg in ['uri', 'title',
+                                                'parent_id', 'item_id']]
         return cls(*args, **content_in)
 
     @property
