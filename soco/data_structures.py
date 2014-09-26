@@ -146,7 +146,7 @@ class MusicLibraryItem(MusicInfoItem):
         'uri': ('', 'res')
     }
 
-    def __init__(self, uri, title, parent_id, **kwargs):
+    def __init__(self, uri, title, parent_id, item_id=None, **kwargs):
         r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
@@ -162,10 +162,11 @@ class MusicLibraryItem(MusicInfoItem):
         super(MusicLibraryItem, self).__init__()
 
         # Parse the input arguments
-        arguments = {'uri': uri, 'title': title, 'parent_id': parent_id}
+        arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
+                     'item_id' : item_id}
         arguments.update(kwargs)
         for key, value in arguments.items():
-            if key in self._translation or key == 'parent_id':
+            if key in self._translation or key == 'parent_id' or key == 'item_id':
                 self.content[key] = value
             else:
                 raise ValueError(
@@ -196,6 +197,9 @@ class MusicLibraryItem(MusicInfoItem):
                 # The xml objects should contain utf-8 internally
                 content[key] = really_unicode(result.text)
 
+        # Extract the item ID
+        content['item_id'] = xml.get('id')
+
         # Extract the parent ID
         content['parent_id'] = xml.get('parentID')
 
@@ -217,7 +221,7 @@ class MusicLibraryItem(MusicInfoItem):
         """
         # Make a copy since this method will modify the input dict
         content_in = content.copy()
-        args = [content_in.pop(arg) for arg in ['uri', 'title', 'parent_id']]
+        args = [content_in.pop(arg) for arg in ['uri', 'title', 'parent_id', 'item_id']]
         return cls(*args, **content_in)
 
     @property
@@ -467,7 +471,7 @@ class MLArtist(MusicLibraryItem):
 
     item_class = 'object.container.person.musicArtist'
 
-    def __init__(self, uri, title, parent_id):
+    def __init__(self, uri, title, parent_id, item_id=None):
         """Instantiate the MLArtist item by passing the arguments to the
         super class :py:meth:`.MusicLibraryItem.__init__`.
 
@@ -475,7 +479,7 @@ class MLArtist(MusicLibraryItem):
         :param title: The title of the artist
         :param item_class: The parent ID for the artist
         """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
+        MusicLibraryItem.__init__(self, uri, title, parent_id, item_id)
 
 
 class MLGenre(MusicLibraryItem):
