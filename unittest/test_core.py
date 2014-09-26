@@ -33,7 +33,7 @@ def moco():
 def moco_zgs(moco):
     """A mock soco with zone group state"""
     ZGS = """<ZoneGroups>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+          <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
             <ZoneGroupMember
                 BootSeq="33"
                 Configuration="1"
@@ -412,6 +412,10 @@ class TestZoneGroupTopology:
         assert len(set(groups)) == 2
         for group in groups:
             assert isinstance(group, ZoneGroup)
+
+    def test_all_groups_have_coordinator(self, moco_zgs):
+        for group in moco_zgs.all_groups:
+            assert group.coordinator is not None
 
     def test_group(self, moco_zgs):
         assert isinstance(moco_zgs.group, ZoneGroup)

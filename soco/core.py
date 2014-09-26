@@ -753,6 +753,7 @@ class SoCo(_SocoSingletonBase):
         for group_element in tree.findall('ZoneGroup'):
             coordinator_uid = group_element.attrib['Coordinator']
             group_uid = group_element.attrib['ID']
+            group_coordinator = None
             members = set()
             for member_element in group_element.findall('ZoneGroupMember'):
                 # Create a SoCo instance for each member. Because SoCo
@@ -766,7 +767,6 @@ class SoCo(_SocoSingletonBase):
                 zone._uid = member_attribs['UUID']
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
-                group_coordinator = None
                 if zone._uid == coordinator_uid:
                     group_coordinator = zone
                     zone._is_coordinator = True
