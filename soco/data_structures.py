@@ -232,17 +232,12 @@ class MusicLibraryItem(MusicInfoItem):
     @property
     def item_id(self):  # pylint: disable=C0103
         """Return the id.
-
-        The id is extracted as the part of the URI after the first # character.
-        For the few music library types where that is not correct, this method
-        should be overwritten.
         """
-        out = self.content['uri']
-        try:
-            out = out[out.index('#') + 1:]
-        except ValueError:
-            out = None
-        return out
+        return self.content['item_id']
+
+    @item_id.setter
+    def item_id(self, item_id):  # pylint: disable=C0111
+        self.content['item_id'] = item_id
 
     @property
     def didl_metadata(self):
@@ -358,19 +353,6 @@ class MLTrack(MusicLibraryItem):
         'uri': ('', 'res'),
         'original_track_number': ('upnp', 'originalTrackNumber')
     }
-
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Return the id."""
-        out = self.content['uri']
-        if 'x-file-cifs' in out:
-            # URI's for MusicTracks starts with x-file-cifs, where cifs most
-            # likely refer to Common Internet File System. For unknown reasons
-            # that part must be replaces with an S to form the item_id
-            out = out.replace('x-file-cifs', 'S')
-        else:
-            out = None
-        return out
 
     @property
     def creator(self):
@@ -523,16 +505,6 @@ class MLPlaylist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer'
 
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Returns the id."""
-        out = self.content['uri']
-        if 'x-file-cifs' in out:
-            out = out.replace('x-file-cifs', 'S')
-        else:
-            out = super(MLPlaylist, self).item_id
-        return out
-
 
 class MLSonosPlaylist(MusicLibraryItem):
     """ Class that represents a sonos playlist.
@@ -546,12 +518,6 @@ class MLSonosPlaylist(MusicLibraryItem):
     """
 
     item_class = 'object.container.playlistContainer'
-
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Returns the id."""
-        out = 'SQ:' + super(MLSonosPlaylist, self).item_id
-        return out
 
 
 class MLShare(MusicLibraryItem):
