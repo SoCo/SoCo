@@ -1595,10 +1595,11 @@ class SoCo(_SocoSingletonBase):
             ('EnqueuedURIMetaData', ''),
             ])
 
-        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        item_id = response['AssignedObjectID']
+        obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:')
+        return MLSonosPlaylist(uri, title, 'SQ:', item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
