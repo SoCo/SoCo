@@ -146,7 +146,7 @@ class MusicLibraryItem(MusicInfoItem):
         'uri': ('', 'res')
     }
 
-    def __init__(self, uri, title, parent_id, item_id=None, **kwargs):
+    def __init__(self, uri, title, parent_id, item_id, **kwargs):
         r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
