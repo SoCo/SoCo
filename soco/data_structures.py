@@ -152,6 +152,7 @@ class MusicLibraryItem(MusicInfoItem):
         :param uri: The URI for the item
         :param title: The title for the item
         :param parent_id: The parent ID for the item
+        :param item_id: The ID for the item
         :param \*\*kwargs: Extra information items to form the music library
             item from. Valid keys are ``album``, ``album_art_uri``,
             ``creator`` and ``original_track_number``.
