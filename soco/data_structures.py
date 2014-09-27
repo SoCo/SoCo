@@ -1727,8 +1727,7 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                            MLSameArtist,
                        'object.item': StreamItem,
                        'object.item.audioItem.audioBroadcast':
-                           StreamAudiobroadcast
-                      }
+                           StreamAudiobroadcast}
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
                     'albumList': MSAlbumList, 'favorites': MSFavorites,
