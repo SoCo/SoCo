@@ -617,106 +617,6 @@ class MLSameArtist(MusicLibraryItem):
         MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
-class MLItem(MusicLibraryItem):
-    """Class that represents an audio broadcast.
-
-    :ivar parent_id: The parent ID for the MLItem is object.item
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLItem from XML.
-        The value is shown below
-
-        .. code-block:: python
-
-            # key: (ns, tag)
-             _translation = {
-                'title': ('dc', 'title'),
-                'stream_content': ('r', 'streamContent'),
-                'radio_show': ('r', 'radioShowMd'),
-                'album_art_uri': ('upnp', 'albumArtURI'),
-                'uri': ('', 'res')
-            }
-
-    """
-
-    item_class = 'object.item'
-    # name: (ns, tag)
-    _translation = {
-        'title': ('dc', 'title'),
-        'stream_content': ('r', 'streamContent'),
-        'radio_show': ('r', 'radioShowMd'),
-        'album_art_uri': ('upnp', 'albumArtURI'),
-        'uri': ('', 'res')
-    }
-
-    @property
-    def stream_content(self):
-        """Get and set the creator as an unicode object."""
-        return self.content.get('stream_content')
-
-    @stream_content.setter
-    def stream_content(self, stream_content):  # pylint: disable=C0111
-        self.content['stream_content'] = stream_content
-
-    @property
-    def radio_show(self):
-        """Get and set the radio_show as an unicode object."""
-        return self.content.get('radio_show')
-
-    @radio_show.setter
-    def radio_show(self, radio_show):  # pylint: disable=C0111
-        self.content['radio_show'] = radio_show
-
-    @property
-    def album_art_uri(self):
-        """Get and set the album art URI as an unicode object."""
-        return self.content.get('album_art_uri')
-
-    @album_art_uri.setter
-    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
-        self.content['album_art_uri'] = album_art_uri
-
-
-class MLAudiobroadcast(MusicLibraryItem):
-    """Class that represents an audio broadcast.
-
-    :ivar parent_id: The parent ID for the MLAudiobroadcast is ????
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLAudiobroadcast from XML.
-
-        Only use radio station title
-
-        The value is shown below
-        (note uri in not in this class but needed to make super class work)
-
-        .. code-block:: python
-
-            # key: (ns, tag)
-             _translation = {
-                'station_title': ('dc', 'title'),
-                'desc': ('r', 'desc')
-                'uri': ('', 'res')
-            }
-
-    """
-
-    item_class = 'object.item.audioItem.audioBroadcast'
-    # name: (ns, tag)
-    _translation = {
-        'title': ('dc', 'title'),
-        'desc': ('r', 'desc'),
-        'uri': ('', 'res')
-    }
-
-    @property
-    def desc(self):
-        """Get and set the creator as an unicode object."""
-        return self.content.get('desc')
-
-    @desc.setter
-    def stream_content(self, desc):  # pylint: disable=C0111
-        self.content['stream_content'] = desc
-
-
 ###############################################################################
 # MUSIC LIBRARY                                                               #
 ###############################################################################
@@ -960,7 +860,7 @@ class QueueItem(MusicInfoItem):
 
 
 ###############################################################################
-# MUSIC LIBRARY                                                               #
+# MUSIC SERVICE                                                             #
 ###############################################################################
 class MusicServiceItem(MusicInfoItem):
     """Class that represents a music service item"""
@@ -1409,6 +1309,313 @@ class MSCollection(MusicServiceItem):
         content.update(kwargs)
         super(MSCollection, self).__init__(**content)
 
+###############################################################################
+# MUSIC STREAMS                                                             #
+###############################################################################
+
+
+class Stream(MusicInfoItem):
+    """Abstract class for a playab;e streams (eg radio stations or one off URIs.
+
+    :ivar item_class: The DIDL Lite class for the music library item is
+        ``None``, since it is a abstract class and it should be overwritten in
+        the sub classes
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MusicLibraryItems from XML. The
+        default value is shown below. This default value applies to most sub
+        classes and the rest should overwrite it.
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+            _translation = {
+                'title': ('dc', 'title'),
+                'uri': ('', 'res')
+            }
+
+    """
+    item_class = None
+    # key: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'uri': ('', 'res')
+    }
+
+    def __init__(self, uri, title, parent_id, **kwargs):
+        r"""Initialize the MusicLibraryItem from parameter arguments.
+
+        :param uri: The URI for the item
+        :param title: The title for the item
+        :param parent_id: The parent ID for the item
+        :param \*\*kwargs: Extra information items to form the music library
+            item from. Valid keys are ``album``, ``album_art_uri``,
+            ``creator`` and ``original_track_number``.
+            ``original_track_number`` is an int, all other values are
+            unicode objects.
+
+        """
+        super(Stream, self).__init__()
+
+        # Parse the input arguments
+        arguments = {'uri': uri, 'title': title, 'parent_id': parent_id}
+        arguments.update(kwargs)
+        for key, value in arguments.items():
+            if key in self._translation or key == 'parent_id':
+                self.content[key] = value
+            else:
+                raise ValueError(
+                    'The key \'{0}\' is not allowed as an argument. Only '
+                    'these keys are allowed: {1}'.
+                    format(key, str(self._translation.keys())))
+
+    @classmethod
+    def from_xml(cls, xml):
+        """Return an instance of this class, created from xml.
+
+        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
+            top element usually is a DIDL-LITE item (NS['']) element. Inside
+            the item element should be the (namespace, tag_name) elements
+            in the dictionary-key-to-xml-tag-and-namespace-translation
+            described in the class docstring.
+
+        """
+        content = {}
+        # Get values from _translation
+        for key, value in cls._translation.items():
+            result = xml.find(ns_tag(*value))
+            if result is None:
+                content[key] = None
+            elif result.text is None:
+                content[key] = None
+            else:
+                # The xml objects should contain utf-8 internally
+                content[key] = really_unicode(result.text)
+
+        # Extract the parent ID
+        content['parent_id'] = xml.get('parentID')
+
+        # Convert type for original track number
+        if content.get('original_track_number') is not None:
+            content['original_track_number'] = \
+                int(content['original_track_number'])
+        return cls.from_dict(content)
+
+    @classmethod
+    def from_dict(cls, content):
+        """Return an instance of this class, created from a dict with
+        parameters.
+
+        :param content: Dict with information for the music library item.
+            Required and valid arguments are the same as for the
+            ``__init__`` method.
+
+        """
+        # Make a copy since this method will modify the input dict
+        content_in = content.copy()
+        args = [content_in.pop(arg) for arg in ['uri', 'title', 'parent_id']]
+        return cls(*args, **content_in)
+
+    @property
+    def to_dict(self):
+        """Get the dict representation of the instance."""
+        return self.content.copy()
+
+    @property
+    def item_id(self):  # pylint: disable=C0103
+        """Return the id.
+
+        The id is extracted as the part of the URI after the first # character.
+        For the few music library types where that is not correct, this method
+        should be overwritten.
+        """
+        out = self.content['uri']
+        try:
+            out = out[out.index('#') + 1:]
+        except ValueError:
+            out = None
+        return out
+
+    @property
+    def didl_metadata(self):
+        """Produce the DIDL metadata XML.
+
+        This method uses the :py:attr:`~.MusicLibraryItem.item_id`
+        attribute (and via that the :py:attr:`~.MusicLibraryItem.uri`
+        attribute), the :py:attr:`~.MusicLibraryItem.item_class` attribute
+        and the :py:attr:`~.MusicLibraryItem.title`  attribute. The
+        metadata will be on the form:
+
+        .. code :: xml
+
+         <DIDL-Lite ..NS_INFO..>
+           <item id="...self.item_id..."
+             parentID="...cls.parent_id..." restricted="true">
+             <dc:title>...self.title...</dc:title>
+             <upnp:class>...self.item_class...</upnp:class>
+             <desc id="cdudn"
+               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+               RINCON_AssociatedZPUDN
+             </desc>
+           </item>
+         </DIDL-Lite>
+
+        """
+        # Check the id_info method and via that, the self.to_dict['uri'] value
+        if self.item_id is None:
+            raise CannotCreateDIDLMetadata(
+                'DIDL Metadata cannot be created when item_id returns None '
+                '(most likely because uri is not set)')
+
+        # Main element, ugly yes, but I have given up on using namespaces with
+        # xml.etree.ElementTree
+        item_attrib = {
+            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
+            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
+            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
+        }
+        xml = XML.Element('DIDL-Lite', item_attrib)
+        # Item sub element
+        item_attrib = \
+            {'parentID': self.parent_id, 'restricted': 'true',
+             'id': self.item_id}
+        item = XML.SubElement(xml, 'item', item_attrib)
+        # Add content from self.content to item
+        XML.SubElement(item, 'dc:title').text = self.title
+        XML.SubElement(item, 'upnp:class').text = self.item_class
+        # Add the desc element
+        desc_attrib = {'id': 'cdudn', 'nameSpace':
+                       'urn:schemas-rinconnetworks-com:metadata-1-0/'}
+        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc.text = 'RINCON_AssociatedZPUDN'
+        return xml
+
+    @property
+    def title(self):
+        """Get and set the title as an unicode object."""
+        return self.content['title']
+
+    @title.setter
+    def title(self, title):  # pylint: disable=C0111
+        self.content['title'] = title
+
+    @property
+    def uri(self):
+        """Get and set the URI as an unicode object."""
+        return self.content['uri']
+
+    @uri.setter
+    def uri(self, uri):  # pylint: disable=C0111
+        self.content['uri'] = uri
+
+    @property
+    def parent_id(self):
+        """Get and set the parent ID."""
+        return self.content['parent_id']
+
+    @parent_id.setter
+    def parent_id(self, parent_id):  # pylint: disable=C0111
+        self.content['parent_id'] = parent_id
+
+
+class StreamItem(Stream):
+    """Class that represents an audio broadcast.
+
+    :ivar parent_id: The parent ID for the MLItem is object.item
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLItem from XML.
+        The value is shown below
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+             _translation = {
+                'title': ('dc', 'title'),
+                'stream_content': ('r', 'streamContent'),
+                'radio_show': ('r', 'radioShowMd'),
+                'album_art_uri': ('upnp', 'albumArtURI'),
+                'uri': ('', 'res')
+            }
+
+    """
+
+    item_class = 'object.item'
+    # name: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'stream_content': ('r', 'streamContent'),
+        'radio_show': ('r', 'radioShowMd'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res')
+    }
+
+    @property
+    def stream_content(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('stream_content')
+
+    @stream_content.setter
+    def stream_content(self, stream_content):  # pylint: disable=C0111
+        self.content['stream_content'] = stream_content
+
+    @property
+    def radio_show(self):
+        """Get and set the radio_show as an unicode object."""
+        return self.content.get('radio_show')
+
+    @radio_show.setter
+    def radio_show(self, radio_show):  # pylint: disable=C0111
+        self.content['radio_show'] = radio_show
+
+    @property
+    def album_art_uri(self):
+        """Get and set the album art URI as an unicode object."""
+        return self.content.get('album_art_uri')
+
+    @album_art_uri.setter
+    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
+        self.content['album_art_uri'] = album_art_uri
+
+
+class StreamAudiobroadcast(Stream):
+    """Class that represents an audio broadcast.
+
+    :ivar parent_id: The parent ID for the MLAudiobroadcast is ????
+    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
+        translation used when instantiating a MLAudiobroadcast from XML.
+
+        Only use radio station title
+
+        The value is shown below
+        (note uri in not in this class but needed to make super class work)
+
+        .. code-block:: python
+
+            # key: (ns, tag)
+             _translation = {
+                'station_title': ('dc', 'title'),
+                'desc': ('r', 'desc')
+                'uri': ('', 'res')
+            }
+
+    """
+
+    item_class = 'object.item.audioItem.audioBroadcast'
+    # name: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'desc': ('r', 'desc'),
+        'uri': ('', 'res')
+    }
+
+    @property
+    def desc(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('desc')
+
+    @desc.setter
+    def stream_content(self, desc):  # pylint: disable=C0111
+        self.content['stream_content'] = desc
+
 
 ###############################################################################
 # CONTAINERS                                                                  #
@@ -1518,10 +1725,10 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container.albumlist': MLAlbumList,
                        'object.container.playlistContainer.sameArtist':
                            MLSameArtist,
-                       'object.item': MLItem,
-                       'object.item.audioItem.audioBroadcast': MLAudiobroadcast
-                       }
-
+                       'object.item': StreamItem,
+                       'object.item.audioItem.audioBroadcast':
+                           StreamAudiobroadcast
+                      }
 
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
                     'albumList': MSAlbumList, 'favorites': MSFavorites,
