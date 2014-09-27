@@ -620,7 +620,7 @@ class MLSameArtist(MusicLibraryItem):
 class MLItem(MusicLibraryItem):
     """Class that represents an audio broadcast.
 
-    :ivar parent_id: The parent ID for the MLItem is ??????
+    :ivar parent_id: The parent ID for the MLItem is object.item
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MLItem from XML.
         The value is shown below
@@ -638,7 +638,7 @@ class MLItem(MusicLibraryItem):
 
     """
 
-    item_class = 'object.item.audioItem.stream'
+    item_class = 'object.item'
     # name: (ns, tag)
     _translation = {
         'title': ('dc', 'title'),
@@ -660,7 +660,7 @@ class MLItem(MusicLibraryItem):
     @property
     def radio_show(self):
         """Get and set the radio_show as an unicode object."""
-        return self.content.get('radio_show')#.split(',')[0]
+        return self.content.get('radio_show')
 
     @radio_show.setter
     def radio_show(self, radio_show):  # pylint: disable=C0111
@@ -699,7 +699,7 @@ class MLAudiobroadcast(MusicLibraryItem):
 
     """
 
-    item_class = 'object.item.audioItem.stream'
+    item_class = 'object.item.audioItem.audioBroadcast'
     # name: (ns, tag)
     _translation = {
         'title': ('dc', 'title'),
