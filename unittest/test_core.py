@@ -30,7 +30,7 @@ def moco():
 
 
 ZGS = """<ZoneGroups>
-      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
+      <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
         <ZoneGroupMember
             BootSeq="33"
             Configuration="1"
@@ -200,6 +200,43 @@ class TestAVTransport:
         assert playstate['current_transport_status'] == 'OK'
         assert playstate['current_transport_speed'] == '1'
 
+    def test_soco_get_queue(self, moco):
+        moco.contentDirectory.Browse.return_value = {
+            'Result' : '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="Q:0/1" parentID="Q:0" restricted="true"><res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" duration="0:02:32">radea:Tra.12345678.mp3</res><upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3</upnp:albumArtURI><dc:title>Item 1 Title</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Item 1 Creator</dc:creator><upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>',
+            'NumberReturned': '1',
+            'TotalMatches': '10',
+            'UpdateID' : '1'}
+        queue = moco.get_queue(start=8, max_items=32)
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 8),
+            ('RequestedCount', 32),
+            ('SortCriteria', '')
+        ])
+        assert queue is not None
+        assert len(queue) == 1
+        moco.contentDirectory.reset_mock()
+
+    def test_soco_queue_size(self, moco):
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '1',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="Q:0" parentID="Q:" restricted="true" childCount="384"><dc:title>Queue Instance 0</dc:title><upnp:class>object.container.playlistContainer</upnp:class><res protocolInfo="x-rincon-queue:*:*:*">x-rincon-queue:RINCON_00012345678901400#0</res></container></DIDL-Lite>',
+            'TotalMatches': '1',
+            'UpdateID': '1'}
+        queue_size = moco.queue_size
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseMetadata'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', '')
+        ])
+        assert queue_size == 384
+        moco.contentDirectory.reset_mock()
+
     def test_join(self, moco):
         moco2 = mock.Mock()
         moco2.uid = "RINCON_000XXX1400"
@@ -274,6 +311,18 @@ class TestAVTransport:
              ('EnqueuedURI', track.uri),
              ('EnqueuedURIMetaData', XML.tostring(track.didl_metadata)),
              ('AddAtIndex', 4294967295)]
+        )
+
+    def test_soco_cross_fade(self, moco):
+        moco.avTransport.GetCrossfadeMode.return_value = {
+            'CrossfadeMode': '1'}
+        assert moco.cross_fade
+        moco.avTransport.GetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        moco.cross_fade = False
+        moco.avTransport.SetCrossfadeMode.assert_called_once_with(
+            [('InstanceID', 0), ('CrossfadeMode', '0')]
         )
 
 
@@ -401,6 +450,10 @@ class TestZoneGroupTopology:
         assert len(set(groups)) == 2
         for group in groups:
             assert isinstance(group, ZoneGroup)
+
+    def test_all_groups_have_coordinator(self, moco_zgs):
+        for group in moco_zgs.all_groups:
+            assert group.coordinator is not None
 
     def test_group(self, moco_zgs):
         assert isinstance(moco_zgs.group, ZoneGroup)

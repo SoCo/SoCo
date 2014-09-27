@@ -209,9 +209,11 @@ class SoCo(_SocoSingletonBase):
         bass -- The speaker's bass EQ.
         treble -- The speaker's treble EQ.
         loudness -- The status of the speaker's loudness compensation.
+        cross_fade -- The status of the speaker's crossfade.
         status_light -- The state of the Sonos status light.
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
+        queue_size -- Get size of queue.
 
     .. warning::
 
@@ -752,6 +754,7 @@ class SoCo(_SocoSingletonBase):
         for group_element in tree.findall('ZoneGroup'):
             coordinator_uid = group_element.attrib['Coordinator']
             group_uid = group_element.attrib['ID']
+            group_coordinator = None
             members = set()
             for member_element in group_element.findall('ZoneGroupMember'):
                 # Create a SoCo instance for each member. Because SoCo
@@ -765,7 +768,6 @@ class SoCo(_SocoSingletonBase):
                 zone._uid = member_attribs['UUID']
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
-                group_coordinator = None
                 if zone._uid == coordinator_uid:
                     group_coordinator = zone
                     zone._is_coordinator = True
@@ -963,6 +965,9 @@ class SoCo(_SocoSingletonBase):
         track['position'] = response['RelTime']
 
         metadata = response['TrackMetaData']
+        # Store the entire Metadata entry in the track, this can then be
+        # used if needed by the client to restart a given URI
+        track['metadata'] = metadata
         # Duration seems to be '0:00:00' when listening to radio
         if metadata != '' and track['duration'] == '0:00:00':
             metadata = XML.fromstring(really_utf8(metadata))
@@ -1154,6 +1159,29 @@ class SoCo(_SocoSingletonBase):
 
         # pylint: disable=star-args
         return Queue(queue, **metadata)
+
+    @property
+    def queue_size(self):
+        """ Get size of queue """
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseMetadata'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', '')
+            ])
+        dom = XML.fromstring(really_utf8(response['Result']))
+
+        queue_size = None
+        container = dom.find(
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container')
+        if container is not None:
+            child_count = container.get('childCount')
+            if child_count is not None:
+                queue_size = int(child_count)
+
+        return queue_size
 
     def get_sonos_playlists(self, start=0, max_items=100,
                             full_album_art_uri=False):
