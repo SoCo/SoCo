@@ -456,16 +456,6 @@ class MLArtist(MusicLibraryItem):
 
     item_class = 'object.container.person.musicArtist'
 
-    def __init__(self, uri, title, parent_id, item_id=None):
-        """Instantiate the MLArtist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the artist
-        :param title: The title of the artist
-        :param item_class: The parent ID for the artist
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id, item_id)
-
 
 class MLGenre(MusicLibraryItem):
     """Class that represents a music library genre.
