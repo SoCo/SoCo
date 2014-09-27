@@ -1315,7 +1315,7 @@ class MSCollection(MusicServiceItem):
 
 
 class Stream(MusicInfoItem):
-    """Abstract class for a playab;e streams (eg radio stations or one off URIs.
+    """Abstract class for a  streams (eg radio stations or one off URIs)
 
     :ivar item_class: The DIDL Lite class for the music library item is
         ``None``, since it is a abstract class and it should be overwritten in
