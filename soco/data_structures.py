@@ -568,17 +568,6 @@ class MLSameArtist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer.sameArtist'
 
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLSameArtist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the composer
-        :param title: The title of the composer
-        :param item_class: The parent ID for the composer
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
-
 
 ###############################################################################
 # MUSIC LIBRARY                                                               #
