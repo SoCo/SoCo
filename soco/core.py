@@ -1395,10 +1395,11 @@ class SoCo(_SocoSingletonBase):
         if idstring.startswith(search):
             search = ""
 
-        search_uri = "#{0}{1}".format(search, idstring)
+        search_item_id = search + idstring
+        search_uri = "#" + search_item_id
 
         search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='',
-                                       item_id='')
+                                       item_id=search_item_id)
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
