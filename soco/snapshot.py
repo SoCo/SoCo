@@ -238,6 +238,10 @@ class Snapshot(object):
     def _restore_queue(self):
         """ Restores the previous state of the queue
 
+            Note: The restore currently adds the items back into the queue
+            using the URI, for items the Sonos system already knows about
+            this is OK, but for other items, they may be missing some of
+            their metadata as it will not be automatically picked up
         """
         if self.queue is not None:
             # Clear the queue so that it can be reset
