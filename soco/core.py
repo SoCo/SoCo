@@ -71,7 +71,11 @@ def discover(timeout=1, include_invisible=False):
         if t1-t0 > timeout:
             return None
 
-        response, _, _ = select.select([_sock], [], [], timeout)
+        # The timeout of the select call is set to be no greater than
+        # 100ms, so as not to exceed (too much) the required timeout
+        # in case the loop is executed more than once.
+        response, _, _ = select.select([_sock], [], [], min(timeout, 0.1))
+
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
         # on the network to disrupt the discovery process, we check that
