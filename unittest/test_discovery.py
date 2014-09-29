@@ -24,7 +24,7 @@ class TestDiscover:
         # 3 packets should be sent
         assert socket.sendto.call_count == 3
         # select called with the relevant timeout
-        mock_select.assert_called_once_with([socket], [], [], TIMEOUT)
+        mock_select.assert_called_once_with([socket], [], [], min(TIMEOUT, 0.1))
         # SoCo should be created with the IP address received
         mock_soco.assert_called_with(IP_ADDR)
 
