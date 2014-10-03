@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from mock import patch, Mock
 
-from soco import discover
+from soco import discover, get_interfaces
 from soco import config
 
 IP_ADDR = '192.168.1.101'
@@ -30,9 +30,9 @@ class TestDiscover:
 
         # Now test include_visible parameter. include_invisible=True should
         # result in calling SoCo.all_zones etc
-        mock_soco.return_value = Mock(all_zones='ALL', visible_zones='VISIBLE')
-        assert discover(include_invisible=True) == 'ALL'
-        assert discover(include_invisible=False) == 'VISIBLE'
+        mock_soco.return_value = Mock(all_zones=['ALL'], visible_zones=['VISIBLE'])
+        assert discover(include_invisible=True) == ['ALL']
+        assert discover(include_invisible=False) == ['VISIBLE']
 
         # if select does not return within timeout SoCo should not be called
         # at all
@@ -41,3 +41,4 @@ class TestDiscover:
         discover()
         # Check no SoCo instance created
         mock_soco.assert_not_called
+    
