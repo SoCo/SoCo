@@ -26,7 +26,7 @@ from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
 
-LOGGER = logging.getLogger(__name__)
+_LOG = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False):
@@ -1047,7 +1047,7 @@ class SoCo(_SocoSingletonBase):
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index + 3:]
             else:
-                LOGGER.warning('Could not handle track info: "%s"', trackinfo)
+                _LOG.warning('Could not handle track info: "%s"', trackinfo)
                 track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
