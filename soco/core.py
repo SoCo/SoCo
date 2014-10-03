@@ -27,7 +27,7 @@ from soco import config
 
 import netifaces
 
-LOGGER = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False):
@@ -61,7 +61,7 @@ def discover(timeout=1, include_invisible=False):
        if inet_addr == "127.0.0.1":
           continue
 
-       LOGGER.debug("Searching {}".format(inet_addr))
+       _log.debug("Searching {}".format(inet_addr))
 
        _sock = socket.socket(
            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
@@ -88,10 +88,10 @@ def discover(timeout=1, include_invisible=False):
            # wait for query responses from them ourselves.
            zone = config.SOCO_CLASS(addr[0])
            if include_invisible:
-               LOGGER.debug("Found {}".format(zone.all_zones))
+               _log.debug("Found {}".format(zone.all_zones))
                all_zones += zone.all_zones
            else:
-               LOGGER.debug("Found {}".format(zone.visible_zones))
+               _log.debug("Found {}".format(zone.visible_zones))
                all_zones += zone.visible_zones
 
     return all_zones
@@ -999,7 +999,7 @@ class SoCo(_SocoSingletonBase):
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index + 3:]
             else:
-                LOGGER.warning('Could not handle track info: "%s"', trackinfo)
+                _log.warning('Could not handle track info: "%s"', trackinfo)
                 track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
