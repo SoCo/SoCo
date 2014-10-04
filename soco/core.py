@@ -25,7 +25,9 @@ from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
 
-LOGGER = logging.getLogger(__name__)
+import netifaces
+
+_log = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False):
@@ -49,33 +51,50 @@ def discover(timeout=1, include_invisible=False):
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
-    _sock = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    # UPnP v1.0 requires a TTL of 4
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
-    # Send a few times. UDP is unreliable
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+    all_zones = []
 
-    response, _, _ = select.select([_sock], [], [], timeout)
-    # Only Zone Players will respond, given the value of ST in the
-    # PLAYER_SEARCH message. It doesn't matter what response they make. All
-    # we care about is the IP address
-    if response:
-        _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query that player
-        # for the topology to find the other players. It is much more efficient
-        # to rely upon the Zone Player's ability to find the others, than to
-        # wait for query responses from them ourselves.
-        zone = config.SOCO_CLASS(addr[0])
-        if include_invisible:
-            return zone.all_zones
-        else:
-            return zone.visible_zones
-    else:
-        return None
+    # Probe all interfaces
+    for interface in netifaces.interfaces():
+       inet_addr = netifaces.ifaddresses(interface)[netifaces.AF_INET][0]['addr']
 
+       # Ignore loop back
+       if inet_addr == "127.0.0.1":
+          continue
+
+       _log.debug("Searching {}".format(inet_addr))
+
+       _sock = socket.socket(
+           socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+       # UPnP v1.0 requires a TTL of 4
+       _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
+
+       # Specify the interface
+       _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(inet_addr))
+
+       # Send a few times. UDP is unreliable
+       _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+       _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+       _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+
+       response, _, _ = select.select([_sock], [], [], timeout)
+       # Only Zone Players will respond, given the value of ST in the
+       # PLAYER_SEARCH message. It doesn't matter what response they make. All
+       # we care about is the IP address
+       if response:
+           _, addr = _sock.recvfrom(1024)
+           # Now we have an IP, we can build a SoCo instance and query that player
+           # for the topology to find the other players. It is much more efficient
+           # to rely upon the Zone Player's ability to find the others, than to
+           # wait for query responses from them ourselves.
+           zone = config.SOCO_CLASS(addr[0])
+           if include_invisible:
+               _log.debug("Found {}".format(zone.all_zones))
+               all_zones += zone.all_zones
+           else:
+               _log.debug("Found {}".format(zone.visible_zones))
+               all_zones += zone.visible_zones
+
+    return all_zones
 
 class SonosDiscovery(object):  # pylint: disable=R0903
     """Retained for backward compatibility only. Will be removed in future
@@ -980,7 +999,7 @@ class SoCo(_SocoSingletonBase):
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index + 3:]
             else:
-                LOGGER.warning('Could not handle track info: "%s"', trackinfo)
+                _log.warning('Could not handle track info: "%s"', trackinfo)
                 track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
