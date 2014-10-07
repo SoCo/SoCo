@@ -29,44 +29,45 @@ def moco():
         patch.stop()
 
 
+ZGS = """<ZoneGroups>
+      <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
+        <ZoneGroupMember
+            BootSeq="33"
+            Configuration="1"
+            Icon="x-rincon-roomicon:zoneextender"
+            Invisible="1"
+            IsZoneBridge="1"
+            Location="http://192.168.1.100:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000ZZZ1400"
+            ZoneName="BRIDGE"/>
+      </ZoneGroup>
+      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
+        <ZoneGroupMember
+            BootSeq="44"
+            Configuration="1"
+            Icon="x-rincon-roomicon:living"
+            Location="http://192.168.1.101:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000XXX1400"
+            ZoneName="Living Room"/>
+        <ZoneGroupMember
+            BootSeq="52"
+            Configuration="1"
+            Icon="x-rincon-roomicon:kitchen"
+            Location="http://192.168.1.102:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000YYY1400"
+            ZoneName="Kitchen"/>
+      </ZoneGroup>
+    </ZoneGroups>"""
+
 @pytest.yield_fixture
 def moco_zgs(moco):
     """A mock soco with zone group state"""
-    ZGS = """<ZoneGroups>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
-            <ZoneGroupMember
-                BootSeq="33"
-                Configuration="1"
-                Icon="x-rincon-roomicon:zoneextender"
-                Invisible="1"
-                IsZoneBridge="1"
-                Location="http://192.168.1.100:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000ZZZ1400"
-                ZoneName="BRIDGE"/>
-          </ZoneGroup>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
-            <ZoneGroupMember
-                BootSeq="44"
-                Configuration="1"
-                Icon="x-rincon-roomicon:living"
-                Location="http://192.168.1.101:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000XXX1400"
-                ZoneName="Living Room"/>
-            <ZoneGroupMember
-                BootSeq="52"
-                Configuration="1"
-                Icon="x-rincon-roomicon:kitchen"
-                Location="http://192.168.1.102:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000YYY1400"
-                ZoneName="Kitchen"/>
-          </ZoneGroup>
-        </ZoneGroups>"""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {
         'ZoneGroupState': ZGS
     }
@@ -138,6 +139,23 @@ class TestAVTransport:
             [('InstanceID', 0), ('Speed', 1)]
         )
 
+    def test_soco_play_uri(self, moco):
+        uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+        moco.avTransport.SetAVTransportURI.assert_called_once_with([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', '')
+        ])
+
+    def test_soco_play_uri_calls_play(self, moco):
+        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+
+        moco.avTransport.Play.assert_called_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
+
     def test_soco_pause(self, moco):
         moco.pause()
         moco.avTransport.Pause.assert_called_once_with(
@@ -198,6 +216,43 @@ class TestAVTransport:
         assert playstate['current_transport_state'] == 'PLAYING'
         assert playstate['current_transport_status'] == 'OK'
         assert playstate['current_transport_speed'] == '1'
+
+    def test_soco_get_queue(self, moco):
+        moco.contentDirectory.Browse.return_value = {
+            'Result' : '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="Q:0/1" parentID="Q:0" restricted="true"><res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" duration="0:02:32">radea:Tra.12345678.mp3</res><upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3</upnp:albumArtURI><dc:title>Item 1 Title</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Item 1 Creator</dc:creator><upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>',
+            'NumberReturned': '1',
+            'TotalMatches': '10',
+            'UpdateID' : '1'}
+        queue = moco.get_queue(start=8, max_items=32)
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 8),
+            ('RequestedCount', 32),
+            ('SortCriteria', '')
+        ])
+        assert queue is not None
+        assert len(queue) == 1
+        moco.contentDirectory.reset_mock()
+
+    def test_soco_queue_size(self, moco):
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '1',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="Q:0" parentID="Q:" restricted="true" childCount="384"><dc:title>Queue Instance 0</dc:title><upnp:class>object.container.playlistContainer</upnp:class><res protocolInfo="x-rincon-queue:*:*:*">x-rincon-queue:RINCON_00012345678901400#0</res></container></DIDL-Lite>',
+            'TotalMatches': '1',
+            'UpdateID': '1'}
+        queue_size = moco.queue_size
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'Q:0'),
+            ('BrowseFlag', 'BrowseMetadata'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', '')
+        ])
+        assert queue_size == 384
+        moco.contentDirectory.reset_mock()
 
     def test_join(self, moco):
         moco2 = mock.Mock()
@@ -261,6 +316,24 @@ class TestAVTransport:
              ('Title', playlist_name),
              ('EnqueuedURI', ''),
              ('EnqueuedURIMetaData', '')]
+        )
+        assert playlist.title == playlist_name
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
+            playlist_id)
+        assert playlist.uri == expected_uri
+        assert playlist.parent_id == "SQ:"
+
+    def test_create_sonos_playlist_from_queue(self, moco):
+        playlist_name = "saved queue"
+        playlist_id = 1
+        moco.avTransport.SaveQueue.return_value = {
+            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
+        }
+        playlist = moco.create_sonos_playlist_from_queue(playlist_name)
+        moco.avTransport.SaveQueue.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Title', playlist_name),
+             ('ObjectID', '')]
         )
         assert playlist.title == playlist_name
         expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
@@ -430,6 +503,10 @@ class TestZoneGroupTopology:
         for group in groups:
             assert isinstance(group, ZoneGroup)
 
+    def test_all_groups_have_coordinator(self, moco_zgs):
+        for group in moco_zgs.all_groups:
+            assert group.coordinator is not None
+
     def test_group(self, moco_zgs):
         assert isinstance(moco_zgs.group, ZoneGroup)
         assert moco_zgs in moco_zgs.group
@@ -449,3 +526,23 @@ class TestZoneGroupTopology:
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
+
+    def test_group_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.label == "Kitchen, Living Room"
+
+    def test_group_short_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.short_label == "Kitchen + 1"
