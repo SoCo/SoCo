@@ -1462,9 +1462,11 @@ class SoCo(_SocoSingletonBase):
         if idstring.startswith(search):
             search = ""
 
-        search_uri = "#{0}{1}".format(search, idstring)
+        search_item_id = search + idstring
+        search_uri = "#" + search_item_id
 
-        search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
+        search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='',
+                                       item_id=search_item_id)
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
@@ -1689,10 +1691,11 @@ class SoCo(_SocoSingletonBase):
             ('EnqueuedURIMetaData', ''),
             ])
 
-        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        item_id = response['AssignedObjectID']
+        obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:')
+        return MLSonosPlaylist(uri, title, 'SQ:', item_id)
 
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
@@ -1712,10 +1715,11 @@ class SoCo(_SocoSingletonBase):
             ('Title', title),
             ('ObjectID', '')
         ])
-        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        item_id = response['AssignedObjectID']
+        obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:')
+        return MLSonosPlaylist(uri, title, 'SQ:', item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist

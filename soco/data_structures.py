@@ -146,12 +146,13 @@ class MusicLibraryItem(MusicInfoItem):
         'uri': ('', 'res')
     }
 
-    def __init__(self, uri, title, parent_id, **kwargs):
+    def __init__(self, uri, title, parent_id, item_id, **kwargs):
         r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
         :param title: The title for the item
         :param parent_id: The parent ID for the item
+        :param item_id: The ID for the item
         :param \*\*kwargs: Extra information items to form the music library
             item from. Valid keys are ``album``, ``album_art_uri``,
             ``creator`` and ``original_track_number``.
@@ -162,10 +163,12 @@ class MusicLibraryItem(MusicInfoItem):
         super(MusicLibraryItem, self).__init__()
 
         # Parse the input arguments
-        arguments = {'uri': uri, 'title': title, 'parent_id': parent_id}
+        arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
+                     'item_id': item_id}
         arguments.update(kwargs)
         for key, value in arguments.items():
-            if key in self._translation or key == 'parent_id':
+            if key in self._translation or key == 'parent_id' \
+                    or key == 'item_id':
                 self.content[key] = value
             else:
                 raise ValueError(
@@ -196,6 +199,9 @@ class MusicLibraryItem(MusicInfoItem):
                 # The xml objects should contain utf-8 internally
                 content[key] = really_unicode(result.text)
 
+        # Extract the item ID
+        content['item_id'] = xml.get('id')
+
         # Extract the parent ID
         content['parent_id'] = xml.get('parentID')
 
@@ -217,7 +223,8 @@ class MusicLibraryItem(MusicInfoItem):
         """
         # Make a copy since this method will modify the input dict
         content_in = content.copy()
-        args = [content_in.pop(arg) for arg in ['uri', 'title', 'parent_id']]
+        args = [content_in.pop(arg) for arg in ['uri', 'title',
+                                                'parent_id', 'item_id']]
         return cls(*args, **content_in)
 
     @property
@@ -228,17 +235,12 @@ class MusicLibraryItem(MusicInfoItem):
     @property
     def item_id(self):  # pylint: disable=C0103
         """Return the id.
-
-        The id is extracted as the part of the URI after the first # character.
-        For the few music library types where that is not correct, this method
-        should be overwritten.
         """
-        out = self.content['uri']
-        try:
-            out = out[out.index('#') + 1:]
-        except ValueError:
-            out = None
-        return out
+        return self.content['item_id']
+
+    @item_id.setter
+    def item_id(self, item_id):  # pylint: disable=C0111
+        self.content['item_id'] = item_id
 
     @property
     def didl_metadata(self):
@@ -356,19 +358,6 @@ class MLTrack(MusicLibraryItem):
     }
 
     @property
-    def item_id(self):  # pylint: disable=C0103
-        """Return the id."""
-        out = self.content['uri']
-        if 'x-file-cifs' in out:
-            # URI's for MusicTracks starts with x-file-cifs, where cifs most
-            # likely refer to Common Internet File System. For unknown reasons
-            # that part must be replaces with an S to form the item_id
-            out = out.replace('x-file-cifs', 'S')
-        else:
-            out = None
-        return out
-
-    @property
     def creator(self):
         """Get and set the creator as an unicode object."""
         return self.content.get('creator')
@@ -467,16 +456,6 @@ class MLArtist(MusicLibraryItem):
 
     item_class = 'object.container.person.musicArtist'
 
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLArtist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the artist
-        :param title: The title of the artist
-        :param item_class: The parent ID for the artist
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
-
 
 class MLGenre(MusicLibraryItem):
     """Class that represents a music library genre.
@@ -519,16 +498,6 @@ class MLPlaylist(MusicLibraryItem):
 
     item_class = 'object.container.playlistContainer'
 
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Returns the id."""
-        out = self.content['uri']
-        if 'x-file-cifs' in out:
-            out = out.replace('x-file-cifs', 'S')
-        else:
-            out = super(MLPlaylist, self).item_id
-        return out
-
 
 class MLSonosPlaylist(MusicLibraryItem):
     """ Class that represents a sonos playlist.
@@ -542,12 +511,6 @@ class MLSonosPlaylist(MusicLibraryItem):
     """
 
     item_class = 'object.container.playlistContainer'
-
-    @property
-    def item_id(self):  # pylint: disable=C0103
-        """Returns the id."""
-        out = 'SQ:' + super(MLSonosPlaylist, self).item_id
-        return out
 
 
 class MLShare(MusicLibraryItem):
@@ -604,17 +567,6 @@ class MLSameArtist(MusicLibraryItem):
     """
 
     item_class = 'object.container.playlistContainer.sameArtist'
-
-    def __init__(self, uri, title, parent_id):
-        """Instantiate the MLSameArtist item by passing the arguments to the
-        super class :py:meth:`.MusicLibraryItem.__init__`.
-
-        :param uri: The URI for the composer
-        :param title: The title of the composer
-        :param item_class: The parent ID for the composer
-
-        """
-        MusicLibraryItem.__init__(self, uri, title, parent_id)
 
 
 ###############################################################################
