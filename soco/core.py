@@ -472,12 +472,17 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
             ])
 
-    def play_uri(self, uri='', meta=''):
+    def play_uri(self, uri='', meta='', title=''):
         """ Play a given stream. Pauses the queue.
+        If there is no metadata passed in and there is a title set then a
+        metadata object will be created. This is often the case if you have
+        a custom stream, it will need at least the title in the metadata in
+        order to play.
 
         Arguments:
         uri -- URI of a stream to be played.
-        meta --- The track metadata to show in the player, DIDL format.
+        meta -- The track metadata to show in the player, DIDL format.
+        title -- The track title to show in the player
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -485,6 +490,19 @@ class SoCo(_SocoSingletonBase):
         Raises SoCoException (or a subclass) upon errors.
 
         """
+        if meta == '' and title != '':
+            meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'\
+                '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '\
+                'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '\
+                'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'\
+                '<item id="R:0/0/0" parentID="R:0/0" restricted="true">'\
+                '<dc:title>{title}</dc:title><upnp:class>'\
+                'object.item.audioItem.audioBroadcast</upnp:class><desc '\
+                'id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:'\
+                'metadata-1-0/">{service}</desc></item></DIDL-Lite>'
+            tunein_service = 'SA_RINCON65031_'
+            # Radio stations need to have at least a title to play
+            meta = meta_template.format(title=title, service=tunein_service)
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
