@@ -169,7 +169,7 @@ class Snapshot(object):
                 # reinstate uri and meta data
                 if self.media_uri != "":
                     self.device.play_uri(
-                        self.media_uri, self.media_metadata, False)
+                        self.media_uri, self.media_metadata, start=False)
 
         # For all devices:
         # Reinstate all the properties that are pretty easy to do

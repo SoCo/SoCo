@@ -462,14 +462,17 @@ class SoCo(_SocoSingletonBase):
         warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
         return self.ip_address
 
-    def play_from_queue(self, index):
+    def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
 
         index: the index of the track to play; first item in the queue is 0
+        start: If the item that has been set should start playing
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
+        False if the track did not start (this may be because it was not
+        requested to start because "start=False")
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -494,8 +497,10 @@ class SoCo(_SocoSingletonBase):
             ('Target', index + 1)
             ])
 
-        # finally, just play what's set
-        return self.play()
+        # finally, just play what's set if needed
+        if start:
+            return self.play()
+        return False
 
     def play(self):
         """Play the currently selected track.
@@ -511,7 +516,7 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
             ])
 
-    def play_uri(self, uri='', meta='', title=''):
+    def play_uri(self, uri='', meta='', title='', start=True):
         """ Play a given stream. Pauses the queue.
         If there is no metadata passed in and there is a title set then a
         metadata object will be created. This is often the case if you have
@@ -522,9 +527,12 @@ class SoCo(_SocoSingletonBase):
         uri -- URI of a stream to be played.
         meta -- The track metadata to show in the player, DIDL format.
         title -- The track title to show in the player
+        start -- If the URI that has been set should start playing
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
+        False if the track did not start (this may be because it was not
+        requested to start because "start=False")
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -548,8 +556,10 @@ class SoCo(_SocoSingletonBase):
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
             ])
-        # The track is enqueued, now play it.
-        return self.play()
+        # The track is enqueued, now play it if needed
+        if start:
+            return self.play()
+        return False
 
     def pause(self):
         """ Pause the currently playing track.
