@@ -8,7 +8,7 @@ import logging
 import importlib
 
 
-LOGGER = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 class SoCoPlugin(object):
@@ -16,7 +16,7 @@ class SoCoPlugin(object):
 
     def __init__(self, soco):
         cls = self.__class__.__name__
-        LOGGER.info('Initializing SoCo plugin {cls}'.format(cls=cls))
+        _log.info('Initializing SoCo plugin {cls}'.format(cls=cls))
         self.soco = soco
 
     @property
@@ -28,7 +28,7 @@ class SoCoPlugin(object):
     def from_name(cls, fullname, soco, *args, **kwargs):
         """ Instantiate a plugin by its full name """
 
-        LOGGER.info('Loading plugin {fullname}'.format(fullname=fullname))
+        _log.info('Loading plugin {fullname}'.format(fullname=fullname))
 
         parts = fullname.split('.')
         modname = '.'.join(parts[:-1])
@@ -37,6 +37,6 @@ class SoCoPlugin(object):
         mod = importlib.import_module(modname)
         cls = getattr(mod, clsname)
 
-        LOGGER.info('Loaded class {cls}'.format(cls=cls))
+        _log.info('Loaded class {cls}'.format(cls=cls))
 
         return cls(soco, *args, **kwargs)
