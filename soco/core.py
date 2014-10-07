@@ -13,6 +13,7 @@ from textwrap import dedent
 import re
 import itertools
 import requests
+import time
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -58,23 +59,59 @@ def discover(timeout=1, include_invisible=False):
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
-    response, _, _ = select.select([_sock], [], [], timeout)
-    # Only Zone Players will respond, given the value of ST in the
-    # PLAYER_SEARCH message. It doesn't matter what response they make. All
-    # we care about is the IP address
-    if response:
-        _, addr = _sock.recvfrom(1024)
-        # Now we have an IP, we can build a SoCo instance and query that player
-        # for the topology to find the other players. It is much more efficient
-        # to rely upon the Zone Player's ability to find the others, than to
-        # wait for query responses from them ourselves.
-        zone = config.SOCO_CLASS(addr[0])
-        if include_invisible:
-            return zone.all_zones
+    t0 = time.time()
+    while True:
+        # Check if the timeout is exceeded. We could do this check just
+        # before the currently only continue statement of this loop,
+        # but I feel it is safer to do it here, so that we do not forget
+        # to do it if/when another continue statement is added later.
+        # Note: this is sensitive to clock adjustments. AFAIK there
+        # is no monotonic timer available before Python 3.3.
+        t1 = time.time()
+        if t1-t0 > timeout:
+            return None
+
+        # The timeout of the select call is set to be no greater than
+        # 100ms, so as not to exceed (too much) the required timeout
+        # in case the loop is executed more than once.
+        response, _, _ = select.select([_sock], [], [], min(timeout, 0.1))
+
+        # Only Zone Players should respond, given the value of ST in the
+        # PLAYER_SEARCH message. However, to prevent misbehaved devices
+        # on the network to disrupt the discovery process, we check that
+        # the response contains the "Sonos" string; otherwise we keep
+        # waiting for a correct response.
+        #
+        # Here is a sample response from a real Sonos device (actual numbers
+        # have been redacted):
+        # HTTP/1.1 200 OK
+        # CACHE-CONTROL: max-age = 1800
+        # EXT:
+        # LOCATION: http://***.***.***.***:1400/xml/device_description.xml
+        # SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)
+        # ST: urn:schemas-upnp-org:device:ZonePlayer:1
+        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:
+        #                                                     ZonePlayer:1
+        # X-RINCON-BOOTSEQ: 3
+        # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
+
+        if response:
+            data, addr = _sock.recvfrom(1024)
+            if "Sonos" not in data:
+                continue
+
+            # Now we have an IP, we can build a SoCo instance and query that
+            # player for the topology to find the other players. It is much
+            # more efficient to rely upon the Zone Player's ability to find
+            # the others, than to wait for query responses from them
+            # ourselves.
+            zone = config.SOCO_CLASS(addr[0])
+            if include_invisible:
+                return zone.all_zones
+            else:
+                return zone.visible_zones
         else:
-            return zone.visible_zones
-    else:
-        return None
+            return None
 
 
 class SonosDiscovery(object):  # pylint: disable=R0903
@@ -197,7 +234,9 @@ class SoCo(_SocoSingletonBase):
         get_favorite_radio_shows -- Get favorite radio shows from Sonos'
                                     Radio app.
         get_favorite_radio_stations -- Get favorite radio stations.
-        create_sonos_playlist -- Creates a new Sonos' playlist
+        create_sonos_playlist -- Create a new empty Sonos playlist
+        create_sonos_playlist_from_queue -- Create a new Sonos playlist
+                                            from the current queue.
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
 
@@ -472,12 +511,17 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
             ])
 
-    def play_uri(self, uri='', meta=''):
+    def play_uri(self, uri='', meta='', title=''):
         """ Play a given stream. Pauses the queue.
+        If there is no metadata passed in and there is a title set then a
+        metadata object will be created. This is often the case if you have
+        a custom stream, it will need at least the title in the metadata in
+        order to play.
 
         Arguments:
         uri -- URI of a stream to be played.
-        meta --- The track metadata to show in the player, DIDL format.
+        meta -- The track metadata to show in the player, DIDL format.
+        title -- The track title to show in the player
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
@@ -485,6 +529,19 @@ class SoCo(_SocoSingletonBase):
         Raises SoCoException (or a subclass) upon errors.
 
         """
+        if meta == '' and title != '':
+            meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'\
+                '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '\
+                'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '\
+                'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'\
+                '<item id="R:0/0/0" parentID="R:0/0" restricted="true">'\
+                '<dc:title>{title}</dc:title><upnp:class>'\
+                'object.item.audioItem.audioBroadcast</upnp:class><desc '\
+                'id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:'\
+                'metadata-1-0/">{service}</desc></item></DIDL-Lite>'
+            tunein_service = 'SA_RINCON65031_'
+            # Radio stations need to have at least a title to play
+            meta = meta_template.format(title=title, service=tunein_service)
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
@@ -1609,7 +1666,7 @@ class SoCo(_SocoSingletonBase):
                 item.album_art_uri
 
     def create_sonos_playlist(self, title):
-        """ Create a new Sonos' playlist .
+        """ Create a new empty Sonos playlist.
 
         :params title: Name of the playlist
 
@@ -1629,6 +1686,29 @@ class SoCo(_SocoSingletonBase):
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
         return MLSonosPlaylist(uri, title, 'SQ:', item_id)
+
+    # pylint: disable=invalid-name
+    def create_sonos_playlist_from_queue(self, title):
+        """ Create a new Sonos playlist from the current queue.
+
+            :params title: Name of the playlist
+
+            :returns: An instance of
+                :py:class:`~.soco.data_structures.MLSonosPlaylist`
+
+        """
+        # Note: probably same as Queue service method SaveAsSonosPlaylist
+        # but this has not been tested.  This method is what the
+        # controller uses.
+        response = self.avTransport.SaveQueue([
+            ('InstanceID', 0),
+            ('Title', title),
+            ('ObjectID', '')
+        ])
+        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
+
+        return MLSonosPlaylist(uri, title, 'SQ:')
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
