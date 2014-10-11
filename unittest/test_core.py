@@ -29,90 +29,91 @@ def moco():
         patch.stop()
 
 
+ZGS = """<ZoneGroups>
+      <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
+        <ZoneGroupMember
+            BootSeq="33"
+            Configuration="1"
+            Icon="x-rincon-roomicon:zoneextender"
+            Invisible="1"
+            IsZoneBridge="1"
+            Location="http://192.168.1.100:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000ZZZ1400"
+            ZoneName="BRIDGE"/>
+      </ZoneGroup>
+      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
+        <ZoneGroupMember
+            BootSeq="44"
+            Configuration="1"
+            Icon="x-rincon-roomicon:living"
+            Location="http://192.168.1.101:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000XXX1400"
+            ZoneName="Living Room"/>
+        <ZoneGroupMember
+            BootSeq="52"
+            Configuration="1"
+            Icon="x-rincon-roomicon:kitchen"
+            Location="http://192.168.1.102:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.1-74200"
+            UUID="RINCON_000YYY1400"
+            ZoneName="Kitchen"/>
+      </ZoneGroup>
+      <ZoneGroup Coordinator="RINCON_000PPP1400" ID="RINCON_000PPP1400:49">
+        <ZoneGroupMember
+            BootSeq="8"
+            Configuration="1"
+            HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR;RINCON_000SSS1400:LR;RINCON_000QQQ1400:SW"
+            Icon="x-rincon-roomicon:living"
+            Location="http://192.168.1.103:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.0-71060"
+            UUID="RINCON_000PPP1400"
+            ZoneName="Home Theatre">
+          <Satellite
+              BootSeq="4"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000QQQ1400:SW"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.104:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000QQQ1400"
+              ZoneName="Home Theatre"/>
+          <Satellite
+              BootSeq="6"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.105:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000RRR1400"
+              ZoneName="Home Theatre"/>
+          <Satellite
+              BootSeq="4"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000SSS1400:LR"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.106:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000SSS1400"
+              ZoneName="Home Theatre"/>
+        </ZoneGroupMember>
+      </ZoneGroup>
+    </ZoneGroups>"""
+
 @pytest.yield_fixture
 def moco_zgs(moco):
     """A mock soco with zone group state"""
-    ZGS = """<ZoneGroups>
-          <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
-            <ZoneGroupMember
-                BootSeq="33"
-                Configuration="1"
-                Icon="x-rincon-roomicon:zoneextender"
-                Invisible="1"
-                IsZoneBridge="1"
-                Location="http://192.168.1.100:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000ZZZ1400"
-                ZoneName="BRIDGE"/>
-          </ZoneGroup>
-          <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
-            <ZoneGroupMember
-                BootSeq="44"
-                Configuration="1"
-                Icon="x-rincon-roomicon:living"
-                Location="http://192.168.1.101:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000XXX1400"
-                ZoneName="Living Room"/>
-            <ZoneGroupMember
-                BootSeq="52"
-                Configuration="1"
-                Icon="x-rincon-roomicon:kitchen"
-                Location="http://192.168.1.102:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.1-74200"
-                UUID="RINCON_000YYY1400"
-                ZoneName="Kitchen"/>
-          </ZoneGroup>
-          <ZoneGroup Coordinator="RINCON_000PPP1400" ID="RINCON_000PPP1400:49">
-            <ZoneGroupMember
-                BootSeq="8"
-                Configuration="1"
-                HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR;RINCON_000SSS1400:LR;RINCON_000QQQ1400:SW"
-                Icon="x-rincon-roomicon:living"
-                Location="http://192.168.1.103:1400/xml/device_description.xml"
-                MinCompatibleVersion="22.0-00000"
-                SoftwareVersion="24.0-71060"
-                UUID="RINCON_000PPP1400"
-                ZoneName="Home Theatre">
-              <Satellite
-                  BootSeq="4"
-                  Configuration="1"
-                  HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000QQQ1400:SW"
-                  Icon="x-rincon-roomicon:living"
-                  Invisible="1"
-                  Location="http://192.168.1.104:1400/xml/device_description.xml"
-                  MinCompatibleVersion="22.0-00000"
-                  SoftwareVersion="24.0-71060"
-                  UUID="RINCON_000QQQ1400"
-                  ZoneName="Home Theatre"/>
-              <Satellite
-                  BootSeq="6"
-                  Configuration="1"
-                  HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR"
-                  Icon="x-rincon-roomicon:living"
-                  Invisible="1"
-                  Location="http://192.168.1.105:1400/xml/device_description.xml"
-                  MinCompatibleVersion="22.0-00000"
-                  SoftwareVersion="24.0-71060"
-                  UUID="RINCON_000RRR1400"
-                  ZoneName="Home Theatre"/>
-              <Satellite
-                  BootSeq="4"
-                  Configuration="1"
-                  HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000SSS1400:LR"
-                  Icon="x-rincon-roomicon:living"
-                  Invisible="1"
-                  Location="http://192.168.1.106:1400/xml/device_description.xml"
-                  MinCompatibleVersion="22.0-00000"
-                  SoftwareVersion="24.0-71060"
-                  UUID="RINCON_000SSS1400"
-                  ZoneName="Home Theatre"/>
-            </ZoneGroupMember>
-          </ZoneGroup>
-        </ZoneGroups>"""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {
         'ZoneGroupState': ZGS
     }
@@ -181,6 +182,23 @@ class TestAVTransport:
     def test_soco_play(self, moco):
         moco.play()
         moco.avTransport.Play.assert_called_once_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
+
+    def test_soco_play_uri(self, moco):
+        uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+        moco.avTransport.SetAVTransportURI.assert_called_once_with([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', '')
+        ])
+
+    def test_soco_play_uri_calls_play(self, moco):
+        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+
+        moco.avTransport.Play.assert_called_with(
             [('InstanceID', 0), ('Speed', 1)]
         )
 
@@ -327,6 +345,24 @@ class TestAVTransport:
              ('Title', playlist_name),
              ('EnqueuedURI', ''),
              ('EnqueuedURIMetaData', '')]
+        )
+        assert playlist.title == playlist_name
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
+            playlist_id)
+        assert playlist.uri == expected_uri
+        assert playlist.parent_id == "SQ:"
+
+    def test_create_sonos_playlist_from_queue(self, moco):
+        playlist_name = "saved queue"
+        playlist_id = 1
+        moco.avTransport.SaveQueue.return_value = {
+            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
+        }
+        playlist = moco.create_sonos_playlist_from_queue(playlist_name)
+        moco.avTransport.SaveQueue.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Title', playlist_name),
+             ('ObjectID', '')]
         )
         assert playlist.title == playlist_name
         expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
@@ -519,3 +555,23 @@ class TestZoneGroupTopology:
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
+
+    def test_group_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.label == "Kitchen, Living Room"
+
+    def test_group_short_label(selfself, moco_zgs):
+        g = moco_zgs.group
+        # Have to mock out group members zone group state here since
+        # g.members is parsed from the XML.
+        for speaker in g.members:
+            speaker.zoneGroupTopology.GetZoneGroupState.return_value = {
+                'ZoneGroupState': ZGS
+            }
+        assert g.short_label == "Kitchen + 1"
