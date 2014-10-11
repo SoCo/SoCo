@@ -20,8 +20,8 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult, Queue, MusicLibraryItem
+from .data_structures import get_ml_item, MLSonosPlaylist,\
+    MLShare, SearchResult, Queue, MusicLibraryItem, MLTrack
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1218,7 +1218,7 @@ class SoCo(_SocoSingletonBase):
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
                 '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-            item = QueueItem.from_xml(element)
+            item = MLTrack.from_xml(element)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1519,7 +1519,7 @@ class SoCo(_SocoSingletonBase):
         :param uri: The URI to be added to the queue
         :type uri: str
         """
-        item = URI(uri)
+        item = MusicLibraryItem(uri=uri, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
