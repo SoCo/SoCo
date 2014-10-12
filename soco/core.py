@@ -1762,8 +1762,9 @@ class SoCo(_SocoSingletonBase):
 
         Keyword arguments:
             artist: Artist name
-            album: Album name
-            track: Track name
+            album: Album name. If left out or passed None, returns tracks
+               for all albums.
+            track: Track name. If left out or passed None, returns all tracks.
             start (int): The starting index of the results
             max_items (int): The maximum number of items to return
             full_album_art_uri(bool): If the album art URI should include the
@@ -1808,7 +1809,7 @@ class SoCo(_SocoSingletonBase):
     def get_albums_for_artist(self, artist,
                               start=0, max_items=100,
                               full_album_art_uri=False):
-        """Search for an artist's albums.
+        """Get an artist's albums.
 
         Parameters:
             artist: Artist name
@@ -1818,7 +1819,7 @@ class SoCo(_SocoSingletonBase):
                 IP address
 
         Returns:
-            dict: A list of :py:class:`~.soco.data_structures.MLAlbum` object
+            A list of :py:class:`~.soco.data_structures.MLAlbum` objects
 
         Raises:
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
@@ -1844,7 +1845,7 @@ class SoCo(_SocoSingletonBase):
 
     def get_tracks_for_album(self, artist, album,
                              start=0, max_items=100, full_album_art_uri=False):
-        """Search for an artist's albums.
+        """Get an artist's albums.
 
         Parameters:
             artist: Artist name
@@ -1855,7 +1856,7 @@ class SoCo(_SocoSingletonBase):
                 IP address
 
         Returns:
-            dict: A list of :py:class:`~.soco.data_structures.MLTrack` object
+            A list of :py:class:`~.soco.data_structures.MLTrack` objects
 
         Raises:
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
