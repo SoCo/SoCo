@@ -8,7 +8,7 @@ import re
 import functools
 import warnings
 
-from .compat import StringType, UnicodeType, quote_plus
+from .compat import StringType, UnicodeType, quote_url
 from .xml import XML
 
 
