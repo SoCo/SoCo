@@ -110,8 +110,6 @@ def discover(timeout=1, include_invisible=False):
                 return zone.all_zones
             else:
                 return zone.visible_zones
-        else:
-            return None
 
 
 class SonosDiscovery(object):  # pylint: disable=R0903
