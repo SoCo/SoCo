@@ -325,6 +325,8 @@ class TestAVTransport:
         assert playlist.parent_id == "SQ:"
 
     def test_add_item_to_sonos_playlist(self, moco):
+        moco.contentDirectory.reset_mock()
+
         playlist = mock.Mock()
         playlist.item_id = 7
 
@@ -333,12 +335,23 @@ class TestAVTransport:
         track.didl_metadata = XML.Element('a')
 
         update_id = 100
-        moco._music_lib_search = mock.Mock(return_value=(
-            {'UpdateID': update_id},
-            None))
+
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '0',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
+            'TotalMatches': '0',
+            'UpdateID': update_id
+        }
 
         moco.add_item_to_sonos_playlist(track, playlist)
-        moco._music_lib_search.assert_called_once_with(playlist.item_id, 0, 1)
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', playlist.item_id),
+            ('BrowseFlag', 'BrowseDirectChildren'), 
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', u'')
+        ])
         moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
             [('InstanceID', 0),
              ('UpdateID', update_id),
