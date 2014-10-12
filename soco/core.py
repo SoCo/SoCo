@@ -22,7 +22,8 @@ from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
     MLShare, SearchResult, Queue, MusicLibraryItem
-from .utils import really_utf8, camel_to_underscore, url_escape_path
+from .utils import really_utf8, camel_to_underscore, url_escape_path,\
+    really_unicode
 from .xml import XML
 from soco import config
 
@@ -1780,9 +1781,9 @@ class SoCo(_SocoSingletonBase):
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
                 found
         """
-        search = u'A:ALBUMARTIST/' + url_escape_path(artist)
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
         if album is not None:
-            search += u'/' + url_escape_path(album)
+            search += really_unicode('/') + url_escape_path(album)
 
         response, metadata = self._music_lib_search(search, start, max_items)
 
@@ -1828,7 +1829,7 @@ class SoCo(_SocoSingletonBase):
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
                 found
         """
-        search = u'A:ALBUMARTIST/' + url_escape_path(artist)
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
 
         response, _ = self._music_lib_search(search, start, max_items)
 
@@ -1865,8 +1866,8 @@ class SoCo(_SocoSingletonBase):
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
                 found
         """
-        search = u'A:ALBUMARTIST/' + url_escape_path(artist)
-        search += u'/' + url_escape_path(album)
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
+        search += really_unicode('/') + url_escape_path(album)
 
         response, _ = self._music_lib_search(search, start, max_items)
 
