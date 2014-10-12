@@ -237,6 +237,9 @@ class SoCo(_SocoSingletonBase):
                                             from the current queue.
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
+        search_track -- Search for an artist, artist's albums, or track.
+        get_albums_for_artist -- Get albums for an artist.
+        get_tracks_for_album -- Get tracks for an artist's album.
 
     Properties::
 
@@ -1809,7 +1812,7 @@ class SoCo(_SocoSingletonBase):
     def get_albums_for_artist(self, artist,
                               start=0, max_items=100,
                               full_album_art_uri=False):
-        """Get an artist's albums.
+        """Get albums for an artist.
 
         Parameters:
             artist: Artist name
@@ -1845,7 +1848,7 @@ class SoCo(_SocoSingletonBase):
 
     def get_tracks_for_album(self, artist, album,
                              start=0, max_items=100, full_album_art_uri=False):
-        """Get an artist's albums.
+        """Get tracks for an artist's album.
 
         Parameters:
             artist: Artist name
