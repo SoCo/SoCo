@@ -360,6 +360,27 @@ class TestAVTransport:
             [('InstanceID', 0), ('CrossfadeMode', '0')]
         )
 
+    def test_search_track_no_result(self, moco):
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '0',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
+            'TotalMatches': '0',
+            'UpdateID': '0'
+        }
+
+        tracks = moco.search_track("artist", "album", "track")
+
+        assert len(tracks) == 0
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/artist/album'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 100),
+            ('SortCriteria', '')
+        ])
+
 
 class TestRenderingControl:
 
