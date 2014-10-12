@@ -374,6 +374,7 @@ class TestAVTransport:
         )
 
     def test_search_track_no_result(self, moco):
+        moco.contentDirectory.reset_mock()
         moco.contentDirectory.Browse.return_value = {
             'NumberReturned': '0',
             'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
@@ -381,9 +382,9 @@ class TestAVTransport:
             'UpdateID': '0'
         }
 
-        tracks = moco.search_track("artist", "album", "track")
+        result = moco.search_track("artist", "album", "track")
 
-        assert len(tracks) == 0
+        assert len(result) == 0
 
         moco.contentDirectory.Browse.assert_called_once_with([
             ('ObjectID', 'A:ALBUMARTIST/artist/album'),
@@ -391,6 +392,32 @@ class TestAVTransport:
             ('Filter', '*'),
             ('StartingIndex', 0),
             ('RequestedCount', 100),
+            ('SortCriteria', '')
+        ])
+
+    def test_search_track_albums(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '2',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="A:ALBUMARTIST/The%20Artist/" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>All</dc:title><upnp:class>object.container.playlistContainer.sameArtist</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/</res></container><container id="A:ALBUMARTIST/The%20Artist/Album%20Title%201" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>Album Title 1</dc:title><upnp:class>object.container.album.musicAlbum</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/Album%20Title%201</res><dc:creator>The Artist</dc:creator><upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%20Artist%2fAlbum%20Title%201%2f/something.mp3&amp;v=432</upnp:albumArtURI></container></DIDL-Lite>',
+            'TotalMatches': '10',
+            'UpdateID': '0'
+        }
+
+        results = moco.search_track("The Artist", max_items=2)
+
+        assert len(results) == 1
+
+        album = results[0]
+        assert album.title == 'Album Title 1'
+        assert album.item_id == 'A:ALBUMARTIST/The%20Artist/Album%20Title%201'
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/The%20Artist'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 2),
             ('SortCriteria', '')
         ])
 
