@@ -350,7 +350,7 @@ class TestAVTransport:
             ('Filter', '*'),
             ('StartingIndex', 0),
             ('RequestedCount', 1),
-            ('SortCriteria', u'')
+            ('SortCriteria', '')
         ])
         moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
             [('InstanceID', 0),
@@ -428,12 +428,12 @@ class TestAVTransport:
         assert track.item_id == 'S://server/The%20Artist/The%20Album/05%20-%20Track%20Title%203.mp3'
 
         moco.contentDirectory.Browse.assert_called_once_with([
-            (u'ObjectID', 'A:ALBUMARTIST/The%20Artist/The%20Album'),
-            (u'BrowseFlag', u'BrowseDirectChildren'),
-            (u'Filter', u'*'),
-            (u'StartingIndex', 0),
-            (u'RequestedCount', 3),
-            (u'SortCriteria', u'')
+            ('ObjectID', 'A:ALBUMARTIST/The%20Artist/The%20Album'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 3),
+            ('SortCriteria', '')
         ])
 
 
