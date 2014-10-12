@@ -7,6 +7,7 @@ from __future__ import unicode_literals, absolute_import, print_function
 import re
 import functools
 import warnings
+import urllib
 
 from .compat import StringType, UnicodeType
 from .xml import XML
@@ -133,3 +134,8 @@ class deprecated(object):
             decorated.__doc__ = ''
         decorated.__doc__ += docs
         return decorated
+
+
+def url_escape_path(path):
+    """ Escape a string value for a URL request path """
+    return urllib.quote(path.encode('utf-8')).replace('/', '%2F')
