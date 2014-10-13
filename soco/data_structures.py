@@ -85,7 +85,7 @@ class MusicLibraryItem(object):
         'creator': ('dc', 'creator'),
     }
 
-    def __init__(self, uri, title, parent_id, item_id, creator=None, **kwargs):
+    def __init__(self, uri, title, parent_id, item_id, **kwargs):
         r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
@@ -103,7 +103,7 @@ class MusicLibraryItem(object):
         self.content = {}
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
-                     'item_id': item_id, 'creator': creator}
+                     'item_id': item_id}
         arguments.update(kwargs)
         for key, value in arguments.items():
             if key in self._translation or key == 'parent_id' \
@@ -337,6 +337,15 @@ class MLItem(MusicLibraryItem):
         'uri': ('', 'res')
     }
 
+    @property
+    def album_art_uri(self):
+        """Get and set the album art URI as an unicode object."""
+        return self.content.get('album_art_uri')
+
+    @album_art_uri.setter
+    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
+        self.content['album_art_uri'] = album_art_uri
+
 # The following are all Sonos specific
     @property
     def stream_content(self):
@@ -405,15 +414,6 @@ class MLTrack(MLAudioItem):
     @album.setter
     def album(self, album):  # pylint: disable=C0111
         self.content['album'] = album
-
-    @property
-    def album_art_uri(self):
-        """Get and set the album art URI as an unicode object."""
-        return self.content.get('album_art_uri')
-
-    @album_art_uri.setter
-    def album_art_uri(self, album_art_uri):  # pylint: disable=C0111
-        self.content['album_art_uri'] = album_art_uri
 
     @property
     def original_track_number(self):
