@@ -132,7 +132,7 @@ def parse_event_xml(xml_event):
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
                     if value.startswith('<DIDL-Lite'):
-                        didl_xml = XML.fromstring(value)
+                        didl_xml = XML.fromstring(value.encode('utf-8'))
                         # Get the item sub-element
                         item_xml = didl_xml.find(
                             "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}"
