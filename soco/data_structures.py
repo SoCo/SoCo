@@ -49,23 +49,6 @@ def get_ml_item(xml):
     return cls.from_xml(xml=xml)
 
 
-def tags_with_text(xml, tags=None):
-    """Return a list of tags that contain text retrieved recursively from an
-    XML tree
-    """
-    if tags is None:
-        tags = []
-    for element in xml:
-        if element.text is not None:
-            tags.append(element)
-        elif len(element) > 0:
-            tags_with_text(element, tags)
-        else:
-            message = 'Unknown XML structure: {0}'.format(element)
-            raise ValueError(message)
-    return tags
-
-
 ###############################################################################
 # BASE OBJECT                                                                 #
 ###############################################################################
@@ -89,7 +72,8 @@ class MusicLibraryItem(object):
             # key: (ns, tag)
             _translation = {
                 'title': ('dc', 'title'),
-                'uri': ('', 'res')
+                'uri': ('', 'res'),
+                'creator': ('dc', 'creator'),
             }
 
     """
@@ -97,10 +81,11 @@ class MusicLibraryItem(object):
     # key: (ns, tag)
     _translation = {
         'title': ('dc', 'title'),
-        'uri': ('', 'res')
+        'uri': ('', 'res'),
+        'creator': ('dc', 'creator'),
     }
 
-    def __init__(self, uri, title, parent_id, item_id, **kwargs):
+    def __init__(self, uri, title, parent_id, item_id, creator=None, **kwargs):
         r"""Initialize the MusicLibraryItem from parameter arguments.
 
         :param uri: The URI for the item
@@ -118,12 +103,13 @@ class MusicLibraryItem(object):
         self.content = {}
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
-                     'item_id': item_id}
+                     'item_id': item_id, 'creator': creator}
         arguments.update(kwargs)
         for key, value in arguments.items():
             if key in self._translation or key == 'parent_id' \
                     or key == 'item_id':
-                self.content[key] = value
+                if value is not None:
+                    self.content[key] = value
             else:
                 raise ValueError(
                     'The key \'{0}\' is not allowed as an argument. Only '
@@ -271,6 +257,15 @@ class MusicLibraryItem(object):
         self.content['parent_id'] = parent_id
 
     @property
+    def creator(self):
+        """Get and set the creator as an unicode object."""
+        return self.content.get('creator')
+
+    @creator.setter
+    def creator(self, creator):  # pylint: disable=C0111
+        self.content['creator'] = creator
+
+    @property
     def didl_metadata(self):
         """Produce the DIDL metadata XML.
 
@@ -326,13 +321,40 @@ class MusicLibraryItem(object):
 
 
 ###############################################################################
-# OBJECT.ITEM HEIRARCHY                                                       #
+# OBJECT.ITEM HIERARCHY                                                       #
 ###############################################################################
 
 class MLItem(MusicLibraryItem):
     """A basic content directory item"""
 
     item_class = 'object.item'
+    _translation = {
+        'title': ('dc', 'title'),
+        'creator': ('dc', 'creator'),
+        'stream_content': ('r', 'streamContent'),
+        'radio_show': ('r', 'radioShowMd'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res')
+    }
+
+# The following are all Sonos specific
+    @property
+    def stream_content(self):
+        """Get and set the stream content URI as an unicode object."""
+        return self.content.get('stream_content')
+
+    @stream_content.setter
+    def stream_content(self, stream_content):  # pylint: disable=C0111
+        self.content['stream_content'] = stream_content
+
+    @property
+    def radio_show(self):
+        """Get and set the radio show metadata as an unicode object."""
+        return self.content.get('radio_show')
+
+    @radio_show.setter
+    def radio_show(self, radio_show):  # pylint: disable=C0111
+        self.content['radio_show'] = radio_show
 
 
 class MLAudioItem(MLItem):
@@ -376,15 +398,6 @@ class MLTrack(MLAudioItem):
     }
 
     @property
-    def creator(self):
-        """Get and set the creator as an unicode object."""
-        return self.content.get('creator')
-
-    @creator.setter
-    def creator(self, creator):  # pylint: disable=C0111
-        self.content['creator'] = creator
-
-    @property
     def album(self):
         """Get and set the album as an unicode object."""
         return self.content.get('album')
@@ -411,6 +424,21 @@ class MLTrack(MLAudioItem):
     # pylint: disable=C0111
     def original_track_number(self, original_track_number):
         self.content['original_track_number'] = original_track_number
+
+
+class MLAudioBroadcast(MLAudioItem):
+
+    """Class that represents an audio broadcast."""
+    item_class = 'object.item.audioItem.audioBroadcast'
+    # name: (ns, tag)
+    _translation = {
+        'title': ('dc', 'title'),
+        'creator': ('dc', 'creator'),
+        'album': ('upnp', 'album'),
+        'album_art_uri': ('upnp', 'albumArtURI'),
+        'uri': ('', 'res'),
+        'original_track_number': ('upnp', 'originalTrackNumber'),
+    }
 
 
 # class (MLTrack):
@@ -474,15 +502,6 @@ class MLMusicAlbum(MLAlbum):
         'album_art_uri': ('upnp', 'albumArtURI'),
         'uri': ('', 'res')
     }
-
-    @property
-    def creator(self):
-        """Get and set the creator as an unicode object."""
-        return self.content.get('creator')
-
-    @creator.setter
-    def creator(self, creator):  # pylint: disable=C0111
-        self.content['creator'] = creator
 
     @property
     def album_art_uri(self):
@@ -730,7 +749,10 @@ class Queue(ListOfMusicInfoItems):
 # CONSTANTS                                                                   #
 ###############################################################################
 
-DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
+DIDL_CLASS_TO_CLASS = {'object.item': MLItem,
+                       'object.item.audioItem.musicTrack': MLTrack,
+                       'object.item.audioItem.audioBroadcast':
+                           MLAudioBroadcast,
                        'object.container.album.musicAlbum': MLMusicAlbum,
                        'object.container.person.musicArtist': MLArtist,
                        'object.container.genre.musicGenre': MLMusicGenre,
@@ -739,11 +761,12 @@ DIDL_CLASS_TO_CLASS = {'object.item.audioItem.musicTrack': MLTrack,
                        'object.container': MLContainer,
                        'object.container.albumlist': MLAlbumList,
                        'object.container.playlistContainer.sameArtist':
-                       MLSameArtist}
+                           MLSameArtist}
 
 NS = {
     'dc': 'http://purl.org/dc/elements/1.1/',
     'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
     '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-    'ms': 'http://www.sonos.com/Services/1.1'
+    'ms': 'http://www.sonos.com/Services/1.1',
+    'r': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
 }

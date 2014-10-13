@@ -12,7 +12,7 @@ from __future__ import unicode_literals
 from .xml import XML
 from .exceptions import CannotCreateDIDLMetadata
 from .utils import camel_to_underscore
-from .data_structures import tags_with_text, NS, ns_tag
+from .data_structures import NS, ns_tag
 
 
 def get_ms_item(xml, service, parent_id):
@@ -22,6 +22,23 @@ def get_ms_item(xml, service, parent_id):
     cls = MS_TYPE_TO_CLASS.get(xml.findtext(ns_tag('ms', 'itemType')))
     out = cls.from_xml(xml, service, parent_id)
     return out
+
+
+def tags_with_text(xml, tags=None):
+    """Return a list of tags that contain text retrieved recursively from an
+    XML tree
+    """
+    if tags is None:
+        tags = []
+    for element in xml:
+        if element.text is not None:
+            tags.append(element)
+        elif len(element) > 0:
+            tags_with_text(element, tags)
+        else:
+            message = 'Unknown XML structure: {0}'.format(element)
+            raise ValueError(message)
+    return tags
 
 
 class MusicServiceItem(object):

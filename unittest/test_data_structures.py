@@ -352,7 +352,7 @@ def common_tests(item_class, item_id, instance, content, item_xml, item_dict):
                                    content['parent_id'],
                                    content['item_id'])
     for key in content.keys():
-        if key not in ['uri', 'title', 'parent_id', 'item_id']:
+        if key not in ['uri', 'title', 'parent_id', 'item_id', 'creator']:
             assert getattr(instance4, key) is None
 
 
