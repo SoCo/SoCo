@@ -137,5 +137,5 @@ class deprecated(object):
 
 def url_escape_path(path):
     """ Escape a string value for a URL request path """
-    # Set safe to empty to ensure escaping of /
-    return quote_url(path.encode('utf-8'), '')
+    # Using 'safe' arg does not seem to work for python 2.6
+    return quote_url(path.encode('utf-8')).replace('/', '%2F')
