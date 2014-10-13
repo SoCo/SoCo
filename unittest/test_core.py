@@ -395,16 +395,35 @@ class TestAVTransport:
             ('SortCriteria', '')
         ])
 
-    def test_search_track_albums(self, moco):
+    def test_search_track_artist_albums(self, moco):
         moco.contentDirectory.reset_mock()
         moco.contentDirectory.Browse.return_value = {
             'NumberReturned': '2',
-            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="A:ALBUMARTIST/The%20Artist/" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>All</dc:title><upnp:class>object.container.playlistContainer.sameArtist</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/</res></container><container id="A:ALBUMARTIST/The%20Artist/Album%20Title%201" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>Album Title 1</dc:title><upnp:class>object.container.album.musicAlbum</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/Album%20Title%201</res><dc:creator>The Artist</dc:creator><upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%20Artist%2fAlbum%20Title%201%2f/something.mp3&amp;v=432</upnp:albumArtURI></container></DIDL-Lite>',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:ns2="urn:schemas-upnp-org:metadata-1-0/upnp/"><container id="A:ALBUMARTIST/The%20Artist/" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>All</dc:title><ns2:class>object.container.playlistContainer.sameArtist</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/</res></container><container id="A:ALBUMARTIST/The%20Artist/First%20Album" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>First Album</dc:title><ns2:class>object.container.album.musicAlbum</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/First%20Album</res><dc:creator>The Artist</dc:creator><ns2:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fFirst%2520Album%2ftrack2.mp3&amp;v=432</ns2:albumArtURI></container><container id="A:ALBUMARTIST/The%20Artist/Second%20Album" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>Second Album</dc:title><ns2:class>object.container.album.musicAlbum</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/Second%20Album</res><dc:creator>The Artist</dc:creator><ns2:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fSecond%2520Album%2ftrack2.mp3&amp;v=432</ns2:albumArtURI></container></DIDL-Lite>',
             'TotalMatches': '10',
             'UpdateID': '0'
         }
+        results = moco.search_track("The Artist", max_items=3)
 
-    def test_search_track_album_tracks(self, moco):
+        assert len(results) == 2
+
+        album = results[0]
+        assert album.title == 'First Album'
+        assert album.item_id == 'A:ALBUMARTIST/The%20Artist/First%20Album'
+        album = results[1]
+        assert album.title == 'Second Album'
+        assert album.item_id == 'A:ALBUMARTIST/The%20Artist/Second%20Album'
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/The%20Artist'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 3),
+            ('SortCriteria', '')
+        ])
+
+    def test_search_track_artist_album_tracks(self, moco):
         moco.contentDirectory.reset_mock()
         moco.contentDirectory.Browse.return_value = {
             'NumberReturned': '3',
