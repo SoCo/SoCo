@@ -441,12 +441,6 @@ class MLAudioBroadcast(MLAudioItem):
     }
 
 
-# class (MLTrack):
-#     def __init__(self, uri, title, item_id, **kwargs):
-#         super(QueueItem, self).__init__(uri, title, parent_id='Q:0',
-#                   item_id=item_id, **kwargs)
-
-
 ###############################################################################
 # OBJECT.CONTAINER HIERARCHY                                                  #
 ###############################################################################
