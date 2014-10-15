@@ -6,69 +6,43 @@ The ``data_structures`` sub module
 Introduction
 ============
 
-The data structures are used to represent playable items like e.g. a
-music track or playlist. The data structure classes are documented in
-the sections below and the rest of this section contains a more
-thorough introduction.
+The majority of the data structures in this module are used to represent the
+metadata for music items, such as music tracks, genres and playlists. The data
+structure classes are documented in the sections below and the rest of this
+section contains a more thorough introduction.
 
-To expand a bit, the ``data_structures`` sub-module consist of a
-hierarchy of classes that represent different music information
-items. This could be a "real" item such as a music library track,
-album or genre or an abstract item such as a music library item.
+Many music related items have a lot of metadata in common. For example, a music
+track and an album may both have artist and title metadata. It is possible
+therefore to derive a hierarchy of items, and to implement them as a class
+structure. The hierarchy which Sonos has adopted is represented by the `DIDL
+Lite xml schema <http://www.upnp.org/schemas/av/didl-lite-v2.xsd>`_ (DIDL stands for 'Digital Item Description Language'. For more details, see the
+`UPnP specifications
+(PDF) <http://www.upnp.org/specs/av/UPnP-av-ContentDirectory-v1-Service.pdf>`_.
 
-The main advantages of using classes as apposed to e.g. dicts to
-contain the information are:
-
- * They are easy to identify
- * It is possibly to define and agree on certain abilities such as
-   what is the criteria for two tracks being equal
- * Certain functionality for these information object, such as
-   producing the XML that is needed for the UPnP communication can be
-   attached to the elements themselves.
-
-Many of the items have a lot in common and therefore has shared
-functionality. This has been implemented by means of inheritance, in
-such a way that common functionality is always pulled up the
-inheritance hierarchy to the highest point that have this
-functionality in common. The hierarchy is illustrated in figure
-:ref:`the figure below <figure-inheritance>`. The black lines are the
-lines of inheritance, going from the top down.
+In the ``data_structures`` module, each class represents a particular DIDL-Lite
+object and is illustrated in :ref:`the figure below <figure-inheritance>`. The
+black lines are the lines of inheritance, going from the top down.
 
 .. _figure-inheritance:
-.. inheritance-diagram:: soco.data_structures 
+.. inheritance-diagram:: soco.data_structures
 
-All data structures are :py:class:`music information items
-<.MusicInfoItem>`. Three classes inherit from this top level class;
-the :py:class:`queue item <.QueueItem>`, the :py:class:`music library
-item <.MusicLibraryItem>` and the music service item
+All data structures are subclasses of the abstract :py:class:`music library item <soco.data_structures.MusicLibraryItem>` class. You should never need to instantiate this directly. The subclasses are divided into :py:class:`ML Containers <soco.data_structures.MLContainer>` and :py:class:`ML Items <soco.data_structures.MLItem>`. In general, :py:class:`ML Containers <soco.data_structures.MLContainer>` are things, like playlists, which are intended to contain other items.
 
-There are 8 types of :py:class:`music library items
-<.MusicLibraryItem>`, represented by the 8 classes that inherit from
-it. From these classes all information items are available as named
-properties. All of these items contains a :py:attr:`title
-<.MusicLibraryItem.title>`, a :py:attr:`URI <.MusicLibraryItem.uri>`
-and a :py:attr:`UPnP class <.MusicLibraryItem.item_class>`, so these
-items are defined in the :py:class:`.MusicLibraryItem` class and
-inherited by them all. For most items the ``ID`` can be extracted from
-the URI in the same way, so therefore it is defined in
-:py:attr:`.MusicLibraryItem.item_id` and the few classes
-(:py:class:`.MLTrack`, :py:class:`.MLPlaylist`) that extract the ID
-differently from the URI then overrides this property. Besides the
-information items that they all share, :py:class:`.MLTrack` and
-:py:class:`.MLAlbum` define some extra fields such as :py:attr:`album
-<.MLTrack.album>`, :py:attr:`album_art_uri <.MLTrack.album_art_uri>`
-and :py:attr:`creator <.MLTrack.creator>`.
+At the bottom of the class hierarchy are 10 types of :py:class:`music library items <.MusicLibraryItem>`. On each of these classes, relevant metadata items
+are are available as attributes (though they may be implemented as properties).
+Each has a :py:attr:`title <.MusicLibraryItem.title>`, a :py:attr:`URI <.MusicLibraryItem.uri>`, an :py:attr:`item id <.MusicLibraryItem.item_id>` and
+a :py:attr:`UPnP class <.MusicLibraryItem.item_class>`. Some have other
+attributes. For example, :py:class:`.MLTrack` and :py:class:`.MLMusicAlbum` have
+some extra fields such as :py:attr:`album <.MLTrack.album>`,
+:py:attr:`album_art_uri <.MLTrack.album_art_uri>` and :py:attr:`creator <.MLTrack.creator>`.
 
-One of the more important attributes is :py:attr:`didl_metadata
-<.MusicLibraryItem.didl_metadata>`. It is used to produce the metadata
-that is sent to the Sonos® units. This metadata is created in an
-almost identical way, which is the reason that it is implemented in
-:py:class:`.MusicLibraryItem`. It uses the URI (through the ID), the
-UPnP class and the title that the items are instantiated with and the
-two class variables ``parent_id`` and ``_translation``. ``parent_id``
-must be over written in each of the sub classes, whereas that is only
-necessary for ``_translation`` if the information fields are different
-from the default.
+One of the more important attributes which each class has is
+:py:attr:`didl_metadata <.MusicLibraryItem.didl_metadata>`. It is used to
+produce the metadata that is sent to the Sonos® units in the form of xml. This
+metadata is created in an almost identical way for each class, which is why it
+is implemented in :py:class:`.MusicLibraryItem`. It uses the URI, the UPnP
+class and the title that the items are instantiated with, along with the two
+class variables ``parent_id`` and ``_translation``.
 
 Functions
 =========
@@ -76,17 +50,6 @@ Functions
 .. autofunction:: soco.data_structures.ns_tag
 .. autofunction:: soco.data_structures.get_ml_item
 
-MusicInfoItem
-=============
-
-.. autoclass:: soco.data_structures.MusicInfoItem
-   :members:
-   :show-inheritance:
-
-   .. automethod:: soco.data_structures.MusicInfoItem.__init__
-   .. automethod:: soco.data_structures.MusicInfoItem.__eq__
-   .. automethod:: soco.data_structures.MusicInfoItem.__repr__
-   .. automethod:: soco.data_structures.MusicInfoItem.__str__
 
 MusicLibraryItem
 ================
@@ -95,6 +58,29 @@ MusicLibraryItem
    :members:
    :special-members:
    :show-inheritance:
+   
+   .. automethod:: soco.data_structures.MusicLibraryItem.__init__
+   .. automethod:: soco.data_structures.MusicLibraryItem.__eq__
+   .. automethod:: soco.data_structures.MusicLibraryItem.__repr__
+   .. automethod:: soco.data_structures.MusicLibraryItem.__str__
+
+
+MLContainer
+===========
+
+.. autoclass:: soco.data_structures.MLContainer
+   :members:
+   :special-members:
+   :show-inheritance:
+   
+MLItem
+=======
+
+.. autoclass:: soco.data_structures.MLItem
+   :members:
+   :special-members:
+   :show-inheritance:
+
 
 MLTrack
 =======
@@ -104,10 +90,10 @@ MLTrack
    :special-members:
    :show-inheritance:
 
-MLAlbum
-=======
+MLMusicAlbum
+============
 
-.. autoclass:: soco.data_structures.MLAlbum
+.. autoclass:: soco.data_structures.MLMusicAlbum
    :members:
    :special-members:
    :show-inheritance:
@@ -120,13 +106,22 @@ MLArtist
    :special-members:
    :show-inheritance:
 
-MLGenre
-=======
+MLMusicGenre
+============
 
-.. autoclass:: soco.data_structures.MLGenre
+.. autoclass:: soco.data_structures.MLMusicGenre
    :members:
    :special-members:
    :show-inheritance:
+
+MLAlbumList
+===========
+
+.. autoclass:: soco.data_structures.MLAlbumList
+   :members:
+   :special-members:
+   :show-inheritance:
+
 
 MLComposer
 ==========
@@ -144,6 +139,16 @@ MLPlaylist
    :special-members:
    :show-inheritance:
 
+
+MLAudioBroadcast
+================
+
+.. autoclass:: soco.data_structures.MLAudioBroadcast
+   :members:
+   :special-members:
+   :show-inheritance:
+
+
 MLShare
 =======
 
@@ -152,10 +157,3 @@ MLShare
    :special-members:
    :show-inheritance:
 
-QueueItem
-=========
-
-.. autoclass:: soco.data_structures.QueueItem
-   :members:
-   :special-members:
-   :show-inheritance:
