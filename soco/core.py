@@ -803,9 +803,9 @@ class SoCo(_SocoSingletonBase):
 #
 
         def parse_zone_group_member(member_element):
-            """ Parse a ZoneGroupMember or Satellite element from Zone Group State,
-            create a SoCo instance for the member, set basic attributes and return
-            it. """
+            """ Parse a ZoneGroupMember or Satellite element from Zone Group
+            State, create a SoCo instance for the member, set basic attributes
+            and return it. """
             # Create a SoCo instance for each member. Because SoCo
             # instances are singletons, this is cheap if they have already
             # been created, and useful if they haven't. We can then
@@ -814,8 +814,8 @@ class SoCo(_SocoSingletonBase):
             ip_addr = member_attribs['Location'].\
                 split('//')[1].split(':')[0]
             zone = config.SOCO_CLASS(ip_addr)
-            # uid doesn't change, but it's not harmful to (re)set it, in case the
-            # zone is as yet unseen.
+            # uid doesn't change, but it's not harmful to (re)set it, in case
+            # the zone is as yet unseen.
             zone._uid = member_attribs['UUID']
             zone._player_name = member_attribs['ZoneName']
             # add the zone to the set of all members, and to the set
