@@ -19,7 +19,7 @@ from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import CannotCreateDIDLMetadata
+from .exceptions import CannotCreateDIDLMetadata, SoCoUPnPException
 from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
     MLShare, SearchResult, Queue, MusicLibraryItem, MLAlbum
 from .utils import really_utf8, camel_to_underscore, url_escape_path,\
@@ -1794,23 +1794,30 @@ class SoCo(_SocoSingletonBase):
                 IP address
 
         Returns:
-            dict: A :py:class:`~.soco.data_structures.SearchResult` object
-
-        Raises:
-            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                found
+            SearchResult: A :py:class:`~.soco.data_structures.SearchResult`
+                object. NOTE! The items in the results are sorted, which means
+                that the properties `number_returned` and `total_matches` will
+                not contain the correct numbers for the items returned, but are
+                the correct numbers to use to continue the search, if it has
+                been broken down into pieces.
         """
         item_id = 'A:ALBUMARTIST/{}/'.format(url_escape_path(artist))
         if album is not None:
             item_id += url_escape_path(album)
         if track is not None:
             item_id += ':{}'.format(url_escape_path(track))
-        print item_id
+
         # Create dummy music library item element to browse
         ml_item = MusicLibraryItem('', '', '', item_id)
-        browse_result = self.browse(ml_item, start=start, max_items=max_items,
-                                    full_album_art_uri=full_album_art_uri)
-        return list(browse_result)
+        try:
+            browse_result = self.browse(ml_item, start=start,
+                                        max_items=max_items,
+                                        full_album_art_uri=full_album_art_uri)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], 'search_tracks', 0, 0, None)
+        browse_result._metadata['search_type'] = 'search_track'
+        return browse_result
 
     def get_albums_for_artist(self, artist,
                               start=0, max_items=100,
@@ -1826,17 +1833,20 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             A list of :py:class:`~.soco.data_structures.MLAlbum` objects
-
-        Raises:
-            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                found
         """
         item_id = 'A:ALBUMARTIST/{}'.format(url_escape_path(artist))
         ml_item = MusicLibraryItem('', '', '', item_id)
-        browse_result = self.browse(ml_item, start=start, max_items=max_items,
-                                    full_album_art_uri=full_album_art_uri)
-        return [item for item in browse_result
-                if item.__class__ == MLAlbum]
+        try:
+            browse_result = self.browse(ml_item, start=start,
+                                        max_items=max_items,
+                                        full_album_art_uri=full_album_art_uri)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], 'albums_for_artist', 0, 0, None)
+        browse_result[:] = [item for item in browse_result
+                            if item.__class__ == MLAlbum]
+        browse_result._metadata['search_type'] = 'albums_for_artist'
+        return browse_result
 
     def get_tracks_for_album(self, artist, album,
                              start=0, max_items=100, full_album_art_uri=False):
@@ -1860,9 +1870,15 @@ class SoCo(_SocoSingletonBase):
         item_id = 'A:ALBUMARTIST/{}/{}'.format(url_escape_path(artist),
                                                url_escape_path(album))
         ml_item = MusicLibraryItem('', '', '', item_id)
-        browse_result = self.browse(ml_item, start=start, max_items=max_items,
-                                    full_album_art_uri=full_album_art_uri)
-        return list(browse_result)
+        try:
+            browse_result = self.browse(ml_item, start=start,
+                                        max_items=max_items,
+                                        full_album_art_uri=full_album_art_uri)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], 'tracks_for_album', 0, 0, None)
+        browse_result._metadata['search_type'] = 'tracks_for_album'
+        return browse_result
 
 # definition section
 
