@@ -1267,6 +1267,7 @@ class SoCo(_SocoSingletonBase):
             search_term=search_term)
         return out
 
+    # pylint: disable=too-many-arguments
     def get_artists(self, start=0, max_items=100, full_album_art_uri=False,
                     search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
@@ -1363,6 +1364,7 @@ class SoCo(_SocoSingletonBase):
                                                  subcategories=subcategories)
         return out
 
+    # pylint: disable=too-many-locals
     def get_music_library_information(self, search_type, start=0,
                                       max_items=100, full_album_art_uri=False,
                                       search_term=None, subcategories=None):
@@ -1411,7 +1413,7 @@ class SoCo(_SocoSingletonBase):
 
         try:
             response, metadata =\
-              self._music_lib_search(search, start, max_items)
+                self._music_lib_search(search, start, max_items)
         except SoCoUPnPException as exception:
             if exception.error_code == '701':
                 return SearchResult([], search_type, 0, 0, None)
@@ -1439,7 +1441,7 @@ class SoCo(_SocoSingletonBase):
         return SearchResult(item_list, **metadata)
 
     def browse(self, ml_item=None, start=0, max_items=100,
-               full_album_art_uri=False):
+               full_album_art_uri=False, search_term=None, subcategories=None):
         """Browse (get sub-elements) a music library item
 
         Keyword arguments:
@@ -1450,6 +1452,13 @@ class SoCo(_SocoSingletonBase):
             max_items (int): The maximum number of items to return
             full_album_art_uri(bool): If the album art URI should include the
                 IP address
+            search_term (str): A string that will be used to perform a fuzzy
+                search among the search results. If used in combination with
+                subcategories, the fuzzy search will be performed on the
+                subcategory. NOTE: Searching will not work if ml_item is None
+            subcategories (list): A list of strings that indicate one or more
+                subcategories to dive into- NOTE: Providing sub categories will
+                not work if ml_item is None.
 
         Returns:
             dict: A :py:class:`~.soco.data_structures.SearchResult` object
@@ -1464,7 +1473,22 @@ class SoCo(_SocoSingletonBase):
         else:
             search = ml_item.item_id
 
-        response, metadata = self._music_lib_search(search, start, max_items)
+        # Add sub categories
+        if subcategories is not None:
+            for category in subcategories:
+                search += '/' + url_escape_path(really_unicode(category))
+        # Add fuzzy search
+        if search_term is not None:
+            search += ':' + url_escape_path(really_unicode(search_term))
+
+        try:
+            response, metadata =\
+                self._music_lib_search(search, start, max_items)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], 'browse', 0, 0, None)
+            else:
+                raise exception
         metadata['search_type'] = 'browse'
 
         # Parse the results
@@ -1831,9 +1855,9 @@ class SoCo(_SocoSingletonBase):
 
         # Perform the search
         result = self.get_album_artists(
-                start=start, max_items=max_items,
-                full_album_art_uri=full_album_art_uri,
-                subcategories=subcategories, search_term=track)
+            start=start, max_items=max_items,
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories, search_term=track)
         result._metadata['search_type'] = 'search_track'
         return result
 
@@ -1859,9 +1883,9 @@ class SoCo(_SocoSingletonBase):
         """
         subcategories = [artist]
         result = self.get_album_artists(
-                start=start, max_items=max_items,
-                full_album_art_uri=full_album_art_uri,
-                subcategories=subcategories)
+            start=start, max_items=max_items,
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories)
         result[:] = [item for item in result if item.__class__ == MLAlbum]
         result._metadata['search_type'] = 'albums_for_artist'
         return result
@@ -1887,9 +1911,9 @@ class SoCo(_SocoSingletonBase):
         """
         subcategories = [artist, album]
         result = self.get_album_artists(
-                start=start, max_items=max_items,
-                full_album_art_uri=full_album_art_uri,
-                subcategories=subcategories)
+            start=start, max_items=max_items,
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories)
         result._metadata['search_type'] = 'tracks_for_album'
         return result
 
