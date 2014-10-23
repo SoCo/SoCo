@@ -1268,7 +1268,7 @@ class SoCo(_SocoSingletonBase):
         return out
 
     def get_artists(self, start=0, max_items=100, full_album_art_uri=False,
-                    search_term=None):
+                    search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
         to the docstring for that method.
@@ -1276,11 +1276,13 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('artists', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_album_artists(self, start=0, max_items=100,
-                          full_album_art_uri=False, search_term=None):
+                          full_album_art_uri=False, search_term=None,
+                          subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='album_artists'`. For details on remaining arguments
         refer to the docstring for that method.
@@ -1289,11 +1291,12 @@ class SoCo(_SocoSingletonBase):
         out = self.get_music_library_information('album_artists',
                                                  start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_albums(self, start=0, max_items=100, full_album_art_uri=False,
-                   search_term=None):
+                   search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='albums'`. For details on remaining arguments refer
         to the docstring for that method.
@@ -1301,11 +1304,12 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('albums', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_genres(self, start=0, max_items=100, full_album_art_uri=False,
-                   search_term=None):
+                   search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='genres'`. For details on remaining arguments refer
         to the docstring for that method.
@@ -1313,11 +1317,12 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('genres', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_composers(self, start=0, max_items=100, full_album_art_uri=False,
-                      search_term=None):
+                      search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='composers'`. For details on remaining arguments
         refer to the docstring for that method.
@@ -1325,11 +1330,12 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('composers', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_tracks(self, start=0, max_items=100, full_album_art_uri=False,
-                   search_term=None):
+                   search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='tracks'`. For details on remaining arguments refer
         to the docstring for that method.
@@ -1337,11 +1343,12 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('tracks', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_playlists(self, start=0, max_items=100, full_album_art_uri=False,
-                      search_term=None):
+                      search_term=None, subcategories=None):
         """ Convinience method for :py:meth:`get_music_library_information`
         with `search_type='playlists'`. For details on remaining arguments
         refer to the docstring for that method.
@@ -1352,12 +1359,13 @@ class SoCo(_SocoSingletonBase):
         """
         out = self.get_music_library_information('playlists', start, max_items,
                                                  full_album_art_uri,
-                                                 search_term=search_term)
+                                                 search_term=search_term,
+                                                 subcategories=subcategories)
         return out
 
     def get_music_library_information(self, search_type, start=0,
                                       max_items=100, full_album_art_uri=False,
-                                      search_term=None):
+                                      search_term=None, subcategories=None):
         """ Retrieve information about the music library
 
         :param search_type: The kind of information to retrieve. Can be one of:
@@ -1372,6 +1380,12 @@ class SoCo(_SocoSingletonBase):
             requested.
         :param full_album_art_uri: If the album art URI should include the
             IP address
+        :param search_term: A string that will be used to perform a fuzzy
+            search among the search results. If used in combination with
+            subcategories, the fuzzy search will be performed on the
+            subcategory
+        :param subcategories: A list of strings that indicate one or more
+            subcategories to dive into
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object
         :raises: :py:class:`SoCoException` upon errors
 
@@ -1386,11 +1400,23 @@ class SoCo(_SocoSingletonBase):
 
         """
         search = self.SEARCH_TRANSLATION[search_type]
-        if search_term is not None:
-            search = really_unicode(search) + ':' +\
-              url_escape_path(search_term)
 
-        response, metadata = self._music_lib_search(search, start, max_items)
+        # Add sub categories
+        if subcategories is not None:
+            for category in subcategories:
+                search += '/' + url_escape_path(really_unicode(category))
+        # Add fuzzy search
+        if search_term is not None:
+            search += ':' + url_escape_path(really_unicode(search_term))
+
+        try:
+            response, metadata =\
+              self._music_lib_search(search, start, max_items)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], search_type, 0, 0, None)
+            else:
+                raise exception
         metadata['search_type'] = search_type
 
         # Parse the results
@@ -1795,29 +1821,21 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             SearchResult: A :py:class:`~.soco.data_structures.SearchResult`
-                object. NOTE! The items in the results are sorted, which means
-                that the properties `number_returned` and `total_matches` will
-                not contain the correct numbers for the items returned, but are
-                the correct numbers to use to continue the search, if it has
-                been broken down into pieces.
+                object.
         """
-        item_id = 'A:ALBUMARTIST/{}/'.format(url_escape_path(artist))
+        subcategories = [artist]
         if album is not None:
-            item_id += url_escape_path(album)
-        if track is not None:
-            item_id += ':{}'.format(url_escape_path(track))
+            subcategories.append(album)
+        else:
+            subcategories.append('')
 
-        # Create dummy music library item element to browse
-        ml_item = MusicLibraryItem('', '', '', item_id)
-        try:
-            browse_result = self.browse(ml_item, start=start,
-                                        max_items=max_items,
-                                        full_album_art_uri=full_album_art_uri)
-        except SoCoUPnPException as exception:
-            if exception.error_code == '701':
-                return SearchResult([], 'search_tracks', 0, 0, None)
-        browse_result._metadata['search_type'] = 'search_track'
-        return browse_result
+        # Perform the search
+        result = self.get_album_artists(
+                start=start, max_items=max_items,
+                full_album_art_uri=full_album_art_uri,
+                subcategories=subcategories, search_term=track)
+        result._metadata['search_type'] = 'search_track'
+        return result
 
     def get_albums_for_artist(self, artist,
                               start=0, max_items=100,
@@ -1832,21 +1850,21 @@ class SoCo(_SocoSingletonBase):
                 IP address
 
         Returns:
-            A list of :py:class:`~.soco.data_structures.MLAlbum` objects
+            A list of :py:class:`~.soco.data_structures.MLAlbum` objects. NOTE!
+            Some non-album results are removed from the search, which means
+            that the properties `number_returned` and `total_matches` will not
+            contain the correct numbers for the items returned, but are the
+            correct numbers to use to continue the search, if it has been
+            broken down into pieces.
         """
-        item_id = 'A:ALBUMARTIST/{}'.format(url_escape_path(artist))
-        ml_item = MusicLibraryItem('', '', '', item_id)
-        try:
-            browse_result = self.browse(ml_item, start=start,
-                                        max_items=max_items,
-                                        full_album_art_uri=full_album_art_uri)
-        except SoCoUPnPException as exception:
-            if exception.error_code == '701':
-                return SearchResult([], 'albums_for_artist', 0, 0, None)
-        browse_result[:] = [item for item in browse_result
-                            if item.__class__ == MLAlbum]
-        browse_result._metadata['search_type'] = 'albums_for_artist'
-        return browse_result
+        subcategories = [artist]
+        result = self.get_album_artists(
+                start=start, max_items=max_items,
+                full_album_art_uri=full_album_art_uri,
+                subcategories=subcategories)
+        result[:] = [item for item in result if item.__class__ == MLAlbum]
+        result._metadata['search_type'] = 'albums_for_artist'
+        return result
 
     def get_tracks_for_album(self, artist, album,
                              start=0, max_items=100, full_album_art_uri=False):
@@ -1867,18 +1885,13 @@ class SoCo(_SocoSingletonBase):
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
                 found
         """
-        item_id = 'A:ALBUMARTIST/{}/{}'.format(url_escape_path(artist),
-                                               url_escape_path(album))
-        ml_item = MusicLibraryItem('', '', '', item_id)
-        try:
-            browse_result = self.browse(ml_item, start=start,
-                                        max_items=max_items,
-                                        full_album_art_uri=full_album_art_uri)
-        except SoCoUPnPException as exception:
-            if exception.error_code == '701':
-                return SearchResult([], 'tracks_for_album', 0, 0, None)
-        browse_result._metadata['search_type'] = 'tracks_for_album'
-        return browse_result
+        subcategories = [artist, album]
+        result = self.get_album_artists(
+                start=start, max_items=max_items,
+                full_album_art_uri=full_album_art_uri,
+                subcategories=subcategories)
+        result._metadata['search_type'] = 'tracks_for_album'
+        return result
 
 # definition section
 
