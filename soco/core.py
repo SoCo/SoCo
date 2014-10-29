@@ -1325,14 +1325,60 @@ class SoCo(_SocoSingletonBase):
                                       max_items=100, full_album_art_uri=False,
                                       search_term=None, subcategories=None,
                                       complete_result=False):
-        """ Retrieve information about the music library
+        """ Retrieve music information objects from the music library
+
+        This method is the main method to get music information items, like
+        e.g. tracks, albums etc., from the music library with. It can be used
+        in a few different ways:
+
+        The **search_term** argument performs a fuzzy search on that string in
+        the results, so e.g calling::
+
+          get_music_library_items('artist', search_term='Metallica')
+
+        will perform a fuzzy search for the term 'Metallica' among all the
+        artists.
+
+        Using the **subcategories** argument, will jump directly into that
+        subcategory of the search and return results from there. So. e.g
+        knowing that among the artist is one called 'Metallica', calling::
+
+          get_music_library_items('artist', subcategories=['Metallica'])
+
+        will jump directly into the 'Metallica' sub category and return the
+        albums associated with Metallica and::
+
+          get_music_library_items('artist', subcategories=['Metallica',
+                                                           'Black'])
+
+        will return the tracks of the album 'Black' by the artist 'Metallica'.
+        The order of sub category types is: Genres->Artists->Albums->Tracks.
+        It is also possible to combine the two, to perform a fuzzy search in a
+        sub category.
+
+        The **start**, **max_items** and **complete_result** arguments all
+        has to do with paging of the results. Per default, the searches are
+        always paged, because there is a limit to how many items we can get at
+        a time. This paging is exposed to the user with the start and max_items
+        arguments. So calling::
+
+          get_music_library_items('artists', start=0, max_items=100)
+          get_music_library_items('artists', start=100, max_items=100)
+
+        will get the first and next 100 items, respectively. It is also
+        to ask for all the elements at once::
+
+          get_music_library_items('artists', complete_result=True)
+
+        This will perform the paging internally and simply return all the
+        items.
 
         :param search_type: The kind of information to retrieve. Can be one of:
             'artists', 'album_artists', 'albums', 'genres', 'composers',
             'tracks', 'share', 'sonos_playlists', and 'playlists', where
             playlists are the imported file based playlists from the
             music library
-        :param start: Starting number of returned matches
+        :param start: Starting number of returned matches (zero based).
         :param max_items: Maximum number of returned matches. NOTE: The maximum
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
@@ -1419,29 +1465,30 @@ class SoCo(_SocoSingletonBase):
                full_album_art_uri=False, search_term=None, subcategories=None):
         """Browse (get sub-elements) a music library item
 
-        Keyword arguments:
-            ml_item (MusicLibraryItem): The MusicLibraryItem to browse, if left
-                out or passed None, the items at the base level will be
-                returned
-            start (int): The starting index of the results
-            max_items (int): The maximum number of items to return
-            full_album_art_uri(bool): If the album art URI should include the
-                IP address
-            search_term (str): A string that will be used to perform a fuzzy
-                search among the search results. If used in combination with
-                subcategories, the fuzzy search will be performed on the
-                subcategory. NOTE: Searching will not work if ml_item is None
-            subcategories (list): A list of strings that indicate one or more
-                subcategories to dive into. NOTE: Providing sub categories will
-                not work if ml_item is None.
-
-        Returns:
-            dict: A :py:class:`~.soco.data_structures.SearchResult` object
-
-        Raises:
-            AttributeError: If ``ml_item`` has no ``item_id`` attribute
+        :param ml_item: The MusicLibraryItem to browse, if left out or passed
+            None, the items at the base level will be returned
+        :type ml_item: MusicLibraryItem
+        :param start: The starting index of the results
+        :type start: int
+        :param max_items: The maximum number of items to return
+        :type max_items: int
+        :param full_album_art_uri: If the album art URI should include the IP
+            address
+        :type full_album_art_uri: bool
+        :param search_term: A string that will be used to perform a fuzzy
+            search among the search results. If used in combination with
+            subcategories, the fuzzy search will be performed on the
+            subcategory. NOTE: Searching will not work if ml_item is None.
+        :type search_term: str
+        :param subcategories: A list of strings that indicate one or more
+            subcategories to dive into. NOTE: Providing sub categories will
+            not work if ml_item is None.
+        :type subcategories: list
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        :raises: AttributeError: If ``ml_item`` has no ``item_id`` attribute
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                browsed
+            browsed
         """
         if ml_item is None:
             search = 'A:'
@@ -1808,19 +1855,18 @@ class SoCo(_SocoSingletonBase):
                      full_album_art_uri=False):
         """Search for an artist, artist's albums, or specific track.
 
-        Keyword arguments:
-            artist: Artist name
-            album: Album name. If left out or passed None, returns tracks
-               for all albums.
-            track: Track name. If left out or passed None, returns all tracks.
-            start (int): The starting index of the results
-            max_items (int): The maximum number of items to return
-            full_album_art_uri(bool): If the album art URI should include the
-                IP address
+        :param artist: Artist name
+        :type artist: str
+        :param album: Album name
+        :type album: str
+        :param track: Track name
+        :type track: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
 
-        Returns:
-            SearchResult: A :py:class:`~.soco.data_structures.SearchResult`
-                object.
         """
         subcategories = [artist]
         if album is not None:
@@ -1839,20 +1885,19 @@ class SoCo(_SocoSingletonBase):
     def get_albums_for_artist(self, artist, full_album_art_uri=False):
         """Get albums for an artist.
 
-        Parameters:
-            artist: Artist name
-            start (int): The starting index of the results
-            max_items (int): The maximum number of items to return
-            full_album_art_uri(bool): If the album art URI should include the
-                IP address
-
-        Returns:
-            A list of :py:class:`~.soco.data_structures.MLAlbum` objects. NOTE!
-            Some non-album results are removed from the search, which means
-            that the properties `number_returned` and `total_matches` will not
-            contain the correct numbers for the items returned, but are the
-            correct numbers to use to continue the search, if it has been
-            broken down into pieces.
+        :param artist: Artist name
+        :type artist: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+            NOTE! Some non-album results are removed from the search, which
+            means that the properties `number_returned` and `total_matches`
+            will not contain the correct numbers for the items returned, but
+            are the correct numbers to use to continue the search, if it has
+            been broken down into pieces.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        
         """
         subcategories = [artist]
         result = self.get_album_artists(
@@ -1875,20 +1920,21 @@ class SoCo(_SocoSingletonBase):
     def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
         """Get tracks for an artist's album.
 
-        Parameters:
-            artist: Artist name
-            album: Album name
-            start (int): The starting index of the results
-            max_items (int): The maximum number of items to return
-            full_album_art_uri(bool): If the album art URI should include the
-                IP address
+        :param artist: Artist name
+        :type artist: str
+        :param album: Album name
+        :type album: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+            NOTE! Some non-album results are removed from the search, which
+            means that the properties `number_returned` and `total_matches`
+            will not contain the correct numbers for the items returned, but
+            are the correct numbers to use to continue the search, if it has
+            been broken down into pieces.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
 
-        Returns:
-            A list of :py:class:`~.soco.data_structures.MLTrack` objects
-
-        Raises:
-            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                found
         """
         subcategories = [artist, album]
         result = self.get_album_artists(
