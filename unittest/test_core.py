@@ -325,6 +325,8 @@ class TestAVTransport:
         assert playlist.parent_id == "SQ:"
 
     def test_add_item_to_sonos_playlist(self, moco):
+        moco.contentDirectory.reset_mock()
+
         playlist = mock.Mock()
         playlist.item_id = 7
 
@@ -333,12 +335,23 @@ class TestAVTransport:
         track.didl_metadata = XML.Element('a')
 
         update_id = 100
-        moco._music_lib_search = mock.Mock(return_value=(
-            {'UpdateID': update_id},
-            None))
+
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '0',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
+            'TotalMatches': '0',
+            'UpdateID': update_id
+        }
 
         moco.add_item_to_sonos_playlist(track, playlist)
-        moco._music_lib_search.assert_called_once_with(playlist.item_id, 0, 1)
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', playlist.item_id),
+            ('BrowseFlag', 'BrowseDirectChildren'), 
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 1),
+            ('SortCriteria', '')
+        ])
         moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
             [('InstanceID', 0),
              ('UpdateID', update_id),
@@ -359,6 +372,88 @@ class TestAVTransport:
         moco.avTransport.SetCrossfadeMode.assert_called_once_with(
             [('InstanceID', 0), ('CrossfadeMode', '0')]
         )
+
+    def test_search_track_no_result(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '0',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
+            'TotalMatches': '0',
+            'UpdateID': '0'
+        }
+
+        result = moco.search_track("artist", "album", "track")
+
+        assert len(result) == 0
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/artist/album'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 100),
+            ('SortCriteria', '')
+        ])
+
+    def test_search_track_artist_albums(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '2',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:ns2="urn:schemas-upnp-org:metadata-1-0/upnp/"><container id="A:ALBUMARTIST/The%20Artist/" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>All</dc:title><ns2:class>object.container.playlistContainer.sameArtist</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/</res></container><container id="A:ALBUMARTIST/The%20Artist/First%20Album" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>First Album</dc:title><ns2:class>object.container.album.musicAlbum</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/First%20Album</res><dc:creator>The Artist</dc:creator><ns2:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fFirst%2520Album%2ftrack2.mp3&amp;v=432</ns2:albumArtURI></container><container id="A:ALBUMARTIST/The%20Artist/Second%20Album" parentID="A:ALBUMARTIST/The%20Artist" restricted="true"><dc:title>Second Album</dc:title><ns2:class>object.container.album.musicAlbum</ns2:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000123456789001400#A:ALBUMARTIST/The%20Artist/Second%20Album</res><dc:creator>The Artist</dc:creator><ns2:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fSecond%2520Album%2ftrack2.mp3&amp;v=432</ns2:albumArtURI></container></DIDL-Lite>',
+            'TotalMatches': '10',
+            'UpdateID': '0'
+        }
+        results = moco.search_track("The Artist", max_items=3)
+
+        assert len(results) == 2
+
+        album = results[0]
+        assert album.title == 'First Album'
+        assert album.item_id == 'A:ALBUMARTIST/The%20Artist/First%20Album'
+        album = results[1]
+        assert album.title == 'Second Album'
+        assert album.item_id == 'A:ALBUMARTIST/The%20Artist/Second%20Album'
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/The%20Artist'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 3),
+            ('SortCriteria', '')
+        ])
+
+    def test_search_track_artist_album_tracks(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.Browse.return_value = {
+            'NumberReturned': '3',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:ns0="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:ns1="urn:schemas-upnp-org:metadata-1-0/upnp/"><item id="S://server/The%20Artist/The%20Album/03%20-%20Track%20Title%201.mp3" parentID="A:ALBUMARTIST/The%20Artist/The%20Album" restricted="true"><res protocolInfo="x-file-cifs:*:audio/mpeg:*">x-file-cifs://server/The%20Artist/The%20Album/03%20-%20Track%20Title%201.mp3</res><ns1:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fThe%2520Album%2f03%2520-%2520Track%2520Title%25201.mp3&amp;v=432</ns1:albumArtURI><dc:title>Track Title 1</dc:title><ns1:class>object.item.audioItem.musicTrack</ns1:class><dc:creator>The Artist</dc:creator><ns1:album>The Album</ns1:album><ns1:originalTrackNumber>3</ns1:originalTrackNumber></item><item id="S://server/The%20Artist/The%20Album/04%20-%20Track%20Title%202.m4a" parentID="A:ALBUMARTIST/The%20Artist/The%20Album" restricted="true"><res protocolInfo="x-file-cifs:*:audio/mp4:*">x-file-cifs://server/The%20Artist/The%20Album/04%20-%20Track%20Title%202.m4a</res><ns1:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fThe%2520Album%2f04%2520-%2520Track%2520Title%25202.m4a&amp;v=432</ns1:albumArtURI><dc:title>Track Title 2</dc:title><ns1:class>object.item.audioItem.musicTrack</ns1:class><dc:creator>The Artist</dc:creator><ns1:album>The Album</ns1:album><ns1:originalTrackNumber>4</ns1:originalTrackNumber></item><item id="S://server/The%20Artist/The%20Album/05%20-%20Track%20Title%203.mp3" parentID="A:ALBUMARTIST/The%20Artist/The%20Album" restricted="true"><res protocolInfo="x-file-cifs:*:audio/mpeg:*">x-file-cifs://server/The%20Artist/The%20Album/05%20-%20Track%20Title%203.mp3</res><ns1:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fserver%2fThe%2520Artist%2fThe%2520Album%2f05%2520-%2520Track%2520Title%25203.mp3&amp;v=432</ns1:albumArtURI><dc:title>Track Title 3</dc:title><ns1:class>object.item.audioItem.musicTrack</ns1:class><dc:creator>The Artist</dc:creator><ns1:album>The Album</ns1:album><ns1:originalTrackNumber>5</ns1:originalTrackNumber></item></DIDL-Lite>',
+            'TotalMatches': '10',
+            'UpdateID': '0'
+        }
+
+        results = moco.search_track("The Artist", "The Album", max_items=3)
+
+        assert len(results) == 3
+
+        track = results[0]
+        assert track.title == 'Track Title 1'
+        assert track.item_id == 'S://server/The%20Artist/The%20Album/03%20-%20Track%20Title%201.mp3'
+        track = results[1]
+        assert track.title == 'Track Title 2'
+        assert track.item_id == 'S://server/The%20Artist/The%20Album/04%20-%20Track%20Title%202.m4a'
+        track = results[2]
+        assert track.title == 'Track Title 3'
+        assert track.item_id == 'S://server/The%20Artist/The%20Album/05%20-%20Track%20Title%203.mp3'
+
+        moco.contentDirectory.Browse.assert_called_once_with([
+            ('ObjectID', 'A:ALBUMARTIST/The%20Artist/The%20Album'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', 0),
+            ('RequestedCount', 3),
+            ('SortCriteria', '')
+        ])
 
 
 class TestRenderingControl:
