@@ -117,15 +117,15 @@ class MusicService(object):
             [('VariableName', 'R_TrialZPSerial')])['StringValue']
         credentials_header.marshall('deviceId', device_id)
         credentials_header.marshall('deviceProvider', 'Sonos')
-        if self.auth_type == 'DeviceLink':
+        if self.auth_type in ['DeviceLink', 'UserId']:
             session_id = device.musicServices.GetSessionId([
                 ('ServiceId', self.service_id),
                 ('Username', self.username)
             ])['SessionId']
             credentials_header.marshall('sessionId', session_id)
-        elif self.auth_type == 'UserId':
-            credentials_header.marshall('username', username)
-            credentials_header.marshall('password', password)
+        # elif self.auth_type == 'UserId':
+        #     credentials_header.marshall('username', username)
+        #     credentials_header.marshall('password', password)
 
     def __repr__(self):
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
