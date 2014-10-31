@@ -50,10 +50,34 @@ def get_ml_item(xml):
 
 
 ###############################################################################
-# BASE OBJECT                                                                 #
+# BASE OBJECTS                                                                #
 ###############################################################################
 
-class MusicLibraryItem(object):
+# a mapping which will be used to look up the relevant class from the
+# DIDL item class
+DIDL_CLASS_TO_CLASS = {}
+
+class DidlMetaClass(type):
+
+    """Meta class for all Didl objects"""
+
+    def __new__(cls, name, bases, attrs):
+        """
+        Args:
+            name: Name of the class
+            bases: Base classes (tuple)
+            attrs: Attributes defined for the class
+        """
+        new_cls = super(DidlMetaClass, cls).__new__(cls, name, bases, attrs)
+        # Register all subclasses with the global DIDL_CLASS_TO_CLASS mapping
+        item_class = attrs.get('item_class', None)
+        if item_class is not None:
+            DIDL_CLASS_TO_CLASS[item_class] = new_cls
+        return new_cls
+
+
+# Py2/3 compatible way of declaring the metaclass
+class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     """Abstract base class for all content directory objects
 
@@ -77,6 +101,9 @@ class MusicLibraryItem(object):
             }
 
     """
+
+
+
     item_class = 'object'
     # key: (ns, tag)
     _translation = {
@@ -86,7 +113,7 @@ class MusicLibraryItem(object):
     }
 
     def __init__(self, uri, title, parent_id, item_id, **kwargs):
-        r"""Initialize the MusicLibraryItem from parameter arguments.
+        r"""Initialize the DidlObject from parameter arguments.
 
         :param uri: The URI for the item
         :param title: The title for the item
@@ -99,7 +126,7 @@ class MusicLibraryItem(object):
             unicode objects.
 
         """
-        super(MusicLibraryItem, self).__init__()
+        super(DidlObject, self).__init__()
         self.content = {}
         # Parse the input arguments
         arguments = {'uri': uri, 'title': title, 'parent_id': parent_id,
@@ -170,14 +197,14 @@ class MusicLibraryItem(object):
 
     def __eq__(self, playable_item):
         """Return the equals comparison result to another ``playable_item``."""
-        if not isinstance(playable_item, MusicLibraryItem):
+        if not isinstance(playable_item, DidlObject):
             return False
         return self.content == playable_item.content
 
     def __ne__(self, playable_item):
         """Return the not equals comparison result to another ``playable_item``
         """
-        if not isinstance(playable_item, MusicLibraryItem):
+        if not isinstance(playable_item, DidlObject):
             return True
         return self.content != playable_item.content
 
@@ -269,10 +296,10 @@ class MusicLibraryItem(object):
     def didl_metadata(self):
         """Produce the DIDL metadata XML.
 
-        This method uses the :py:attr:`~.MusicLibraryItem.item_id`
-        attribute (and via that the :py:attr:`~.MusicLibraryItem.uri`
-        attribute), the :py:attr:`~.MusicLibraryItem.item_class` attribute
-        and the :py:attr:`~.MusicLibraryItem.title`  attribute. The
+        This method uses the :py:attr:`~.DidlObject.item_id`
+        attribute (and via that the :py:attr:`~.DidlObject.uri`
+        attribute), the :py:attr:`~.DidlObject.item_class` attribute
+        and the :py:attr:`~.DidlObject.title`  attribute. The
         metadata will be on the form:
 
         .. code :: xml
@@ -324,7 +351,7 @@ class MusicLibraryItem(object):
 # OBJECT.ITEM HIERARCHY                                                       #
 ###############################################################################
 
-class MLItem(MusicLibraryItem):
+class DidlItem(DidlObject):
     """A basic content directory item"""
 
     item_class = 'object.item'
@@ -366,19 +393,19 @@ class MLItem(MusicLibraryItem):
         self.content['radio_show'] = radio_show
 
 
-class MLAudioItem(MLItem):
+class DidlAudioItem(DidlItem):
     """A audio item"""
 
     item_class = 'object.item.audioitem'
 
 
-class MLTrack(MLAudioItem):
+class DidlMusicTrack(DidlAudioItem):
 
     """Class that represents a music library track.
 
-    :ivar parent_id: The parent ID for the MLTrack is 'A:TRACKS'
+    :ivar parent_id: The parent ID for the DidlMusicTrack is 'A:TRACKS'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLTrack from XML. The value is
+        translation used when instantiating a DidlMusicTrack from XML. The value is
         shown below
 
         .. code-block:: python
@@ -426,7 +453,7 @@ class MLTrack(MLAudioItem):
         self.content['original_track_number'] = original_track_number
 
 
-class MLAudioBroadcast(MLAudioItem):
+class DidlAudioBroadcast(DidlAudioItem):
 
     """Class that represents an audio broadcast."""
     item_class = 'object.item.audioItem.audioBroadcast'
@@ -445,35 +472,35 @@ class MLAudioBroadcast(MLAudioItem):
 # OBJECT.CONTAINER HIERARCHY                                                  #
 ###############################################################################
 
-class MLContainer(MusicLibraryItem):
+class DidlContainer(DidlObject):
 
     """Class that represents a music library container.
 
-    :ivar item_class: The item_class for the MLContainer is 'object.container'
+    :ivar item_class: The item_class for the DidlContainer is 'object.container'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLContainer from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlContainer from XML is inherited
+        from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container'
 
 
-class MLAlbum(MLContainer):
+class DidlAlbum(DidlContainer):
 
     """A content directory album"""
 
     item_class = 'object.container.album'
 
 
-class MLMusicAlbum(MLAlbum):
+class DidlMusicAlbum(DidlAlbum):
 
     """Class that represents a music library album.
 
-    :ivar item_class: The item_class for MLTrack is
+    :ivar item_class: The item_class for DidlMusicTrack is
         'object.container.album.musicAlbum'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLAlbum from XML. The value is
+        translation used when instantiating a DidlAlbum from XML. The value is
         shown below
 
         .. code-block :: python
@@ -507,134 +534,120 @@ class MLMusicAlbum(MLAlbum):
         self.content['album_art_uri'] = album_art_uri
 
 
-class MLPerson(MLContainer):
+class DidlPerson(DidlContainer):
     """A content directory class representing a person"""
     item_class = 'object.container.person'
 
 
-class MLComposer(MLPerson):
+class DidlComposer(DidlPerson):
 
     """Class that represents a music library composer.
 
-    :ivar item_class: The item_class for MLComposer is
+    :ivar item_class: The item_class for DidlComposer is
         'object.container.person.composer'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLComposer from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlComposer from XML is inherited
+        from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container.person.composer'
 
 
-class MLArtist(MLPerson):
+class DidlMusicArtist(DidlPerson):
 
     """Class that represents a music library artist.
 
-    :ivar item_class: The item_class for MLArtist is
+    :ivar item_class: The item_class for DidlMusicArtist is
         'object.container.person.musicArtist'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLArtist from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlMusicArtist from XML is inherited
+        from :py:class:`.DidlObject`.
     """
 
     item_class = 'object.container.person.musicArtist'
 
 
-class MLAlbumList(MLContainer):
+class DidlAlbumList(DidlContainer):
 
     """Class that represents a music library album list.
 
-    :ivar item_class: The item_class for MLAlbumList is
+    :ivar item_class: The item_class for DidlAlbumList is
         'object.container.albumlist'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLAlbumList from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlAlbumList from XML is inherited
+        from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container.albumlist'
 
 
-class MLPlaylist(MLContainer):
+class DidlPlaylistContainer(DidlContainer):
 
     """Class that represents a music library play list.
 
-    :ivar item_class: The item_class for the MLPlaylist is
+    :ivar item_class: The item_class for the DidlPlaylistContainer is
         'object.container.playlistContainer'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLPlaylist from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlPlaylistContainer from XML is inherited
+        from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container.playlistContainer'
 
 
-class MLSameArtist(MLPlaylist):
+class DidlSameArtist(DidlPlaylistContainer):
 
     """Class that represents all by the artist.
 
     This type is returned by browsing an artist or a composer
 
-    :ivar item_class: The item_class for MLSameArtist is
+    :ivar item_class: The item_class for DidlSameArtist is
         'object.container.playlistContainer.sameArtist'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLSameArtist from XML is
-        inherited from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlSameArtist from XML is
+        inherited from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container.playlistContainer.sameArtist'
 
 
-class MLGenre(MLContainer):
+class DidlGenre(DidlContainer):
 
     """A content directory class representing a general genre"""
     item_class = 'object.container.genre'
 
 
-class MLMusicGenre(MLGenre):
+class DidlMusicGenre(DidlGenre):
 
     """Class that represents a music genre.
 
-    :ivar item_class: The item class for the MLGenre is
+    :ivar item_class: The item class for the DidlGenre is
         'object.container.genre.musicGenre'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLGenre from XML is inherited
-        from :py:class:`.MusicLibraryItem`.
+        translation used when instantiating a DidlGenre from XML is inherited
+        from :py:class:`.DidlObject`.
 
     """
 
     item_class = 'object.container.genre.musicGenre'
 
 
-class MLShare(MLContainer):
+class DidlShare(DidlContainer):
     # Is this really needed?
 
     """Class that represents a music library share.
 
-    :ivar item_class: The item_class for the MLShare is 'object.container'
+    :ivar item_class: The item_class for the DidlShare is 'object.container'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a MLShare from XML is inherited
-        from :py:class:`.MusicLibraryItem`."""
+        translation used when instantiating a DidlShare from XML is inherited
+        from :py:class:`.DidlObject`."""
 
     pass
 
-
-class MLSonosPlaylist(MLPlaylist):
-    # Is this really needed?
-
-    """ Class that represents a sonos playlist.
-
-    :ivar item_class: The item_class for MLSonosPlaylist is
-        'object.container.playlistContainer'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating MLSonosPlaylist from
-        XML is inherited from :py:class:`.MusicLibraryItem`.
-
-    """
-    pass
 
 
 ###############################################################################
@@ -742,20 +755,6 @@ class Queue(ListOfMusicInfoItems):
 ###############################################################################
 # CONSTANTS                                                                   #
 ###############################################################################
-
-DIDL_CLASS_TO_CLASS = {'object.item': MLItem,
-                       'object.item.audioItem.musicTrack': MLTrack,
-                       'object.item.audioItem.audioBroadcast':
-                           MLAudioBroadcast,
-                       'object.container.album.musicAlbum': MLMusicAlbum,
-                       'object.container.person.musicArtist': MLArtist,
-                       'object.container.genre.musicGenre': MLMusicGenre,
-                       'object.container.person.composer': MLComposer,
-                       'object.container.playlistContainer': MLPlaylist,
-                       'object.container': MLContainer,
-                       'object.container.albumlist': MLAlbumList,
-                       'object.container.playlistContainer.sameArtist':
-                           MLSameArtist}
 
 NS = {
     'dc': 'http://purl.org/dc/elements/1.1/',

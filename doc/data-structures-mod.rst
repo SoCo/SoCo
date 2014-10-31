@@ -26,21 +26,21 @@ black lines are the lines of inheritance, going from the top down.
 .. _figure-inheritance:
 .. inheritance-diagram:: soco.data_structures
 
-All data structures are subclasses of the abstract :py:class:`music library item <soco.data_structures.MusicLibraryItem>` class. You should never need to instantiate this directly. The subclasses are divided into :py:class:`ML Containers <soco.data_structures.MLContainer>` and :py:class:`ML Items <soco.data_structures.MLItem>`. In general, :py:class:`ML Containers <soco.data_structures.MLContainer>` are things, like playlists, which are intended to contain other items.
+All data structures are subclasses of the abstract :py:class:`Didl Object item <soco.data_structures.DidlObject>` class. You should never need to instantiate this directly. The subclasses are divided into :py:class:`Containers <soco.data_structures.DidlContainer>` and :py:class:`Items <soco.data_structures.DidlItem>`. In general, :py:class:`Containers <soco.data_structures.DidlContainer>` are things, like playlists, which are intended to contain other items.
 
-At the bottom of the class hierarchy are 10 types of :py:class:`music library items <.MusicLibraryItem>`. On each of these classes, relevant metadata items
+At the bottom of the class hierarchy are 10 types of :py:class:`DIDL items <.DidlObject>`. On each of these classes, relevant metadata items
 are are available as attributes (though they may be implemented as properties).
-Each has a :py:attr:`title <.MusicLibraryItem.title>`, a :py:attr:`URI <.MusicLibraryItem.uri>`, an :py:attr:`item id <.MusicLibraryItem.item_id>` and
-a :py:attr:`UPnP class <.MusicLibraryItem.item_class>`. Some have other
-attributes. For example, :py:class:`.MLTrack` and :py:class:`.MLMusicAlbum` have
-some extra fields such as :py:attr:`album <.MLTrack.album>`,
-:py:attr:`album_art_uri <.MLTrack.album_art_uri>` and :py:attr:`creator <.MLTrack.creator>`.
+Each has a :py:attr:`title <.DidlObject.title>`, a :py:attr:`URI <.DidlObject.uri>`, an :py:attr:`item id <.DidlObject.item_id>` and
+a :py:attr:`UPnP class <.DidlObject.item_class>`. Some have other
+attributes. For example, :py:class:`.DidlMusicTrack` and :py:class:`.DidlMusicAlbum` have
+some extra fields such as :py:attr:`album <.DidlMusicTrack.album>`,
+:py:attr:`album_art_uri <.DidlMusicTrack.album_art_uri>` and :py:attr:`creator <.DidlMusicTrack.creator>`.
 
 One of the more important attributes which each class has is
-:py:attr:`didl_metadata <.MusicLibraryItem.didl_metadata>`. It is used to
+:py:attr:`didl_metadata <.DidlObject.didl_metadata>`. It is used to
 produce the metadata that is sent to the Sonos® units in the form of xml. This
 metadata is created in an almost identical way for each class, which is why it
-is implemented in :py:class:`.MusicLibraryItem`. It uses the URI, the UPnP
+is implemented in :py:class:`.DidlObject`. It uses the URI, the UPnP
 class and the title that the items are instantiated with, along with the two
 class variables ``parent_id`` and ``_translation``.
 
@@ -51,108 +51,108 @@ Functions
 .. autofunction:: soco.data_structures.get_ml_item
 
 
-MusicLibraryItem
+DidlObject
 ================
 
-.. autoclass:: soco.data_structures.MusicLibraryItem
+.. autoclass:: soco.data_structures.DidlObject
    :members:
    :special-members:
    :show-inheritance:
-   
-   .. automethod:: soco.data_structures.MusicLibraryItem.__init__
-   .. automethod:: soco.data_structures.MusicLibraryItem.__eq__
-   .. automethod:: soco.data_structures.MusicLibraryItem.__repr__
-   .. automethod:: soco.data_structures.MusicLibraryItem.__str__
+
+   .. automethod:: soco.data_structures.DidlObject.__init__
+   .. automethod:: soco.data_structures.DidlObject.__eq__
+   .. automethod:: soco.data_structures.DidlObject.__repr__
+   .. automethod:: soco.data_structures.DidlObject.__str__
 
 
-MLContainer
+DidlContainer
 ===========
 
-.. autoclass:: soco.data_structures.MLContainer
+.. autoclass:: soco.data_structures.DidlContainer
    :members:
    :special-members:
    :show-inheritance:
-   
-MLItem
+
+DidlItem
 =======
 
-.. autoclass:: soco.data_structures.MLItem
+.. autoclass:: soco.data_structures.DidlItem
    :members:
    :special-members:
    :show-inheritance:
 
 
-MLTrack
+DidlMusicTrack
 =======
 
-.. autoclass:: soco.data_structures.MLTrack
+.. autoclass:: soco.data_structures.DidlMusicTrack
    :members:
    :special-members:
    :show-inheritance:
 
-MLMusicAlbum
+DidlMusicAlbum
 ============
 
-.. autoclass:: soco.data_structures.MLMusicAlbum
+.. autoclass:: soco.data_structures.DidlMusicAlbum
    :members:
    :special-members:
    :show-inheritance:
 
-MLArtist
+DidlMusicArtist
 ========
 
-.. autoclass:: soco.data_structures.MLArtist
+.. autoclass:: soco.data_structures.DidlMusicArtist
    :members:
    :special-members:
    :show-inheritance:
 
-MLMusicGenre
+DidlMusicGenre
 ============
 
-.. autoclass:: soco.data_structures.MLMusicGenre
+.. autoclass:: soco.data_structures.DidlMusicGenre
    :members:
    :special-members:
    :show-inheritance:
 
-MLAlbumList
+DidlAlbumList
 ===========
 
-.. autoclass:: soco.data_structures.MLAlbumList
+.. autoclass:: soco.data_structures.DidlAlbumList
    :members:
    :special-members:
    :show-inheritance:
 
 
-MLComposer
+DidlComposer
 ==========
 
-.. autoclass:: soco.data_structures.MLComposer
+.. autoclass:: soco.data_structures.DidlComposer
    :members:
    :special-members:
    :show-inheritance:
 
-MLPlaylist
+DidlPlaylistContainer
 ==========
 
-.. autoclass:: soco.data_structures.MLPlaylist
+.. autoclass:: soco.data_structures.DidlPlaylistContainer
    :members:
    :special-members:
    :show-inheritance:
 
 
-MLAudioBroadcast
+DidlAudioBroadcast
 ================
 
-.. autoclass:: soco.data_structures.MLAudioBroadcast
+.. autoclass:: soco.data_structures.DidlAudioBroadcast
    :members:
    :special-members:
    :show-inheritance:
 
 
-MLShare
+DidlContainer
 =======
 
-.. autoclass:: soco.data_structures.MLShare
+.. autoclass:: soco.data_structures.DidlContainer
    :members:
    :special-members:
    :show-inheritance:
