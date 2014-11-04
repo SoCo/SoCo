@@ -50,35 +50,39 @@ def get_ml_item(element):
     return cls.from_xml(xml=xml)
 
 
-class Resource(object):
+class DidlResource(object):
 
-    """Represents a resource. Used for generating the DIDL XML messages.
+    """￼Indentifies a resource, typically some type of a￼binary asset, such as
+    a song.
+
+    A 'res' element contains a uri that identifies the resource.
     """
-    # Taken from the Python Brisa project - MIT licence.
-    def __init__(self, value='', protocol_info='', import_uri='', size=None,
-                 duration='', bitrate=None, sample_frequency=None,
-                 bits_per_sample=None, nr_audio_channels=None, resolution='',
-                 color_depth=None, protection=''):
+    # Adapted from a class taken from the Python Brisa project - MIT licence.
+    def __init__(self, uri, protocol_info, import_uri=None, size=None,
+                 duration=None, bitrate=None, sample_frequency=None,
+                 bits_per_sample=None, nr_audio_channels=None, resolution=None,
+                 color_depth=None, protection=None):
         """ Constructor for the Resource class.
 
-
-            value: value of the res tag
-            protocol_info (str): information about the protocol in the form
-                a:b:c:d
-            import_uri (str): uri locator for resource update
-            size (int): size in bytes
-            duration (str) : duration of the playback of the res at normal speed
-                (H*:MM:SS:F* or H*:MM:SS:F0/F1)
-            bitrate (int): bitrate in bytes/second
-            sample_frequency (int): sample frequency in Hz
-            bits_per_sample (int): bits per sample
-            nr_audio_channels (int): number of audio channels
-            resolution (str): resolution of the resource (X*Y)
-            color_depth (int): color depth in bits
-            protection (str): statement of protection type
+            Args:
+                uri (str): value of the res tag, typically a URI
+                protocol_info (str): ￼A string in the form a:b:c:d that
+                    identifies the streaming or transport protocol for
+                    transmitting the resource. A value is required.
+                import_uri (str): optional uri locator for resource update
+                size (int): optional size in bytes
+                duration (str) : optional duration of the playback of the res
+                    at normal speed (H*:MM:SS:F* or H*:MM:SS:F0/F1)
+                bitrate (int): optional bitrate in bytes/second
+                sample_frequency (int): optional sample frequency in Hz
+                bits_per_sample (int): optional bits per sample
+                nr_audio_channels (int): optional number of audio channels
+                resolution (str): optional resolution of the resource (X*Y)
+                color_depth (int): optional color depth in bits
+                protection (str): statement of protection type
 
         """
-        self.value = value
+        self.uri = uri
         self.protocol_info = protocol_info
         self.import_uri = import_uri
         self.size = size
@@ -91,28 +95,42 @@ class Resource(object):
         self.color_depth = color_depth
         self.protection = protection
 
-    def from_element(self, elt):
+    @classmethod
+    def from_element(cls, element):
         """ Sets the resource properties from an element.
         """
-        if 'protocolInfo' not in elt.attrib:
+
+        def int_helper(name):
+            result = element.get(name)
+            if result is not None:
+                try:
+                    return int(result)
+                except ValueError:
+                    raise ValueError(
+                        'Could not convert {0} to an integer'.format(name))
+            else:
+                return None
+
+
+        content = {}
+        # required
+        content['protocol_info'] = element.get('protocolInfo')
+        if content['protocol_info'] is None:
             raise Exception('Could not create Resource from Element: '
                             'protocolInfo not found (required).')
-
-        # Required
-        self.protocol_info = elt.attrib['protocolInfo']
-
         # Optional
-        self.import_uri = elt.attrib.get('importUri', '')
-        self.size = elt.attrib.get('size', None)
-        self.duration = elt.attrib.get('duration', '')
-        self.bitrate = elt.attrib.get('bitrate', None)
-        self.sample_frequency = elt.attrib.get('sampleFrequency', None)
-        self.bits_per_sample = elt.attrib.get('bitsPerSample', None)
-        self.nr_audio_channels = elt.attrib.get('nrAudioChannels', None)
-        self.resolution = elt.attrib.get('resolution', '')
-        self.color_depth = elt.attrib.get('colorDepth', None)
-        self.protection = elt.attrib.get('protection', '')
-        self.value = elt.text
+        content['import_uri'] = element.get('importUri')
+        content['size'] = int_helper('size')
+        content['duration'] = element.get('duration')
+        content['bitrate'] = int_helper('bitrate')
+        content['sample_frequency'] = int_helper('sampleFrequency')
+        content['bits_per_sample'] = int_helper('bitsPerSample')
+        content['nr_audio_channels'] = int_helper('nrAudioChannels')
+        content['resolution'] = element.get('resolution')
+        content['color_depth'] = int_helper('colorDepth')
+        content['protection'] = element.get('protection')
+        content['uri'] = element.text
+        return cls(**content)
 
     @classmethod
     def from_string(cls, xml_string):
@@ -129,34 +147,34 @@ class Resource(object):
         if not self.protocol_info:
             raise Exception('Could not create Element for this resource: '
                             'protocolInfo not set (required).')
-        root = ElementTree.Element('res')
+        root = XML.Element('res')
 
         # Required
         root.attrib['protocolInfo'] = self.protocol_info
 
         # Optional
-        if self.import_uri:
+        if self.import_uri is not None:
             root.attrib['importUri'] = self.import_uri
-        if self.size:
-            root.attrib['size'] = self.size
-        if self.duration:
+        if self.size is not None:
+            root.attrib['size'] = str(self.size)
+        if self.duration is not None:
             root.attrib['duration'] = self.duration
-        if self.bitrate:
-            root.attrib['bitrate'] = self.bitrate
-        if self.sample_frequency:
-            root.attrib['sampleFrequency'] = self.sample_frequency
-        if self.bits_per_sample:
-            root.attrib['bitsPerSample'] = self.bits_per_sample
-        if self.nr_audio_channels:
-            root.attrib['nrAudioChannels'] = self.nr_audio_channels
-        if self.resolution:
+        if self.bitrate is not None:
+            root.attrib['bitrate'] = str(self.bitrate)
+        if self.sample_frequency is not None:
+            root.attrib['sampleFrequency'] = str(self.sample_frequency)
+        if self.bits_per_sample is not None:
+            root.attrib['bitsPerSample'] = str(self.bits_per_sample)
+        if self.nr_audio_channels is not None:
+            root.attrib['nrAudioChannels'] = str(self.nr_audio_channels)
+        if self.resolution is not None:
             root.attrib['resolution'] = self.resolution
-        if self.color_depth:
-            root.attrib['colorDepth'] = self.color_depth
-        if self.protection:
+        if self.color_depth is not None:
+            root.attrib['colorDepth'] = str(self.color_depth)
+        if self.protection is not None:
             root.attrib['protection'] = self.protection
 
-        root.text = self.value
+        root.text = self.uri
 
         return root
 
@@ -211,6 +229,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
                 'title': ('dc', 'title'),
                 'uri': ('', 'res'),
                 'creator': ('dc', 'creator'),
+                'write_status': ('upnp', 'writeStatus')
             }
 
     """
@@ -221,9 +240,10 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     _translation = {
         'uri': ('', 'res'),
         'creator': ('dc', 'creator'),
+        'write_status': ('upnp', 'writeStatus'),
     }
 
-    def __init__(self, title, parent_id, item_id, **kwargs):
+    def __init__(self, title, parent_id, item_id, restricted=True, **kwargs):
         r"""Initialize the DidlObject from parameter arguments.
 
         :param title: The title for the item
@@ -250,6 +270,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         self.title = title
         self.parent_id = parent_id
         self.item_id = item_id
+        # Restricted is a complulsory attribute, but is always True for Sonos
+        self.restricted = restricted
 
         for key, value in kwargs.items():
             # For each attribute, check to see if this class allows it
@@ -279,26 +301,35 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         if not element.tag.endswith(cls.element):
             raise CannotCreateDIDLMetadata("Wrong element. Expected {0},"
             " got {1}".format(cls.element, element.tag))
-        content = {}
-        # parent_id and item_id are stored as attibutes on the element
+
+        # parent_id, item_id  and restricted are stored as attibutes on the
+        # element
         item_id = element.get('id', None)
         if item_id is None:
             raise CannotCreateDIDLMetadata("Missing id attribute")
         parent_id = element.get('parentID', None)
         if parent_id is None:
             raise CannotCreateDIDLMetadata("Missing parentID attribute")
+        restricted = element.get('restricted', None)
+        if restricted is None:
+            raise CannotCreateDIDLMetadata("Missing restricted attribute")
+        restricted = True if restricted in [1, 'true', 'True'] else False
+
         # There must be a title, and it must be the first sub-element
         title_elt = element[0]
         if title_elt.tag != (ns_tag('dc', 'title')):
-            raise CannotCreateDIDLMetadata("Missing or misplaced title element")
+            raise CannotCreateDIDLMetadata(
+                "Missing or misplaced title element")
         title = title_elt.text
+
         # Get values of the elements listed in _translation and add them to
         # the content dict
+        content = {}
         for key, value in cls._translation.items():
-            result = element.find('{0}'.format(ns_tag(*value)))
-            if result is not None and result.text is not None:
+            result = element.findtext('{0}'.format(ns_tag(*value)))
+            if result is not None:
                 # We store info as unicode internally.
-                content[key] = really_unicode(result.text)
+                content[key] = really_unicode(result)
 
         # Convert type for original track number
         if content.get('original_track_number') is not None:
@@ -308,7 +339,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Now pass the content dict we have just built to the main
         # constructor, as kwargs, to create the object
         return cls(title=title, parent_id=parent_id, item_id=item_id,
-            **content)
+            restricted=restricted, **content)
 
     @classmethod
     def from_dict(cls, content):
@@ -380,10 +411,11 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         for key in self._translation:
             if hasattr(self, key):
                 content[key] = getattr(self, key)
-        # also add parent_id, item_id and title because they are not listed in
-        # _translation
+        # also add parent_id, item_id, restricted and title because they are
+        # not listed in _translation
         content['parent_id'] = self.parent_id
         content['item_id'] = self.item_id
+        content['restricted']=self.restricted
         content['title'] = self.title
         return content
 
@@ -420,26 +452,30 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             'xmlns:dc':"http://purl.org/dc/elements/1.1/",
             'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
             'parentID': self.parent_id,
-            'restricted': 'true',
+            'restricted': '1' if self.restricted else '0',
             'id': self.item_id
         }
         elt = XML.Element(self.element, elt_attrib)
+
         # Add the title, which must always come first, according to the spec
         title = self.title
         XML.SubElement(elt, 'dc:title').text = self.title
-        # Add in the item class
-        XML.SubElement(elt, 'upnp:class').text = self.item_class
+
         # Add the rest of the metadata attributes (i.e all those listed in
         # _translation) as sub-elements of the item element
         for key, value in self._translation.items():
             if hasattr(self, key):
                 tag = "%s:%s"%value if value[0] else "%s"%value[1]
                 XML.SubElement(elt, tag).text = ("%s"%getattr(self, key))
-        # Add the desc element
+        # Now add in the item class
+        XML.SubElement(elt, 'upnp:class').text = self.item_class
+
+        # And the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
                        'urn:schemas-rinconnetworks-com:metadata-1-0/'}
         desc = XML.SubElement(elt, 'desc', desc_attrib)
         desc.text = 'RINCON_AssociatedZPUDN'
+
         return elt
 
 
@@ -450,6 +486,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 class DidlItem(DidlObject):
 
     """A basic content directory item"""
+
+    # The spec allows for an option 'refID' attribute, but we do not handle it
 
     item_class = 'object.item'
     # _translation = DidlObject._translation.update({ ...})
@@ -474,6 +512,11 @@ class DidlAudioItem(DidlItem):
         {
         'genre': ('upnp', 'genre'),
         'description': ('dc', 'description'),
+        'long_description': ('upnp', 'longDescription'),
+        'publisher': ('dc', 'publisher'),
+        'language': ('dc', 'language'),
+        'relation': ('dc', 'relation'),
+        'rights': ('dc', 'rights'),
         }
     )
 
@@ -509,7 +552,9 @@ class DidlMusicTrack(DidlAudioItem):
             'artist': ('upnp', 'artist'),
             'album': ('upnp', 'album'),
             'original_track_number': ('upnp', 'originalTrackNumber'),
+            'playlist': ('upnp', 'playlist'),
             'contributor': ('dc', 'contributor'),
+            'date': ('dc', 'date'),
         }
     )
 
@@ -518,6 +563,16 @@ class DidlAudioBroadcast(DidlAudioItem):
 
     """Class that represents an audio broadcast."""
     item_class = 'object.item.audioItem.audioBroadcast'
+    _translation = DidlAudioItem._translation.copy()
+    _translation.update(
+        {
+            'region': ('upnp', 'region'),
+            'radio_call_sign': ('upnp', 'radioCallSign'),
+            'radio_station_id': ('upnp', 'radioStationID'),
+            'channel_nr': ('upnp', 'channelNr'),
+
+        }
+    )
 
 
 ###############################################################################
@@ -538,6 +593,8 @@ class DidlContainer(DidlObject):
 
     item_class = 'object.container'
     element = 'container'
+    # We do not implement createClass or searchClass. Not used by Sonos??
+    # TODO: handle the 'childCount' element.
 
 
 class DidlAlbum(DidlContainer):
@@ -550,8 +607,12 @@ class DidlAlbum(DidlContainer):
     _translation.update(
         {
             'description': ('dc', 'description'),
+            'long_description': ('upnp', 'longDescription'),
             'publisher': ('dc', 'publisher'),
             'contributor': ('dc', 'contributor'),
+            'date': ('dc', 'date'),
+            'relation': ('dc', 'relation'),
+            'rights': ('dc', 'rights'),
         }
     )
 
@@ -585,6 +646,8 @@ class DidlMusicAlbum(DidlAlbum):
         {
             'artist': ('upnp', 'artist'),
             'genre': ('upnp', 'genre'),
+            'producer': ('upnp', 'producer'),
+            'toc': ('upnp', 'toc'),
             'album_art_uri': ('upnp', 'albumArtURI'),
         }
     )
@@ -594,6 +657,12 @@ class DidlPerson(DidlContainer):
 
     """A content directory class representing a person"""
     item_class = 'object.container.person'
+    _translation = DidlContainer._translation.copy()
+    _translation.update(
+        {
+            'language': ('dc', 'language'),
+        }
+    )
 
 
 class DidlComposer(DidlPerson):
@@ -607,6 +676,8 @@ class DidlComposer(DidlPerson):
         inherited from :py:class:`.DidlObject`.
 
     """
+
+    # Not in the DIDL-Lite spec. Sonos specific??
 
     item_class = 'object.container.person.composer'
 
@@ -628,6 +699,7 @@ class DidlMusicArtist(DidlPerson):
     _translation.update(
         {
             'genre': ('upnp', 'genre'),
+            'artist_discography_uri': ('upnp', 'artistDiscographyURI'),
         }
     )
 
@@ -643,7 +715,8 @@ class DidlAlbumList(DidlContainer):
         inherited from :py:class:`.DidlObject`.
 
     """
-
+    # This does not appear (that I can find) in the DIDL-Lite specs.
+    # Presumably Sonos specific
     item_class = 'object.container.albumlist'
 
 
@@ -666,8 +739,13 @@ class DidlPlaylistContainer(DidlContainer):
         {
             'artist': ('upnp', 'artist'),
             'genre': ('upnp', 'genre'),
-            'description': ('dc', 'description'),
+            'long_description': ('upnp', 'longDescription'),
+            'producer': ('dc', 'producer'),
             'contributor': ('dc', 'contributor'),
+            'description': ('dc', 'description'),
+            'date': ('dc', 'date'),
+            'language': ('dc', 'language'),
+            'rights': ('dc', 'rights'),
         }
     )
 
@@ -686,6 +764,7 @@ class DidlSameArtist(DidlPlaylistContainer):
 
     """
 
+    # Not in teh DIDL-Lite spec. Sonos specific?
     item_class = 'object.container.playlistContainer.sameArtist'
 
 
@@ -698,6 +777,7 @@ class DidlGenre(DidlContainer):
     _translation.update(
         {
             'genre': ('upnp', 'genre'),
+            'long_description': ('upnp', 'longDescription'),
             'description': ('dc', 'description'),
         }
     )
