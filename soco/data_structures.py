@@ -57,18 +57,19 @@ def get_ml_item(xml):
 # DIDL item class
 DIDL_CLASS_TO_CLASS = {}
 
+
 class DidlMetaClass(type):
 
     """Meta class for all Didl objects"""
 
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         """
         Args:
             name: Name of the class
             bases: Base classes (tuple)
             attrs: Attributes defined for the class
         """
-        new_cls = super(DidlMetaClass, cls).__new__(cls, name, bases, attrs)
+        new_cls = super(DidlMetaClass, mcs).__new__(mcs, name, bases, attrs)
         # Register all subclasses with the global DIDL_CLASS_TO_CLASS mapping
         item_class = attrs.get('item_class', None)
         if item_class is not None:
@@ -102,8 +103,6 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     """
 
-
-
     item_class = 'object'
     # key: (ns, tag)
     _translation = {
@@ -126,6 +125,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             unicode objects.
 
         """
+        # pylint: disable=super-on-old-class
         super(DidlObject, self).__init__()
         self.content = {}
         # Parse the input arguments
@@ -352,6 +352,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 ###############################################################################
 
 class DidlItem(DidlObject):
+
     """A basic content directory item"""
 
     item_class = 'object.item'
@@ -394,6 +395,7 @@ class DidlItem(DidlObject):
 
 
 class DidlAudioItem(DidlItem):
+
     """A audio item"""
 
     item_class = 'object.item.audioitem'
@@ -405,8 +407,8 @@ class DidlMusicTrack(DidlAudioItem):
 
     :ivar parent_id: The parent ID for the DidlMusicTrack is 'A:TRACKS'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlMusicTrack from XML. The value is
-        shown below
+        translation used when instantiating a DidlMusicTrack from XML.
+        The value is shown below
 
         .. code-block:: python
 
@@ -476,10 +478,11 @@ class DidlContainer(DidlObject):
 
     """Class that represents a music library container.
 
-    :ivar item_class: The item_class for the DidlContainer is 'object.container'
+    :ivar item_class: The item_class for the DidlContainer is
+        'object.container'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlContainer from XML is inherited
-        from :py:class:`.DidlObject`.
+        translation used when instantiating a DidlContainer from XML is
+        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -535,6 +538,7 @@ class DidlMusicAlbum(DidlAlbum):
 
 
 class DidlPerson(DidlContainer):
+
     """A content directory class representing a person"""
     item_class = 'object.container.person'
 
@@ -546,8 +550,8 @@ class DidlComposer(DidlPerson):
     :ivar item_class: The item_class for DidlComposer is
         'object.container.person.composer'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlComposer from XML is inherited
-        from :py:class:`.DidlObject`.
+        translation used when instantiating a DidlComposer from XML is
+        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -561,8 +565,8 @@ class DidlMusicArtist(DidlPerson):
     :ivar item_class: The item_class for DidlMusicArtist is
         'object.container.person.musicArtist'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlMusicArtist from XML is inherited
-        from :py:class:`.DidlObject`.
+        translation used when instantiating a DidlMusicArtist from XML is
+        inherited from :py:class:`.DidlObject`.
     """
 
     item_class = 'object.container.person.musicArtist'
@@ -575,8 +579,8 @@ class DidlAlbumList(DidlContainer):
     :ivar item_class: The item_class for DidlAlbumList is
         'object.container.albumlist'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlAlbumList from XML is inherited
-        from :py:class:`.DidlObject`.
+        translation used when instantiating a DidlAlbumList from XML is
+        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -590,8 +594,8 @@ class DidlPlaylistContainer(DidlContainer):
     :ivar item_class: The item_class for the DidlPlaylistContainer is
         'object.container.playlistContainer'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlPlaylistContainer from XML is inherited
-        from :py:class:`.DidlObject`.
+        translation used when instantiating a DidlPlaylistContainer from XML is
+        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -647,7 +651,6 @@ class DidlShare(DidlContainer):
         from :py:class:`.DidlObject`."""
 
     pass
-
 
 
 ###############################################################################

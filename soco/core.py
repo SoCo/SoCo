@@ -1465,8 +1465,9 @@ class SoCo(_SocoSingletonBase):
         search_item_id = search + idstring
         search_uri = "#" + search_item_id
 
-        search_item = DidlObject(uri=search_uri, title='', parent_id='',
-                                       item_id=search_item_id)
+        search_item = DidlObject(
+            uri=search_uri, title='', parent_id='',
+            item_id=search_item_id)
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
