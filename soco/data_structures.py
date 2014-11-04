@@ -13,6 +13,7 @@ such as music tracks or genres.
 # Although Sonos uses ContentDirectory v1, the document for v2 is more helpful:
 # http://upnp.org/specs/av/UPnP-av-ContentDirectory-v2-Service.pdf
 
+# TODO: Add Desc element
 
 from __future__ import unicode_literals
 
@@ -68,7 +69,9 @@ class DidlResource(object):
                 uri (str): value of the res tag, typically a URI
                 protocol_info (str): ￼A string in the form a:b:c:d that
                     identifies the streaming or transport protocol for
-                    transmitting the resource. A value is required.
+                    transmitting the resource. A value is required. For more
+                    information see §2.5.2 at
+                    http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-Service.pdf
                 import_uri (str): optional uri locator for resource update
                 size (int): optional size in bytes
                 duration (str) : optional duration of the playback of the res
@@ -82,7 +85,11 @@ class DidlResource(object):
                 protection (str): statement of protection type
 
         """
+        # Values of uri MUST be properly escaped URIs as described in RFC 2396
         self.uri = uri
+        # Protocol iinfo is in the form a:b:c:d - see
+        # §2.5.2 at
+        # http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-Service.pdf
         self.protocol_info = protocol_info
         self.import_uri = import_uri
         self.size = size
@@ -238,17 +245,19 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     element = 'item'
     # key: (ns, tag)
     _translation = {
-        'uri': ('', 'res'),
         'creator': ('dc', 'creator'),
         'write_status': ('upnp', 'writeStatus'),
     }
 
-    def __init__(self, title, parent_id, item_id, restricted=True, **kwargs):
+    def __init__(self, title, parent_id, item_id, restricted=True,
+        resources=None, **kwargs):
         r"""Initialize the DidlObject from parameter arguments.
 
         :param title: The title for the item
         :param parent_id: The parent ID for the item
         :param item_id: The ID for the item
+        :param restricted: Whether the item can be modified
+        :param resources: A list of resources for this object
         :param \*\*kwargs: Extra information items to form the Didl
             item from. Valid keys are ``album``, ``album_art_uri``,
             ``creator`` and ``original_track_number``.
@@ -272,6 +281,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         self.item_id = item_id
         # Restricted is a complulsory attribute, but is always True for Sonos
         self.restricted = restricted
+
+        # Resources is multi-valued, and dealt with separately
+        self.resources = [] if resources is None else resources
 
         for key, value in kwargs.items():
             # For each attribute, check to see if this class allows it
@@ -322,6 +334,12 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
                 "Missing or misplaced title element")
         title = title_elt.text
 
+        # Deal with any resource elements
+        resources = []
+        for res_elt in element.findall(ns_tag('', 'res')):
+            resources.append(
+                DidlResource.from_element(res_elt))
+
         # Get values of the elements listed in _translation and add them to
         # the content dict
         content = {}
@@ -339,7 +357,25 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Now pass the content dict we have just built to the main
         # constructor, as kwargs, to create the object
         return cls(title=title, parent_id=parent_id, item_id=item_id,
-            restricted=restricted, **content)
+            restricted=restricted, resources=resources, **content)
+
+    @classmethod
+    def from_string(cls, text):
+        """ An alternative constructor to create an instance from a unicode
+        string
+
+        Arg:
+            text (str): Unicode text containing an XML representation"""
+
+        #wrap text in fak attribute to apply namespaces
+        text = """<soco_dummy xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+            xmlns:dc="http://purl.org/dc/elements/1.1/"
+            xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">{0}
+            </soco_dummy>""".format(text)
+        text = text.encode('utf-8')
+        elt = XML.fromstring(text)
+        # Strip the dummy element
+        return cls.from_element(elt[0])
 
     @classmethod
     def from_dict(cls, content):
@@ -411,12 +447,14 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         for key in self._translation:
             if hasattr(self, key):
                 content[key] = getattr(self, key)
-        # also add parent_id, item_id, restricted and title because they are
-        # not listed in _translation
+        # also add parent_id, item_id, restricted, title and resources because
+        # they are not listed in _translation
         content['parent_id'] = self.parent_id
         content['item_id'] = self.item_id
         content['restricted']=self.restricted
         content['title'] = self.title
+        if self.resources != []:
+            content['resources'] = self.resources
         return content
 
     @property
@@ -460,6 +498,10 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Add the title, which must always come first, according to the spec
         title = self.title
         XML.SubElement(elt, 'dc:title').text = self.title
+
+        # Add in any resources
+        for resource in self.resources:
+            elt.append(resource.to_didl_element())
 
         # Add the rest of the metadata attributes (i.e all those listed in
         # _translation) as sub-elements of the item element
