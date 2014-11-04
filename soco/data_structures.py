@@ -21,7 +21,7 @@ import warnings
 warnings.simplefilter('always', DeprecationWarning)
 import textwrap
 
-from .xml import XML
+from .xml import XML, Namespaces
 
 from .exceptions import CannotCreateDIDLMetadata
 from .utils import really_unicode
@@ -35,10 +35,10 @@ from .utils import really_unicode
 
 def ns_tag(ns_id, tag):
     """Return a namespace/tag item. The ns_id is translated to a full name
-    space via the NS module variable.
+    space via the Namespace variable from the XML module.
 
     """
-    return '{{{0}}}{1}'.format(NS[ns_id], tag)
+    return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
 
 
 def get_ml_item(element):
@@ -47,8 +47,8 @@ def get_ml_item(element):
     in the DIDL_CLASS_TO_CLASS module variable dictionary.
 
     """
-    cls = _DIDL_CLASS_TO_CLASS[xml.find(ns_tag('upnp', 'class')).text]
-    return cls.from_xml(xml=xml)
+    cls = _DIDL_CLASS_TO_CLASS[element.find(ns_tag('upnp', 'class')).text]
+    return cls.from_element(element=element)
 
 
 class DidlResource(object):
@@ -303,8 +303,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         from an elementtree xml element.
 
         :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (NS['']) element. Inside
-            the item element should be the (namespace, tag_name) elements
+            top element usually is a DIDL-LITE item (Namespaces['']) element.
+            Inside the item element should be the (namespace, tag_name) elements
             in the dictionary-key-to-xml-tag-and-namespace-translation
             described in the class docstring.
 
@@ -482,9 +482,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
          </DIDL-Lite>
 
         """
-        # for prefix, uri in NS.items():
-        #           XML.register_namespace(prefix, uri)
-        # Insert the parent ID and item ID as attributes on the Item element
+
         elt_attrib = {
             'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
             'xmlns:dc':"http://purl.org/dc/elements/1.1/",
@@ -954,18 +952,3 @@ class Queue(ListOfMusicInfoItems):
             super(Queue, self).__repr__(),
         )
 
-
-###############################################################################
-# CONSTANTS                                                                   #
-###############################################################################
-
-NS = {
-    'dc': 'http://purl.org/dc/elements/1.1/',
-    'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-    '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-    'ms': 'http://www.sonos.com/Services/1.1',
-    'r': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
-}
-
-for prefix, uri in NS.items():
-    XML.register_namespace(prefix, uri)
