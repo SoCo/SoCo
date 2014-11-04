@@ -1696,7 +1696,8 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return DidlPlaylistContainer(uri, title, 'SQ:', item_id)
+        return DidlPlaylistContainer(uri=uri, title=title, parent_id='SQ:',
+             item_id=item_id)
 
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
@@ -1720,7 +1721,8 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return DidlPlaylistContainer(uri, title, 'SQ:', item_id)
+        return DidlPlaylistContainer(uri=uri, title=title, parent_id='SQ:',
+            item_id=item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
