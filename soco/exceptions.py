@@ -29,7 +29,7 @@ class SoCoUPnPException(SoCoException):
         return self.message
 
 
-class CannotCreateDIDLMetadata(SoCoException):
+class DIDLMetadataError(SoCoException):
     """ Raised if a data container class cannot create the DIDL metadata due to
     missing information
 
