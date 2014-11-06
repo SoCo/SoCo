@@ -24,7 +24,7 @@ from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
 from .xml import XML
 from .exceptions import SoCoException
 from .utils import camel_to_underscore
-from .data_structures import get_ml_item
+from .data_structures import get_didl_object
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -138,7 +138,7 @@ def parse_event_xml(xml_event):
                             "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}"
                             "item"
                             )
-                        value = get_ml_item(item_xml)
+                        value = get_didl_object(item_xml)
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:

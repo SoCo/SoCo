@@ -20,7 +20,7 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, DidlPlaylistContainer,\
+from .data_structures import get_didl_object, DidlPlaylistContainer,\
     DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
@@ -1381,7 +1381,7 @@ class SoCo(_SocoSingletonBase):
             elif search_type == 'share':
                 item = DidlContainer.from_xml(container)
             else:
-                item = get_ml_item(container)
+                item = get_didl_object(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1424,7 +1424,7 @@ class SoCo(_SocoSingletonBase):
         dom = XML.fromstring(really_utf8(response['Result']))
         item_list = []
         for container in dom:
-            item = get_ml_item(container)
+            item = get_didl_object(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
