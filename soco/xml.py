@@ -29,3 +29,12 @@ except AttributeError:
 
 for prefix, uri in Namespaces.items():
     register_namespace(prefix, uri)
+
+
+def ns_tag(ns_id, tag):
+    """Return a namespace/tag item. The ns_id is translated to a full name
+    space via the Namespaces variable.
+
+    """
+    return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
+

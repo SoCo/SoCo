@@ -21,27 +21,17 @@ import warnings
 warnings.simplefilter('always', DeprecationWarning)
 import textwrap
 
-from .xml import XML, Namespaces
+from .xml import XML, Namespaces, ns_tag
 
-from .exceptions import CannotCreateDIDLMetadata
+from .exceptions import DIDLMetadataError
 from .utils import really_unicode
 
 ###############################################################################
 # MISC HELPER FUNCTIONS                                                       #
 ###############################################################################
 
-# Move these to the XML module?
 
-
-def ns_tag(ns_id, tag):
-    """Return a namespace/tag item. The ns_id is translated to a full name
-    space via the Namespace variable from the XML module.
-
-    """
-    return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
-
-
-def get_ml_item(element):
+def get_didl_object(element):
     """Return the music library item that corresponds to an elementtree
     element. The class is identified by getting the UPNP class making a lookup
     in the DIDL_CLASS_TO_CLASS module variable dictionary.
@@ -66,7 +56,8 @@ class DidlResource(object):
         """ Constructor for the Resource class.
 
             Args:
-                uri (str): value of the res tag, typically a URI
+                uri (str): value of the res tag, typically a URI. It MUST be
+                    properly escaped URIs as described in RFC 239
                 protocol_info (str): ￼A string in the form a:b:c:d that
                     identifies the streaming or transport protocol for
                     transmitting the resource. A value is required. For more
@@ -85,7 +76,6 @@ class DidlResource(object):
                 protection (str): statement of protection type
 
         """
-        # Values of uri MUST be properly escaped URIs as described in RFC 2396
         self.uri = uri
         # Protocol iinfo is in the form a:b:c:d - see
         # §2.5.2 at
@@ -304,33 +294,33 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
         :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
             top element usually is a DIDL-LITE item (Namespaces['']) element.
-            Inside the item element should be the (namespace, tag_name) elements
-            in the dictionary-key-to-xml-tag-and-namespace-translation
+            Inside the item element should be the (namespace, tag_name)
+            elements in the dictionary-key-to-xml-tag-and-namespace-translation
             described in the class docstring.
 
         """
         # Check we have the right sort of element
         if not element.tag.endswith(cls.element):
-            raise CannotCreateDIDLMetadata("Wrong element. Expected {0},"
+            raise DIDLMetadataError("Wrong element. Expected {0},"
             " got {1}".format(cls.element, element.tag))
 
         # parent_id, item_id  and restricted are stored as attibutes on the
         # element
         item_id = element.get('id', None)
         if item_id is None:
-            raise CannotCreateDIDLMetadata("Missing id attribute")
+            raise DIDLMetadataError("Missing id attribute")
         parent_id = element.get('parentID', None)
         if parent_id is None:
-            raise CannotCreateDIDLMetadata("Missing parentID attribute")
+            raise DIDLMetadataError("Missing parentID attribute")
         restricted = element.get('restricted', None)
         if restricted is None:
-            raise CannotCreateDIDLMetadata("Missing restricted attribute")
+            raise DIDLMetadataError("Missing restricted attribute")
         restricted = True if restricted in [1, 'true', 'True'] else False
 
         # There must be a title, and it must be the first sub-element
         title_elt = element[0]
         if title_elt.tag != (ns_tag('dc', 'title')):
-            raise CannotCreateDIDLMetadata(
+            raise DIDLMetadataError(
                 "Missing or misplaced title element")
         title = title_elt.text
 
@@ -368,7 +358,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             text (str): Unicode text containing an XML representation"""
 
         #wrap text in fak attribute to apply namespaces
-        text = """<soco_dummy xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+        text = """<soco_dummy
+            xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
             xmlns:dc="http://purl.org/dc/elements/1.1/"
             xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">{0}
             </soco_dummy>""".format(text)
@@ -488,7 +479,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             'xmlns:dc':"http://purl.org/dc/elements/1.1/",
             'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
             'parentID': self.parent_id,
-            'restricted': '1' if self.restricted else '0',
+            'restricted': 'true' if self.restricted else 'false',
             'id': self.item_id
         }
         elt = XML.Element(self.element, elt_attrib)

@@ -9,10 +9,10 @@
 
 from __future__ import unicode_literals
 
-from .xml import XML
+from .xml import XML, ns_tag, Namespaces
 from .exceptions import DIDLMetadataError
 from .utils import camel_to_underscore
-from .data_structures import NS, ns_tag
+
 
 
 def get_ms_item(xml, service, parent_id):
@@ -111,7 +111,7 @@ class MusicServiceItem(object):
         # Extract values from the XML
         all_text_elements = tags_with_text(xml)
         for item in all_text_elements:
-            tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
+            tag = item.tag[len(Namespaces['ms']) + 2:]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
             if tag not in cls.valid_fields:
                 message = 'The info tag \'{0}\' is not allowed for this item'.\

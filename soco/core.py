@@ -19,7 +19,7 @@ from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import CannotCreateDIDLMetadata
+from .exceptions import DIDLMetadataError
 from .data_structures import get_didl_object, DidlPlaylistContainer,\
     DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
 from .utils import really_utf8, camel_to_underscore
@@ -1534,9 +1534,9 @@ class SoCo(_SocoSingletonBase):
         # Get the metadata
         try:
             metadata = XML.tostring(queueable_item.didl_metadata)
-        except CannotCreateDIDLMetadata as exception:
+        except DIDLMetadataError as exception:
             message = ('The queueable item could not be enqueued, because it '
-                       'raised a CannotCreateDIDLMetadata exception with the '
+                       'raised a DIDLMetadataError exception with the '
                        'following message:\n{0}').format(str(exception))
             raise ValueError(message)
         if isinstance(metadata, str):
@@ -1740,9 +1740,9 @@ class SoCo(_SocoSingletonBase):
         # Get the metadata
         try:
             metadata = XML.tostring(queueable_item.didl_metadata)
-        except CannotCreateDIDLMetadata as exception:
+        except DIDLMetadataError as exception:
             message = ('The queueable item could not be enqueued, because it '
-                       'raised a CannotCreateDIDLMetadata exception with the '
+                       'raised a DIDLMetadataError exception with the '
                        'following message:\n{0}').format(str(exception))
             raise ValueError(message)
         if isinstance(metadata, str):
