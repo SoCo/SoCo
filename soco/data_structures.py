@@ -55,7 +55,6 @@ def from_DIDL_string(string):
     items = []
     root = XML.fromstring(string.encode('utf-8'))
     for elt in root:
-        XML.dump(elt)
         if elt.tag.endswith('item') or elt.tag.endswith('container'):
             cls = _DIDL_CLASS_TO_CLASS[elt.findtext(ns_tag('upnp', 'class'))]
             items.append(cls.from_element(elt))
@@ -157,6 +156,13 @@ class DidlResource(object):
         content['uri'] = element.text
         return cls(**content)
 
+
+    def __repr__(self):
+        return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
+                                             self.uri,
+                                             hex(id(self)))
+    def __str(self):
+        return self.__repr__()
 
     def to_didl_element(self):
         """ Returns an Element based on this Resource.

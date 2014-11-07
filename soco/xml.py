@@ -30,7 +30,6 @@ except AttributeError:
 for prefix, uri in Namespaces.items():
     register_namespace(prefix, uri)
 
-
 def ns_tag(ns_id, tag):
     """Return a namespace/tag item. The ns_id is translated to a full name
     space via the Namespaces variable.
@@ -38,3 +37,5 @@ def ns_tag(ns_id, tag):
     """
     return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
 
+# cElementTree does not expose the type of an Element, so we do it ourselves
+ElementType = type(XML.Element(None))
