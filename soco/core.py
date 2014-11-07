@@ -20,8 +20,9 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import DIDLMetadataError
-from .data_structures import get_didl_object, DidlPlaylistContainer,\
-    DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
+from .data_structures import DidlPlaylistContainer,\
+    DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack, \
+    from_didl_string, DidlResource
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1215,10 +1216,8 @@ class SoCo(_SocoSingletonBase):
             # pylint: disable=star-args
             return Queue(queue, **metadata)
 
-        result_dom = XML.fromstring(really_utf8(result))
-        for element in result_dom.findall(
-                '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-            item = DidlMusicTrack.from_xml(element)
+        items = from_didl_string(result)
+        for item in items:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1373,15 +1372,9 @@ class SoCo(_SocoSingletonBase):
         metadata['search_type'] = search_type
 
         # Parse the results
-        dom = XML.fromstring(really_utf8(response['Result']))
-        item_list = []
-        for container in dom:
-            if search_type == 'sonos_playlists':
-                item = DidlPlaylistContainer.from_xml(container)
-            elif search_type == 'share':
-                item = DidlContainer.from_xml(container)
-            else:
-                item = get_didl_object(container)
+        item_list=[]
+        items = from_didl_string(response['Result'])
+        for item in items:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1421,14 +1414,13 @@ class SoCo(_SocoSingletonBase):
         metadata['search_type'] = 'browse'
 
         # Parse the results
-        dom = XML.fromstring(really_utf8(response['Result']))
+        containers = from_didl_string(response['Result'])
         item_list = []
-        for container in dom:
-            item = get_didl_object(container)
+        for container in containers:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
-                self._update_album_art_to_full_uri(item)
-            item_list.append(item)
+                self._update_album_art_to_full_uri(container)
+            item_list.append(container)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
@@ -1464,9 +1456,9 @@ class SoCo(_SocoSingletonBase):
 
         search_item_id = search + idstring
         search_uri = "#" + search_item_id
-
+        res = [DidlResource(uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
         search_item = DidlObject(
-            uri=search_uri, title='', parent_id='',
+            resources=res, title='', parent_id='',
             item_id=search_item_id)
 
         # Call the base version
@@ -1520,7 +1512,8 @@ class SoCo(_SocoSingletonBase):
         :param uri: The URI to be added to the queue
         :type uri: str
         """
-        item = DidlObject(uri=uri, title='', parent_id='', item_id='')
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        item = DidlObject(resources=res, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
@@ -1696,7 +1689,8 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return DidlPlaylistContainer(uri=uri, title=title, parent_id='SQ:',
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        return DidlPlaylistContainer(resources=res, title=title, parent_id='SQ:',
              item_id=item_id)
 
     # pylint: disable=invalid-name
@@ -1720,8 +1714,8 @@ class SoCo(_SocoSingletonBase):
         item_id = response['AssignedObjectID']
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
-
-        return DidlPlaylistContainer(uri=uri, title=title, parent_id='SQ:',
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        return DidlPlaylistContainer(resources=res, title=title, parent_id='SQ:',
             item_id=item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):

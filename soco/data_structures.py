@@ -28,13 +28,10 @@ from .xml import XML, ns_tag
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
 
+
 ###############################################################################
 # MISC HELPER FUNCTIONS                                                       #
 ###############################################################################
-
-
-def get_didl_object():
-    pass
 
 def to_didl_string(*args):
     """ Convert any number of DIDLObjects to a unicode xml string.
