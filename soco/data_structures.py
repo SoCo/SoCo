@@ -33,6 +33,9 @@ from .utils import really_unicode
 ###############################################################################
 
 
+def get_didl_object():
+    pass
+
 def to_didl_string(*args):
     """ Convert any number of DIDLObjects to a unicode xml string.
 
@@ -415,14 +418,14 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         """Return the equals comparison result to another ``playable_item``."""
         if not isinstance(playable_item, DidlObject):
             return False
-        return self.to_dict == playable_item.to_dict
+        return self.to_dict() == playable_item.to_dict()
 
     def __ne__(self, playable_item):
         """Return the not equals comparison result to another ``playable_item``
         """
         if not isinstance(playable_item, DidlObject):
             return True
-        return self.to_dict != playable_item.to_dict
+        return self.to_dict() != playable_item.to_dict()
 
     def __repr__(self):
         """Return the repr value for the item.
@@ -501,17 +504,18 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
          </DIDL-Lite>
 
         """
-        elt_attrib = {
-            'parentID': self.parent_id,
-            'restricted': 'true' if self.restricted else 'false',
-            'id': self.item_id
-        }
+        elt_attrib = {}
         if include_namespaces:
             elt_attrib.update({
                 'xmlns': "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
                 'xmlns:dc': "http://purl.org/dc/elements/1.1/",
                 'xmlns:upnp': "urn:schemas-upnp-org:metadata-1-0/upnp/",
             })
+        elt_attrib.update({
+            'parentID': self.parent_id,
+            'restricted': 'true' if self.restricted else 'false',
+            'id': self.item_id
+        })
         elt = XML.Element(self.tag, elt_attrib)
 
         # Add the title, which should always come first, according to the spec
