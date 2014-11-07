@@ -2,8 +2,10 @@
 # pylint: disable=star-args, too-many-arguments
 
 
-""" This module contains all the data structures for the information objects
-such as music tracks or genres.
+""" This module contains classes for handling DIDL-Lite metadata, which
+is the XML schema used by Sonos for carrying metadata representing many items
+such as tracks, playlists, composers, albums etc.
+
 
 """
 
@@ -21,7 +23,7 @@ import warnings
 warnings.simplefilter('always', DeprecationWarning)
 import textwrap
 
-from .xml import XML, Namespaces, ns_tag
+from .xml import XML, ns_tag
 
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
@@ -31,38 +33,58 @@ from .utils import really_unicode
 ###############################################################################
 
 
-def get_didl_object(element):
-    """Return the music library item that corresponds to an elementtree
-    element. The class is identified by getting the UPNP class making a lookup
-    in the DIDL_CLASS_TO_CLASS module variable dictionary.
+def to_didl_string(*args):
+    """ Convert any number of DIDLObjects to a unicode xml string.
 
-    """
-    cls = _DIDL_CLASS_TO_CLASS[element.findtext(ns_tag('upnp', 'class'))]
-    return cls.from_element(element=element)
+    Args:
+        *args (DidlObject): One or more DidlObject (or subclass) instances
 
-def to_DIDL_string(*args):
-    didl = XML.Element('DIDL-Lite',
+    Returns:
+        str: A unicode string of the form <DIDL-Lite ...>...</DIDL-Lite>
+            representing the instances"""
+
+    didl = XML.Element(
+        'DIDL-Lite',
         {
-            'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
-            'xmlns:dc':"http://purl.org/dc/elements/1.1/",
-            'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
+            'xmlns': "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
+            'xmlns:dc': "http://purl.org/dc/elements/1.1/",
+            'xmlns:upnp': "urn:schemas-upnp-org:metadata-1-0/upnp/",
         })
     for arg in args:
         didl.append(arg.to_element())
     return XML.tostring(didl)
 
-def from_DIDL_string(string):
+
+def from_didl_string(string):
+    """ Convert a unicode xml string to a list of DIDLObjects
+
+    Arg:
+        string (str): A unicode string containing an xml representation of one
+            or more DIDL-Lite items (in the form  <DIDL-Lite ...>
+            ...</DIDL-Lite> )
+
+    Returns:
+        list: A list of one or more instances of DIDLObject or a subclass
+    """
+
     items = []
     root = XML.fromstring(string.encode('utf-8'))
     for elt in root:
         if elt.tag.endswith('item') or elt.tag.endswith('container'):
-            cls = _DIDL_CLASS_TO_CLASS[elt.findtext(ns_tag('upnp', 'class'))]
+            item_class = elt.findtext(ns_tag('upnp', 'class'))
+            try:
+                cls = _DIDL_CLASS_TO_CLASS[item_class]
+            except KeyError:
+                raise DIDLMetadataError("Unknown UPnP class: %s" % item_class)
             items.append(cls.from_element(elt))
         else:
+            # <desc> elements are allowed as an immediate child of <DIDL-Lite>
+            # according to the spec, but I have not seen one in Sonos, so
+            # we treat them as illegal. May need to fix this if this
+            # causes problems.
             raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
-                %elt.tag)
+                                    % elt.tag)
     return items
-
 
 
 ###############################################################################
@@ -70,13 +92,14 @@ def from_DIDL_string(string):
 ###############################################################################
 
 class DidlResource(object):
-
-    """￼Indentifies a resource, typically some type of a￼binary asset, such as
+    """￼Identifies a resource, typically some type of a￼binary asset, such as
     a song.
 
     A 'res' element contains a uri that identifies the resource.
     """
     # Adapted from a class taken from the Python Brisa project - MIT licence.
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, uri, protocol_info, import_uri=None, size=None,
                  duration=None, bitrate=None, sample_frequency=None,
                  bits_per_sample=None, nr_audio_channels=None, resolution=None,
@@ -91,17 +114,17 @@ class DidlResource(object):
                     transmitting the resource. A value is required. For more
                     information see §2.5.2 at
                     http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-Service.pdf
-                import_uri (str): optional uri locator for resource update
-                size (int): optional size in bytes
-                duration (str) : optional duration of the playback of the res
+                import_uri (str, optional): uri locator for resource update
+                size (int, optional): size in bytes
+                duration (str, optional): duration of the playback of the res
                     at normal speed (H*:MM:SS:F* or H*:MM:SS:F0/F1)
-                bitrate (int): optional bitrate in bytes/second
-                sample_frequency (int): optional sample frequency in Hz
-                bits_per_sample (int): optional bits per sample
-                nr_audio_channels (int): optional number of audio channels
-                resolution (str): optional resolution of the resource (X*Y)
-                color_depth (int): optional color depth in bits
-                protection (str): statement of protection type
+                bitrate (int, optional): bitrate in bytes/second
+                sample_frequency (int, optional): sample frequency in Hz
+                bits_per_sample (int, optional): bits per sample
+                nr_audio_channels (int, optional): number of audio channels
+                resolution (str, optional): resolution of the resource (X*Y)
+                color_depth (int, optional): color depth in bits
+                protection (str, optional): statement of protection type
 
         """
         self.uri = uri
@@ -123,9 +146,13 @@ class DidlResource(object):
     @classmethod
     def from_element(cls, element):
         """ Sets the resource properties from a <res> element.
+
+        Arg:
+            element (Element): An ElementTree Element
         """
 
-        def int_helper(name):
+        def _int_helper(name):
+            """Tries to convert the name attribute to an int, or None"""
             result = element.get(name)
             if result is not None:
                 try:
@@ -144,28 +171,28 @@ class DidlResource(object):
                             'protocolInfo not found (required).')
         # Optional
         content['import_uri'] = element.get('importUri')
-        content['size'] = int_helper('size')
+        content['size'] = _int_helper('size')
         content['duration'] = element.get('duration')
-        content['bitrate'] = int_helper('bitrate')
-        content['sample_frequency'] = int_helper('sampleFrequency')
-        content['bits_per_sample'] = int_helper('bitsPerSample')
-        content['nr_audio_channels'] = int_helper('nrAudioChannels')
+        content['bitrate'] = _int_helper('bitrate')
+        content['sample_frequency'] = _int_helper('sampleFrequency')
+        content['bits_per_sample'] = _int_helper('bitsPerSample')
+        content['nr_audio_channels'] = _int_helper('nrAudioChannels')
         content['resolution'] = element.get('resolution')
-        content['color_depth'] = int_helper('colorDepth')
+        content['color_depth'] = _int_helper('colorDepth')
         content['protection'] = element.get('protection')
         content['uri'] = element.text
         return cls(**content)
-
 
     def __repr__(self):
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
                                              self.uri,
                                              hex(id(self)))
-    def __str(self):
+
+    def __str__(self):
         return self.__repr__()
 
-    def to_didl_element(self):
-        """ Returns an Element based on this Resource.
+    def to_element(self):
+        """ Returns an ElementTree Element based on this resource.
         """
         if not self.protocol_info:
             raise Exception('Could not create Element for this resource: '
@@ -174,7 +201,6 @@ class DidlResource(object):
 
         # Required
         root.attrib['protocolInfo'] = self.protocol_info
-
         # Optional
         if self.import_uri is not None:
             root.attrib['importUri'] = self.import_uri
@@ -198,7 +224,6 @@ class DidlResource(object):
             root.attrib['protection'] = self.protection
 
         root.text = self.uri
-
         return root
 
 
@@ -233,52 +258,41 @@ class DidlMetaClass(type):
 # Py2/3 compatible way of declaring the metaclass
 class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
-    """Abstract base class for all content directory objects
+    """Abstract base class for all DIDL-Lite items
 
     You should not need to instantiate this.
 
-    :ivar item_class: According to the spec, the DIDL Lite class for the base
-     item is ``object``. Since it is a abstract class and it should be
-     overwritten in the sub classes
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating Didl objects from XML. The
-        default value is shown below. This default value applies to most sub
-        classes and the rest should overwrite it.
-
-        .. code-block:: python
-
-            # key: (ns, tag)
-            _translation = {
-                'title': ('dc', 'title'),
-                'uri': ('', 'res'),
-                'creator': ('dc', 'creator'),
-                'write_status': ('upnp', 'writeStatus')
-            }
+    Attributes:
+        item_class (str): The DIDL Lite class for this object
+        tag (str): The XML element tag name used for this instance
+        _translation (dict): A dict used to translate between instance
+            attribute names and XML tags/namespaces. It also serves to define
+            the allowed tags/attributes for this instance. Overridden and
+            extended by subclasses.
 
     """
 
     item_class = 'object'
-    element = 'item'
-    # key: (ns, tag)
+    tag = 'item'
+    # key: attribute_name: (ns, tag)
     _translation = {
         'creator': ('dc', 'creator'),
         'write_status': ('upnp', 'writeStatus'),
     }
 
     def __init__(self, title, parent_id, item_id, restricted=True,
-        resources=None, **kwargs):
+                 resources=None, **kwargs):
         r"""Initialize the DidlObject from parameter arguments.
 
-        :param title: The title for the item
-        :param parent_id: The parent ID for the item
-        :param item_id: The ID for the item
-        :param restricted: Whether the item can be modified
-        :param resources: A list of resources for this object
-        :param \*\*kwargs: Extra information items to form the Didl
-            item from. Valid keys are ``album``, ``album_art_uri``,
-            ``creator`` and ``original_track_number``.
-            ``original_track_number`` is an int, all other values are
-            unicode objects.
+        Args:
+            title (str): The title for the item
+            parent_id (str): The parent ID for the item
+            item_id (str): The ID for the item
+            restricted (bool): Whether the item can be modified
+            resources (list): A list of resources for this object
+            **kwargs: Extra metadata. What is allowed depends on the
+                _translation class attribute, which in turn depends on the DIDL
+                class
 
         """
         # All didl objects *must* have a title, a parent_id and an item_id
@@ -316,27 +330,26 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     @classmethod
     def from_element(cls, element):
         """An alternative constructor to create an instance of this class
-        from an elementtree xml element.
+        from an ElementTree xml Element.
 
         The element must be a DIDL-Lite <item> or <container> element, and must
         be properly namespaced.
 
-        :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
-            top element usually is a DIDL-LITE item (Namespaces['']) element.
-            Inside the item element should be the (namespace, tag_name)
-            elements in the dictionary-key-to-xml-tag-and-namespace-translation
-            described in the class docstring.
+        Arg:
+            xml (Element): An :py:class:`xml.etree.ElementTree.Element` object.
 
         """
         # Check we have the right sort of element
-        if not element.tag.endswith(cls.element):
-            raise DIDLMetadataError("Wrong element. Expected '<{0}>',"
-            " got '<{1}>'".format(cls.element, element.tag))
+        if not element.tag.endswith(cls.tag):
+            raise DIDLMetadataError(
+                "Wrong element. Expected '<{0}>',"
+                " got '<{1}>'".format(cls.tag, element.tag))
         # and that the upnp matches what we are expecting
         item_class = element.find(ns_tag('upnp', 'class')).text
         if item_class != cls.item_class:
-            raise DIDLMetadataError("UPnP class is incorrect. Expected '{0}',"
-            " got '{1}'".format(cls.item_class, item_class))
+            raise DIDLMetadataError(
+                "UPnP class is incorrect. Expected '{0}',"
+                " got '{1}'".format(cls.item_class, item_class))
 
         # parent_id, item_id  and restricted are stored as attibutes on the
         # element
@@ -351,11 +364,12 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             raise DIDLMetadataError("Missing restricted attribute")
         restricted = True if restricted in [1, 'true', 'True'] else False
 
-        # There must be a title, and it must be the first sub-element
-        title_elt = element[0]
-        if title_elt.tag != (ns_tag('dc', 'title')):
+        # There must be a title. According to spec, it should be the first
+        # child, but Sonos does not abide by this
+        title_elt = element.find(ns_tag('dc', 'title'))
+        if title_elt is None:
             raise DIDLMetadataError(
-                "Missing or misplaced title element")
+                "Missing title element")
         title = title_elt.text
 
         # Deal with any resource elements
@@ -381,17 +395,16 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Now pass the content dict we have just built to the main
         # constructor, as kwargs, to create the object
         return cls(title=title, parent_id=parent_id, item_id=item_id,
-            restricted=restricted, resources=resources, **content)
-
+                   restricted=restricted, resources=resources, **content)
 
     @classmethod
     def from_dict(cls, content):
         """An alternative constructor to create instance from a dict with
         parameters. Equivalent to DidlObject(**content).
 
-        :param content: Dict with information for the music library item.
-            Required and valid arguments are the same as for the
-            ``__init__`` method.
+        Arg:
+            content (dict): Dict containing metadata information.Required and
+            valid arguments are the same as for the ``__init__`` method.
 
         """
         # Do we really need this constructor? Could use DidlObject(**content)
@@ -414,7 +427,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     def __repr__(self):
         """Return the repr value for the item.
 
-        The repr is on the form::
+        The repr is of the form::
 
           <class_name 'middle_part[0:40]' at id_in_hex>
 
@@ -444,9 +457,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         """
         return self.__repr__()
 
-    @property
     def to_dict(self):
-        """Get the dict representation of the instance."""
+        """Return the dict representation of the instance."""
 
         content = {}
         # Get the value of each attribute listed in _translation, and add it
@@ -458,20 +470,21 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # they are not listed in _translation
         content['parent_id'] = self.parent_id
         content['item_id'] = self.item_id
-        content['restricted']=self.restricted
+        content['restricted'] = self.restricted
         content['title'] = self.title
         if self.resources != []:
             content['resources'] = self.resources
         return content
 
     def to_element(self, include_namespaces=False):
-        """Produce the DIDL metadata XML.
+        """Return an ElementTree Element representing this instance
 
-        This method uses the :py:attr:`~.DidlObject.item_id`
-        attribute (and via that the :py:attr:`~.DidlObject.uri`
-        attribute), the :py:attr:`~.DidlObject.item_class` attribute
-        and the :py:attr:`~.DidlObject.title`  attribute. The
-        metadata will be of the form:
+        Arg:
+            include_namespaces (bool, optional): If True, include xml
+                namespace attributes on the root element
+
+        Return:
+            An ElementTree Element
 
         .. code :: xml
 
@@ -495,14 +508,13 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         }
         if include_namespaces:
             elt_attrib.update({
-                'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
-                'xmlns:dc':"http://purl.org/dc/elements/1.1/",
-                'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
+                'xmlns': "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
+                'xmlns:dc': "http://purl.org/dc/elements/1.1/",
+                'xmlns:upnp': "urn:schemas-upnp-org:metadata-1-0/upnp/",
             })
-        elt = XML.Element(self.element, elt_attrib)
+        elt = XML.Element(self.tag, elt_attrib)
 
-        # Add the title, which must always come first, according to the spec
-        title = self.title
+        # Add the title, which should always come first, according to the spec
         XML.SubElement(elt, 'dc:title').text = self.title
 
         # Add in any resources
@@ -513,8 +525,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # _translation) as sub-elements of the item element
         for key, value in self._translation.items():
             if hasattr(self, key):
-                tag = "%s:%s"%value if value[0] else "%s"%value[1]
-                XML.SubElement(elt, tag).text = ("%s"%getattr(self, key))
+                tag = "%s:%s" % value if value[0] else "%s" % value[1]
+                XML.SubElement(elt, tag).text = ("%s" % getattr(self, key))
         # Now add in the item class
         XML.SubElement(elt, 'upnp:class').text = self.item_class
 
@@ -539,13 +551,13 @@ class DidlItem(DidlObject):
 
     item_class = 'object.item'
     # _translation = DidlObject._translation.update({ ...})
-     # does not work, but doing it in two steps does
+    # does not work, but doing it in two steps does
     _translation = DidlObject._translation.copy()
     _translation.update(
         {
-        'stream_content': ('r', 'streamContent'),
-        'radio_show': ('r', 'radioShowMd'),
-        'album_art_uri': ('upnp', 'albumArtURI'),
+            'stream_content': ('r', 'streamContent'),
+            'radio_show': ('r', 'radioShowMd'),
+            'album_art_uri': ('upnp', 'albumArtURI'),
         }
     )
 
@@ -558,15 +570,18 @@ class DidlAudioItem(DidlItem):
     _translation = DidlItem._translation.copy()
     _translation.update(
         {
-        'genre': ('upnp', 'genre'),
-        'description': ('dc', 'description'),
-        'long_description': ('upnp', 'longDescription'),
-        'publisher': ('dc', 'publisher'),
-        'language': ('dc', 'language'),
-        'relation': ('dc', 'relation'),
-        'rights': ('dc', 'rights'),
+            'genre': ('upnp', 'genre'),
+            'description': ('dc', 'description'),
+            'long_description': ('upnp', 'longDescription'),
+            'publisher': ('dc', 'publisher'),
+            'language': ('dc', 'language'),
+            'relation': ('dc', 'relation'),
+            'rights': ('dc', 'rights'),
         }
     )
+
+# I have seen an item with class object.itemobject.item.sonos-favorite.
+# Probably a typo in Sonos' code somewhere.  Handle it here?
 
 
 class DidlMusicTrack(DidlAudioItem):
@@ -629,18 +644,10 @@ class DidlAudioBroadcast(DidlAudioItem):
 
 class DidlContainer(DidlObject):
 
-    """Class that represents a music library container.
-
-    :ivar item_class: The item_class for the DidlContainer is
-        'object.container'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlContainer from XML is
-        inherited from :py:class:`.DidlObject`.
-
-    """
+    """Class that represents a music library container.  """
 
     item_class = 'object.container'
-    element = 'container'
+    tag = 'container'
     # We do not implement createClass or searchClass. Not used by Sonos??
     # TODO: handle the 'childCount' element.
 
@@ -669,26 +676,11 @@ class DidlMusicAlbum(DidlAlbum):
 
     """Class that represents a music library album.
 
-    :ivar item_class: The item_class for DidlMusicTrack is
-        'object.container.album.musicAlbum'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlAlbum from XML. The value is
-        shown below
-
-        .. code-block :: python
-
-            # key: (ns, tag)
-            _translation = {
-                'title': ('dc', 'title'),
-                'creator': ('dc', 'creator'),
-                'album_art_uri': ('upnp', 'albumArtURI'),
-                'uri': ('', 'res')
-            }
-
     """
 
     item_class = 'object.container.album.musicAlbum'
     # name: (ns, tag)
+    # pylint: disable=protected-access
     _translation = DidlAudioItem._translation.copy()
     _translation.update(
         {
@@ -716,13 +708,6 @@ class DidlPerson(DidlContainer):
 class DidlComposer(DidlPerson):
 
     """Class that represents a music library composer.
-
-    :ivar item_class: The item_class for DidlComposer is
-        'object.container.person.composer'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlComposer from XML is
-        inherited from :py:class:`.DidlObject`.
-
     """
 
     # Not in the DIDL-Lite spec. Sonos specific??
@@ -733,12 +718,6 @@ class DidlComposer(DidlPerson):
 class DidlMusicArtist(DidlPerson):
 
     """Class that represents a music library artist.
-
-    :ivar item_class: The item_class for DidlMusicArtist is
-        'object.container.person.musicArtist'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlMusicArtist from XML is
-        inherited from :py:class:`.DidlObject`.
     """
 
     item_class = 'object.container.person.musicArtist'
@@ -756,12 +735,6 @@ class DidlAlbumList(DidlContainer):
 
     """Class that represents a music library album list.
 
-    :ivar item_class: The item_class for DidlAlbumList is
-        'object.container.albumlist'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlAlbumList from XML is
-        inherited from :py:class:`.DidlObject`.
-
     """
     # This does not appear (that I can find) in the DIDL-Lite specs.
     # Presumably Sonos specific
@@ -771,12 +744,6 @@ class DidlAlbumList(DidlContainer):
 class DidlPlaylistContainer(DidlContainer):
 
     """Class that represents a music library play list.
-
-    :ivar item_class: The item_class for the DidlPlaylistContainer is
-        'object.container.playlistContainer'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlPlaylistContainer from XML is
-        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -800,15 +767,9 @@ class DidlPlaylistContainer(DidlContainer):
 
 class DidlSameArtist(DidlPlaylistContainer):
 
-    """Class that represents all by the artist.
+    """Class that represents all tracks by a single artist.
 
     This type is returned by browsing an artist or a composer
-
-    :ivar item_class: The item_class for DidlSameArtist is
-        'object.container.playlistContainer.sameArtist'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlSameArtist from XML is
-        inherited from :py:class:`.DidlObject`.
 
     """
 
@@ -819,6 +780,7 @@ class DidlSameArtist(DidlPlaylistContainer):
 class DidlGenre(DidlContainer):
 
     """A content directory class representing a general genre"""
+
     item_class = 'object.container.genre'
     # name: (ns, tag)
     _translation = DidlContainer._translation.copy()
@@ -834,12 +796,6 @@ class DidlGenre(DidlContainer):
 class DidlMusicGenre(DidlGenre):
 
     """Class that represents a music genre.
-
-    :ivar item_class: The item class for the DidlGenre is
-        'object.container.genre.musicGenre'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlGenre from XML is inherited
-        from :py:class:`.DidlObject`.
 
     """
 
@@ -959,4 +915,3 @@ class Queue(ListOfMusicInfoItems):
             self.__class__.__name__,
             super(Queue, self).__repr__(),
         )
-
