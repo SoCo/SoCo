@@ -37,9 +37,38 @@ def get_didl_object(element):
     in the DIDL_CLASS_TO_CLASS module variable dictionary.
 
     """
-    cls = _DIDL_CLASS_TO_CLASS[element.find(ns_tag('upnp', 'class')).text]
+    cls = _DIDL_CLASS_TO_CLASS[element.findtext(ns_tag('upnp', 'class'))]
     return cls.from_element(element=element)
 
+def to_DIDL_string(*args):
+    didl = XML.Element('DIDL-Lite',
+        {
+            'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
+            'xmlns:dc':"http://purl.org/dc/elements/1.1/",
+            'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
+        })
+    for arg in args:
+        didl.append(arg.to_element())
+    return XML.tostring(didl)
+
+def from_DIDL_string(string):
+    items = []
+    root = XML.fromstring(string.encode('utf-8'))
+    for elt in root:
+        XML.dump(elt)
+        if elt.tag.endswith('item') or elt.tag.endswith('container'):
+            cls = _DIDL_CLASS_TO_CLASS[elt.findtext(ns_tag('upnp', 'class'))]
+            items.append(cls.from_element(elt))
+        else:
+            raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
+                %elt.tag)
+    return items
+
+
+
+###############################################################################
+# DIDL RESOURCE                                                               #
+###############################################################################
 
 class DidlResource(object):
 
@@ -94,7 +123,7 @@ class DidlResource(object):
 
     @classmethod
     def from_element(cls, element):
-        """ Sets the resource properties from an element.
+        """ Sets the resource properties from a <res> element.
         """
 
         def int_helper(name):
@@ -107,7 +136,6 @@ class DidlResource(object):
                         'Could not convert {0} to an integer'.format(name))
             else:
                 return None
-
 
         content = {}
         # required
@@ -129,14 +157,6 @@ class DidlResource(object):
         content['uri'] = element.text
         return cls(**content)
 
-    @classmethod
-    def from_string(cls, xml_string):
-        """ Returns an instance generated from a xml string.
-        """
-        instance = cls()
-        elt = parse_xml(xml_string)
-        instance.from_element(elt)
-        return instance
 
     def to_didl_element(self):
         """ Returns an Element based on this Resource.
@@ -292,6 +312,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         """An alternative constructor to create an instance of this class
         from an elementtree xml element.
 
+        The element must be a DIDL-Lite <item> or <container> element, and must
+        be properly namespaced.
+
         :param xml: An :py:class:`xml.etree.ElementTree.Element` object. The
             top element usually is a DIDL-LITE item (Namespaces['']) element.
             Inside the item element should be the (namespace, tag_name)
@@ -301,8 +324,13 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         """
         # Check we have the right sort of element
         if not element.tag.endswith(cls.element):
-            raise DIDLMetadataError("Wrong element. Expected {0},"
-            " got {1}".format(cls.element, element.tag))
+            raise DIDLMetadataError("Wrong element. Expected '<{0}>',"
+            " got '<{1}>'".format(cls.element, element.tag))
+        # and that the upnp matches what we are expecting
+        item_class = element.find(ns_tag('upnp', 'class')).text
+        if item_class != cls.item_class:
+            raise DIDLMetadataError("UPnP class is incorrect. Expected '{0}',"
+            " got '{1}'".format(cls.item_class, item_class))
 
         # parent_id, item_id  and restricted are stored as attibutes on the
         # element
@@ -349,24 +377,6 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return cls(title=title, parent_id=parent_id, item_id=item_id,
             restricted=restricted, resources=resources, **content)
 
-    @classmethod
-    def from_string(cls, text):
-        """ An alternative constructor to create an instance from a unicode
-        string
-
-        Arg:
-            text (str): Unicode text containing an XML representation"""
-
-        #wrap text in fak attribute to apply namespaces
-        text = """<soco_dummy
-            xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-            xmlns:dc="http://purl.org/dc/elements/1.1/"
-            xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">{0}
-            </soco_dummy>""".format(text)
-        text = text.encode('utf-8')
-        elt = XML.fromstring(text)
-        # Strip the dummy element
-        return cls.from_element(elt[0])
 
     @classmethod
     def from_dict(cls, content):
@@ -448,8 +458,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             content['resources'] = self.resources
         return content
 
-    @property
-    def to_element(self):
+    def to_element(self, include_namespaces=False):
         """Produce the DIDL metadata XML.
 
         This method uses the :py:attr:`~.DidlObject.item_id`
@@ -473,15 +482,17 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
          </DIDL-Lite>
 
         """
-
         elt_attrib = {
-            'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
-            'xmlns:dc':"http://purl.org/dc/elements/1.1/",
-            'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
             'parentID': self.parent_id,
             'restricted': 'true' if self.restricted else 'false',
             'id': self.item_id
         }
+        if include_namespaces:
+            elt_attrib.update({
+                'xmlns':"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
+                'xmlns:dc':"http://purl.org/dc/elements/1.1/",
+                'xmlns:upnp':"urn:schemas-upnp-org:metadata-1-0/upnp/",
+            })
         elt = XML.Element(self.element, elt_attrib)
 
         # Add the title, which must always come first, according to the spec
