@@ -1,7 +1,7 @@
 
 """ Module that contains XML related utility functions """
 
-# pylint: disable=unused-import, invalid-name
+# pylint: disable=unused-import, invalid-name, no-member
 
 from __future__ import absolute_import
 
