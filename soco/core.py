@@ -22,7 +22,7 @@ from .groups import ZoneGroup
 from .exceptions import DIDLMetadataError
 from .data_structures import DidlPlaylistContainer,\
     DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack, \
-    from_didl_string, DidlResource
+    from_didl_string, to_didl_string, DidlResource
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1456,7 +1456,9 @@ class SoCo(_SocoSingletonBase):
 
         search_item_id = search + idstring
         search_uri = "#" + search_item_id
-        res = [DidlResource(uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
+        # Not sure about the res protocol. But this seems to work
+        res = [DidlResource(
+            uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
         search_item = DidlObject(
             resources=res, title='', parent_id='',
             item_id=search_item_id)
@@ -1512,32 +1514,19 @@ class SoCo(_SocoSingletonBase):
         :param uri: The URI to be added to the queue
         :type uri: str
         """
+        # FIXME: The res.protocol_info should probably represent the mime type
+        # etc of the uri. But this seems OK.
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         item = DidlObject(resources=res, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
-        # Check if teh required attributes are there
-        for attribute in ['didl_metadata', 'uri']:
-            if not hasattr(queueable_item, attribute):
-                message = 'queueable_item has no attribute {0}'.\
-                    format(attribute)
-                raise AttributeError(message)
-        # Get the metadata
-        try:
-            metadata = XML.tostring(queueable_item.didl_metadata)
-        except DIDLMetadataError as exception:
-            message = ('The queueable item could not be enqueued, because it '
-                       'raised a DIDLMetadataError exception with the '
-                       'following message:\n{0}').format(str(exception))
-            raise ValueError(message)
-        if isinstance(metadata, str):
-            metadata = metadata.encode('utf-8')
-
+        metadata = to_didl_string(queueable_item)
+        metadata.encode('utf-8')
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
-            ('EnqueuedURI', queueable_item.uri),
+            ('EnqueuedURI', queueable_item.resources[0].uri),
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 1)
