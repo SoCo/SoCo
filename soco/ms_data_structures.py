@@ -14,7 +14,6 @@ from .exceptions import DIDLMetadataError
 from .utils import camel_to_underscore
 
 
-
 def get_ms_item(xml, service, parent_id):
     """Return the music service item that corresponds to xml. The class is
     identified by getting the type from the 'itemType' tag

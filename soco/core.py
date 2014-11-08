@@ -21,7 +21,7 @@ from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import DIDLMetadataError
 from .data_structures import DidlPlaylistContainer,\
-    DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack, \
+    SearchResult, Queue, DidlObject, \
     from_didl_string, to_didl_string, DidlResource
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
@@ -1372,7 +1372,7 @@ class SoCo(_SocoSingletonBase):
         metadata['search_type'] = search_type
 
         # Parse the results
-        item_list=[]
+        item_list = []
         items = from_didl_string(response['Result'])
         for item in items:
             # Check if the album art URI should be fully qualified
@@ -1679,8 +1679,8 @@ class SoCo(_SocoSingletonBase):
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
-        return DidlPlaylistContainer(resources=res, title=title, parent_id='SQ:',
-             item_id=item_id)
+        return DidlPlaylistContainer(
+            resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
@@ -1704,8 +1704,8 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
-        return DidlPlaylistContainer(resources=res, title=title, parent_id='SQ:',
-            item_id=item_id)
+        return DidlPlaylistContainer(
+            resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist

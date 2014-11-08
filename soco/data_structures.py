@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=star-args, too-many-arguments
+# pylint: disable=star-args, too-many-arguments, fixme
 
 
 """ This module contains classes for handling DIDL-Lite metadata, which
@@ -621,8 +621,8 @@ class DidlAudioItem(DidlItem):
 #   </item>
 # </DIDL-Lite>
 
-# Note the r:ordinal, r:type; r:description, r:resMD elements which are not seen
-# (?) anywhere else
+# Note the r:ordinal, r:type; r:description, r:resMD elements which are not
+# seen (?) anywhere else
 # We're ignoring this for the moment!
 
 

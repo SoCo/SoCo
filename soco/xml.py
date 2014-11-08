@@ -1,7 +1,7 @@
 
 """ Module that contains XML related utility functions """
 
-# pylint: disable=unused-import
+# pylint: disable=unused-import, invalid-name
 
 from __future__ import absolute_import
 
@@ -24,11 +24,14 @@ try:
     register_namespace = XML.register_namespace
 except AttributeError:
     # Python 2.6: see http://effbot.org/zone/element-namespaces.htm
-    def register_namespace(prefix, uri):
-        XML._namespace_map[uri] = prefix
+    def register_namespace(a_prefix, a_uri):
+        " Registers a namespace prefix to assist in serialization"
+        # pylint: disable=protected-access
+        XML._namespace_map[a_uri] = a_prefix
 
 for prefix, uri in Namespaces.items():
     register_namespace(prefix, uri)
+
 
 def ns_tag(ns_id, tag):
     """Return a namespace/tag item. The ns_id is translated to a full name
@@ -36,6 +39,3 @@ def ns_tag(ns_id, tag):
 
     """
     return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
-
-# cElementTree does not expose the type of an Element, so we do it ourselves
-ElementType = type(XML.Element(None))
