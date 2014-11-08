@@ -127,6 +127,8 @@ class DidlResource(object):
                 protection (str, optional): statement of protection type
 
         """
+        # Of these attributes, only uri, protocol_info and duration have been
+        # spotted 'in the wild'
         self.uri = uri
         # Protocol iinfo is in the form a:b:c:d - see
         # §2.5.2 at
@@ -309,7 +311,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         self.title = title
         self.parent_id = parent_id
         self.item_id = item_id
-        # Restricted is a complulsory attribute, but is always True for Sonos
+        # Restricted is a complulsory attribute, but is almost always True for
+        # Sonos. (Only seen it 'false' when browsing favorites)
         self.restricted = restricted
 
         # Resources is multi-valued, and dealt with separately
@@ -520,7 +523,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
         # Add in any resources
         for resource in self.resources:
-            elt.append(resource.to_didl_element())
+            elt.append(resource.to_element())
 
         # Add the rest of the metadata attributes (i.e all those listed in
         # _translation) as sub-elements of the item element
@@ -581,8 +584,46 @@ class DidlAudioItem(DidlItem):
         }
     )
 
-# I have seen an item with class object.itemobject.item.sonos-favorite.
-# Probably a typo in Sonos' code somewhere.  Handle it here?
+# Browsing Sonos Favorites produces some odd looking DIDL-Lite. The object
+# class is 'object.itemobject.item.sonos-favorite', which is probably a typo
+# in Sonos' code somewhere.
+
+# Here is an example:
+# <?xml version="1.0" ?>
+# <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+#     xmlns:dc="http://purl.org/dc/elements/1.1/"
+#     xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+#     xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+#   <item id="FV:2/13" parentID="FV:2" restricted="false">
+#     <dc:title>Shake It Off</dc:title>
+#     <upnp:class>object.itemobject.item.sonos-favorite</upnp:class>
+#     <r:ordinal>4</r:ordinal>
+#     <res protocolInfo="sonos.com-spotify:*:audio/x-spotify:*">
+#         x-sonos-spotify:spotify%3atrack%3a7n.......?sid=9&amp;flags=32</res>
+#     <upnp:albumArtURI>http://o.scd.....</upnp:albumArtURI>
+#     <r:type>instantPlay</r:type>
+#     <r:description>By Taylor Swift</r:description>
+#     <r:resMD>&lt;DIDL-Lite xmlns:dc=&quot;
+#       http://purl.org/dc/elements/1.1/&quot;
+#       xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot;
+#       xmlns:r=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;
+#       xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot;&gt;
+#       &lt;item id=&quot;00030020spotify%3atrack%3a7n9Q6b...74uCtajkddPt&quot;
+#       parentID=&quot;0006006ctoplist%2ftracks%2fregion%2fGB&quot;
+#       restricted=&quot;true&quot;&gt;&lt;dc:title&gt;Shake It Off
+#       &lt;/dc:title&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack
+#       &lt;/upnp:class&gt;&lt;desc id=&quot;cdudn&quot;
+#       nameSpace=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;&gt;
+#       SA_RINCON2311_XXXXX&lt;/desc&gt;
+#       &lt;/item&gt;
+#       &lt;/DIDL-Lite&gt;
+#     </r:resMD>
+#   </item>
+# </DIDL-Lite>
+
+# Note the r:ordinal, r:type; r:description, r:resMD elements which are not seen
+# (?) anywhere else
+# We're ignoring this for the moment!
 
 
 class DidlMusicTrack(DidlAudioItem):
