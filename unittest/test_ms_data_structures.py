@@ -9,7 +9,7 @@ import pytest
 
 from soco.xml import XML
 
-from soco.data_structures import MSTrack, MSAlbum, MSArtist, \
+from soco.ms_data_structures import MSTrack, MSAlbum, MSArtist, \
     MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
 from soco.exceptions import CannotCreateDIDLMetadata
 
