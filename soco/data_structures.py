@@ -39,8 +39,8 @@ def ns_tag(ns_id, tag):
     return '{{{0}}}{1}'.format(NS[ns_id], tag)
 
 
-def get_ml_item(xml):
-    """Return the music library item that corresponds to xml. The class is
+def get_didl_object(xml):
+    """Return the DIDL object that corresponds to xml. The class is
     identified by getting the UPNP class making a lookup in the
     DIDL_CLASS_TO_CLASS module variable dictionary.
 
@@ -84,8 +84,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     You should not need to instantiate this
 
-    :ivar item_class: According to the spec, the DIDL Lite class for the music
-     library item is ``object``, since it is a abstract class and it should be
+    :ivar item_class: According to the spec, the DIDL Lite class for DIDL
+     items is ``object``, since it is a abstract class and it should be
      overwritten in the sub classes
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a MusicLibraryItems from XML. The
@@ -403,9 +403,8 @@ class DidlAudioItem(DidlItem):
 
 class DidlMusicTrack(DidlAudioItem):
 
-    """Class that represents a music library track.
+    """Class that represents a music track.
 
-    :ivar parent_id: The parent ID for the DidlMusicTrack is 'A:TRACKS'
     :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
         translation used when instantiating a DidlMusicTrack from XML.
         The value is shown below
@@ -545,7 +544,7 @@ class DidlPerson(DidlContainer):
 
 class DidlComposer(DidlPerson):
 
-    """Class that represents a music library composer.
+    """Class that represents a composer.
 
     :ivar item_class: The item_class for DidlComposer is
         'object.container.person.composer'
@@ -560,7 +559,7 @@ class DidlComposer(DidlPerson):
 
 class DidlMusicArtist(DidlPerson):
 
-    """Class that represents a music library artist.
+    """Class that represents an artist.
 
     :ivar item_class: The item_class for DidlMusicArtist is
         'object.container.person.musicArtist'
@@ -574,7 +573,7 @@ class DidlMusicArtist(DidlPerson):
 
 class DidlAlbumList(DidlContainer):
 
-    """Class that represents a music library album list.
+    """Class that represents an album list.
 
     :ivar item_class: The item_class for DidlAlbumList is
         'object.container.albumlist'
@@ -589,7 +588,7 @@ class DidlAlbumList(DidlContainer):
 
 class DidlPlaylistContainer(DidlContainer):
 
-    """Class that represents a music library play list.
+    """Class that represents a play list.
 
     :ivar item_class: The item_class for the DidlPlaylistContainer is
         'object.container.playlistContainer'
@@ -638,19 +637,6 @@ class DidlMusicGenre(DidlGenre):
     """
 
     item_class = 'object.container.genre.musicGenre'
-
-
-class DidlShare(DidlContainer):
-    # Is this really needed?
-
-    """Class that represents a music library share.
-
-    :ivar item_class: The item_class for the DidlShare is 'object.container'
-    :ivar _translation: The dictionary-key-to-xml-tag-and-namespace-
-        translation used when instantiating a DidlShare from XML is inherited
-        from :py:class:`.DidlObject`."""
-
-    pass
 
 
 ###############################################################################

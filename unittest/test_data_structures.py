@@ -477,20 +477,6 @@ def test_DidlPlaylistContainer():
           playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
 
-def test_didlshare():
-    """Test the DidlShare class"""
-    # Set the tests up
-    uri = 'x-rincon-playlist:RINCON_000E5884455C01400#S://TLE-SERVER/share'
-    item_id = 'S://TLE-SERVER/share'
-    share = data_structures.DidlContainer(uri, TITLE, 'S:', item_id)
-
-    # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'parent_id': 'S:',
-               'item_id' : item_id}
-    common_tests('object.container', item_id, share, content,
-                 SHARE_XML, SHARE_DICT)
-
-
 def test_didlalbumlist():
     """Test the DidlAlbumList class"""
     # Sets the tests up
@@ -516,8 +502,8 @@ def test_ns_tag():
         assert res == correct
 
 
-def test_get_ml_item():
-    """Test the get_ml_item medule function"""
+def test_get_didl_object():
+    """Test the get_didl_object module function"""
     xmls = [TRACK_XML,
             ALBUM_XML,
             ARTIST_XML,
@@ -532,5 +518,5 @@ def test_get_ml_item():
                data_structures.DidlPlaylistContainer]
     for xml, class_ in zip(xmls, classes):
         etree = XML.fromstring(xml.encode('utf-8'))
-        item = data_structures.get_ml_item(etree)
+        item = data_structures.get_didl_object(etree)
         assert item.__class__ == class_
