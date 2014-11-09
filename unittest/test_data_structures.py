@@ -302,7 +302,7 @@ def set_and_get_test(instance, content, key):
 
 
 def common_tests(item_class, item_id, instance, content, item_xml, item_dict):
-    """Test all the common methods inherited from MusicLibraryItem
+    """Test all the common methods inherited from DidlObject
 
     :param parent_id: The parent ID of the class
     :param item_id: The expected item_id result for instance
@@ -352,13 +352,13 @@ def common_tests(item_class, item_id, instance, content, item_xml, item_dict):
                                    content['parent_id'],
                                    content['item_id'])
     for key in content.keys():
-        if key not in ['uri', 'title', 'parent_id', 'item_id']:
+        if key not in ['uri', 'title', 'parent_id', 'item_id', 'creator']:
             assert getattr(instance4, key) is None
 
 
 # The functions that test the different classes
-def test_mltrack():
-    """Test the MLTrack class"""
+def test_didltrack():
+    """Test the DidlMusicTrack class"""
     # Set the tests up
     uri = 'x-file-cifs://dummy_uri'
     item_id = 'S://TLE-SERVER/share/ogg/Mozart%20-%20Orpheus%20Orchestra_convert/5-Mozart-...%20-II%20Adagio.ogg'
@@ -367,7 +367,7 @@ def test_mltrack():
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:TRACKS',
                'item_id' : item_id}
     content.update(kwargs)
-    track = data_structures.MLTrack(uri, TITLE, 'A:TRACKS', item_id, **kwargs)
+    track = data_structures.DidlMusicTrack(uri, TITLE, 'A:TRACKS', item_id, **kwargs)
 
     # Run tests on inherited methods and attributes
     common_tests('object.item.audioItem.musicTrack', item_id,
@@ -383,13 +383,13 @@ def test_mltrack():
     track.original_track_number = 47
 
 
-def test_mlalbum():
-    """Test the MLAlbum class"""
+def test_didlmusicalbum():
+    """Test the DidlMusicAlbum class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM/dummy_album'
     item_id = 'A:ALBUM/dummy_album'
     kwargs = {'album_art_uri': ART_URI, 'creator': CREATOR}
-    album = data_structures.MLAlbum(uri, TITLE, 'A:ALBUM', item_id, **kwargs)
+    album = data_structures.DidlMusicAlbum(uri, TITLE, 'A:ALBUM', item_id, **kwargs)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:ALBUM',
@@ -403,12 +403,12 @@ def test_mlalbum():
         set_and_get_test(album, content, key)
 
 
-def test_mlartist():
-    """Test the MLArtist class"""
+def test_didlartist():
+    """Test the DidlMusicArtist class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ARTIST/10%20Years'
     item_id = 'A:ARTIST/10%20Years'
-    artist = data_structures.MLArtist(uri, TITLE, 'A:ARTIST', item_id)
+    artist = data_structures.DidlMusicArtist(uri, TITLE, 'A:ARTIST', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:ARTIST',
@@ -417,12 +417,12 @@ def test_mlartist():
                  artist, content, ARTIST_XML, ARTIST_DICT)
 
 
-def test_mlgenre():
-    """Test the MLGenre class"""
+def test_didlmusicgenre():
+    """Test the DidlMusicGenre class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:GENRE/Acid'
     item_id = 'A:GENRE/Acid'
-    genre = data_structures.MLGenre(uri, TITLE, 'A:GENRE', item_id)
+    genre = data_structures.DidlMusicGenre(uri, TITLE, 'A:GENRE', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:GENRE',
@@ -431,13 +431,13 @@ def test_mlgenre():
                  content, GENRE_XML, GENRE_DICT)
 
 
-def test_mlcomposer():
-    """Test the MLComposer class"""
+def test_didlcomposer():
+    """Test the DidlComposer class"""
     # Set the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:COMPOSER/A.%20Kiedis'\
           '%2fFlea%2fJ.%20Frusciante%2fC.%20Smith'
     item_id = 'A:COMPOSER/A.%20Kiedis%2fFlea%2fJ.%20Frusciante%2fC.%20Smith'
-    composer = data_structures.MLComposer(uri, TITLE, 'A:COMPOSER', item_id)
+    composer = data_structures.DidlComposer(uri, TITLE, 'A:COMPOSER', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:COMPOSER',
@@ -446,14 +446,14 @@ def test_mlcomposer():
                  item_id, composer, content, COMPOSER_XML, COMPOSER_DICT)
 
 
-def test_mlplaylist():
-    """Test the MLPlaylist class"""
+def test_didlplaylist():
+    """Test the DidlPlaylistContainer class"""
     # Set the tests up
     uri = 'x-file-cifs://TLE-SERVER/share/mp3/Trentem%c3%b8ller%20-%20The%20'\
           'Trentem%c3%b8ller%20Chronicles/-%3dTrentem%c3%b8ller%20-%20The%20'\
           'Trentem%c3%b8ller%20Chronicles%20(CD%201).m3u'
     item_id = 'S://TLE-SERVER/share/mp3/Trentem%c3%b8ller%20-%20The%20Trentem%c3%b8ller%20Chronicles/-%3dTrentem%c3%b8ller%20-%20The%20Trentem%c3%b8ller%20Chronicles%20(CD%201).m3u'
-    playlist = data_structures.MLPlaylist(uri, TITLE, 'A:PLAYLISTS', item_id)
+    playlist = data_structures.DidlPlaylistContainer(uri, TITLE, 'A:PLAYLISTS', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:PLAYLISTS',
@@ -463,40 +463,26 @@ def test_mlplaylist():
                  PLAYLIST_XML, PLAYLIST_DICT)
 
 
-def test_mlsonosplaylist():
-    """Test the MLSonosPlaylist class"""
+def test_DidlPlaylistContainer():
+    """Test the DidlPlaylistContainer class"""
     # Set the tests up
     uri = 'file:///jffs/settings/savedqueues.rsq#13 title: Koop'
     item_id = 'SQ:13'
-    playlist = data_structures.MLSonosPlaylist(uri, TITLE, 'SQ:', item_id)
+    playlist = data_structures.DidlPlaylistContainer(uri, TITLE, 'SQ:', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'SQ:',
                'item_id' : item_id}
     common_tests('object.container.playlistContainer', item_id,
-                 playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
+          playlist, content, SONOS_PLAYLIST_XML, SONOS_PLAYLIST_DICT)
 
 
-def test_mlshare():
-    """Test the MLShare class"""
-    # Set the tests up
-    uri = 'x-rincon-playlist:RINCON_000E5884455C01400#S://TLE-SERVER/share'
-    item_id = 'S://TLE-SERVER/share'
-    share = data_structures.MLShare(uri, TITLE, 'S:', item_id)
-
-    # Run tests on inherited methods and attributes
-    content = {'uri': uri, 'title': TITLE, 'parent_id': 'S:',
-               'item_id' : item_id}
-    common_tests('object.container', item_id, share, content,
-                 SHARE_XML, SHARE_DICT)
-
-
-def test_mlalbumlist():
-    """Test the MLAlbumList class"""
+def test_didlalbumlist():
+    """Test the DidlAlbumList class"""
     # Sets the tests up
     uri = 'x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM'
     item_id = 'A:ALBUM'
-    albumlist = data_structures.MLAlbumList(uri, TITLE, 'A:', item_id)
+    albumlist = data_structures.DidlAlbumList(uri, TITLE, 'A:', item_id)
 
     # Run tests on inherited methods and attributes
     content = {'uri': uri, 'title': TITLE, 'parent_id': 'A:',
@@ -516,72 +502,21 @@ def test_ns_tag():
         assert res == correct
 
 
-def test_get_ml_item():
-    """Test the get_ml_item medule function"""
+def test_get_didl_object():
+    """Test the get_didl_object module function"""
     xmls = [TRACK_XML,
             ALBUM_XML,
             ARTIST_XML,
             GENRE_XML,
             COMPOSER_XML,
             PLAYLIST_XML]
-    classes = [data_structures.MLTrack,
-               data_structures.MLAlbum,
-               data_structures.MLArtist,
-               data_structures.MLGenre,
-               data_structures.MLComposer,
-               data_structures.MLPlaylist]
+    classes = [data_structures.DidlMusicTrack,
+               data_structures.DidlMusicAlbum,
+               data_structures.DidlMusicArtist,
+               data_structures.DidlMusicGenre,
+               data_structures.DidlComposer,
+               data_structures.DidlPlaylistContainer]
     for xml, class_ in zip(xmls, classes):
         etree = XML.fromstring(xml.encode('utf-8'))
-        item = data_structures.get_ml_item(etree)
+        item = data_structures.get_didl_object(etree)
         assert item.__class__ == class_
-
-
-def test_queue_item():
-    """Test the QueueItem class"""
-    # Set the tests up
-    uri = 'x-file-cifs://dummy_uri'
-    kwargs = {'album': ALBUM, 'album_art_uri': ART_URI, 'creator': CREATOR,
-              'original_track_number': 47}
-    content = {'uri': uri, 'title': TITLE, 'item_class': 'dummy.class'}
-    content.update(kwargs)
-    track = data_structures.QueueItem(uri, TITLE, 'dummy.class', **kwargs)
-
-    # from_xml, this test uses real data examples
-    instance2 = track.__class__.from_xml(
-        XML.fromstring(QUEUE_XML1.encode('utf8')))
-    assert instance2.to_dict == QUEUE_DICT1
-
-    # from_dict and to_dict
-    instance3 = track.__class__.from_dict(content)
-    assert instance3.to_dict == content
-
-    # Test common attributes
-    for key in ['uri', 'title', 'item_class']:
-        set_and_get_test(track, content, key)
-
-    # Test equals (should fail if we change any attribute)
-    assert track == instance3
-    for key in content.keys():
-        original = getattr(instance3, key)
-        if key == 'original_track_number':
-            setattr(instance3, key, original + 1)
-        else:
-            setattr(instance3, key, original + '!addition¡')
-        assert track != instance3
-        setattr(instance3, key, original)
-
-    # Test default class and None for un-assigned attributes
-    instance4 = track.__class__(content['uri'], content['title'])
-    assert instance4.item_class == QUEUE_DICT1['item_class']
-    for key in content.keys():
-        if key not in ['uri', 'title', 'item_class']:
-            assert getattr(instance4, key) is None
-
-    # Test class specific attributes
-    for key in ['album', 'album_art_uri', 'creator']:
-        set_and_get_test(track, content, key)
-
-    assert track.original_track_number == 47
-    track.original_track_number = 42
-    assert track.original_track_number == 42
-    track.original_track_number = 47

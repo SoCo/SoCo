@@ -20,8 +20,8 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock, SystemProperties, MusicServices
 from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult, Queue, MusicLibraryItem
+from .data_structures import get_didl_object, DidlPlaylistContainer,\
+    DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
 from .utils import really_utf8, camel_to_underscore
 from .xml import XML
 from soco import config
@@ -1227,7 +1227,7 @@ class SoCo(_SocoSingletonBase):
         result_dom = XML.fromstring(really_utf8(result))
         for element in result_dom.findall(
                 '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-            item = QueueItem.from_xml(element)
+            item = DidlMusicTrack.from_xml(element)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1386,11 +1386,11 @@ class SoCo(_SocoSingletonBase):
         item_list = []
         for container in dom:
             if search_type == 'sonos_playlists':
-                item = MLSonosPlaylist.from_xml(container)
+                item = DidlPlaylistContainer.from_xml(container)
             elif search_type == 'share':
-                item = MLShare.from_xml(container)
+                item = DidlContainer.from_xml(container)
             else:
-                item = get_ml_item(container)
+                item = get_didl_object(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1405,7 +1405,7 @@ class SoCo(_SocoSingletonBase):
         """Browse (get sub-elements) a music library item
 
         Keyword arguments:
-            ml_item (MusicLibraryItem): The MusicLibraryItem to browse, if left
+            ml_item (DidlObject): The DidlObject to browse, if left
                 out or passed None, the items at the base level will be
                 returned
             start (int): The starting index of the results
@@ -1433,7 +1433,7 @@ class SoCo(_SocoSingletonBase):
         dom = XML.fromstring(really_utf8(response['Result']))
         item_list = []
         for container in dom:
-            item = get_ml_item(container)
+            item = get_didl_object(container)
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1474,8 +1474,9 @@ class SoCo(_SocoSingletonBase):
         search_item_id = search + idstring
         search_uri = "#" + search_item_id
 
-        search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='',
-                                       item_id=search_item_id)
+        search_item = DidlObject(
+            uri=search_uri, title='', parent_id='',
+            item_id=search_item_id)
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
@@ -1528,7 +1529,7 @@ class SoCo(_SocoSingletonBase):
         :param uri: The URI to be added to the queue
         :type uri: str
         """
-        item = URI(uri)
+        item = DidlObject(uri=uri, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
@@ -1690,7 +1691,7 @@ class SoCo(_SocoSingletonBase):
         :params title: Name of the playlist
 
         :returns: An instance of
-            :py:class:`~.soco.data_structures.MLSonosPlaylist`
+            :py:class:`~.soco.data_structures.DidlPlaylistContainer`
 
         """
         response = self.avTransport.CreateSavedQueue([
@@ -1704,7 +1705,7 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:', item_id)
+        return DidlPlaylistContainer(uri, title, 'SQ:', item_id)
 
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
@@ -1713,7 +1714,7 @@ class SoCo(_SocoSingletonBase):
             :params title: Name of the playlist
 
             :returns: An instance of
-                :py:class:`~.soco.data_structures.MLSonosPlaylist`
+                :py:class:`~.soco.data_structures.DidlPlaylistContainer`
 
         """
         # Note: probably same as Queue service method SaveAsSonosPlaylist
@@ -1728,7 +1729,7 @@ class SoCo(_SocoSingletonBase):
         obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:', item_id)
+        return DidlPlaylistContainer(uri, title, 'SQ:', item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
