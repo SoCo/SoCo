@@ -69,7 +69,7 @@ class TestResource():
             bitrate=3)
         elt = res.to_element()
         assert XML.tostring(elt) == (
-            '<res bitrate="3" protocolInfo="a:protocol:info:xx">a%20uri</res>')
+            b'<res bitrate="3" protocolInfo="a:protocol:info:xx">a%20uri</res>')
         assert data_structures.DidlResource.from_element(elt).__dict__ == \
             res.__dict__
 

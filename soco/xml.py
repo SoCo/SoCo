@@ -6,9 +6,9 @@
 from __future__ import absolute_import
 
 try:
-    import xml.etree.cElementTree as XML  # nopep8
+    import xml.etree.cElementTree as XML
 except ImportError:
-    import xml.etree.ElementTree as XML  # nopep8
+    import xml.etree.ElementTree as XML
 
 Namespaces = {
     'dc': 'http://purl.org/dc/elements/1.1/',
@@ -24,10 +24,12 @@ try:
     register_namespace = XML.register_namespace
 except AttributeError:
     # Python 2.6: see http://effbot.org/zone/element-namespaces.htm
+    import xml.etree.ElementTree as XML2
+
     def register_namespace(a_prefix, a_uri):
         " Registers a namespace prefix to assist in serialization"
         # pylint: disable=protected-access
-        XML._namespace_map[a_uri] = a_prefix
+        XML2._namespace_map[a_uri] = a_prefix
 
 for prefix, uri in Namespaces.items():
     register_namespace(prefix, uri)
