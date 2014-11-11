@@ -1398,7 +1398,7 @@ class SoCo(_SocoSingletonBase):
           get_music_library_items('artists', start=100, max_items=100)
 
         will get the first and next 100 items, respectively. It is also
-        to ask for all the elements at once::
+        possible to ask for all the elements at once::
 
           get_music_library_items('artists', complete_result=True)
 
@@ -1419,7 +1419,7 @@ class SoCo(_SocoSingletonBase):
             IP address
         :param search_term: A string that will be used to perform a fuzzy
             search among the search results. If used in combination with
-            subcategories, the fuzzy search will be performed on the
+            subcategories, the fuzzy search will be performed in the
             subcategory
         :param subcategories: A list of strings that indicate one or more
             subcategories to dive into
@@ -1929,11 +1929,6 @@ class SoCo(_SocoSingletonBase):
             IP address
         :type full_album_art_uri: bool
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
-            NOTE! Some non-album results are removed from the search, which
-            means that the properties `number_returned` and `total_matches`
-            will not contain the correct numbers for the items returned, but
-            are the correct numbers to use to continue the search, if it has
-            been broken down into pieces.
         :rtype: :py:class:`~.soco.data_structures.SearchResult`
 
         """
@@ -1966,11 +1961,6 @@ class SoCo(_SocoSingletonBase):
             IP address
         :type full_album_art_uri: bool
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
-            NOTE! Some non-album results are removed from the search, which
-            means that the properties `number_returned` and `total_matches`
-            will not contain the correct numbers for the items returned, but
-            are the correct numbers to use to continue the search, if it has
-            been broken down into pieces.
         :rtype: :py:class:`~.soco.data_structures.SearchResult`
 
         """
