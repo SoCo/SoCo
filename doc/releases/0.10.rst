@@ -1,0 +1,17 @@
+SoCo 0.10 release notes
+***********************
+
+Release notes for the upcoming release.
+
+New Features
+============
+
+
+Improvements
+============
+
+
+Backwards Compatability
+=======================
+
+

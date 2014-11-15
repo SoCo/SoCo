@@ -1,0 +1,104 @@
+SoCo 0.8 release notes
+**********************
+
+New Features
+============
+
+* Re-added support for Python 2.6 (`#154
+  <https://github.com/SoCo/SoCo/pull/154>`_)
+
+* Added :meth:`SoCo.get_sonos_playlists` (`#114
+  <https://github.com/SoCo/SoCo/pull/114>`_)
+
+* Added methods for working with speaker topology
+
+ * :attr:`soco.SoCo.group` retrieves the :class:`soco.groups.ZoneGroup` to
+   which the speaker belongs (`#132 <https://github.com/SoCo/SoCo/pull/132>`_).
+   The group itself has a :attr:`soco.groups.ZoneGroup.member` attribute
+   returning all of its members. Iterating directly over the group is possible
+   as well.
+
+ * Speakers can be grouped using :meth:`soco.SoCo.join`
+   (`#136 <https://github.com/SoCo/SoCo/pull/136>`_)::
+
+      z1 = SoCo('192.168.1.101')
+      z2 = SoCo('192.168.1.102')
+      z1.join(z2)
+
+ * :attr:`soco.SoCo.all_zones` and :attr:`soco.SoCo.visible_zones` return all
+   and all visible zones, respectively.
+
+ * :attr:`soco.SoCo.is_bridge` indicates if the ``SoCo`` instance represents a
+   bridge.
+
+ * :attr:`soco.SoCo.is_coordinator` indicates if the ``SoCo`` instance is a
+   group coordinator (`#166 <https://github.com/SoCo/SoCo/pull/166>`_)
+
+* A new :class:`soco.plugins.spotify.Spotify` plugin allows querying and
+  playing the Spotify music catalogue (`#119
+  <https://github.com/SoCo/SoCo/pull/119>`_)::
+
+      from soco.plugins.spotify import Spotify
+      from soco.plugins.spotify import SpotifyTrack
+      # create a new plugin, pass the soco instance to it
+      myplugin = Spotify(device)
+      print 'index: ' + str(myplugin.add_track_to_queue(SpotifyTrack('
+          spotify:track:20DfkHC5grnKNJCzZQB6KC')))
+      print 'index: ' + str(myplugin.add_album_to_queue(SpotifyAlbum('
+          spotify:album:6a50SaJpvdWDp13t0wUcPU')))
+
+
+* A :class:`soco.data_structures.URI` item can be passed to ``add_to_queue``
+  which allows playing music from arbitrary URIs (`#147
+  <https://github.com/SoCo/SoCo/pull/147>`_) ::
+
+      import soco
+      from soco.data_structures import URI
+
+      soc = soco.SoCo('...ip_address...')
+      uri = URI('http://www.noiseaddicts.com/samples/17.mp3')
+      soc.add_to_queue(uri)
+
+
+* A new ``include_invisible`` parameter to :meth:`soco.discover` can be used
+  to retrieve invisible speakers or bridges (`#146
+  <https://github.com/SoCo/SoCo/pull/146>`_)
+
+* A new ``timeout`` parameter to :meth:`soco.discover`. If no zones are found
+  within ``timeout`` seconds ``None`` is returned. (`#146
+  <https://github.com/SoCo/SoCo/pull/146>`_)
+
+* Network requests can be cached for better performance (`#131
+  <https://github.com/SoCo/SoCo/pull/131>`_).
+
+* It is now possible to subscribe to events of a service using its `subscribe`
+  method, which returns a `Subscription` object. To unsubscribe, call the
+  `unsubscribe` method on the returned object. (`#121
+  <https://github.com/SoCo/SoCo/pull/121>`_, `#130
+  <https://github.com/SoCo/SoCo/pull/130>`_)
+
+* Support for reading and setting crossfade (`#165
+  <https://github.com/SoCo/SoCo/pull/165>`_)
+
+
+Improvements
+============
+
+* Performance improvements for speaker discovery (`#146
+  <https://github.com/SoCo/SoCo/pull/146>`_)
+
+* Various improvements to the Wimp plugin (`#140
+  <https://github.com/SoCo/SoCo/pull/140>`_).
+
+* Test coverage tracking using `coveralls.io <http://coveralls.io/>`_ (`#163
+  <https://github.com/SoCo/SoCo/pull/163>`_)
+
+
+Backwards Compatability
+=======================
+
+* Queue related use 0-based indexing consistently (`#103
+  <https://github.com/SoCo/SoCo/pull/103>`_)
+
+* :meth:`soco.SoCo.get_speakers_ip` is deprecated in favour of
+  :meth:`soco.discover` (`#124 <https://github.com/SoCo/SoCo/pull/124>`_)
