@@ -7,6 +7,7 @@ import mock
 from soco import SoCo
 from soco.groups import ZoneGroup
 from soco.xml import XML
+from soco.data_structures import DidlMusicTrack
 
 IP_ADDR = '192.168.1.101'
 
@@ -360,6 +361,20 @@ class TestAVTransport:
             [('InstanceID', 0), ('CrossfadeMode', '0')]
         )
 
+    def test_soco_get_item_album_art_uri(self, moco):
+        uri = 'x-file-cifs://dummy_uri'
+        title = 'fake-title'
+        parent_id = 'A:TRACKS'
+        item_id = 'fake-id'
+        kwargs = {'album': 'fake-album',
+                  'album_art_uri': '/getaa?r=1&u=track.mp3',
+                  'creator': 'fake-artist',
+                  'original_track_number': 47}
+        content = {'uri': uri, 'title': title, 'parent_id': parent_id}
+        content.update(kwargs)
+        track = DidlMusicTrack(uri, title, parent_id, item_id, **kwargs)
+        full_uri = moco.get_item_album_art_uri(track)
+        assert full_uri == "http://192.168.1.101:1400/getaa?r=1&u=track.mp3"
 
 class TestRenderingControl:
 
