@@ -48,11 +48,11 @@ Functions
 =========
 
 .. autofunction:: soco.data_structures.ns_tag
-.. autofunction:: soco.data_structures.get_ml_item
+.. autofunction:: soco.data_structures.get_didl_object
 
 
 DidlObject
-================
+==========
 
 .. autoclass:: soco.data_structures.DidlObject
    :members:
@@ -66,7 +66,7 @@ DidlObject
 
 
 DidlContainer
-===========
+=============
 
 .. autoclass:: soco.data_structures.DidlContainer
    :members:
@@ -74,7 +74,7 @@ DidlContainer
    :show-inheritance:
 
 DidlItem
-=======
+========
 
 .. autoclass:: soco.data_structures.DidlItem
    :members:
@@ -83,7 +83,7 @@ DidlItem
 
 
 DidlMusicTrack
-=======
+==============
 
 .. autoclass:: soco.data_structures.DidlMusicTrack
    :members:
@@ -91,7 +91,7 @@ DidlMusicTrack
    :show-inheritance:
 
 DidlMusicAlbum
-============
+==============
 
 .. autoclass:: soco.data_structures.DidlMusicAlbum
    :members:
@@ -99,7 +99,7 @@ DidlMusicAlbum
    :show-inheritance:
 
 DidlMusicArtist
-========
+===============
 
 .. autoclass:: soco.data_structures.DidlMusicArtist
    :members:
@@ -107,7 +107,7 @@ DidlMusicArtist
    :show-inheritance:
 
 DidlMusicGenre
-============
+==============
 
 .. autoclass:: soco.data_structures.DidlMusicGenre
    :members:
@@ -115,7 +115,7 @@ DidlMusicGenre
    :show-inheritance:
 
 DidlAlbumList
-===========
+=============
 
 .. autoclass:: soco.data_structures.DidlAlbumList
    :members:
@@ -124,7 +124,7 @@ DidlAlbumList
 
 
 DidlComposer
-==========
+============
 
 .. autoclass:: soco.data_structures.DidlComposer
    :members:
@@ -132,7 +132,7 @@ DidlComposer
    :show-inheritance:
 
 DidlPlaylistContainer
-==========
+=====================
 
 .. autoclass:: soco.data_structures.DidlPlaylistContainer
    :members:
@@ -141,7 +141,7 @@ DidlPlaylistContainer
 
 
 DidlAudioBroadcast
-================
+==================
 
 .. autoclass:: soco.data_structures.DidlAudioBroadcast
    :members:
@@ -150,7 +150,7 @@ DidlAudioBroadcast
 
 
 DidlContainer
-=======
+=============
 
 .. autoclass:: soco.data_structures.DidlContainer
    :members:

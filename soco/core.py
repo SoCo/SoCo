@@ -402,7 +402,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def play_mode(self):
-        """ The queue's play mode. Case-insensitive options are::
+        """ The queue's play mode. Case-insensitive options are:
 
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
@@ -1117,8 +1117,9 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
 
     def get_group_coordinator(self, zone_name):
-        """     .. deprecated:: 0.8
-                   Use :meth:`group` or :meth:`all_groups` instead.
+        """
+        .. deprecated:: 0.8
+           Use :meth:`group` or :meth:`all_groups` instead.
 
         """
         import warnings
@@ -1135,11 +1136,11 @@ class SoCo(_SocoSingletonBase):
         """ Get the IP addresses of all the Sonos speakers in the network.
 
         Arguments:
-        refresh -- Refresh the speakers IP cache. Ignored. For backward
+            refresh -- Refresh the speakers IP cache. Ignored. For backward
             compatibility only
 
         Returns:
-        a set of IP addresses of the Sonos speakers.
+            a set of IP addresses of the Sonos speakers.
 
         .. deprecated:: 0.8
 
@@ -1391,12 +1392,11 @@ class SoCo(_SocoSingletonBase):
 
     def browse(self, ml_item=None, start=0, max_items=100,
                full_album_art_uri=False):
-        """Browse (get sub-elements) a music library item
+        """
+        Browse (get sub-elements) a music library item
 
         Keyword arguments:
             ml_item (DidlObject): The DidlObject to browse, if left
-                out or passed None, the items at the base level will be
-                returned
             start (int): The starting index of the results
             max_items (int): The maximum number of items to return
             full_album_art_uri(bool): If the album art URI should include the
@@ -1722,9 +1722,10 @@ class SoCo(_SocoSingletonBase):
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
-        :param queueable_item: the item to add to the Sonos' playlist
-        :param sonos_playlist: the Sonos' playlist to which the item should
-                               be added
+
+            :param queueable_item: the item to add to the Sonos' playlist
+            :param sonos_playlist: the Sonos' playlist to which the item should
+                be added
 
         """
         # Check if the required attributes are there
