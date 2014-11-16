@@ -1468,6 +1468,7 @@ class SoCo(_SocoSingletonBase):
                 response, metadata =\
                     self._music_lib_search(search, start, max_items)
             except SoCoUPnPException as exception:
+                # 'No such object' UPnP errors
                 if exception.error_code == '701':
                     return SearchResult([], search_type, 0, 0, None)
                 else:
@@ -1546,6 +1547,7 @@ class SoCo(_SocoSingletonBase):
             response, metadata =\
                 self._music_lib_search(search, start, max_items)
         except SoCoUPnPException as exception:
+            # 'No such object' UPnP errors
             if exception.error_code == '701':
                 return SearchResult([], 'browse', 0, 0, None)
             else:
