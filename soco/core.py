@@ -1293,7 +1293,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('sonos_playlists', **kwargs)
 
     def get_artists(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
         to the docstring for that method.
 
@@ -1301,7 +1301,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('artists', **kwargs)
 
     def get_album_artists(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='album_artists'`. For details on remaining arguments
         refer to the docstring for that method.
 
@@ -1309,7 +1309,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('album_artists', **kwargs)
 
     def get_albums(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='albums'`. For details on remaining arguments refer
         to the docstring for that method.
 
@@ -1318,7 +1318,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('albums', *kwargs)
 
     def get_genres(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='genres'`. For details on remaining arguments refer
         to the docstring for that method.
 
@@ -1326,7 +1326,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('genres', **kwargs)
 
     def get_composers(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='composers'`. For details on remaining arguments
         refer to the docstring for that method.
 
@@ -1334,7 +1334,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('composers', **kwargs)
 
     def get_tracks(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='tracks'`. For details on remaining arguments refer
         to the docstring for that method.
 
@@ -1342,7 +1342,7 @@ class SoCo(_SocoSingletonBase):
         return self.get_music_library_information('tracks', **kwargs)
 
     def get_playlists(self, **kwargs):
-        """ Convinience method for :py:meth:`get_music_library_information`
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='playlists'`. For details on remaining arguments
         refer to the docstring for that method.
 
