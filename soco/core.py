@@ -1907,10 +1907,7 @@ class SoCo(_SocoSingletonBase):
 
         """
         subcategories = [artist]
-        if album is not None:
-            subcategories.append(album)
-        else:
-            subcategories.append('')
+        subcategories.append(album or '')
 
         # Perform the search
         result = self.get_album_artists(
