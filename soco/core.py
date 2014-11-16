@@ -1284,64 +1284,70 @@ class SoCo(_SocoSingletonBase):
 
         return queue_size
 
-    def get_sonos_playlists(self, **kwargs):
+    def get_sonos_playlists(self, *args, **kwargs):
         """ Convenience method for:
             get_music_library_information('sonos_playlists')
             Refer to the docstring for that method
 
         """
-        return self.get_music_library_information('sonos_playlists', **kwargs)
+        args = tuple(['sonos_playlists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_artists(self, **kwargs):
+    def get_artists(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        return self.get_music_library_information('artists', **kwargs)
+        args = tuple(['artists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_album_artists(self, **kwargs):
+    def get_album_artists(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='album_artists'`. For details on remaining arguments
         refer to the docstring for that method.
 
         """
-        return self.get_music_library_information('album_artists', **kwargs)
+        args = tuple(['album_artists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_albums(self, **kwargs):
+    def get_albums(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='albums'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        # pylint: disable=star-args
-        return self.get_music_library_information('albums', *kwargs)
+        args = tuple(['albums'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_genres(self, **kwargs):
+    def get_genres(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='genres'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        return self.get_music_library_information('genres', **kwargs)
+        args = tuple(['genres'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_composers(self, **kwargs):
+    def get_composers(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='composers'`. For details on remaining arguments
         refer to the docstring for that method.
 
         """
-        return self.get_music_library_information('composers', **kwargs)
+        args = tuple(['composers'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_tracks(self, **kwargs):
+    def get_tracks(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='tracks'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        return self.get_music_library_information('tracks', **kwargs)
+        args = tuple(['tracks'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_playlists(self, **kwargs):
+    def get_playlists(self, *args, **kwargs):
         """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='playlists'`. For details on remaining arguments
         refer to the docstring for that method.
@@ -1350,7 +1356,8 @@ class SoCo(_SocoSingletonBase):
         imported from the music library, they are not the Sonos playlists.
 
         """
-        return self.get_music_library_information('playlists', **kwargs)
+        args = tuple(['playlists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
     # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
     def get_music_library_information(self, search_type, start=0,
