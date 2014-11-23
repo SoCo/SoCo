@@ -32,7 +32,6 @@ PACKAGES = (
         'soco.plugins',
 )
 
-REQUIREMENTS = list(open('requirements.txt'))
 TEST_REQUIREMENTS = list(open('requirements-dev.txt'))
 AUTHOR_EMAIL = metadata['author']
 VERSION = metadata['version']
@@ -65,6 +64,7 @@ with open('README.rst') as file:
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
+REQUIREMENTS = ['requests']
 # For some versions of python (2.6) we need the importlib
 # as it is not in the standard install
 try:

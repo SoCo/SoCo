@@ -1,3 +1,2 @@
 requests
-https://github.com/pysimplesoap/pysimplesoap/archive/1.13.zip
-
+http://github.com/pysimplesoap/pysimplesoap/archive/master.zip#egg=PySimpleSOAP-1.16
