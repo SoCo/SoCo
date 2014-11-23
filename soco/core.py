@@ -22,7 +22,8 @@ from .groups import ZoneGroup
 from .exceptions import CannotCreateDIDLMetadata
 from .data_structures import get_didl_object, DidlPlaylistContainer,\
     DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
-from .utils import really_utf8, camel_to_underscore
+from .utils import really_utf8, camel_to_underscore, url_escape_path,\
+    really_unicode
 from .xml import XML
 from soco import config
 
@@ -238,6 +239,9 @@ class SoCo(_SocoSingletonBase):
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
         get_item_album_art_uri -- Get an item's Album Art absolute URI.
+        search_track -- Search for an artist, artist's albums, or track.
+        get_albums_for_artist -- Get albums for an artist.
+        get_tracks_for_album -- Get tracks for an artist's album.
 
     Properties::
 
@@ -1790,6 +1794,132 @@ class SoCo(_SocoSingletonBase):
             return self._build_album_art_full_uri(item.album_art_uri)
         else:
             return None
+
+    def search_track(self, artist, album=None, track=None,
+                     start=0, max_items=100, full_album_art_uri=False):
+        """Search for an artist, artist's albums, or specific track.
+
+        Keyword arguments:
+            artist: Artist name
+            album: Album name. If left out or passed None, returns tracks
+               for all albums.
+            track: Track name. If left out or passed None, returns all tracks.
+            start (int): The starting index of the results
+            max_items (int): The maximum number of items to return
+            full_album_art_uri(bool): If the album art URI should include the
+                IP address
+
+        Returns:
+            dict: A :py:class:`~.soco.data_structures.SearchResult` object
+
+        Raises:
+            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
+                found
+        """
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
+        if album is not None:
+            search += really_unicode('/') + url_escape_path(album)
+
+        response, metadata = self._music_lib_search(search, start, max_items)
+
+        metadata['search_type'] = 'browse'
+
+        # Parse the results
+        dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
+        for container in dom:
+            item = get_ml_item(container)
+            # this does not work: item is MLCategory or item is MLSameArtist
+            if item.item_class == 'object.container' or item.item_class == \
+               'object.container.playlistContainer.sameArtist':
+                continue
+
+            if track is not None and item.title != track:
+                continue
+
+            # Check if the album art URI should be fully qualified
+            if full_album_art_uri:
+                self._update_album_art_to_full_uri(item)
+            item_list.append(item)
+
+        # pylint: disable=star-args
+        return SearchResult(item_list, **metadata)
+
+    def get_albums_for_artist(self, artist,
+                              start=0, max_items=100,
+                              full_album_art_uri=False):
+        """Get albums for an artist.
+
+        Parameters:
+            artist: Artist name
+            start (int): The starting index of the results
+            max_items (int): The maximum number of items to return
+            full_album_art_uri(bool): If the album art URI should include the
+                IP address
+
+        Returns:
+            A list of :py:class:`~.soco.data_structures.MLAlbum` objects
+
+        Raises:
+            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
+                found
+        """
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
+
+        response, _ = self._music_lib_search(search, start, max_items)
+
+        # Parse the results
+        dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
+        for container in dom:
+            item = get_ml_item(container)
+            # this does not work: item is MLAlbum
+            if item.item_class == 'object.container.album.musicAlbum':
+                # Check if the album art URI should be fully qualified
+                if full_album_art_uri:
+                    self._update_album_art_to_full_uri(item)
+                item_list.append(item)
+
+        return item_list
+
+    def get_tracks_for_album(self, artist, album,
+                             start=0, max_items=100, full_album_art_uri=False):
+        """Get tracks for an artist's album.
+
+        Parameters:
+            artist: Artist name
+            album: Album name
+            start (int): The starting index of the results
+            max_items (int): The maximum number of items to return
+            full_album_art_uri(bool): If the album art URI should include the
+                IP address
+
+        Returns:
+            A list of :py:class:`~.soco.data_structures.MLTrack` objects
+
+        Raises:
+            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
+                found
+        """
+        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
+        search += really_unicode('/') + url_escape_path(album)
+
+        response, _ = self._music_lib_search(search, start, max_items)
+
+        # Parse the results
+        dom = XML.fromstring(really_utf8(response['Result']))
+        item_list = []
+        for container in dom:
+            item = get_ml_item(container)
+            # this does not work: item is MLTrack
+            if item.item_class == 'object.item.audioItem.musicTrack':
+                # Check if the album art URI should be fully qualified
+                if full_album_art_uri:
+                    self._update_album_art_to_full_uri(item)
+                item_list.append(item)
+
+        return item_list
+>>>>>>> Initial searching patch
 
 # definition section
 

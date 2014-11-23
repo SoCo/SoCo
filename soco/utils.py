@@ -8,7 +8,7 @@ import re
 import functools
 import warnings
 
-from .compat import StringType, UnicodeType
+from .compat import StringType, UnicodeType, quote_url
 from .xml import XML
 
 
@@ -133,3 +133,9 @@ class deprecated(object):
             decorated.__doc__ = ''
         decorated.__doc__ += docs
         return decorated
+
+
+def url_escape_path(path):
+    """ Escape a string value for a URL request path """
+    # Using 'safe' arg does not seem to work for python 2.6
+    return quote_url(path.encode('utf-8')).replace('/', '%2F')
