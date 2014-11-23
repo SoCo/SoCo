@@ -18,7 +18,7 @@ import struct
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
-from .services import AlarmClock
+from .services import AlarmClock, SystemProperties, MusicServices
 from .groups import ZoneGroup
 from .exceptions import DIDLMetadataError, SoCoUPnPException
 from .data_structures import DidlPlaylistContainer,\
@@ -305,6 +305,8 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl = RenderingControl(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
         self.alarmClock = AlarmClock(self)
+        self.systemProperties = SystemProperties(self)
+        self.musicServices = MusicServices(self)
 
         # Some private attributes
         self._all_zones = set()
@@ -322,6 +324,15 @@ class SoCo(_SocoSingletonBase):
 
     def __repr__(self):
         return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
+
+    @staticmethod
+    def any_soco():
+        """ Return any soco device, for when it doesn't matter which """
+
+        # This can be improved to use an existing SoCo instance if there is
+        # one, instead of using discover()
+        device = discover().pop()
+        return device
 
     @property
     def player_name(self):
