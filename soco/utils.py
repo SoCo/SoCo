@@ -136,6 +136,11 @@ class deprecated(object):
 
 
 def url_escape_path(path):
-    """ Escape a string value for a URL request path """
+    """ Escape a string value for a URL request path
+
+    >>> url_escape_path("Foo, bar & baz / the hackers")
+    u'Foo%2C%20bar%20%26%20baz%20%2F%20the%20hackers'
+
+    """
     # Using 'safe' arg does not seem to work for python 2.6
     return quote_url(path.encode('utf-8')).replace('/', '%2F')
