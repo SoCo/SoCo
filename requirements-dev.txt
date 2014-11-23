@@ -4,6 +4,7 @@ mock >= 1.0.1
 graphviz
 flake8
 pylint
+logilab-common==0.62.1  # requirement of pylint; pinned as 0.63.0 has problems with Python 3
 coveralls
 pytest-cov
 wheel

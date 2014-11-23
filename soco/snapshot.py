@@ -148,9 +148,6 @@ class Snapshot(object):
 
             if self.is_playing_queue and self.playlist_position > 0:
                 # was playing from playlist
-                # reinstate track, position, play mode, cross fade
-                self.device.play_mode = self.play_mode
-                self.device.cross_fade = self.cross_fade
 
                 if self.playlist_position is not None:
 
@@ -164,6 +161,11 @@ class Snapshot(object):
                 if self.track_position is not None:
                     if self.track_position != "":
                         self.device.seek(self.track_position)
+
+                # reinstate track, position, play mode, cross fade
+                # Need to make sure there is a proper track selected first
+                self.device.play_mode = self.play_mode
+                self.device.cross_fade = self.cross_fade
             else:
                 # was playing a stream (radio station, file, or nothing)
                 # reinstate uri and meta data
