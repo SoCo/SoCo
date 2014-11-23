@@ -1,6 +1,3 @@
---allow-external pysimplesoap
---allow-unverified pysimplesoap
-
 requests
 https://github.com/pysimplesoap/pysimplesoap/archive/1.13.zip
 
