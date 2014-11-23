@@ -114,7 +114,7 @@ class MusicService(object):
 
     _music_services_data = None
 
-    def __init__(self, service_name, username=None, password=None):
+    def __init__(self, service_name, username=None):
         """Constructor
 
         Arg:
@@ -123,8 +123,6 @@ class MusicService(object):
             username (str): The relevant username will be obtained
                 automatically if the service is subscribed. Pass another
                 username here to override it, if necessary
-            password (str): The password for accessing the service. Not needed
-                if device authorisation is used
 
         """
 
@@ -134,9 +132,9 @@ class MusicService(object):
             raise Exception("Unknown music service: '%s'" % service_name)
         self.is_subscribed = False
         subscribed = self.get_subscribed_music_services()
-        for s in subscribed:
-            if s[0] == service_name:
-                self.username = s[1]
+        for sub in subscribed:
+            if sub[0] == service_name:
+                self.username = username if username else sub[1]
                 self.is_subscribed = True
         self.uri = data['Uri']
         self.secure_uri = data['SecureUri']
@@ -259,7 +257,7 @@ class MusicService(object):
         dom = XML.fromstring(response.content)
         # Elementtree does not support CData, so we have to go a long way round
         command = dom.findtext('.//Command')
-        value =  XML.fromstring(command).attrib['Value']
+        value = XML.fromstring(command).attrib['Value']
         info = value.split(',')
         # Each service has four items. Only the first and second appear
         # interesting. They are the service id (eg 2311 for spotify) and

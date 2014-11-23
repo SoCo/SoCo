@@ -8,8 +8,7 @@ import logging
 from datetime import datetime
 import re
 import weakref
-import soco
-from soco.core import discover, PLAY_MODES
+from soco.core import PLAY_MODES
 from soco.xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
