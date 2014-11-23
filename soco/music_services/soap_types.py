@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
-""" Types used by pysimplesoap to unmarshall SOAP return values
+""" Types used by pysimplesoap to unmarshall SOAP return values.
 """
+
+# Laregly translated by hand from WSDL files for various Sonos services,
+# eg https://sonos.hos.com/SOAP/Server1.2.php?WSDL
 
 from __future__ import unicode_literals
 

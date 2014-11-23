@@ -30,61 +30,114 @@ class MusicService(object):
 
     Example:
 
-        print (MusicService.get_all_music_services())
+        Print all the services Sonos knows about
 
-        # The TuneIn services doesn't require a login, so we don't need to use
-        # any credentials
-        tunein = MusicService('TuneIn')
-        print (tunein.get_metadata(item_id=root))
+        >>> from soco.music_services import MusicService
+        >>> from pprint import ppring
+        >>> print (MusicService.get_all_music_services())
+        ['Spotify',
+         'The Hype Machine',
+         'Saavn',
+         'Bandcamp',
+         'Stitcher SmartRadio',
+         'Concert Vault',
+         ...
+         ]
 
-        # Now let's play with Spotify. Spotify is authenticated by the Sonos
-        # system itself, so we only need a username
-        spotify = MusicService('Spotify', username='12345678') # <-your userID
+        Or just those tho which you are subscribed (and the relevant
+        usernames)
 
-        print (spotify.get_metadata(item_id='root'))
+        >>> pprint (MusicService.get_subscribed_music_services())
+        [('Spotify', u'XXXXXX'), ('radioPup', u''), ('Spreaker', u'')]
 
-        # Now we can get some metadata about a track
-        response =  spotify.get_media_metadata(
-            item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
-        print (response)
+        Interact with TuneIn
 
-        # or even a playlist
-        response =  spotify.get_metadata(
-            item_id='spotify:user:spotify:playlist:0FQk6BADgIIYd3yTLCThjg')
-        print (response)
+        >>> tunein = MusicService('TuneIn')
+        >>> print tunein
+        <MusicService 'TuneIn' at 0x10ad84e10>
+        >>> pprint (tunein.get_metadata(item_id='root'))
+        {'count': 5,
+         'index': 0,
+         'mediaCollection': ({'albumArtURI': u'http://spotify-...',
+                              'canEnumerate': True,
+                              'canPlay': False,
+                              'canScroll': False,
+                              'id': u'playlists',
+                              'itemType': u'favorites',
+                              'title': u'Playlists'},
+                             {'albumArtURI': u'http://spotify-...',
+                              'canEnumerate': True,
+                              'canPlay': True,
+                              'canScroll': False,
+                              'id': u'starred',
+                              'itemType': u'favorites',
+                              'title': u'Starred'},
+                            ...),
+         'total': 5}
+        # Get some metadata about a track
+        >>> response =  spotify.get_media_metadata(
+        ... item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
+        >>> print (response)
+        {'mediaMetadata': [{'id': u'spotify:track:6NmXV4o6bmp704aPGyTVVG'},
+                           {'itemType': u'track'},
+                           {'title': u'B?n Fra Helvete (Live)'},
+                           {'mimeType': u'audio/x-spotify'},
+                           {'trackMetadata': {'album': u'Mann Mot Mann (Ep)',
+                                              'albumArtURI': u'http://o.s...9',
+                                              'albumId': u'spotify:album:...',
+                                              'artist': u'Kaizers Orchestra',
+                                              'artistId': u'spotify:artist...',
+                                              'canAddToFavorites': True,
+                                              'canPlay': True,
+                                              'canSkip': True,
+                                              'duration': 317}}]}
 
-        # or a URI
-        response =  spotify.get_media_URI(
-            item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
-        pprint (response)
+        or even a playlist
+
+        >>> response =  spotify.get_metadata(
+        ...    item_id='spotify:user:spotify:playlist:0FQk6BADgIIYd3yTLCThjg')
+
+        or a URI
+
+        >>> response =  spotify.get_media_URI(
+        ...    item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
+
+        Find the available search categories, and use them
 
         # and a search
-        print (spotify.available_search_categories)
-        print (spotify.search(category='artists', term='miles'))
+        >>> pprint (spotify.available_search_categories)
+        ['albums', 'tracks', 'artists']
+        >>> result =  spotify.search(category='artists', term='miles')
 
 
     """
 
     _music_services_data = None
 
-    def __init__(self, service_name, username='', password=''):
+    def __init__(self, service_name, username=None, password=None):
         """Constructor
 
         Arg:
             service_name (str): The name of the music service, as returned by
-                `get_all_music_services()`
-            username (str): The username for accessing this service. Not
-                needed if device authorisation is used
+                `get_all_music_services()`, eg 'Spotify', or 'TuneIn'
+            username (str): The relevant username will be obtained
+                automatically if the service is subscribed. Pass another
+                username here to override it, if necessary
             password (str): The password for accessing the service. Not needed
                 if device authorisation is used
 
         """
 
         self.service_name = service_name
-        self.username = username
         data = self._get_music_services_data().get(service_name)
         if not data:
             raise Exception("Unknown music service: '%s'" % service_name)
+        self.is_subscribed = False
+        subscribed = self.get_subscribed_music_services()
+        for s in subscribed:
+            if s[0] == service_name:
+                self.username = s[1]
+                self.is_subscribed = True
         self.uri = data['Uri']
         self.secure_uri = data['SecureUri']
         self.capabilities = data['Capabilities']
@@ -101,8 +154,8 @@ class MusicService(object):
             action='http://www.sonos.com/Services/1.1#',
             namespace='http://www.sonos.com/Services/1.1',
             soap_ns='soap',
-            # Spotify uses gzip. Others may also. Unzipping is handled by
-            # the Requests library
+            # Spotify uses gzip. Others may do so as well. Unzipping is handled
+            # for us by the requests library
             http_headers={'Accept-Encoding': 'gzip'},
         )
 
@@ -123,9 +176,6 @@ class MusicService(object):
                 ('Username', self.username)
             ])['SessionId']
             credentials_header.marshall('sessionId', session_id)
-        # elif self.auth_type == 'UserId':
-        #     credentials_header.marshall('username', username)
-        #     credentials_header.marshall('password', password)
 
     def __repr__(self):
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
@@ -141,7 +191,8 @@ class MusicService(object):
          system
 
         Returns:
-            dict: A dict containing relevant data, keyed by service name
+            dict: A dict containing relevant data. Each key is a service name,
+                and each value is a dict containing relevant data.
 
         """
         # Check if cached, and return the cached value
@@ -152,14 +203,13 @@ class MusicService(object):
         available_services = device.musicServices.ListAvailableServices()
         descriptor_list_xml = available_services[
             'AvailableServiceDescriptorList']
-        # AvailableServiceTypeList is a comma separated string, so we split it
-        # Each entry corresponds with an entry in
+        # AvailableServiceTypeList is a comma separated string of service ids,
+        # so we split it. Each entry corresponds with an entry in
         # AvailableServicesDescriptorList
-        type_list = available_services['AvailableServiceTypeList'].split(',')
-
+        id_list = available_services['AvailableServiceTypeList'].split(',')
         root = XML.fromstring(descriptor_list_xml.encode('utf-8'))
         result = {}
-        for service, service_type in zip(root, type_list):
+        for service, service_id in zip(root, id_list):
             auth_element = (service.find('Policy'))
             auth = auth_element.attrib
             result_value = service.attrib.copy()
@@ -168,7 +218,7 @@ class MusicService(object):
             if presentation_element is not None:
                 result_value['PresentationMapUri'] = presentation_element.get(
                     'Uri')
-            result_value['ServiceType'] = service_type
+            result_value['ServiceID'] = service_id
             result[service.get('Name')] = result_value
         cls._music_services_data = result
         return result
@@ -179,6 +229,52 @@ class MusicService(object):
 
         These services have not necessarily been subscribed to"""
         return cls._get_music_services_data().keys()
+
+    @classmethod
+    def get_subscribed_music_services(cls):
+        """ Return a list of subscribed music services and their usernames.
+
+        Returns:
+            (list): A list of (service_name, username) tuples
+        """
+        # Data on subscribed services is available at
+        # http://{Player_IP}:1400/status/securesettings, which returns XML
+        # containing something like this:
+        # <?xml version="1.0" ?>
+        # <?xml-stylesheet ...>
+        # <ZPSupportInfo type="User"><Command cmdline= ...>
+        #    <![CDATA[<]]>Setting Name=&quot;R_SvcAccounts&quot;
+        # Value=&quot;2311,115721712,1,XXXX,41479,,1,XXXX,41735,,1,XXXX&quot;/
+        # <![CDATA[>]]>
+        # </Command></ZPSupportInfo>
+        #
+        # It is likely that the same information is available over UPnP as well
+        # via a call to
+        # systemProperties.GetStringX([('VariableName','R_SvcAccounts')]))
+        # This returns an encrypted string, and, so far, we cannot decrypt it
+        device = SoCo.any_soco()
+        settings_url = "http://{0}:1400/status/securesettings".format(
+            device.ip_address)
+        response = requests.get(settings_url)
+        dom = XML.fromstring(response.content)
+        # Elementtree does not support CData, so we have to go a long way round
+        command = dom.findtext('.//Command')
+        value =  XML.fromstring(command).attrib['Value']
+        info = value.split(',')
+        # Each service has four items. Only the first and second appear
+        # interesting. They are the service id (eg 2311 for spotify) and
+        # the username
+        services_ids = info[::4]
+        usernames = info[1::4]
+        data = cls._get_music_services_data().values()
+        service_names = []
+        for service_id in services_ids:
+            for service in data:
+                if service['ServiceID'] == service_id:
+                    service_names.append(service['Name'])
+                    break
+        services_info = zip(service_names, usernames)
+        return services_info
 
 # Looking at various services, we see that the following SOAP methods are
 # implemented, but not all in each service. Probably, the Capabilities property
