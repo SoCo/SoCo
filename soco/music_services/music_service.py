@@ -309,8 +309,9 @@ class MusicService(object):
         types = {'getMediaMetadataResult': {
             'mediaMetadata': [MEDIAMETADATA_TYPE]
         }}
-        response = self.soap_client.getMediaMetadata(
-            id=item_id, headers=self.headers)
+        response = self.soap_client.call(
+            'getMediaMetadata',
+            ('id', item_id), headers=self.headers)
         return response.getMediaMetadataResult.unmarshall(
             types, strict=False)['getMediaMetadataResult']
 
@@ -323,8 +324,9 @@ class MusicService(object):
         Returns:
             (str): The item's URI
         """
-        response = self.soap_client.getMediaURI(
-            id=item_id, headers=self.headers)
+        response = self.soap_client.call(
+            'getMediaURI',
+            ('id', item_id), headers=self.headers)
         return response.getMediaURIResult.unmarshall(
             types={'getMediaURIResult': str},
             strict=False)['getMediaURIResult']
@@ -346,10 +348,12 @@ class MusicService(object):
 
         """
         types = {'getMetadataResult': MEDIALIST_TYPE}
-
-        response = self.soap_client.getMetadata(
-            id=item_id, index=index, count=count, recursive=recursive,
-            headers=self.headers)
+        response = self.soap_client.call(
+            'getMetadata',
+            ('id', item_id), ('index', index),
+            ('count', count), ('recursive', recursive),
+            headers=self.headers
+        )
         return response.getMetadataResult.unmarshall(
             types, strict=False)['getMetadataResult']
 
@@ -375,9 +379,10 @@ class MusicService(object):
         if search_category is None:
             raise Exception("%s does not support the '%s' search category" % (
                 self.service_name, category))
-        response = self.soap_client.search(
-            id=search_category, term=term, index=index, count=count,
-            headers=self.headers)
+        response = self.soap_client.call(
+            'search',
+            ('id', search_category), ('term', term), ('index', index),
+            ('count', count), headers=self.headers)
         return response.searchResult.unmarshall(
             types, strict=False)['searchResult']
 
