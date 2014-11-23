@@ -19,7 +19,7 @@ from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import CannotCreateDIDLMetadata
+from .exceptions import CannotCreateDIDLMetadata, SoCoUPnPException
 from .data_structures import get_didl_object, DidlPlaylistContainer,\
     DidlContainer, SearchResult, Queue, DidlObject, DidlMusicTrack
 from .utils import really_utf8, camel_to_underscore, url_escape_path,\
@@ -1795,8 +1795,10 @@ class SoCo(_SocoSingletonBase):
         else:
             return None
 
+    # pylint: disable=too-many-locals
     def search_track(self, artist, album=None, track=None,
-                     start=0, max_items=100, full_album_art_uri=False):
+                     start=0, max_items=100, full_album_art_uri=False,
+                     fuzzy=False):
         """Search for an artist, artist's albums, or specific track.
 
         Keyword arguments:
@@ -1808,19 +1810,31 @@ class SoCo(_SocoSingletonBase):
             max_items (int): The maximum number of items to return
             full_album_art_uri(bool): If the album art URI should include the
                 IP address
+            fuzzy (bool): If the search should be fuzzy and matches a
+                prefix of the name. Otherwise looks for an exact match.
 
         Returns:
-            dict: A :py:class:`~.soco.data_structures.SearchResult` object
+            SearchResult: A :py:class:`~.soco.data_structures.SearchResult`
+            object. NOTE: The items in the results are sorted, which means
+            that the properties `number_returned` and `total_matches` will
+            not contain the correct numbers for the items returned, but are
+            the correct numbers to use to continue the search, if it has
+            been broken down into pieces.  Returns an empty result if there
+            is nothing found.
 
-        Raises:
-            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                found
         """
-        search = really_unicode('A:ALBUMARTIST/') + url_escape_path(artist)
+        search = really_unicode('A:ALBUMARTIST')
+        search += ':' if fuzzy else '/'
+        search += url_escape_path(artist)
         if album is not None:
             search += really_unicode('/') + url_escape_path(album)
 
-        response, metadata = self._music_lib_search(search, start, max_items)
+        try:
+            response, metadata = self._music_lib_search(search, start,
+                                                        max_items)
+        except SoCoUPnPException as exception:
+            if exception.error_code == '701':
+                return SearchResult([], 'search_tracks', 0, 0, None)
 
         metadata['search_type'] = 'browse'
 
