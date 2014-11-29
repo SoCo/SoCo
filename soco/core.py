@@ -237,6 +237,7 @@ class SoCo(_SocoSingletonBase):
                                             from the current queue.
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
+        get_item_album_art_uri -- Get an item's Album Art absolute URI.
 
     Properties::
 
@@ -1024,6 +1025,18 @@ class SoCo(_SocoSingletonBase):
             ('DesiredLEDState', led_state),
             ])
 
+    def _build_album_art_full_uri(self, url):
+        """ Ensure an Album Art URI is an absolute URI
+
+        :param url: The album art URI
+        """
+
+        # Add on the full album art link, as the URI version
+        # does not include the ipaddress
+        if not url.startswith(('http:', 'https:')):
+            url = 'http://' + self.ip_address + ':1400' + url
+        return url
+
     def get_current_track_info(self):
         """ Get information about the currently playing track.
 
@@ -1092,16 +1105,11 @@ class SoCo(_SocoSingletonBase):
             if md_album:
                 track['album'] = md_album
 
-            album_art = metadata.findtext(
+            album_art_url = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-            if album_art is not None:
-                url = metadata.findtext(
-                    './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-                if url.startswith(('http:', 'https:')):
-                    track['album_art'] = url
-                else:
-                    track['album_art'] = 'http://' + self.ip_address + ':1400'\
-                        + url
+            if album_art_url is not None:
+                track['album_art'] = self._build_album_art_full_uri(
+                    album_art_url)
 
         return track
 
@@ -1683,18 +1691,13 @@ class SoCo(_SocoSingletonBase):
         return result
 
     def _update_album_art_to_full_uri(self, item):
-        """Updated the Album Art URI to be fully qualified
+        """Update an item's Album Art URI to be an absolute URI
 
         :param item: The item to update the URI for
         """
-        if not getattr(item, 'album_art_uri', False):
-            return
-
-        # Add on the full album art link, as the URI version
-        # does not include the ipaddress
-        if not item.album_art_uri.startswith(('http:', 'https:')):
-            item.album_art_uri = 'http://' + self.ip_address + ':1400' +\
-                item.album_art_uri
+        if getattr(item, 'album_art_uri', False):
+            item.album_art_uri = self._build_album_art_full_uri(
+                item.album_art_uri)
 
     def create_sonos_playlist(self, title):
         """ Create a new empty Sonos playlist.
@@ -1779,6 +1782,14 @@ class SoCo(_SocoSingletonBase):
                                         # do not known the meaning of this
                                         # "magic" number.
             ])
+
+    def get_item_album_art_uri(self, item):
+        """ Get an item's Album Art absolute URI. """
+
+        if getattr(item, 'album_art_uri', False):
+            return self._build_album_art_full_uri(item.album_art_uri)
+        else:
+            return None
 
 # definition section
 
