@@ -33,7 +33,7 @@ class MusicService(object):
         Print all the services Sonos knows about
 
         >>> from soco.music_services import MusicService
-        >>> from pprint import ppring
+        >>> from pprint import pprint
         >>> print (MusicService.get_all_music_services())
         ['Spotify',
          'The Hype Machine',
@@ -55,7 +55,10 @@ class MusicService(object):
         >>> tunein = MusicService('TuneIn')
         >>> print tunein
         <MusicService 'TuneIn' at 0x10ad84e10>
-        >>> pprint (tunein.get_metadata(item_id='root'))
+
+        Browse an item. By default, the root item is used.
+
+        >>> pprint (tunein.get_metadata())
         {'count': 5,
          'index': 0,
          'mediaCollection': ({'albumArtURI': u'http://spotify-...',
@@ -74,7 +77,9 @@ class MusicService(object):
                               'title': u'Starred'},
                             ...),
          'total': 5}
-        # Get some metadata about a track
+
+        Get some metadata about a specific track
+
         >>> response =  spotify.get_media_metadata(
         ... item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
         >>> print (response)
@@ -201,13 +206,9 @@ class MusicService(object):
         available_services = device.musicServices.ListAvailableServices()
         descriptor_list_xml = available_services[
             'AvailableServiceDescriptorList']
-        # AvailableServiceTypeList is a comma separated string of service ids,
-        # so we split it. Each entry corresponds with an entry in
-        # AvailableServicesDescriptorList
-        id_list = available_services['AvailableServiceTypeList'].split(',')
         root = XML.fromstring(descriptor_list_xml.encode('utf-8'))
         result = {}
-        for service, service_id in zip(root, id_list):
+        for service in root:
             auth_element = (service.find('Policy'))
             auth = auth_element.attrib
             result_value = service.attrib.copy()
@@ -216,7 +217,15 @@ class MusicService(object):
             if presentation_element is not None:
                 result_value['PresentationMapUri'] = presentation_element.get(
                     'Uri')
-            result_value['ServiceID'] = service_id
+            result_value['ServiceID'] = service.get('Id')
+
+            # ServiceType is used elsewhere in Sonos, eg to form tokens, and
+            # get_subscribed_music_services() below
+            # Its value always seems to be (ID*256) + 7.
+            # Some serviceTypes are listed in
+            # available_services['AvailableServiceTypeList'] but this does not
+            # seem to be comprehensive
+            result_value['ServiceType'] = str(int(service.get('Id'))*256 + 7)
             result[service.get('Name')] = result_value
         cls._music_services_data = result
         return result
@@ -260,15 +269,15 @@ class MusicService(object):
         value = XML.fromstring(command).attrib['Value']
         info = value.split(',')
         # Each service has four items. Only the first and second appear
-        # interesting. They are the service id (eg 2311 for spotify) and
+        # interesting. They are the serviceType (eg 2311 for spotify) and
         # the username
-        services_ids = info[::4]
+        services_types = info[::4]
         usernames = info[1::4]
         data = cls._get_music_services_data().values()
         service_names = []
-        for service_id in services_ids:
+        for service_type in services_types:
             for service in data:
-                if service['ServiceID'] == service_id:
+                if service['ServiceType'] == service_type:
                     service_names.append(service['Name'])
                     break
         services_info = zip(service_names, usernames)
