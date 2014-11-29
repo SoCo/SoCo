@@ -800,6 +800,31 @@ class SoCo(_SocoSingletonBase):
 # </ZoneGroups>
 #
 
+        def parse_zone_group_member(member_element):
+            """ Parse a ZoneGroupMember or Satellite element from Zone Group
+            State, create a SoCo instance for the member, set basic attributes
+            and return it. """
+            # Create a SoCo instance for each member. Because SoCo
+            # instances are singletons, this is cheap if they have already
+            # been created, and useful if they haven't. We can then
+            # update various properties for that instance.
+            member_attribs = member_element.attrib
+            ip_addr = member_attribs['Location'].\
+                split('//')[1].split(':')[0]
+            zone = config.SOCO_CLASS(ip_addr)
+            # uid doesn't change, but it's not harmful to (re)set it, in case
+            # the zone is as yet unseen.
+            zone._uid = member_attribs['UUID']
+            zone._player_name = member_attribs['ZoneName']
+            # add the zone to the set of all members, and to the set
+            # of visible members if appropriate
+            is_visible = False if member_attribs.get(
+                'Invisible') == '1' else True
+            if is_visible:
+                self._visible_zones.add(zone)
+            self._all_zones.add(zone)
+            return zone
+
         # This is called quite frequently, so it is worth optimising it.
         # Maintain a private cache. If the zgt has not changed, there is no
         # need to repeat all the XML parsing. In addition, switch on network
@@ -822,15 +847,10 @@ class SoCo(_SocoSingletonBase):
             group_coordinator = None
             members = set()
             for member_element in group_element.findall('ZoneGroupMember'):
-                # Create a SoCo instance for each member. Because SoCo
-                # instances are singletons, this is cheap if they have already
-                # been created, and useful if they haven't. We can then
-                # update various properties for that instance.
-                member_attribs = member_element.attrib
-                ip_addr = member_attribs['Location'].\
-                    split('//')[1].split(':')[0]
-                zone = config.SOCO_CLASS(ip_addr)
-                zone._uid = member_attribs['UUID']
+                zone = parse_zone_group_member(member_element)
+                # Perform extra processing relevant to direct zone group
+                # members
+                #
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
                 if zone._uid == coordinator_uid:
@@ -838,20 +858,22 @@ class SoCo(_SocoSingletonBase):
                     zone._is_coordinator = True
                 else:
                     zone._is_coordinator = False
-                zone._player_name = member_attribs['ZoneName']
-                # uid and is_bridge do not change, but it does no real harm to
-                # set/reset them here, just in case the zone has not been seen
+                # is_bridge doesn't change, but it does no real harm to
+                # set/reset it here, just in case the zone has not been seen
                 # before
-                zone._is_bridge = True if member_attribs.get(
+                zone._is_bridge = True if member_element.attrib.get(
                     'IsZoneBridge') == '1' else False
-                is_visible = False if member_attribs.get(
-                    'Invisible') == '1' else True
-                # add the zone to the members for this group, and to the set of
-                # all members, and to the set of visible members if appropriate
+                # add the zone to the members for this group
                 members.add(zone)
-                self._all_zones.add(zone)
-                if is_visible:
-                    self._visible_zones.add(zone)
+                # Loop over Satellite elements if present, and process as for
+                # ZoneGroup elements
+                for satellite_element in member_element.findall('Satellite'):
+                    zone = parse_zone_group_member(satellite_element)
+                    # Assume a satellite can't be a bridge or coordinator, so
+                    # no need to check.
+                    #
+                    # Add the zone to the members for this group.
+                    members.add(zone)
                 # Now create a ZoneGroup with this info and add it to the list
                 # of groups
             self._groups.add(ZoneGroup(group_uid, group_coordinator, members))

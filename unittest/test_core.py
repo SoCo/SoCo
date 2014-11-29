@@ -63,6 +63,52 @@ ZGS = """<ZoneGroups>
             UUID="RINCON_000YYY1400"
             ZoneName="Kitchen"/>
       </ZoneGroup>
+      <ZoneGroup Coordinator="RINCON_000PPP1400" ID="RINCON_000PPP1400:49">
+        <ZoneGroupMember
+            BootSeq="8"
+            Configuration="1"
+            HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR;RINCON_000SSS1400:LR;RINCON_000QQQ1400:SW"
+            Icon="x-rincon-roomicon:living"
+            Location="http://192.168.1.103:1400/xml/device_description.xml"
+            MinCompatibleVersion="22.0-00000"
+            SoftwareVersion="24.0-71060"
+            UUID="RINCON_000PPP1400"
+            ZoneName="Home Theatre">
+          <Satellite
+              BootSeq="4"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000QQQ1400:SW"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.104:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000QQQ1400"
+              ZoneName="Home Theatre"/>
+          <Satellite
+              BootSeq="6"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.105:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000RRR1400"
+              ZoneName="Home Theatre"/>
+          <Satellite
+              BootSeq="4"
+              Configuration="1"
+              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000SSS1400:LR"
+              Icon="x-rincon-roomicon:living"
+              Invisible="1"
+              Location="http://192.168.1.106:1400/xml/device_description.xml"
+              MinCompatibleVersion="22.0-00000"
+              SoftwareVersion="24.0-71060"
+              UUID="RINCON_000SSS1400"
+              ZoneName="Home Theatre"/>
+        </ZoneGroupMember>
+      </ZoneGroup>
     </ZoneGroups>"""
 
 @pytest.yield_fixture
@@ -480,9 +526,9 @@ class TestZoneGroupTopology:
 
     def test_all_groups(self, moco_zgs):
         groups = moco_zgs.all_groups
-        assert len(groups) == 2
+        assert len(groups) == 3
         # Check 3 unique groups
-        assert len(set(groups)) == 2
+        assert len(set(groups)) == 3
         for group in groups:
             assert isinstance(group, ZoneGroup)
 
@@ -496,16 +542,16 @@ class TestZoneGroupTopology:
 
     def test_all_zones(selfself, moco_zgs):
         zones = moco_zgs.all_zones
-        assert len(zones) == 3
-        assert len(set(zones)) == 3
+        assert len(zones) == 7
+        assert len(set(zones)) == 7
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
     def test_visible_zones(selfself, moco_zgs):
         zones = moco_zgs.visible_zones
-        assert len(zones) == 2
-        assert len(set(zones)) == 2
+        assert len(zones) == 3
+        assert len(set(zones)) == 3
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
