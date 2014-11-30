@@ -398,7 +398,7 @@ class TestAVTransport:
             ('Filter', '*'),
             ('StartingIndex', 0),
             ('RequestedCount', 1),
-            ('SortCriteria', u'')
+            ('SortCriteria', '')
         ])
         moco.avTransport.AddURIToSavedQueue.assert_called_once_with(
             [('InstanceID', 0),
