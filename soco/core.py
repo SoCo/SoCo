@@ -1592,8 +1592,9 @@ class SoCo(_SocoSingletonBase):
         search = self.SEARCH_TRANSLATION[search_type]
 
         # Check if the string ID already has the type, if so we do not want to
-        # add one
-        if idstring.startswith(search):
+        # add one also Imported playlist have a full path to them, so they do
+        # not require the A:PLAYLISTS part first
+        if idstring.startswith(search) or (search_type == 'playlists'):
             search = ""
 
         search_item_id = search + idstring
