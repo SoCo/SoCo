@@ -52,8 +52,11 @@ class TalkerPlugin(SoCoPlugin):
         if zoneNames:
             assert type(zoneNames) == list and all([zone in nameList for zone in zoneNames]), \
                 'Speaker object must be instantiated with a list of existing zone names on your network'
+            speakingSoCos = [zone for zone in zoneList if zone.player_name in zoneNames]
+        else:
+            speakingSoCos = zoneList
 
-        speakingSoCos = [zone for zone in zoneList if zone.player_name in zoneNames]
+
 
         self.masterSoCo = speakingSoCos[0]
         speakingSoCos.pop(0)
