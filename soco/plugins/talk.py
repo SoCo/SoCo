@@ -43,6 +43,8 @@ class TalkerPlugin(SoCoPlugin):
             discovered = soco.discover(timeout=2)
             iter += 1
 
+        assert discovered is not None, 'Connection to Sonos system failed.'
+
         zoneList = []
         nameList = []
         for zone in discovered:
@@ -206,7 +208,7 @@ class GoogleTTS(object):
 def testStuff():
     import soco
     talker = TalkerPlugin(soco,'/Users/Jeff/BitBucket/Personal/Python/SonosExperiments/AudioMessages/talkOutput.mp3',
-                          'x-file-cifs://MACBOOKPRO-5A98/AudioMessages/talkOutput.mp3',['Office'])
+                          'x-file-cifs://MACBOOKPRO-5A98/AudioMessages/talkOutput.mp3')
 
     talker.talk(volume='75')
 
