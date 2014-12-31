@@ -57,7 +57,7 @@ def discover(timeout=1, include_invisible=False):
         socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     # UPnP v1.0 requires a TTL of 4
     _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-        struct.pack("B", 4))
+                     struct.pack("B", 4))
     # Send a few times. UDP is unreliable
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
