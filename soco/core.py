@@ -14,6 +14,7 @@ import re
 import itertools
 import requests
 import time
+import structt
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -55,7 +56,8 @@ def discover(timeout=1, include_invisible=False):
     _sock = socket.socket(
         socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     # UPnP v1.0 requires a TTL of 4
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
+    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+        struct.pack("B", 4))
     # Send a few times. UDP is unreliable
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
