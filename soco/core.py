@@ -14,7 +14,7 @@ import re
 import itertools
 import requests
 import time
-import structt
+import struct
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
