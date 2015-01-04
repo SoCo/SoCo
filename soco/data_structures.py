@@ -726,6 +726,21 @@ class DidlMusicAlbum(DidlAlbum):
     )
 
 
+class DidlMusicAlbumFavorite(DidlAlbum):
+
+    """Class that represents a Sonos favorite music library album.
+
+    This class is not part of the DIDL spec and is Sonos specific.
+
+    """
+
+    item_class = 'object.container.album.musicAlbum.sonos-favorite'
+    # Despite the fact that the item derives from object.container, it's
+    # XML does not include a <container> tag, but an <item> tag. This seems
+    # to be an error by Sonos.
+    tag = 'item'
+
+
 class DidlPerson(DidlContainer):
 
     """A content directory class representing a person."""
