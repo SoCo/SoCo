@@ -101,7 +101,7 @@ def discover(timeout=1, include_invisible=False):
 
         if response:
             data, addr = _sock.recvfrom(1024)
-            if "Sonos" not in data:
+            if b"Sonos" not in data:
                 continue
 
             # Now we have an IP, we can build a SoCo instance and query that
