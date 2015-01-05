@@ -18,3 +18,5 @@ script:
 
 after_script:
   - coveralls
+  
+sudo: false
