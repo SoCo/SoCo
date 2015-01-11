@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0302,fixme, protected-access
-""" The core module contains SonosDiscovery and SoCo classes that implement
+""" The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
 
@@ -11,7 +11,6 @@ import socket
 import logging
 from textwrap import dedent
 import re
-import itertools
 import requests
 import time
 import struct
@@ -114,27 +113,6 @@ def discover(timeout=1, include_invisible=False):
                 return zone.all_zones
             else:
                 return zone.visible_zones
-
-
-class SonosDiscovery(object):  # pylint: disable=R0903
-    """Retained for backward compatibility only. Will be removed in future
-    releases
-
-    .. deprecated:: 0.7
-       Use :func:`discover` instead.
-
-    """
-
-    def __init__(self):
-        import warnings
-        warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
-
-    @staticmethod
-    def get_speaker_ips():
-        """ Deprecated in favour of discover() """
-        import warnings
-        warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
-        return [i.ip_address for i in discover()]
 
 
 class _ArgsSingleton(type):
@@ -454,19 +432,6 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CrossfadeMode', crossfade_value)
             ])
-
-    @property
-    def speaker_ip(self):
-        """Retained for backward compatibility only. Will be removed in future
-        releases
-
-        .. deprecated:: 0.7
-           Use :attr:`ip_address` instead.
-
-        """
-        import warnings
-        warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
-        return self.ip_address
 
     def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
@@ -1152,39 +1117,6 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
 
             return self.speaker_info
-
-    def get_group_coordinator(self, zone_name):
-        """
-        .. deprecated:: 0.8
-           Use :meth:`group` or :meth:`all_groups` instead.
-
-        """
-        import warnings
-        warnings.warn(
-            "get_group_coordinator is deprecated. "
-            "Use the group or all_groups methods instead")
-        for group in self.all_groups:
-            for member in group:
-                if member.player_name == zone_name:
-                    return group.coordinator.ip_address
-        return None
-
-    def get_speakers_ip(self, refresh=False):
-        """ Get the IP addresses of all the Sonos speakers in the network.
-
-        Arguments:
-            refresh -- Refresh the speakers IP cache. Ignored. For backward
-            compatibility only
-
-        Returns:
-            a set of IP addresses of the Sonos speakers.
-
-        .. deprecated:: 0.8
-
-
-        """
-        # pylint: disable=star-args, unused-argument
-        return set(z.ip_address for z in itertools.chain(*self.all_groups))
 
     def get_current_transport_info(self):
         """ Get the current playback state

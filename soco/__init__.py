@@ -14,14 +14,13 @@ __website__ = 'https://github.com/SoCo/SoCo'
 __license__ = 'MIT License'
 
 
-from .core import discover, SoCo, SonosDiscovery
+from .core import discover, SoCo
 from .exceptions import SoCoException, UnknownSoCoException
 
 # You really should not `import *` - it is poor practice
 # but if you do, here is what you get:
 __all__ = [
     'discover',
-    'SonosDiscovery',
     'SoCo',
     'SoCoException',
     'UnknownSoCoException',
