@@ -712,6 +712,10 @@ class DidlMusicAlbum(DidlAlbum):
     """Class that represents a music library album. """
 
     item_class = 'object.container.album.musicAlbum'
+    # Despite the fact that the item derives from object.container, it's
+    # XML does not include a <container> tag, but an <item> tag. This seems
+    # to be an error by Sonos.
+    tag = 'item'
     # name: (ns, tag)
     # pylint: disable=protected-access
     _translation = DidlAudioItem._translation.copy()
