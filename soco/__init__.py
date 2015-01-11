@@ -14,7 +14,8 @@ __website__ = 'https://github.com/SoCo/SoCo'
 __license__ = 'MIT License'
 
 
-from .core import discover, SoCo
+from .core import SoCo
+from .discovery import discover
 from .exceptions import SoCoException, UnknownSoCoException
 
 # You really should not `import *` - it is poor practice
