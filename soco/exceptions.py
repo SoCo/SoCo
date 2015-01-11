@@ -30,8 +30,19 @@ class SoCoUPnPException(SoCoException):
 
 
 class CannotCreateDIDLMetadata(SoCoException):
+    """ Deprecated in v.0.11 and will be removed in a future version.
+
+    Use DIDLMetadataError instead.
+    """
+
+
+class DIDLMetadataError(CannotCreateDIDLMetadata):
     """ Raised if a data container class cannot create the DIDL metadata due to
-    missing information
+    missing information.
+
+    For backward compatibility, this is currently a subclass of
+    CannotCreateDIDLMetadata. In a future version, it will likely become a
+    direct subclass of SoCoException.
 
     """
 

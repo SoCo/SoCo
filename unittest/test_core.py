@@ -351,7 +351,7 @@ class TestAVTransport:
         assert playlist.title == playlist_name
         expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
             playlist_id)
-        assert playlist.uri == expected_uri
+        assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"
 
     def test_create_sonos_playlist_from_queue(self, moco):
@@ -369,7 +369,7 @@ class TestAVTransport:
         assert playlist.title == playlist_name
         expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
             playlist_id)
-        assert playlist.uri == expected_uri
+        assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"
 
     def test_add_item_to_sonos_playlist(self, moco):

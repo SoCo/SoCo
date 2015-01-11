@@ -9,10 +9,9 @@
 
 from __future__ import unicode_literals
 
-from .xml import XML
-from .exceptions import CannotCreateDIDLMetadata
+from .xml import XML, ns_tag, NAMESPACES
+from .exceptions import DIDLMetadataError
 from .utils import camel_to_underscore
-from .data_structures import NS, ns_tag
 
 
 def get_ms_item(xml, service, parent_id):
@@ -111,7 +110,7 @@ class MusicServiceItem(object):
         # Extract values from the XML
         all_text_elements = tags_with_text(xml)
         for item in all_text_elements:
-            tag = item.tag[len(NS['ms']) + 2:]  # Strip namespace
+            tag = item.tag[len(NAMESPACES['ms']) + 2:]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
             if tag not in cls.valid_fields:
                 message = 'The info tag \'{0}\' is not allowed for this item'.\
@@ -237,19 +236,19 @@ class MusicServiceItem(object):
         if not self.can_play:
             message = 'This item is not meant to be played and therefore '\
                 'also not to create its own didl_metadata'
-            raise CannotCreateDIDLMetadata(message)
+            raise DIDLMetadataError(message)
         # Check if we have the attributes to create the didl metadata:
         for key in ['extended_id', 'title', 'item_class']:
             if not hasattr(self, key):
                 message = 'The property \'{0}\' is not present on this item. '\
                     'This indicates that this item was not meant to create '\
                     'didl_metadata'.format(key)
-                raise CannotCreateDIDLMetadata(message)
+                raise DIDLMetadataError(message)
         if 'description' not in self.content:
             message = 'The item for \'description\' is not present in '\
                 'self.content. This indicates that this item was not meant '\
                 'to create didl_metadata'
-            raise CannotCreateDIDLMetadata(message)
+            raise DIDLMetadataError(message)
 
         # Main element, ugly? yes! but I have given up on using namespaces
         # with xml.etree.ElementTree

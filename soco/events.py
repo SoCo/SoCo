@@ -24,7 +24,7 @@ from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
 from .xml import XML
 from .exceptions import SoCoException
 from .utils import camel_to_underscore
-from .data_structures import get_didl_object
+from .data_structures import from_didl_string
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -132,13 +132,7 @@ def parse_event_xml(xml_event):
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
                     if value.startswith('<DIDL-Lite'):
-                        didl_xml = XML.fromstring(value.encode('utf-8'))
-                        # Get the item sub-element
-                        item_xml = didl_xml.find(
-                            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}"
-                            "item"
-                            )
-                        value = get_didl_object(item_xml)
+                        value = from_didl_string(value)[0]
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
