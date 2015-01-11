@@ -10,7 +10,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as XML
 
-Namespaces = {
+NAMESPACES = {
     'dc': 'http://purl.org/dc/elements/1.1/',
     'upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
     '': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
@@ -31,13 +31,13 @@ except AttributeError:
         # pylint: disable=protected-access
         XML2._namespace_map[a_uri] = a_prefix
 
-for prefix, uri in Namespaces.items():
+for prefix, uri in NAMESPACES.items():
     register_namespace(prefix, uri)
 
 
 def ns_tag(ns_id, tag):
     """Return a namespace/tag item. The ns_id is translated to a full name
-    space via the Namespaces variable.
+    space via the NAMESPACES variable.
 
     """
-    return '{{{0}}}{1}'.format(Namespaces[ns_id], tag)
+    return '{{{0}}}{1}'.format(NAMESPACES[ns_id], tag)
