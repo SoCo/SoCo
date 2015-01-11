@@ -343,7 +343,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             xml (Element): An :py:class:`xml.etree.ElementTree.Element` object.
 
         """
-        # Check we have the right sort of element
+        # Check we have the right sort of element. tag can be an empty string
+        # which indicates that any tag is allowed (see eg the musicAlbum DIDL
+        # class)
         if not element.tag.endswith(cls.tag):
             raise DIDLMetadataError(
                 "Wrong element. Expected '<{0}>',"
@@ -712,10 +714,11 @@ class DidlMusicAlbum(DidlAlbum):
     """Class that represents a music library album. """
 
     item_class = 'object.container.album.musicAlbum'
-    # Despite the fact that the item derives from object.container, it's
-    # XML does not include a <container> tag, but an <item> tag. This seems
-    # to be an error by Sonos.
-    tag = 'item'
+    # According to the spec, all musicAlbums should be represented in
+    # XML by a <container> tag. Sonos sometimes uses <container> and
+    # sometimes uses <item>. Set the tag type to '' to indicate that
+    # either is allowed.
+    tag = ''
     # name: (ns, tag)
     # pylint: disable=protected-access
     _translation = DidlAudioItem._translation.copy()
