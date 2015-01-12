@@ -178,6 +178,7 @@ class Event(object):
         # overridden, and will not allow direct setting of attributes
         self.__dict__['sid'] = sid
         self.__dict__['seq'] = seq
+	self.__dict__['timestamp'] = time.time()
         self.__dict__['service'] = service
         self.__dict__['variables'] = variables if variables is not None else {}
 
