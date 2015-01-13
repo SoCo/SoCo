@@ -206,6 +206,8 @@ class SoCo(_SocoSingletonBase):
         self._visible_zones = set()
         self._zgs_cache = None
 
+        _LOG.debug("Created SoCo instance for ip: %s", ip_address)
+
     def __str__(self):
         return "<{0} object at ip {1}>".format(
             self.__class__.__name__, self.ip_address)
