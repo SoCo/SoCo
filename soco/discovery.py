@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-""" The core module contains the SoCo class that implements
-the main entry to the SoCo functionality
-"""
+""" Discovery of Sonos devices on the network. """
 
 from __future__ import unicode_literals
 
