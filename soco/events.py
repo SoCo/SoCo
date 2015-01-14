@@ -155,6 +155,8 @@ class Event(object):
     Args:
         sid (str): the subscription id
         seq (str): the event sequence number for that subscription
+        timestamp (str): the time that the event was received (from python's
+            time.time() function)
         service (str): the service which is subscribed to the event
         variables (dict): contains the {names: values} of the evented variables
 
@@ -172,12 +174,13 @@ class Event(object):
         which was not returned in the event.
 
     """
-    # pylint: disable=too-few-public-methods
-    def __init__(self, sid, seq, service, variables=None):
+    # pylint: disable=too-few-public-methods, too-many-arguments
+    def __init__(self, sid, seq, service, timestamp, variables=None):
         # Initialisation has to be done like this, because __setattr__ is
         # overridden, and will not allow direct setting of attributes
         self.__dict__['sid'] = sid
         self.__dict__['seq'] = seq
+        self.__dict__['timestamp'] = timestamp
         self.__dict__['service'] = service
         self.__dict__['variables'] = variables if variables is not None else {}
 
@@ -206,6 +209,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
     def do_NOTIFY(self):  # pylint: disable=invalid-name
         """ Handle a NOTIFY request.  See the UPnP Spec for details."""
+        timestamp = time.time()
         headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
         sid = headers['sid']  # Event Subscription Identifier
@@ -216,10 +220,10 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
             service = _sid_to_service.get(sid)
         variables = parse_event_xml(content)
         # Build the Event object
-        event = Event(sid, seq, service, variables)
+        event = Event(sid, seq, service, timestamp, variables)
         log.info(
-            "Event %s received for %s service on thread %s", seq,
-            service.service_id, threading.current_thread())
+            "Event %s received for %s service on thread %s at %s", seq,
+            service.service_id, threading.current_thread(), timestamp)
         log.debug("Event content: %s", content)
         # pass the event details on to the service so it can update its cache.
         if service is not None:  # It might have been removed by another thread
