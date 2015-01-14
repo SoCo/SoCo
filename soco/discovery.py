@@ -13,13 +13,27 @@ from soco import config
 from .utils import really_utf8
 
 
-def discover(timeout=1, include_invisible=False):
+def discover(timeout=1, include_invisible=False, interface_addr=None):
     """ Discover Sonos zones on the local network.
 
-    Return an set of visible SoCo instances for each zone found.
+    Return an set of SoCo instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
     `include_invisible` is True. Will block for up to `timeout` seconds, after
     which return `None` if no zones found.
+
+    Args:
+        timeout (int): block for this many seconds, at most. Default 1
+        include_invisible (bool): include invisible zones in the return set.
+            Default False
+        interface_addr (str): Discovery operates by sending UDP multicast
+            datagrams. interface_addr is a string (dotted quad) representation
+            of the network interface address to use as the source of the
+            datagrams (i.e. it is a value for IP_MULTICAST_IF). If None or not
+            specified, the system default interface for UDP multicast messages
+            will be used. This is probably what you want to happen.
+
+    Returns:
+        (set): a set of SoCo instances, one for each zone found, or else None.
 
     """
 
@@ -39,6 +53,16 @@ def discover(timeout=1, include_invisible=False):
     # UPnP v1.0 requires a TTL of 4
     _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
                      struct.pack("B", 4))
+    # Use the specified interface, if any
+    if interface_addr is not None:
+        try:
+            address = socket.inet_aton(interface_addr)
+        except socket.error:
+            raise ValueError("{0} is not a valid IP address string".format(
+                interface_addr))
+        _sock.setsockopt(
+            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, address)
+
     # Send a few times. UDP is unreliable
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
