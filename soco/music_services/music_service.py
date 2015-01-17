@@ -241,41 +241,70 @@ class MusicService(object):
     def get_subscribed_music_services(cls):
         """ Return a list of subscribed music services and their usernames.
 
+        TuneIn is always present, and will not appear in the returned list.
+
         Returns:
             (list): A list of (service_name, username) tuples
         """
         # Data on subscribed services is available at
-        # http://{Player_IP}:1400/status/securesettings, which returns XML
+        # http://{Player_IP}:1400/status/accounts, which returns XML
         # containing something like this:
-        # <?xml version="1.0" ?>
-        # <?xml-stylesheet ...>
-        # <ZPSupportInfo type="User"><Command cmdline= ...>
-        #    <![CDATA[<]]>Setting Name=&quot;R_SvcAccounts&quot;
-        # Value=&quot;2311,115721712,1,XXXX,41479,,1,XXXX,41735,,1,XXXX&quot;/
-        # <![CDATA[>]]>
-        # </Command></ZPSupportInfo>
+        # <?xml version="1.0"?> ...
+        # <ZPSupportInfo type="User">
+        #     <Accounts LastUpdateDevice="RINCON_000XXXXXXXXXXXXXX" Version="8"
+        #       NextSerialNum="5">
+        #         <Account Type="2311" SerialNum="1">
+        #             <UN>123456789</UN>
+        #             <MD>1</MD>
+        #             <NN/>
+        #             <OADevID/>
+        #             <Key/>
+        #         </Account>
+        #         <Account Type="41735" SerialNum="3">
+        #             <UN/>
+        #             <MD>1</MD>
+        #             <NN/>
+        #             <OADevID/>
+        #             <Key/>
+        #         </Account>
+        #         <Account Type="519" SerialNum="4">
+        #             <UN>user@example.com</UN>
+        #             <MD>1</MD>
+        #             <NN/>
+        #             <OADevID/>
+        #             <Key/>
+        #         </Account>
+        #         <Account Type="41479" SerialNum="2">
+        #             <UN/>
+        #             <MD>1</MD>
+        #             <NN/>
+        #             <OADevID/>
+        #             <Key/>
+        #         </Account>
+        #     </Accounts>
+        # </ZPSupportInfo>
+
         #
         # It is likely that the same information is available over UPnP as well
         # via a call to
         # systemProperties.GetStringX([('VariableName','R_SvcAccounts')]))
         # This returns an encrypted string, and, so far, we cannot decrypt it
         device = SoCo.any_soco()
-        settings_url = "http://{0}:1400/status/securesettings".format(
+        settings_url = "http://{0}:1400/status/accounts".format(
             device.ip_address)
         response = requests.get(settings_url)
         dom = XML.fromstring(response.content)
-        # Elementtree does not support CData, so we have to go a long way round
-        command = dom.findtext('.//Command')
-        value = XML.fromstring(command).attrib['Value']
-        info = value.split(',')
-        # Each service has four items. Only the first and second appear
-        # interesting. They are the serviceType (eg 2311 for spotify) and
-        # the username
-        services_types = info[::4]
-        usernames = info[1::4]
+        accounts = dom.findall('.//Account')
+        service_types = []
+        usernames = []
+        for account in accounts:
+            service_types.append(account.get('Type'))
+            usernames.append(account.findtext('UN'))
+        # for each service type, look up its name
+        # We should make this faster, perhaps with a dict lookup
         data = cls._get_music_services_data().values()
         service_names = []
-        for service_type in services_types:
+        for service_type in service_types:
             for service in data:
                 if service['ServiceType'] == service_type:
                     service_names.append(service['Name'])
