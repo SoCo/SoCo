@@ -65,9 +65,10 @@ DUMMY_EVENT = """
 
 def test_event_object():
     # Basic initialisation
-    dummy_event = Event('123', '456', 'dummy', {'zone': 'kitchen'})
+    dummy_event = Event('123', '456', 'dummy', 123456.7, {'zone': 'kitchen'})
     assert dummy_event.sid == '123'
     assert dummy_event.seq == '456'
+    assert dummy_event.timestamp == 123456.7
     assert dummy_event.service =='dummy'
     assert dummy_event.variables == {'zone':'kitchen'}
     # attribute access
