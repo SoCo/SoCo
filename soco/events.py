@@ -218,13 +218,13 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
         # find the relevant service from the sid
         with _sid_to_service_lock:
             service = _sid_to_service.get(sid)
-        variables = parse_event_xml(content)
-        # Build the Event object
-        event = Event(sid, seq, service, timestamp, variables)
         log.info(
             "Event %s received for %s service on thread %s at %s", seq,
             service.service_id, threading.current_thread(), timestamp)
         log.debug("Event content: %s", content)
+        variables = parse_event_xml(content)
+        # Build the Event object
+        event = Event(sid, seq, service, timestamp, variables)
         # pass the event details on to the service so it can update its cache.
         if service is not None:  # It might have been removed by another thread
             # pylint: disable=protected-access
