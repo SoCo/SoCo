@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import socket
 import select
 from textwrap import dedent
@@ -11,6 +12,8 @@ import struct
 
 from soco import config
 from .utils import really_utf8
+
+_LOG = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False, interface_addr=None):
@@ -78,6 +81,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
             socket.IPPROTO_IP, socket.IP_MULTICAST_IF, address)
 
     # Send a few times. UDP is unreliable
+    _LOG.info("Sending discovery packets")
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
@@ -120,6 +124,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
         if response:
             data, addr = _sock.recvfrom(1024)
+            _LOG.debug('Received discovery response from %s: "%s"', addr, data)
             if b"Sonos" not in data:
                 continue
 
