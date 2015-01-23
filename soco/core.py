@@ -958,6 +958,32 @@ class SoCo(_SocoSingletonBase):
             ])
 
     @property
+    def is_playing_radio(self):
+        """ Is the speaker playing radio?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+            ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-rincon-mp3radio:', track_uri) is not None
+
+    @property
+    def is_playing_line_in(self):
+        """ Is the speaker playing line in?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+            ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-rincon-stream:', track_uri) is not None
+
+    @property
     def is_playing_tv(self):
         """ Is the playbar speaker input from TV?
 
