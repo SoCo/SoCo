@@ -288,6 +288,7 @@ class TestAVTransport:
         )
 
     def test_is_playing_tv(self, moco):
+        moco.avTransport.reset_mock()
         moco.avTransport.GetPositionInfo.return_value = {
             'TrackURI': 'x-sonos-htastream:RINCON_00012345678901234:spdif'
         }
@@ -302,6 +303,42 @@ class TestAVTransport:
             'TrackURI': 'not-tv',
         }
         playing_tv = moco.is_playing_tv
+        assert not playing_tv
+
+    def test_is_playing_radio(self, moco):
+        moco.avTransport.reset_mock()
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'x-rincon-mp3radio://example.com:80/myradio'
+        }
+        playing_tv = moco.is_playing_radio
+        assert playing_tv
+        moco.avTransport.GetPositionInfo.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Channel', 'Master')]
+        )
+
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'not-radio',
+        }
+        playing_tv = moco.is_playing_radio
+        assert not playing_tv
+
+    def test_is_playing_line_in(self, moco):
+        moco.avTransport.reset_mock()
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'x-rincon-stream:blah-blah'
+        }
+        playing_tv = moco.is_playing_line_in
+        assert playing_tv
+        moco.avTransport.GetPositionInfo.assert_called_once_with(
+            [('InstanceID', 0),
+             ('Channel', 'Master')]
+        )
+
+        moco.avTransport.GetPositionInfo.return_value = {
+            'TrackURI': 'not-line-in',
+        }
+        playing_tv = moco.is_playing_line_in
         assert not playing_tv
 
     def test_create_sonos_playlist(self, moco):
