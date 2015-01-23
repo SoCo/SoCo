@@ -16,7 +16,6 @@ items such as tracks, playlists, composers, albums etc.
 # Although Sonos uses ContentDirectory v1, the document for v2 is more helpful:
 # http://upnp.org/specs/av/UPnP-av-ContentDirectory-v2-Service.pdf
 
-# TODO: Add Desc element
 
 from __future__ import unicode_literals
 
@@ -79,7 +78,7 @@ def from_didl_string(string):
             items.append(cls.from_element(elt))
         else:
             # <desc> elements are allowed as an immediate child of <DIDL-Lite>
-            # according to the spec, but I have not seen one in Sonos, so
+            # according to the spec, but I have not seen one there in Sonos, so
             # we treat them as illegal. May need to fix this if this
             # causes problems.
             raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
@@ -284,7 +283,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     }
 
     def __init__(self, title, parent_id, item_id, restricted=True,
-                 resources=None, **kwargs):
+                 resources=None, desc='RINCON_AssociatedZPUDN', **kwargs):
         r"""Construct and initialize a DidlObject.
 
         Args:
@@ -293,6 +292,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             item_id (str): The ID for the item
             restricted (bool): Whether the item can be modified
             resources (list): A list of resources for this object
+            desc (str): A didl descriptor, default RINCON_AssociatedZPUDN. This
+                is not the same as "description"! It is used for identifying
+                the relevant music service
             **kwargs: Extra metadata. What is allowed depends on the
                 _translation class attribute, which in turn depends on the DIDL
                 class
@@ -319,13 +321,17 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Resources is multi-valued, and dealt with separately
         self.resources = [] if resources is None else resources
 
+        # According to the spec, there may be one or more desc values. Sonos
+        # only seems to use one, so we won't bother with a list
+        self.desc = desc
+
         for key, value in kwargs.items():
             # For each attribute, check to see if this class allows it
             if key not in self._translation:
                 raise ValueError(
                     'The key \'{0}\' is not allowed as an argument. Only '
                     'these keys are allowed: parent_id, item_id, title, '
-                    'restricted, resources, '
+                    'restricted, resources, desc'
                     ' {1}'.format(key, ', '.join(self._translation.keys())))
             # It is an allowed attribute. Set it as an attribute on self, so
             # that it can be accessed as Classname.attribute in the normal
@@ -384,6 +390,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             resources.append(
                 DidlResource.from_element(res_elt))
 
+        # and the desc element (There is only one in Sonos)
+        desc = element.findtext(ns_tag('', 'desc'))
+
         # Get values of the elements listed in _translation and add them to
         # the content dict
         content = {}
@@ -401,7 +410,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # Now pass the content dict we have just built to the main
         # constructor, as kwargs, to create the object
         return cls(title=title, parent_id=parent_id, item_id=item_id,
-                   restricted=restricted, resources=resources, **content)
+                   restricted=restricted, resources=resources, desc=desc,
+                   **content)
 
     @classmethod
     def from_dict(cls, content):
@@ -487,6 +497,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         content['title'] = self.title
         if self.resources != []:
             content['resources'] = self.resources
+        content['desc'] = self.desc
         return content
 
     def to_element(self, include_namespaces=False):
@@ -550,8 +561,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         # And the desc element
         desc_attrib = {'id': 'cdudn', 'nameSpace':
                        'urn:schemas-rinconnetworks-com:metadata-1-0/'}
-        desc = XML.SubElement(elt, 'desc', desc_attrib)
-        desc.text = 'RINCON_AssociatedZPUDN'
+        desc_elt = XML.SubElement(elt, 'desc', desc_attrib)
+        desc_elt.text = self.desc
 
         return elt
 
