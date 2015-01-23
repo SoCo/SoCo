@@ -35,6 +35,20 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
     Returns:
         (set): a set of SoCo instances, one for each zone found, or else None.
 
+    Note:
+        There is no easy cross-platform way to find out the addresses of the
+        local machine's network interfaces. You might try the
+        `netifaces module <https://pypi.python.org/pypi/netifaces>`_ and some
+        code like this::
+
+            >>> from netifaces import interfaces, AF_INET, ifaddresses
+            >>> data = [ifaddresses(i) for i in interfaces()]
+            >>> [d[AF_INET][0]['addr'] for d in data if d.get(AF_INET)]
+            ['127.0.0.1', '192.168.1.20']
+
+            This should provide you with a list of values to try for
+            interface_addr if you are having trouble finding your Sonos devices
+
     """
 
     # pylint: disable=invalid-name
