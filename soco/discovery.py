@@ -3,6 +3,7 @@
 
 from __future__ import unicode_literals
 
+import logging
 import socket
 import select
 from textwrap import dedent
@@ -12,14 +13,44 @@ import struct
 from soco import config
 from .utils import really_utf8
 
+_LOG = logging.getLogger(__name__)
 
-def discover(timeout=1, include_invisible=False):
+
+def discover(timeout=1, include_invisible=False, interface_addr=None):
     """ Discover Sonos zones on the local network.
 
-    Return an set of visible SoCo instances for each zone found.
+    Return an set of SoCo instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
     `include_invisible` is True. Will block for up to `timeout` seconds, after
     which return `None` if no zones found.
+
+    Args:
+        timeout (int): block for this many seconds, at most. Default 1
+        include_invisible (bool): include invisible zones in the return set.
+            Default False
+        interface_addr (str): Discovery operates by sending UDP multicast
+            datagrams. interface_addr is a string (dotted quad) representation
+            of the network interface address to use as the source of the
+            datagrams (i.e. it is a value for IP_MULTICAST_IF). If None or not
+            specified, the system default interface for UDP multicast messages
+            will be used. This is probably what you want to happen.
+
+    Returns:
+        (set): a set of SoCo instances, one for each zone found, or else None.
+
+    Note:
+        There is no easy cross-platform way to find out the addresses of the
+        local machine's network interfaces. You might try the
+        `netifaces module <https://pypi.python.org/pypi/netifaces>`_ and some
+        code like this::
+
+            >>> from netifaces import interfaces, AF_INET, ifaddresses
+            >>> data = [ifaddresses(i) for i in interfaces()]
+            >>> [d[AF_INET][0]['addr'] for d in data if d.get(AF_INET)]
+            ['127.0.0.1', '192.168.1.20']
+
+            This should provide you with a list of values to try for
+            interface_addr if you are having trouble finding your Sonos devices
 
     """
 
@@ -39,7 +70,18 @@ def discover(timeout=1, include_invisible=False):
     # UPnP v1.0 requires a TTL of 4
     _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
                      struct.pack("B", 4))
+    # Use the specified interface, if any
+    if interface_addr is not None:
+        try:
+            address = socket.inet_aton(interface_addr)
+        except socket.error:
+            raise ValueError("{0} is not a valid IP address string".format(
+                interface_addr))
+        _sock.setsockopt(
+            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, address)
+
     # Send a few times. UDP is unreliable
+    _LOG.info("Sending discovery packets")
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
     _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
@@ -82,6 +124,7 @@ def discover(timeout=1, include_invisible=False):
 
         if response:
             data, addr = _sock.recvfrom(1024)
+            _LOG.debug('Received discovery response from %s: "%s"', addr, data)
             if b"Sonos" not in data:
                 continue
 
