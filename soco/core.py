@@ -254,6 +254,8 @@ class SoCo(_SocoSingletonBase):
         play_mode -- The queue's repeat/shuffle settings.
         queue_size -- Get size of queue.
         is_playing_tv -- Is the playbar speaker input from TV?
+        is_playing_radio -- Is the speaker input from radio?
+        is_playing_line_in -- Is the speaker input from line-in?
 
     .. warning::
 
@@ -972,7 +974,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_line_in(self):
-        """ Is the speaker playing line in?
+        """ Is the speaker playing line-in?
 
         return True or False
         """
