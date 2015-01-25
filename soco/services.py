@@ -290,6 +290,9 @@ class Service(object):
             action=action)
         headers = {'Content-Type': 'text/xml; charset="utf-8"',
                    'SOAPACTION': soap_action}
+        # Note that although we set the charset to utf-8 here, in fact the
+        # body is still unicode. It will only be converted to bytes when it
+        # is set over the network
         return (headers, body)
 
     def send_command(self, action, args=None, cache=None, cache_timeout=None):
@@ -325,8 +328,12 @@ class Service(object):
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
+        # Convert the body to bytes, and send it.
         response = requests.post(
-            self.base_url + self.control_url, headers=headers, data=body)
+            self.base_url + self.control_url,
+            headers=headers,
+            data=body.encode('utf-8')
+            )
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         log.info(
@@ -334,7 +341,8 @@ class Service(object):
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
-            # params are returned.
+            # params are returned. By using response.text, we rely upon
+            # the requests library to convert to unicode for us.
             result = self.unwrap_arguments(response.text) or True
             # Store in the cache. There is no need to do this if there was an
             # error, since we would want to try a network call again.
@@ -473,8 +481,10 @@ class Service(object):
         # default value
         # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
-        scpd_body = requests.get(self.base_url + self.scpd_url).text
-        tree = XML.fromstring(scpd_body.encode('utf-8'))
+        # get the scpd body as bytes, and feed directly to elementtree
+        # which likes to receive bytes
+        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
         srvStateTables = tree.findall('{0}serviceStateTable'.format(ns))

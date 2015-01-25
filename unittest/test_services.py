@@ -168,7 +168,7 @@ def test_send_command(service):
         assert result == {'CurrentLEDState': 'On', 'Unicode': "μИⅠℂ☺ΔЄ💋"}
         fake_post.assert_called_once_with(
             'http://192.168.1.101:1400/Service/Control',
-            headers=mock.ANY, data=DUMMY_VALID_ACTION)
+            headers=mock.ANY, data=DUMMY_VALID_ACTION.encode('utf-8'))
         # Now the cache should be primed, so try it again
         fake_post.reset_mock()
         result = service.send_command('SetAVTransportURI', [
