@@ -1811,6 +1811,23 @@ class SoCo(_SocoSingletonBase):
         result._metadata['search_type'] = 'tracks_for_album'
         return result
 
+    @property
+    def library_updating(self):
+        """True if the music library is in the process of being updated
+
+        :returns: True if the music library is in the process of being updated
+        :rtype: bool
+        """
+        result = self.contentDirectory.GetShareIndexInProgress()
+        return result['IsIndexing'] != '0'
+
+    def start_library_update(self):
+        """Start an update of the music library."""
+        return self.contentDirectory.RefreshShareIndex([
+            ('AlbumArtistDisplayOption', ''),
+        ])
+
+
 # definition section
 
 RADIO_STATIONS = 0

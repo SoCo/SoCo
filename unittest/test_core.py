@@ -543,6 +543,23 @@ class TestAVTransport:
         ])
 
 
+class TestContentDirectory:
+
+    def test_soco_library_updating(self, moco):
+        moco.contentDirectory.GetShareIndexInProgress.return_value = {'IsIndexing': '0'}
+        assert not moco.library_updating
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.GetShareIndexInProgress.return_value = {'IsIndexing': '1'}
+        assert moco.library_updating
+
+    def test_soco_start_library_update(self, moco):
+        moco.contentDirectory.RefreshShareIndex.return_value = True
+        assert moco.start_library_update()
+        moco.contentDirectory.RefreshShareIndex.assert_called_with([
+            ('AlbumArtistDisplayOption', ''),
+        ])
+
+
 class TestRenderingControl:
 
     def test_soco_mute(self, moco):
