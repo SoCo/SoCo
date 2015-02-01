@@ -135,6 +135,7 @@ class SoCo(_SocoSingletonBase):
         search_track -- Search for an artist, artist's albums, or track.
         get_albums_for_artist -- Get albums for an artist.
         get_tracks_for_album -- Get tracks for an artist's album.
+        start_library_update -- Trigger an update of the music library.
 
     Properties::
 
@@ -149,6 +150,7 @@ class SoCo(_SocoSingletonBase):
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
         queue_size -- Get size of queue.
+        library_updating -- Whether music library update is in progress.
 
     .. warning::
 
