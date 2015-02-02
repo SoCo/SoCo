@@ -47,5 +47,9 @@ class DIDLMetadataError(CannotCreateDIDLMetadata):
     """
 
 
+class MusicServiceException(SoCoException):
+    """ An error relating to a third party music service """
+
+
 class UnknownXMLStructure(SoCoException):
     """Raised if XML with and unknown or unexpected structure is returned"""
