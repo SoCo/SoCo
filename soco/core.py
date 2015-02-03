@@ -151,6 +151,7 @@ class SoCo(_SocoSingletonBase):
         play_mode -- The queue's repeat/shuffle settings.
         queue_size -- Get size of queue.
         library_updating -- Whether music library update is in progress.
+        album_artist_display_option -- album artist display option
 
     .. warning::
 
@@ -1823,11 +1824,34 @@ class SoCo(_SocoSingletonBase):
         result = self.contentDirectory.GetShareIndexInProgress()
         return result['IsIndexing'] != '0'
 
-    def start_library_update(self):
-        """Start an update of the music library."""
+    def start_library_update(self, album_artist_display_option=''):
+        """Start an update of the music library.
+
+        If specified, album_artist_display_option changes the album
+        artist compilation setting (see also album_artist_display_option).
+        """
         return self.contentDirectory.RefreshShareIndex([
-            ('AlbumArtistDisplayOption', ''),
+            ('AlbumArtistDisplayOption', album_artist_display_option),
         ])
+
+    @property
+    def album_artist_display_option(self):
+        """Return the current value of the album artist compilation
+        setting (see
+        http://www.sonos.com/support/help/3.4/en/sonos_user_guide/
+        Chap07_new/Compilation_albums.htm)
+
+        This is a string. Possible values:
+
+        * "WMP" - Use Album Artists
+        * "ITUNES" - Use iTunes® Compilations
+        * "NONE" - Do not group compilations
+
+        To change the current setting, call `start_library_update` and
+        pass the new setting.
+        """
+        result = self.contentDirectory.GetAlbumArtistDisplayOption()
+        return result['AlbumArtistDisplayOption']
 
 
 # definition section
