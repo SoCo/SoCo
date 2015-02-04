@@ -578,6 +578,8 @@ class Subscription(object):
 # if you want to use a different port than 1400, set
 # soco.events.event_listener_port accordingly after importing but before
 # subscribing to an event
+
+# pylint: disable=C0103
 event_listener_port = 1400
 
 # pylint: disable=C0103
