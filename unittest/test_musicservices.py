@@ -285,3 +285,5 @@ def test_desc_from_uri():
     assert desc_from_uri(UNKNOWN_AC_WITH_SID) == 'SA_RINCON2311_12345678'
     NO_DATA = 'x-sonos-http:track%3a3402413.mp3?flags=32'
     assert desc_from_uri(NO_DATA) == 'RINCON_AssociatedZPUDN'
+    HTTP = "http://archive.org/download/TenD/TenD2005-07-16t10Wonderboy_64kb.mp3"
+    assert desc_from_uri(HTTP) == 'RINCON_AssociatedZPUDN'

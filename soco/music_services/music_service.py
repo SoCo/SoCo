@@ -696,7 +696,14 @@ def desc_from_uri(uri):
     # missing, we need the sid (service_type) parameter to find a relevant
     # account
 
-    query_string = parse_qs(urlparse(uri).query)
+    # urlparse does not work consistently with custom URI schemes such as
+    # those used by Sonos. This is especially broken in Python 2.6 and
+    # early versions of 2.7: http://bugs.python.org/issue9374
+    # As a workaround, we split off the scheme manually, and then parse
+    # the uri as if it were http
+    if ":" in uri:
+        scheme, uri = uri.split(":", 1)
+    query_string = parse_qs(urlparse(uri, 'http').query)
     # Is there an account serial number?
     if query_string.get('sn'):
         account_serial_number = query_string['sn'][0]
