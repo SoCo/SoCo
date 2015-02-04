@@ -401,7 +401,12 @@ class MusicService(object):
         #     </Service>
         # ...
         # </ Services>
-        services = root.findall('.//Service')
+
+        # Ideally, the search path should be './/Service' to find Service
+        # elements at any level, but Python 2.6 breaks with this if Service
+        # is a child of the current element. Since 'Service' works here, we use
+        # that instead
+        services = root.findall('Service')
         for service in services:
             result_value = service.attrib.copy()
             name = service.get('Name')
