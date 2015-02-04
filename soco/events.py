@@ -254,7 +254,7 @@ class EventServerThread(threading.Thread):
         self.address = address
 
     def run(self):
-        # Start the server on the local IP at port 1400.  Handling of requests
+        # Start the server on the local IP at port 1400 (default).  Handling of requests
         # is delegated to instances of the EventNotifyHandler class
         listener = EventServer(self.address, EventNotifyHandler)
         log.info("Event listener running on %s", listener.server_address)
@@ -279,7 +279,7 @@ class EventListener(object):
         self.address = ()
 
     def start(self, any_zone):
-        """Start the event listener listening on the local machine at port 1400
+        """Start the event listener listening on the local machine at port 1400 (default)
 
         Make sure that your firewall allows connections to this port
 
@@ -294,14 +294,11 @@ class EventListener(object):
         # Sonos net, see http://stackoverflow.com/q/166506
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        temp_sock.connect((any_zone.ip_address, 1400))
+        temp_sock.connect((any_zone.ip_address, event_listener_port))
         ip_address = temp_sock.getsockname()[0]
         temp_sock.close()
         # Start the event listener server in a separate thread.
-        # Hardcoded to listen on port 1400. Any free port could
-        # be used but this seems appropriate for Sonos, and avoids the need
-        # to find a free port.
-        self.address = (ip_address, 1400)
+        self.address = (ip_address, event_listener_port)
         self._listener_thread = EventServerThread(self.address)
         self._listener_thread.daemon = True
         self._listener_thread.start()
@@ -575,6 +572,10 @@ class Subscription(object):
         else:
             time_left = self.timeout-(time.time()-self._timestamp)
             return time_left if time_left > 0 else 0
+
+# if you want to use a different port than 1400, set soco.events.event_listener_port
+# accordingly after importing but before subscribing to an event
+event_listener_port = 1400
 
 # pylint: disable=C0103
 event_listener = EventListener()
