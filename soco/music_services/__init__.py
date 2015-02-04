@@ -6,9 +6,11 @@ with Sonos.
 
 """
 
-from .music_service import MusicService
+from .music_service import MusicService, MusicAccount, desc_from_uri
 
 
 __all__ = [
     'MusicService',
+    'MusicAccount',
+    'desc_from_uri'
     ]

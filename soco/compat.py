@@ -14,6 +14,7 @@ try:  # python 3
     StringType = bytes  # nopep8
     UnicodeType = str  # nopep8
     from urllib.parse import quote as quote_url  # nopep8
+    from urllib.parse import urlparse, parse_qs
 
 except ImportError:  # python 2.7
     from SimpleHTTPServer import SimpleHTTPRequestHandler  # nopep8
@@ -23,6 +24,7 @@ except ImportError:  # python 2.7
     from Queue import Queue  # nopep8
     from types import StringType, UnicodeType  # nopep8
     from urllib import quote as quote_url  # nopep8
+    from urlparse import urlparse, parse_qs
 
 try:  # python 2.7 - this has to be done the other way round
     from cPickle import dumps  # nopep8

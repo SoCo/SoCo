@@ -22,6 +22,7 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.soap_types import (MEDIAMETADATA_TYPE, MEDIALIST_TYPE)
 # pylint: disable=unused-import
 from soco.music_services import soap_transport  # noqa
+from soco.compat import urlparse, parse_qs
 
 
 # pylint: disable=too-many-instance-attributes
@@ -668,3 +669,54 @@ class MusicService(object):
         """
         # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
+
+def desc_from_uri(uri):
+    """Create the content of DIDL desc element from a uri
+
+    Args:
+        uri (str): A uri, eg:
+            x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4
+
+    Returns:
+        (str): The content of a desc element for that uri, eg
+            SA_RINCON519_email@example.com
+
+    """
+     #
+     # If there is an sn parameter (which is the srial number of an account), we
+     # can obtain all the infomration we need from that, because we can lookup
+     # the relevant service_id in the account database (it is the same as the
+     # account_type). Consequently, the sid parameter is unneeded. But if sn is
+     # missing, we need the sid (service_type) parameter to find a relevant
+     # account
+
+    query_string = parse_qs(urlparse(uri).query)
+    # Is there an account serial number?
+    if query_string.get('sn'):
+        account_serial_number = query_string['sn'][0]
+        try:
+            account = MusicAccount._get_account_data()[account_serial_number]
+            desc = "SA_RINCON{0}_{1}".format(
+                account.account_type, account.username)
+            return desc
+        except KeyError:
+        # There is no account matching this serial number. Fall back to using
+        # the service id to find an account
+            pass
+    if query_string.get('sid'):
+        service_id = query_string['sid'][0]
+        for service in MusicService._get_music_services_data().values():
+            if service_id == service["ServiceID"]:
+                service_type = service["ServiceType"]
+                account = MusicAccount.get_accounts_for_service(service_type)
+                if len(account) == 0:
+                    break
+                # Use the first account we find
+                account = account[0]
+                desc = "SA_RINCON{0}_{1}".format(
+                    account.account_type, account.username)
+                return desc
+    # Nothing found. Default to the standard desc value. Is this the right
+    # thing to do?
+    desc = 'RINCON_AssociatedZPUDN'
+    return desc
