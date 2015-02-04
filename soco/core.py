@@ -140,6 +140,7 @@ class SoCo(_SocoSingletonBase):
     Properties::
 
         uid -- The speaker's unique identifier
+        household_id -- The speaker's household id
         mute -- The speaker's mute status.
         volume -- The speaker's volume.
         bass -- The speaker's bass EQ.
@@ -206,6 +207,7 @@ class SoCo(_SocoSingletonBase):
         self._is_coordinator = False
         self._player_name = None
         self._uid = None
+        self._household_id = None
         self._visible_zones = set()
         self._zgs_cache = None
 
@@ -270,6 +272,19 @@ class SoCo(_SocoSingletonBase):
         # # the udn has a "uuid:" prefix before the uid, so we need to strip it
         # self._uid = uid = udn[5:]
         # return uid
+
+    @property
+    def household_id(self):
+        """ A unique identifier for all players in a household.
+
+        Looks like: Sonos_asahHKgjgJGjgjGjggjJgjJG34
+       """
+        # Since this does not change over time (?) check whether we already
+        # know the answer. If so, return the cached version
+        if self._household_id is None:
+            self._household_id = self.deviceProperties.GetHouseholdID()[
+                'CurrentHouseholdID']
+        return self._household_id
 
     @property
     def is_visible(self):

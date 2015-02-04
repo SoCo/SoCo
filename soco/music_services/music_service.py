@@ -50,8 +50,8 @@ class MusicAccount(object):
             username (str): The username used for logging into the music
                 service
             metadata (str): Metadata for the account
-            oa_device_id (str): OpenAuth id (currently unused?)
-            key (str): (unknown)
+            oa_device_id (str): Used for OpenAuth id for some services
+            key (str): Used for OpenAuthid for some services
 
         """
 
@@ -483,7 +483,17 @@ class MusicService(object):
             [('VariableName', 'R_TrialZPSerial')])['StringValue']
         credentials_header.marshall('deviceId', device_id)
         credentials_header.marshall('deviceProvider', 'Sonos')
+        if self.account.oa_device_id:
+            # OAuth account credentials are present. We must use them to
+            # authticate.
+            token = credentials_header.add_child('loginToken')
+            token.marshall('token', self.account.oa_device_id)
+            token.marshall('key', self.account.key)
+            token.marshall('householdId', device.household_id)
+            return result
+        # otherwise, perhaps use DeviceLink or UserId auth
         if self.auth_type in ['DeviceLink', 'UserId']:
+            # We need a session ID from Sonos
             session_id = device.musicServices.GetSessionId([
                 ('ServiceId', self.service_id),
                 ('Username', self.account.username)
@@ -702,7 +712,7 @@ def desc_from_uri(uri):
     # As a workaround, we split off the scheme manually, and then parse
     # the uri as if it were http
     if ":" in uri:
-        scheme, uri = uri.split(":", 1)
+        _, uri = uri.split(":", 1)
     query_string = parse_qs(urlparse(uri, 'http').query)
     # Is there an account serial number?
     if query_string.get('sn'):
