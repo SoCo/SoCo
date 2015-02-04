@@ -254,8 +254,9 @@ class EventServerThread(threading.Thread):
         self.address = address
 
     def run(self):
-        # Start the server on the local IP at port 1400 (default).  Handling of requests
-        # is delegated to instances of the EventNotifyHandler class
+        # Start the server on the local IP at port 1400 (default).
+        # Handling of requests is delegated to instances of the
+        # EventNotifyHandler class
         listener = EventServer(self.address, EventNotifyHandler)
         log.info("Event listener running on %s", listener.server_address)
         # Listen for events untill told to stop
@@ -279,7 +280,8 @@ class EventListener(object):
         self.address = ()
 
     def start(self, any_zone):
-        """Start the event listener listening on the local machine at port 1400 (default)
+        """Start the event listener listening on the local machine at port 1400
+        (default)
 
         Make sure that your firewall allows connections to this port
 
@@ -573,8 +575,9 @@ class Subscription(object):
             time_left = self.timeout-(time.time()-self._timestamp)
             return time_left if time_left > 0 else 0
 
-# if you want to use a different port than 1400, set soco.events.event_listener_port
-# accordingly after importing but before subscribing to an event
+# if you want to use a different port than 1400, set
+# soco.events.event_listener_port accordingly after importing but before
+# subscribing to an event
 event_listener_port = 1400
 
 # pylint: disable=C0103
