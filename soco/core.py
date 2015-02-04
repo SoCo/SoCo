@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0302,fixme, protected-access
-""" The core module contains SonosDiscovery and SoCo classes that implement
+""" The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
 
 from __future__ import unicode_literals
 
-import select
 import socket
 import logging
-from textwrap import dedent
 import re
-import itertools
 import requests
-import time
-import struct
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
@@ -30,111 +25,6 @@ from .xml import XML
 from soco import config
 
 _LOG = logging.getLogger(__name__)
-
-
-def discover(timeout=1, include_invisible=False):
-    """ Discover Sonos zones on the local network.
-
-    Return an set of visible SoCo instances for each zone found.
-    Include invisible zones (bridges and slave zones in stereo pairs if
-    `include_invisible` is True. Will block for up to `timeout` seconds, after
-    which return `None` if no zones found.
-
-    """
-
-    # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent("""\
-        M-SEARCH * HTTP/1.1
-        HOST: 239.255.255.250:1900
-        MAN: "ssdp:discover"
-        MX: 1
-        ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """).encode('utf-8')
-    MCAST_GRP = "239.255.255.250"
-    MCAST_PORT = 1900
-
-    _sock = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    # UPnP v1.0 requires a TTL of 4
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                     struct.pack("B", 4))
-    # Send a few times. UDP is unreliable
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-
-    t0 = time.time()
-    while True:
-        # Check if the timeout is exceeded. We could do this check just
-        # before the currently only continue statement of this loop,
-        # but I feel it is safer to do it here, so that we do not forget
-        # to do it if/when another continue statement is added later.
-        # Note: this is sensitive to clock adjustments. AFAIK there
-        # is no monotonic timer available before Python 3.3.
-        t1 = time.time()
-        if t1-t0 > timeout:
-            return None
-
-        # The timeout of the select call is set to be no greater than
-        # 100ms, so as not to exceed (too much) the required timeout
-        # in case the loop is executed more than once.
-        response, _, _ = select.select([_sock], [], [], min(timeout, 0.1))
-
-        # Only Zone Players should respond, given the value of ST in the
-        # PLAYER_SEARCH message. However, to prevent misbehaved devices
-        # on the network to disrupt the discovery process, we check that
-        # the response contains the "Sonos" string; otherwise we keep
-        # waiting for a correct response.
-        #
-        # Here is a sample response from a real Sonos device (actual numbers
-        # have been redacted):
-        # HTTP/1.1 200 OK
-        # CACHE-CONTROL: max-age = 1800
-        # EXT:
-        # LOCATION: http://***.***.***.***:1400/xml/device_description.xml
-        # SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)
-        # ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:
-        #                                                     ZonePlayer:1
-        # X-RINCON-BOOTSEQ: 3
-        # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
-
-        if response:
-            data, addr = _sock.recvfrom(1024)
-            if b"Sonos" not in data:
-                continue
-
-            # Now we have an IP, we can build a SoCo instance and query that
-            # player for the topology to find the other players. It is much
-            # more efficient to rely upon the Zone Player's ability to find
-            # the others, than to wait for query responses from them
-            # ourselves.
-            zone = config.SOCO_CLASS(addr[0])
-            if include_invisible:
-                return zone.all_zones
-            else:
-                return zone.visible_zones
-
-
-class SonosDiscovery(object):  # pylint: disable=R0903
-    """Retained for backward compatibility only. Will be removed in future
-    releases
-
-    .. deprecated:: 0.7
-       Use :func:`discover` instead.
-
-    """
-
-    def __init__(self):
-        import warnings
-        warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
-
-    @staticmethod
-    def get_speaker_ips():
-        """ Deprecated in favour of discover() """
-        import warnings
-        warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
-        return [i.ip_address for i in discover()]
 
 
 class _ArgsSingleton(type):
@@ -318,6 +208,8 @@ class SoCo(_SocoSingletonBase):
         self._visible_zones = set()
         self._zgs_cache = None
 
+        _LOG.debug("Created SoCo instance for ip: %s", ip_address)
+
     def __str__(self):
         return "<{0} object at ip {1}>".format(
             self.__class__.__name__, self.ip_address)
@@ -465,19 +357,6 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CrossfadeMode', crossfade_value)
             ])
-
-    @property
-    def speaker_ip(self):
-        """Retained for backward compatibility only. Will be removed in future
-        releases
-
-        .. deprecated:: 0.7
-           Use :attr:`ip_address` instead.
-
-        """
-        import warnings
-        warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
-        return self.ip_address
 
     def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
@@ -1098,8 +977,13 @@ class SoCo(_SocoSingletonBase):
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index + 3:]
             else:
-                _LOG.warning('Could not handle track info: "%s"', trackinfo)
-                track['title'] = trackinfo
+                # Might find some kind of title anyway in metadata
+                track['title'] = metadata.findtext('.//{http://purl.org/dc/'
+                                                   'elements/1.1/}title')
+                if not track['title']:
+                    _LOG.warning('Could not handle track info: "%s"',
+                                 trackinfo)
+                    track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
@@ -1163,39 +1047,6 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
 
             return self.speaker_info
-
-    def get_group_coordinator(self, zone_name):
-        """
-        .. deprecated:: 0.8
-           Use :meth:`group` or :meth:`all_groups` instead.
-
-        """
-        import warnings
-        warnings.warn(
-            "get_group_coordinator is deprecated. "
-            "Use the group or all_groups methods instead")
-        for group in self.all_groups:
-            for member in group:
-                if member.player_name == zone_name:
-                    return group.coordinator.ip_address
-        return None
-
-    def get_speakers_ip(self, refresh=False):
-        """ Get the IP addresses of all the Sonos speakers in the network.
-
-        Arguments:
-            refresh -- Refresh the speakers IP cache. Ignored. For backward
-            compatibility only
-
-        Returns:
-            a set of IP addresses of the Sonos speakers.
-
-        .. deprecated:: 0.8
-
-
-        """
-        # pylint: disable=star-args, unused-argument
-        return set(z.ip_address for z in itertools.chain(*self.all_groups))
 
     def get_current_transport_info(self):
         """ Get the current playback state

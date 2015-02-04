@@ -88,13 +88,14 @@ class TestDidlObject():
 
     def test_create_didl_object_with_good_params(self):
         didl_object = data_structures.DidlObject(title='a_title',
-            parent_id='pid', item_id='iid', creator='a_creator')
+            parent_id='pid', item_id='iid', creator='a_creator', desc="dummy")
         assert didl_object is not None
         assert didl_object.title == 'a_title'
         assert didl_object.parent_id == 'pid'
         assert didl_object.item_id == 'iid'
         assert didl_object.creator == 'a_creator'
         assert didl_object.resources == []
+        assert didl_object.desc=="dummy"
 
     def test_didl_object_from_wrong_element(self):
         # Using the wrong element
@@ -114,9 +115,7 @@ class TestDidlObject():
                  <upnp:class>object</upnp:class>
                  <dc:creator>a_creator</dc:creator>
                  <desc id="cdudn"
-                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-                   RINCON_AssociatedZPUDN
-                 </desc>
+                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">DUMMY</desc>
                </item>
         """)
 
@@ -126,6 +125,7 @@ class TestDidlObject():
         assert didl_object.parent_id == 'pid'
         assert didl_object.item_id == 'iid'
         assert didl_object.creator == 'a_creator'
+        assert didl_object.desc == 'DUMMY'
 
     def test_didl_object_from_wrong_class(self):
         # mismatched upnp class
@@ -150,13 +150,14 @@ class TestDidlObject():
 
     def test_didl_object_from_dict(self):
         didl_object = data_structures.DidlObject(title='a_title',
-            parent_id='pid', item_id='iid', creator='a_creator')
+            parent_id='pid', item_id='iid', creator='a_creator', desc='dummy')
         the_dict = {
             'title': 'a_title',
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
             'restricted': True,
+            'desc': 'dummy'
         }
         assert data_structures.DidlObject.from_dict(the_dict) == didl_object
         # adding in an attibute not in _translation should make no difference
@@ -186,7 +187,8 @@ class TestDidlObject():
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
-            'restricted': True
+            'restricted': True,
+            'desc': 'RINCON_AssociatedZPUDN'
         }
         assert didl_object.to_dict() == the_dict
         # adding in an attibute not in _translation should make no difference

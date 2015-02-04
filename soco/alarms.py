@@ -8,8 +8,9 @@ import logging
 from datetime import datetime
 import re
 import weakref
-from soco.core import PLAY_MODES
-from soco.xml import XML
+from .core import PLAY_MODES
+from .discovery import discover
+from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 TIME_FORMAT = "%H:%M:%S"

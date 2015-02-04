@@ -6,13 +6,12 @@
 
 import time
 
-from soco import SoCo, SonosDiscovery
+from soco import SoCo
 from soco.plugins import SoCoPlugin
 
 
 def main():
-    sd = SonosDiscovery()
-    speakers = sd.get_speaker_ips()
+    speakers = [speaker.ip_address for speaker in SoCo.discover()]
 
     if not speakers:
         print 'no speakers found, exiting.'

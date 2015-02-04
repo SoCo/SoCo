@@ -107,10 +107,6 @@ class Service(object):
         #: A cache for storing the result of network calls. By default, this is
         #: TimedCache(default_timeout=0). See :class:`TimedCache`
         self.cache = Cache(default_timeout=0)
-        log.debug(
-            "Created service %s, ver %s, id %s, base_url %s, control_url %s",
-            self.service_type, self.version, self.service_id, self.base_url,
-            self.control_url)
 
         # From table 3.3 in
         # http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf
@@ -333,6 +329,8 @@ class Service(object):
             self.base_url + self.control_url, headers=headers, data=body)
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
+        log.info(
+            "Received status %s from %s", status, self.soco.ip_address)
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
@@ -341,8 +339,6 @@ class Service(object):
             # Store in the cache. There is no need to do this if there was an
             # error, since we would want to try a network call again.
             cache.put(result, action, args, timeout=cache_timeout)
-            log.info(
-                "Received status %s from %s", status, self.soco.ip_address)
             return result
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
