@@ -19,6 +19,7 @@ import atexit
 
 import requests
 
+import config
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
@@ -296,11 +297,11 @@ class EventListener(object):
         # Sonos net, see http://stackoverflow.com/q/166506
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        temp_sock.connect((any_zone.ip_address, event_listener_port))
+        temp_sock.connect((any_zone.ip_address, config.EVENT_LISTENER_PORT))
         ip_address = temp_sock.getsockname()[0]
         temp_sock.close()
         # Start the event listener server in a separate thread.
-        self.address = (ip_address, event_listener_port)
+        self.address = (ip_address, config.EVENT_LISTENER_PORT)
         self._listener_thread = EventServerThread(self.address)
         self._listener_thread.daemon = True
         self._listener_thread.start()
@@ -574,13 +575,6 @@ class Subscription(object):
         else:
             time_left = self.timeout-(time.time()-self._timestamp)
             return time_left if time_left > 0 else 0
-
-# if you want to use a different port than 1400, set
-# soco.events.event_listener_port accordingly after importing but before
-# subscribing to an event
-
-# pylint: disable=C0103
-event_listener_port = 1400
 
 # pylint: disable=C0103
 event_listener = EventListener()
