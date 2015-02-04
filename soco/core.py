@@ -23,6 +23,7 @@ from .utils import really_utf8, camel_to_underscore, really_unicode,\
     url_escape_path
 from .xml import XML
 from soco import config
+from soco.discovery import discover
 
 _LOG = logging.getLogger(__name__)
 

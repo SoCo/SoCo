@@ -9,7 +9,6 @@ from datetime import datetime
 import re
 import weakref
 from .core import PLAY_MODES
-from .discovery import discover
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103

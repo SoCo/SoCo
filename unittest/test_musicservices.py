@@ -182,7 +182,7 @@ def patch_music_services(monkeypatch):
     """Patch MusicService and MusicAccount to avoid network requests and use
     dummy data."""
     monkeypatch.setattr(
-        MusicService, '_get_music_services_data_xml',
+        MusicService, 'get_music_services_data_xml',
         mock.Mock(return_value=SERVICES_DESCRIPTOR_LIST))
     monkeypatch.setattr(
         MusicService, '_get_headers',
@@ -198,7 +198,7 @@ def patch_music_services(monkeypatch):
 
 def test_initialise_account():
     assert MusicAccount._account_data is None
-    accounts = MusicAccount._get_account_data()
+    accounts = MusicAccount.get_account_data()
     assert len(accounts) == 4
     assert accounts['1'].username == '12345678'
     assert accounts['1'].account_type == '2311'
@@ -221,7 +221,7 @@ def test_get_accounts_for_service():
 
 def test_initialise_services():
     assert MusicService._music_services_data is None
-    data = MusicService._get_music_services_data()
+    data = MusicService.get_music_services_data()
     assert len(data) == 6
     deezer = data['519']
     assert deezer['Name'] == "Deezer"

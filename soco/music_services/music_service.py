@@ -101,7 +101,7 @@ class MusicAccount(object):
         return result
 
     @classmethod
-    def _get_account_data(cls):
+    def get_account_data(cls):
         """Parse raw account data xml into a useful python datastructure.
 
         Returns:
@@ -166,7 +166,7 @@ class MusicAccount(object):
 
         """
         return [
-            a for a in cls._get_account_data().values() if not a.deleted
+            a for a in cls.get_account_data().values() if not a.deleted
         ]
 
     @classmethod
@@ -348,7 +348,7 @@ class MusicService(object):
         return self.__repr__()
 
     @staticmethod
-    def _get_music_services_data_xml(soco=None):
+    def get_music_services_data_xml(soco=None):
         """Fetch the music services data xml from a Sonos device.
 
         Args:
@@ -368,7 +368,7 @@ class MusicService(object):
         return descriptor_list_xml
 
     @classmethod
-    def _get_music_services_data(cls):
+    def get_music_services_data(cls):
         """Parse raw account data xml into a useful python datastructure.
 
         Returns:
@@ -381,7 +381,7 @@ class MusicService(object):
 
         result = {}
         root = XML.fromstring(
-            cls._get_music_services_data_xml().encode('utf-8')
+            cls.get_music_services_data_xml().encode('utf-8')
         )
         # <Services SchemaVersion="1">
         #     <Service Id="163" Name="Spreaker" Version="1.1"
@@ -438,7 +438,7 @@ class MusicService(object):
         """
         return [
             service['Name'] for service in
-            cls._get_music_services_data().values()
+            cls.get_music_services_data().values()
         ]
 
     @classmethod
@@ -453,7 +453,7 @@ class MusicService(object):
         accounts_for_service = MusicAccount.get_accounts_for_service
         return [
             service['Name'] for service in
-            cls._get_music_services_data().values() if len(
+            cls.get_music_services_data().values() if len(
                 accounts_for_service(service['ServiceType'])
                 ) > 0
         ]
@@ -461,7 +461,7 @@ class MusicService(object):
     @classmethod
     def get_data_for_name(cls, service_name):
         """Get the data relating to a named music service."""
-        for service in cls._get_music_services_data().values():
+        for service in cls.get_music_services_data().values():
             if service_name == service["Name"]:
                 return service
         raise MusicServiceException(
@@ -670,6 +670,7 @@ class MusicService(object):
         # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
 
+
 def desc_from_uri(uri):
     """Create the content of DIDL desc element from a uri
 
@@ -682,30 +683,30 @@ def desc_from_uri(uri):
             SA_RINCON519_email@example.com
 
     """
-     #
-     # If there is an sn parameter (which is the srial number of an account), we
-     # can obtain all the infomration we need from that, because we can lookup
-     # the relevant service_id in the account database (it is the same as the
-     # account_type). Consequently, the sid parameter is unneeded. But if sn is
-     # missing, we need the sid (service_type) parameter to find a relevant
-     # account
+    #
+    # If there is an sn parameter (which is the serial number of an account),
+    # we can obtain all the infomration we need from that, because we can find
+    # the relevant service_id in the account database (it is the same as the
+    # account_type). Consequently, the sid parameter is unneeded. But if sn is
+    # missing, we need the sid (service_type) parameter to find a relevant
+    # account
 
     query_string = parse_qs(urlparse(uri).query)
     # Is there an account serial number?
     if query_string.get('sn'):
         account_serial_number = query_string['sn'][0]
         try:
-            account = MusicAccount._get_account_data()[account_serial_number]
+            account = MusicAccount.get_account_data()[account_serial_number]
             desc = "SA_RINCON{0}_{1}".format(
                 account.account_type, account.username)
             return desc
         except KeyError:
-        # There is no account matching this serial number. Fall back to using
-        # the service id to find an account
+            # There is no account matching this serial number. Fall back to
+            # using the service id to find an account
             pass
     if query_string.get('sid'):
         service_id = query_string['sid'][0]
-        for service in MusicService._get_music_services_data().values():
+        for service in MusicService.get_music_services_data().values():
             if service_id == service["ServiceID"]:
                 service_type = service["ServiceType"]
                 account = MusicAccount.get_accounts_for_service(service_type)
