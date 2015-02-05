@@ -57,10 +57,10 @@ def discovering(timeout=1, include_invisible=False):
             return devices
 
     # Try and find the address ourselves by going to a web page
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("sonos.com", 80))
-    int_addr = s.getsockname()[0]
-    s.close()
+    soc = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    soc.connect(("sonos.com", 80))
+    int_addr = soc.getsockname()[0]
+    soc.close()
     _LOG.debug("Searching for devices using web search")
     if int_addr not in [None, '']:
         devices = discover(timeout, include_invisible, int_addr)
