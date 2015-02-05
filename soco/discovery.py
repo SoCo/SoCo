@@ -15,6 +15,57 @@ from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
+def discovering(timeout=1, include_invisible=False):
+    """ Discover Sonos zones on the local network.
+    
+    This is a more aggressive search than the discover method, using multiple
+    attempts to check different network addresses
+
+    Args:
+        timeout (int): block for this many seconds, at most. Default 1
+        include_invisible (bool): include invisible zones in the return set.
+            Default False
+
+    Returns:
+        (set): a set of SoCo instances, one for each zone found, or else None.
+    """
+    # Start by calling the base discovery method
+    devices = discover(timeout, include_invisible)
+
+    # Check if the devices were found
+    if devices:
+        return devices
+
+    # If we reach here then there are no devices found, so we can try
+    # some alternative methods.  As there are no really good ways of
+    # finding the active network in a platform independent manner we
+    # try a few different things, practice has shown that these quite
+    # often result in finding the devices
+    int_addr = socket.gethostbyname(socket.gethostname())
+    _LOG.debug("Searching for devices using gethostname")
+    if int_addr not in [None, '']:
+        devices = discover(timeout, include_invisible, int_addr)
+        if devices:
+            return devices
+
+    int_addr = socket.gethostbyname(socket.getfqdn())
+    _LOG.debug("Searching for devices using getfqdn")
+    if int_addr not in [None, '']:
+        devices = discover(timeout, include_invisible, int_addr)
+        if devices:
+            return devices
+
+    # Try and find the address ourselves by going to a web page
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("sonos.com", 80))
+    int_addr = s.getsockname()[0]
+    s.close()
+    _LOG.debug("Searching for devices using web search")
+    if int_addr not in [None, '']:
+        devices = discover(timeout, include_invisible, int_addr)
+
+    return devices
+
 
 def discover(timeout=1, include_invisible=False, interface_addr=None):
     """ Discover Sonos zones on the local network.
