@@ -15,9 +15,10 @@ from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
+
 def discovering(timeout=1, include_invisible=False):
     """ Discover Sonos zones on the local network.
-    
+
     This is a more aggressive search than the discover method, using multiple
     attempts to check different network addresses
 
