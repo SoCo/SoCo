@@ -15,13 +15,14 @@ __license__ = 'MIT License'
 
 
 from .core import SoCo
-from .discovery import discover
+from .discovery import discover, discovering
 from .exceptions import SoCoException, UnknownSoCoException
 
 # You really should not `import *` - it is poor practice
 # but if you do, here is what you get:
 __all__ = [
     'discover',
+    'discovering',
     'SoCo',
     'SoCoException',
     'UnknownSoCoException',
