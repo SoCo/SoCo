@@ -19,7 +19,7 @@ import atexit
 
 import requests
 
-import config
+from soco import config
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
