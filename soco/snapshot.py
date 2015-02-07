@@ -10,6 +10,7 @@ and then back again to what was playing previously
 
 # pylint: disable=too-many-instance-attributes
 class Snapshot(object):
+
     """
     Class to support snap-shotting the current Sonos State, and then
     restoring it later

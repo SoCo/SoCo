@@ -187,7 +187,7 @@ class MusicService(object):
                 'User-agent': 'Linux UPnP/1.0 Sonos/99.9-99999'
             },
             music_service=self
-            )
+        )
 
     def __repr__(self):
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,

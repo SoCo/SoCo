@@ -95,7 +95,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
         # Note: this is sensitive to clock adjustments. AFAIK there
         # is no monotonic timer available before Python 3.3.
         t1 = time.time()
-        if t1-t0 > timeout:
+        if t1 - t0 > timeout:
             return None
 
         # The timeout of the select call is set to be no greater than

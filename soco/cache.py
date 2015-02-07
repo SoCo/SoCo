@@ -11,10 +11,12 @@ from soco import config
 
 
 class _BaseCache(object):
+
     """A base class for the cache.
 
     Does nothing by itself."""
     # pylint: disable=no-self-use, unused-argument
+
     def __init__(self, default_timeout=0):
         super(_BaseCache, self).__init__()
         self._cache = {}
@@ -52,11 +54,13 @@ class _BaseCache(object):
 
 
 class NullCache(_BaseCache):
+
     """A cache which does nothing. Useful for debugging."""
     pass
 
 
 class TimedCache(_BaseCache):
+
     """ A simple thread-safe cache for caching method return values
 
     At present, the cache can theoretically grow and grow, since entries are
@@ -150,6 +154,7 @@ class TimedCache(_BaseCache):
 
 
 class Cache(_BaseCache):
+
     """A factory class which returns an instance of a cache subclass.
 
     If config.CACHE_ENABLED is False, the dummy inactive cache will be returned

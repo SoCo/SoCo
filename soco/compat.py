@@ -38,6 +38,8 @@ except ImportError:
     import logging
 
     class NullHandler(logging.Handler):
+
         """Create a null handler if using Python 2.6"""
+
         def emit(self, record):
             pass
