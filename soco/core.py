@@ -232,7 +232,7 @@ class SoCo(_SocoSingletonBase):
         # the network.
         try:
             # pylint: disable=no-member
-            device = cls._instances[cls._class_group].values()[0]
+            device = list(cls._instances[cls._class_group].values())[0]
         except KeyError:
             device = discover().pop()
         return device
