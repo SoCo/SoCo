@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 
 class ZoneGroup(object):
+
     """
     A class representing a Sonos Group. It looks like this::
 
@@ -59,6 +60,7 @@ class ZoneGroup(object):
     the label and short_label properties.
 
     """
+
     def __init__(self, uid, coordinator, members=None):
         #: The unique Sonos ID for this group
         self.uid = uid
@@ -93,5 +95,5 @@ class ZoneGroup(object):
         group_names = sorted([m.player_name for m in self.members])
         group_label = group_names[0]
         if len(group_names) > 1:
-            group_label += " + {0}".format(len(group_names)-1)
+            group_label += " + {0}".format(len(group_names) - 1)
         return group_label

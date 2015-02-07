@@ -41,6 +41,7 @@ def tags_with_text(xml, tags=None):
 
 
 class MusicServiceItem(object):
+
     """Class that represents a music service item"""
 
     # These fields must be overwritten in the sub classes
@@ -54,7 +55,6 @@ class MusicServiceItem(object):
 
     @classmethod
     def from_xml(cls, xml, service, parent_id):
-
         """Return a Music Service item generated from xml
 
         :param xml: Object XML. All items containing text are added to the
@@ -156,14 +156,12 @@ class MusicServiceItem(object):
         return cls(*args, **kwargs)
 
     def __eq__(self, playable_item):
-
         """Return the equals comparison result to another ``playable_item``."""
         if not isinstance(playable_item, MusicServiceItem):
             return False
         return self.content == playable_item.content
 
     def __ne__(self, playable_item):
-
         """Return the not equals comparison result to another ``playable_item``
         """
         if not isinstance(playable_item, MusicServiceItem):
@@ -320,6 +318,7 @@ class MusicServiceItem(object):
 
 
 class MSTrack(MusicServiceItem):
+
     """Class that represents a music service track"""
 
     item_class = 'object.item.audioItem.musicTrack'
@@ -366,6 +365,7 @@ class MSTrack(MusicServiceItem):
 
 
 class MSAlbum(MusicServiceItem):
+
     """Class that represents a Music Service Album"""
 
     item_class = 'object.container.album.musicAlbum'
@@ -400,6 +400,7 @@ class MSAlbum(MusicServiceItem):
 
 
 class MSAlbumList(MusicServiceItem):
+
     """Class that represents a Music Service Album List"""
 
     item_class = 'object.container.albumlist'
@@ -429,6 +430,7 @@ class MSAlbumList(MusicServiceItem):
 
 
 class MSPlaylist(MusicServiceItem):
+
     """Class that represents a Music Service Play List"""
 
     item_class = 'object.container.albumlist'
@@ -457,6 +459,7 @@ class MSPlaylist(MusicServiceItem):
 
 
 class MSArtistTracklist(MusicServiceItem):
+
     """Class that represents a Music Service Artist Track List"""
 
     item_class = 'object.container.playlistContainer.sameArtist'
@@ -482,6 +485,7 @@ class MSArtistTracklist(MusicServiceItem):
 
 
 class MSArtist(MusicServiceItem):
+
     """Class that represents a Music Service Artist"""
 
     valid_fields = [
@@ -502,6 +506,7 @@ class MSArtist(MusicServiceItem):
 
 
 class MSFavorites(MusicServiceItem):
+
     """Class that represents a Music Service Favorite"""
 
     valid_fields = ['id', 'item_type', 'title', 'can_play', 'can_cache',
@@ -520,6 +525,7 @@ class MSFavorites(MusicServiceItem):
 
 
 class MSCollection(MusicServiceItem):
+
     """Class that represents a Music Service Collection"""
 
     valid_fields = ['id', 'item_type', 'title', 'can_play', 'can_cache',

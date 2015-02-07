@@ -25,7 +25,7 @@ __all__ = [
     'SoCo',
     'SoCoException',
     'UnknownSoCoException',
-    ]
+]
 
 # http://docs.python.org/2/howto/logging.html#library-config
 # Avoids spurious error messages if no logger is configured by the user

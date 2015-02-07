@@ -146,6 +146,7 @@ def parse_event_xml(xml_event):
 
 
 class Event(object):
+
     """ A read-only object representing a received event
 
     The values of the evented variables can be accessed via the `variables`
@@ -175,6 +176,7 @@ class Event(object):
 
     """
     # pylint: disable=too-few-public-methods, too-many-arguments
+
     def __init__(self, sid, seq, service, timestamp, variables=None):
         # Initialisation has to be done like this, because __setattr__ is
         # overridden, and will not allow direct setting of attributes
@@ -200,11 +202,13 @@ class Event(object):
 
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+
     """ A TCP server which handles each new request in a new thread """
     allow_reuse_address = True
 
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
+
     """ Handles HTTP NOTIFY Verbs sent to the listener server """
 
     def do_NOTIFY(self):  # pylint: disable=invalid-name
@@ -244,6 +248,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
 
 class EventServerThread(threading.Thread):
+
     """The thread in which the event listener server will run"""
 
     def __init__(self, address):
@@ -264,6 +269,7 @@ class EventServerThread(threading.Thread):
 
 
 class EventListener(object):
+
     """The Event Listener.
 
     Runs an http server in a thread which is an endpoint for NOTIFY messages
@@ -327,6 +333,7 @@ class EventListener(object):
 
 
 class Subscription(object):
+
     """ A class representing the subscription to a UPnP event
 
     """
@@ -377,6 +384,7 @@ class Subscription(object):
         """
 
         class AutoRenewThread(threading.Thread):
+
             """ Used by the auto_renew code to renew a subscription from
                 within a thread.
                 """
@@ -457,7 +465,7 @@ class Subscription(object):
         if not auto_renew:
             return
         # Autorenew just before expiry, say at 85% of self.timeout seconds
-        interval = self.timeout * 85/100
+        interval = self.timeout * 85 / 100
         auto_renew_thread = AutoRenewThread(
             interval, self._auto_renew_thread_flag, self)
         auto_renew_thread.start()
@@ -573,7 +581,7 @@ class Subscription(object):
         if self._timestamp is None:
             return 0
         else:
-            time_left = self.timeout-(time.time()-self._timestamp)
+            time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
 
 # pylint: disable=C0103

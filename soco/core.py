@@ -28,6 +28,7 @@ _LOG = logging.getLogger(__name__)
 
 
 class _ArgsSingleton(type):
+
     """ A metaclass which permits only a single instance of each derived class
     sharing the same `_class_group` class attribute to exist for any given set
     of positional arguments.
@@ -70,6 +71,7 @@ class _ArgsSingleton(type):
 
 class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
         _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
+
     """ The base class for the SoCo class.
 
     Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
@@ -82,6 +84,7 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
 
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
+
     """A simple class for controlling a Sonos speaker.
 
     For any given set of arguments to __init__, only one instance of this class
@@ -233,7 +236,7 @@ class SoCo(_SocoSingletonBase):
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')
-            ])
+        ])
 
     @property
     def uid(self):
@@ -312,7 +315,7 @@ class SoCo(_SocoSingletonBase):
         """
         result = self.avTransport.GetTransportSettings([
             ('InstanceID', 0),
-            ])
+        ])
         return result['PlayMode']
 
     @play_mode.setter
@@ -325,7 +328,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetPlayMode([
             ('InstanceID', 0),
             ('NewPlayMode', playmode)
-            ])
+        ])
 
     @property
     def cross_fade(self):
@@ -334,7 +337,7 @@ class SoCo(_SocoSingletonBase):
 
         response = self.avTransport.GetCrossfadeMode([
             ('InstanceID', 0),
-            ])
+        ])
         cross_fade_state = response['CrossfadeMode']
         return True if int(cross_fade_state) else False
 
@@ -345,7 +348,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetCrossfadeMode([
             ('InstanceID', 0),
             ('CrossfadeMode', crossfade_value)
-            ])
+        ])
 
     def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
@@ -373,14 +376,14 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
         # second, set the track number with a seek command
         self.avTransport.Seek([
             ('InstanceID', 0),
             ('Unit', 'TRACK_NR'),
             ('Target', index + 1)
-            ])
+        ])
 
         # finally, just play what's set if needed
         if start:
@@ -399,7 +402,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Play([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def play_uri(self, uri='', meta='', title='', start=True):
         """ Play a given stream. Pauses the queue.
@@ -440,7 +443,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
-            ])
+        ])
         # The track is enqueued, now play it if needed
         if start:
             return self.play()
@@ -458,7 +461,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Pause([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def stop(self):
         """ Stop the currently playing track.
@@ -472,7 +475,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Stop([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
@@ -491,7 +494,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Unit', 'REL_TIME'),
             ('Target', timestamp)
-            ])
+        ])
 
     def next(self):
         """ Go to the next track.
@@ -511,7 +514,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Next([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def previous(self):
         """ Go back to the previously played track.
@@ -530,7 +533,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Previous([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     @property
     def mute(self):
@@ -539,7 +542,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetMute([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
         mute_state = response['CurrentMute']
         return True if int(mute_state) else False
 
@@ -551,7 +554,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredMute', mute_value)
-            ])
+        ])
 
     @property
     def volume(self):
@@ -560,7 +563,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetVolume([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         volume = response['CurrentVolume']
         return int(volume)
 
@@ -573,7 +576,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredVolume', volume)
-            ])
+        ])
 
     @property
     def bass(self):
@@ -582,7 +585,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetBass([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         bass = response['CurrentBass']
         return int(bass)
 
@@ -594,7 +597,7 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl.SetBass([
             ('InstanceID', 0),
             ('DesiredBass', bass)
-            ])
+        ])
 
     @property
     def treble(self):
@@ -603,7 +606,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetTreble([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         treble = response['CurrentTreble']
         return int(treble)
 
@@ -615,7 +618,7 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl.SetTreble([
             ('InstanceID', 0),
             ('DesiredTreble', treble)
-            ])
+        ])
 
     @property
     def loudness(self):
@@ -629,7 +632,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetLoudness([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         loudness = response["CurrentLoudness"]
         return True if int(loudness) else False
 
@@ -641,7 +644,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
-            ])
+        ])
 
     def _parse_zone_group_state(self):
         """ The Zone Group State contains a lot of useful information. Retrieve
@@ -833,7 +836,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -851,7 +854,7 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
             ('InstanceID', 0)
-            ])
+        ])
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
@@ -871,7 +874,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     def switch_to_tv(self):
         """ Switch the speaker's input to TV.
@@ -891,7 +894,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-sonos-htastream:{0}:spdif'.format(self.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     @property
     def status_light(self):
@@ -909,7 +912,7 @@ class SoCo(_SocoSingletonBase):
         led_state = 'On' if led_on else 'Off'
         self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
-            ])
+        ])
 
     def _build_album_art_full_uri(self, url):
         """ Ensure an Album Art URI is an absolute URI
@@ -941,7 +944,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
                  'position': ''}
@@ -1052,7 +1055,7 @@ class SoCo(_SocoSingletonBase):
         """
         response = self.avTransport.GetTransportInfo([
             ('InstanceID', 0),
-            ])
+        ])
 
         playstate = {
             'current_transport_status': '',
@@ -1089,7 +1092,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
         result = response['Result']
 
         metadata = {}
@@ -1122,7 +1125,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', 0),
             ('RequestedCount', 1),
             ('SortCriteria', '')
-            ])
+        ])
         dom = XML.fromstring(really_utf8(response['Result']))
 
         queue_size = None
@@ -1487,7 +1490,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
 
         # Get result information
         metadata = {}
@@ -1517,7 +1520,7 @@ class SoCo(_SocoSingletonBase):
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 1)
-            ])
+        ])
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
@@ -1540,7 +1543,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('ObjectID', objid),
             ('UpdateID', updid),
-            ])
+        ])
 
     def clear_queue(self):
         """ Removes all tracks from the queue.
@@ -1553,7 +1556,7 @@ class SoCo(_SocoSingletonBase):
         """
         self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
-            ])
+        ])
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
@@ -1607,7 +1610,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
         result = {}
         favorites = []
         results_xml = response['Result']
@@ -1654,7 +1657,7 @@ class SoCo(_SocoSingletonBase):
             ('Title', title),
             ('EnqueuedURI', ''),
             ('EnqueuedURIMetaData', ''),
-            ])
+        ])
 
         item_id = response['AssignedObjectID']
         obj_id = item_id.split(':', 2)[1]
@@ -1725,7 +1728,7 @@ class SoCo(_SocoSingletonBase):
             ('AddAtIndex', 4294967295)  # this field has always this value, we
                                         # do not known the meaning of this
                                         # "magic" number.
-            ])
+        ])
 
     def get_item_album_art_uri(self, item):
         """ Get an item's Album Art absolute URI. """
