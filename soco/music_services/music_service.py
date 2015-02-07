@@ -8,9 +8,6 @@ This module provides the MusicService class and related functionality.
 
 from __future__ import unicode_literals
 
-from pysimplesoap.client import SoapClient, SoapFault
-from pysimplesoap.simplexml import SimpleXMLElement
-
 import requests
 
 import logging
@@ -23,166 +20,10 @@ from soco.music_services.soap_types import (MEDIAMETADATA_TYPE, MEDIALIST_TYPE)
 # pylint: disable=unused-import
 from soco.music_services import soap_transport  # noqa
 from soco.compat import urlparse, parse_qs
+from soco.music_services.accounts import Account
 
 
-# pylint: disable=too-many-instance-attributes
-class MusicAccount(object):
-
-    """An account for a Music Service.
-
-    Each service may have more than one account: see
-    http://www.sonos.com/en-gb/software/release/5-2
-
-    """
-
-    _account_data = None
-
-    def __init__(self):
-        """Constructor.
-
-        Args:
-            account_type (str): A unique identifier for the music service to
-                which this account relates, eg '2311' for Spotify. It is the
-                same as the `service_type` of the relevant MusicService object
-            serial_number: (str): A unique identifier for this account
-            nickname (str): The account's nickname
-            deleted (bool): True if this account has been deleted
-            username (str): The username used for logging into the music
-                service
-            metadata (str): Metadata for the account
-            oa_device_id (str): Used for OpenAuth id for some services
-            key (str): Used for OpenAuthid for some services
-
-        """
-
-        self.account_type = ''
-        self.serial_number = ''
-        self.nickname = ''
-        self.deleted = False
-        self.username = ''
-        self.metadata = ''
-        self.oa_device_id = ''
-        self.key = ''
-
-    def __repr__(self):
-        return "<{0} '{1}:{2}:{3}' at {4}>".format(
-            self.__class__.__name__,
-            self.serial_number,
-            self.account_type,
-            self.nickname,
-            hex(id(self))
-        )
-
-    def __str__(self):
-        return self.__repr__()
-
-    @staticmethod
-    def _get_account_xml(soco=None):
-        """Fetch the account data from a Sonos device.
-
-        Args:
-            soco (SoCo): a SoCo instance to query. If none is specified, a
-                random device will be used.
-
-        Returns:
-            (str): a byte string containing the account data xml
-
-        """
-        # It is likely that the same information is available over UPnP as well
-        # via a call to
-        # systemProperties.GetStringX([('VariableName','R_SvcAccounts')]))
-        # This returns an encrypted string, and, so far, we cannot decrypt it
-        device = soco or SoCo.any_soco()
-        log.debug("Fetching account data from %s", device)
-        settings_url = "http://{0}:1400/status/accounts".format(
-            device.ip_address)
-        result = requests.get(settings_url).content
-        log.debug("Account data: %s", result)
-        return result
-
-    @classmethod
-    def get_account_data(cls):
-        """Parse raw account data xml into a useful python datastructure.
-
-        Returns:
-            (dict): A dict keyed by account serial number. Each value is a
-                MusicAccount object
-
-        """
-
-        # Check if there is a cached value, and return it if there is.
-        if cls._account_data is not None:
-            return cls._account_data
-
-        result = {}
-        root = XML.fromstring(cls._get_account_xml())
-        # <ZPSupportInfo type="User">
-        #   <Accounts
-        #   LastUpdateDevice="RINCON_000XXXXXXXX400"
-        #   Version="8" NextSerialNum="5">
-        #     <Account Type="2311" SerialNum="1">
-        #         <UN>12345678</UN>
-        #         <MD>1</MD>
-        #         <NN></NN>
-        #         <OADevID></OADevID>
-        #         <Key></Key>
-        #     </Account>
-        #     <Account Type="41735" SerialNum="3" Deleted="1">
-        #         <UN></UN>
-        #         <MD>1</MD>
-        #         <NN>Nickname</NN>
-        #         <OADevID></OADevID>
-        #         <Key></Key>
-        #     </Account>
-        # ...
-        #   <Accounts />
-        accounts = root.findall('.//Account')
-        for account in accounts:
-            acct = MusicAccount()
-
-            acct.account_type = account.get('Type')
-            acct.serial_number = account.get('SerialNum')
-            acct.deleted = True if account.get('Deleted') == '1' else False
-            acct.username = account.findtext('UN')
-            # Not sure what 'MD' stands for.  Metadata?
-            acct.metadata = account.findtext('MD')
-            acct.nickname = account.findtext('NN')
-            acct.oa_device_id = account.findtext('OADevID')
-            acct.key = account.findtext('Key')
-
-            result[acct.serial_number] = acct
-
-        cls._account_data = result
-        return result
-
-    @classmethod
-    def get_all_accounts(cls):
-        """Get a list of all accounts.
-
-        Deleted accounts are excluded.
-
-        Returns:
-            (list): A set of MusicAccount instances
-
-        """
-        return [
-            a for a in cls.get_account_data().values() if not a.deleted
-        ]
-
-    @classmethod
-    def get_accounts_for_service(cls, service_type):
-        """Get a list of accounts for a given music service.
-
-        Args:
-            service_type (str): The service_type to use
-
-        Returns:
-            (list): A list of MusicAccount instances
-
-        """
-        return [
-            a for a in cls.get_all_accounts() if a.account_type == service_type
-        ]
+# pylint: disable=too-many-instance-attributes, protected-access
 
 
 # pylint: disable=too-many-instance-attributes
@@ -289,13 +130,17 @@ class MusicService(object):
         Arg:
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
-            account (MusicAccount): The account to use to access this service.
+            account (Account): The account to use to access this service.
                 If none is specified, one will be chosen automatically if
                 possible.
+
+        Raises:
+            MusicServiceException
 
         """
 
         self.service_name = service_name
+        # Look up the data for this service
         data = self.get_data_for_name(service_name)
         self.uri = data['Uri']
         self.secure_uri = data['SecureUri']
@@ -313,31 +158,36 @@ class MusicService(object):
         elif service_name == "TuneIn":
             # TuneIn is always present, but will have no account data, so we
             # need to handle it specially. Create a dummy account
-            self.account = MusicAccount()
+            self.account = Account()
         else:
             # try to find an account for this service
-            for acct in MusicAccount.get_all_accounts():
-                if acct.account_type == self.service_type:
+            for acct in Account.get_accounts().values():
+                if acct.service_type == self.service_type:
                     self.account = acct
                     break
             else:
                 raise MusicServiceException(
                     "No account found for service: '%s'" % service_name)
 
-        self.soap_client = SoapClient(
+        self.soap_client = soap_transport.SoapClient(
             location=self.secure_uri,
             action='http://www.sonos.com/Services/1.1#',
             namespace='http://www.sonos.com/Services/1.1',
             soap_ns='soap',
-            # Spotify uses gzip. Others may do so as well. Unzipping is handled
-            # for us by the requests library
-            http_headers={'Accept-Encoding': 'gzip'},
-        )
+            timeout=9,  # The default is 60
 
-        # Add the credentials header to the SOAP method, and populate it
-        # appropriately. This header must be sent with all future requests.
-        #
-        self.headers = self._get_headers()
+            # Spotify uses gzip. Others may do so as well. Unzipping is handled
+            # for us by the requests library. We need to set the user agent to
+            # a genuine Sonos value. Google Play music seems to want this. The
+            # firmware release number (after 'Sonos/" is obviously fake, and
+            # higher than current values, in case Google only offers certain
+            # services to certain firmware rel eases. ") #
+            http_headers={
+                'Accept-Encoding': 'gzip, deflate',
+                'User-agent': 'Linux UPnP/1.0 Sonos/99.9-99999'
+            },
+            music_service=self
+            )
 
     def __repr__(self):
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
@@ -348,7 +198,7 @@ class MusicService(object):
         return self.__repr__()
 
     @staticmethod
-    def get_music_services_data_xml(soco=None):
+    def _get_music_services_data_xml(soco=None):
         """Fetch the music services data xml from a Sonos device.
 
         Args:
@@ -368,7 +218,7 @@ class MusicService(object):
         return descriptor_list_xml
 
     @classmethod
-    def get_music_services_data(cls):
+    def _get_music_services_data(cls):
         """Parse raw account data xml into a useful python datastructure.
 
         Returns:
@@ -376,12 +226,13 @@ class MusicService(object):
                 dict containing relevant data
 
         """
+        # Return from cache if we have it.
         if cls._music_services_data is not None:
             return cls._music_services_data
 
         result = {}
         root = XML.fromstring(
-            cls.get_music_services_data_xml().encode('utf-8')
+            cls._get_music_services_data_xml().encode('utf-8')
         )
         # <Services SchemaVersion="1">
         #     <Service Id="163" Name="Spreaker" Version="1.1"
@@ -428,6 +279,7 @@ class MusicService(object):
             service_type = str(int(service.get('Id')) * 256 + 7)
             result_value['ServiceType'] = service_type
             result[service_type] = result_value
+        # Cache this so we don't need to do it again.
         cls._music_services_data = result
         return result
 
@@ -443,7 +295,7 @@ class MusicService(object):
         """
         return [
             service['Name'] for service in
-            cls.get_music_services_data().values()
+            cls._get_music_services_data().values()
         ]
 
     @classmethod
@@ -455,73 +307,56 @@ class MusicService(object):
         Returns:
             (list): A list of strings
         """
-        accounts_for_service = MusicAccount.get_accounts_for_service
+        # This is very inefficient - loops within loops within loops, and
+        # many network requests
+        # Optimise it?
+        accounts_for_service = Account.get_accounts_for_service
+        service_data = cls._get_music_services_data().values()
         return [
-            service['Name'] for service in
-            cls.get_music_services_data().values() if len(
+            service['Name'] for service in service_data
+            if len(
                 accounts_for_service(service['ServiceType'])
-                ) > 0
+            ) > 0
         ]
 
     @classmethod
     def get_data_for_name(cls, service_name):
         """Get the data relating to a named music service."""
-        for service in cls.get_music_services_data().values():
+        for service in cls._get_music_services_data().values():
             if service_name == service["Name"]:
                 return service
         raise MusicServiceException(
             "Unknown music service: '%s'" % service_name)
 
-    def _get_headers(self):
-        """Get the authentication header for this service."""
-        result = SimpleXMLElement("<Headers/>")
-        credentials_header = result.add_child("credentials")
-        credentials_header['xmlns'] = "http://www.sonos.com/Services/1.1"
+    ########################################################################
+    #                                                                      #
+    #                           SOAP METHODS.                              #
+    #                                                                      #
+    ########################################################################
 
-        device = SoCo.any_soco()
-        device_id = device.systemProperties.GetString(
-            [('VariableName', 'R_TrialZPSerial')])['StringValue']
-        credentials_header.marshall('deviceId', device_id)
-        credentials_header.marshall('deviceProvider', 'Sonos')
-        if self.account.oa_device_id:
-            # OAuth account credentials are present. We must use them to
-            # authticate.
-            token = credentials_header.add_child('loginToken')
-            token.marshall('token', self.account.oa_device_id)
-            token.marshall('key', self.account.key)
-            token.marshall('householdId', device.household_id)
-            return result
-        # otherwise, perhaps use DeviceLink or UserId auth
-        if self.auth_type in ['DeviceLink', 'UserId']:
-            # We need a session ID from Sonos
-            session_id = device.musicServices.GetSessionId([
-                ('ServiceId', self.service_id),
-                ('Username', self.account.username)
-            ])['SessionId']
-            credentials_header.marshall('sessionId', session_id)
-        return result
+    #  Looking at various services, we see that the following SOAP methods
+    #  are implemented, but not all in each service. Probably, the
+    #  Capabilities property indicates which features are implemented, but
+    #  it is not clear precisely how. Some of the more common/useful
+    #  features have been wrapped into instance methods, below
 
-# Looking at various services, we see that the following SOAP methods are
-# implemented, but not all in each service. Probably, the Capabilities property
-# indicates which features are implemented, but it is not clear precisely how.
-# Some of the more common/useful features have been wrapped into instance
-# methods, below
-#    createItem(xs:string favorite)
-#    createTrialAccount(xs:string deviceId)
-#    deleteItem(xs:string favorite)
-#    getAccount()
-#    getExtendedMetadata(xs:string id)
-#    getExtendedMetadataText(xs:string id, xs:string Type)
-#    getLastUpdate()
-#    getMediaMetadata(xs:string id)
-#    getMediaURI(xs:string id)
-#    getMetadata(xs:string id, xs:int index, xs:int count,xs:boolean recursive)
-#    getScrollIndices(xs:string id)
-#    getSessionId(xs:string username, xs:string password)
-#    mergeTrialccount(xs:string deviceId)
-#    rateItem(id id, xs:integer rating)
-#    search(xs:string id, xs:string term, xs:string index, xs:int count)
-#    setPlayedSeconds(id id, xs:int seconds)
+    #    createItem(xs:string favorite)
+    #    createTrialAccount(xs:string deviceId)
+    #    deleteItem(xs:string favorite)
+    #    getAccount()
+    #    getExtendedMetadata(xs:string id)
+    #    getExtendedMetadataText(xs:string id, xs:string Type)
+    #    getLastUpdate()
+    #    getMediaMetadata(xs:string id)
+    #    getMediaURI(xs:string id)
+    #    getMetadata(xs:string id, xs:int index, xs:int count,xs:boolean
+    #                recursive)
+    #    getScrollIndices(xs:string id)
+    #    getSessionId(xs:string username, xs:string password)
+    #    mergeTrialccount(xs:string deviceId)
+    #    rateItem(id id, xs:integer rating)
+    #    search(xs:string id, xs:string term, xs:string index, xs:int count)
+    #    setPlayedSeconds(id id, xs:int seconds)
 
     def get_media_metadata(self, item_id):
         """Get metadata for a media item.
@@ -536,12 +371,10 @@ class MusicService(object):
         types = {'getMediaMetadataResult': {
             'mediaMetadata': [MEDIAMETADATA_TYPE]
         }}
-        try:
-            response = self.soap_client.call(
-                'getMediaMetadata',
-                ('id', item_id), headers=self.headers)
-        except SoapFault as exc:
-            raise MusicServiceException(exc.faultstring)
+
+        response = self.soap_client.call(
+            'getMediaMetadata',
+            ('id', item_id))
         return response.getMediaMetadataResult.unmarshall(
             types, strict=False)['getMediaMetadataResult']
 
@@ -554,12 +387,9 @@ class MusicService(object):
             (str): The item's URI
 
         """
-        try:
-            response = self.soap_client.call(
-                'getMediaURI',
-                ('id', item_id), headers=self.headers)
-        except SoapFault as exc:
-            raise MusicServiceException(exc.faultstring)
+        response = self.soap_client.call(
+            'getMediaURI',
+            ('id', item_id))
         return response.getMediaURIResult.unmarshall(
             types={'getMediaURIResult': str},
             strict=False)['getMediaURIResult']
@@ -580,15 +410,11 @@ class MusicService(object):
 
         """
         types = {'getMetadataResult': MEDIALIST_TYPE}
-        try:
-            response = self.soap_client.call(
-                'getMetadata',
-                ('id', item_id), ('index', index),
-                ('count', count), ('recursive', recursive),
-                headers=self.headers
-            )
-        except SoapFault as exc:
-            raise MusicServiceException(exc.faultstring)
+        response = self.soap_client.call(
+            'getMetadata',
+            ('id', item_id), ('index', index),
+            ('count', count), ('recursive', recursive)
+        )
         return response.getMetadataResult.unmarshall(
             types, strict=False)['getMetadataResult']
 
@@ -615,13 +441,11 @@ class MusicService(object):
             raise MusicServiceException(
                 "%s does not support the '%s' search category" % (
                     self.service_name, category))
-        try:
-            response = self.soap_client.call(
-                'search',
-                ('id', search_category), ('term', term), ('index', index),
-                ('count', count), headers=self.headers)
-        except SoapFault as exc:
-            raise MusicServiceException(exc.faultstring)
+
+        response = self.soap_client.call(
+            'search',
+            ('id', search_category), ('term', term), ('index', index),
+            ('count', count))
         return response.searchResult.unmarshall(
             types, strict=False)['searchResult']
 
@@ -660,7 +484,7 @@ class MusicService(object):
             return self._search_prefix_map
         log.info('Fetching presentation map from %s',
                  self.presentation_map_uri)
-        pmap = requests.get(self.presentation_map_uri)
+        pmap = requests.get(self.presentation_map_uri, timeout=9)
         pmap_root = XML.fromstring(pmap.content)
         # Search translations can appear in Category or CustomCategory elements
         categories = pmap_root.findall(".//SearchCategories/Category")
@@ -702,7 +526,7 @@ def desc_from_uri(uri):
     # If there is an sn parameter (which is the serial number of an account),
     # we can obtain all the infomration we need from that, because we can find
     # the relevant service_id in the account database (it is the same as the
-    # account_type). Consequently, the sid parameter is unneeded. But if sn is
+    # service_type). Consequently, the sid parameter is unneeded. But if sn is
     # missing, we need the sid (service_type) parameter to find a relevant
     # account
 
@@ -718,9 +542,9 @@ def desc_from_uri(uri):
     if query_string.get('sn'):
         account_serial_number = query_string['sn'][0]
         try:
-            account = MusicAccount.get_account_data()[account_serial_number]
+            account = Account.get_accounts()[account_serial_number]
             desc = "SA_RINCON{0}_{1}".format(
-                account.account_type, account.username)
+                account.service_type, account.username)
             return desc
         except KeyError:
             # There is no account matching this serial number. Fall back to
@@ -728,16 +552,16 @@ def desc_from_uri(uri):
             pass
     if query_string.get('sid'):
         service_id = query_string['sid'][0]
-        for service in MusicService.get_music_services_data().values():
+        for service in MusicService._get_music_services_data().values():
             if service_id == service["ServiceID"]:
                 service_type = service["ServiceType"]
-                account = MusicAccount.get_accounts_for_service(service_type)
+                account = Account.get_accounts_for_service(service_type)
                 if len(account) == 0:
                     break
                 # Use the first account we find
                 account = account[0]
                 desc = "SA_RINCON{0}_{1}".format(
-                    account.account_type, account.username)
+                    account.service_type, account.username)
                 return desc
     # Nothing found. Default to the standard desc value. Is this the right
     # thing to do?

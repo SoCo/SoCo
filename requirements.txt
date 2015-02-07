@@ -1,2 +1,2 @@
 requests
-PySimpleSOAP==1.16
+http://github.com/pysimplesoap/pysimplesoap/archive/master.zip#egg=PySimpleSOAP-1.17

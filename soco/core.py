@@ -220,13 +220,18 @@ class SoCo(_SocoSingletonBase):
     def __repr__(self):
         return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
 
-    @staticmethod
-    def any_soco():
+    @classmethod
+    def any_soco(cls):
         """ Return any soco device, for when it doesn't matter which """
 
-        # This can be improved to use an existing SoCo instance if there is
-        # one, instead of using discover()
-        device = discover().pop()
+        # Try to obtain an existing instance, or use discover if necessary.
+        # Note that this assumes that the existing instance has not left
+        # the network.
+        try:
+            # pylint: disable=no-member
+            device = cls._instances[cls._class_group].values()[0]
+        except KeyError:
+            device = discover().pop()
         return device
 
     @property
