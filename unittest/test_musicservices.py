@@ -259,7 +259,7 @@ def test_search():
     }
     categories = spotify.available_search_categories
     assert len(categories) == 3
-    assert set(categories) == {'stations', 'shows', 'hosts'}
+    assert set(categories) == set(['stations', 'shows', 'hosts'])
     with pytest.raises(MusicServiceException) as excinfo:
         spotify.search('badcategory')
     assert "support the 'badcategory' search category" in str(excinfo.value)
