@@ -9,7 +9,7 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.music_services.music_service import MusicService
 from soco.music_services.music_service import desc_from_uri
-from soco.music_services.soap_transport import SoapClient
+from soco.music_services import soap_transport
 
 
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
@@ -170,29 +170,17 @@ SERVICES_DESCRIPTOR_LIST = """<?xml version="1.0"?>
     </Service>
 </Services>
 """
-HEADER = """<s:Header>
-    <credentials xmlns="http://www.sonos.com/Services/1.1">
-        <deviceId>00-0E-58-XX-XX-XX:D</deviceId>
-        <deviceProvider>Sonos</deviceProvider>
-        <sessionId>praFt7jMSd546905c3243bdgBsq1n7S547905c3243f47LqmHH:2:123456789</sessionId>
-    </credentials>
-    </s:Header>"""
 
 @pytest.fixture(autouse=True)
 def patch_music_services(monkeypatch):
-    """Patch MusicService and Account to avoid network requests and use
-    dummy data."""
+    """Patch MusicService, Account and SoapClient to avoid network requests
+    and use dummy data."""
     monkeypatch.setattr(
         MusicService, '_get_music_services_data_xml',
         mock.Mock(return_value=SERVICES_DESCRIPTOR_LIST))
     monkeypatch.setattr(
-        SoapClient, '_get_headers',
-        mock.Mock(return_value=HEADER)
-    )
-    # ensure that the soap client cannot use the network
-    monkeypatch.setattr(
-        SoapClient, 'call', mock.MagicMock()
-    )
+        soap_transport, 'SoapClient',
+        mock.Mock())
     monkeypatch.setattr(
         Account, '_get_account_xml',
         mock.Mock(return_value=ACCOUNT_DATA))
@@ -244,7 +232,7 @@ def test_get_names():
 def test_get_subscribed_names():
     names = MusicService.get_subscribed_services_names()
     assert len(names) == 3
-    assert set(names) == {'Spotify', 'Spreaker', 'radioPup'}
+    assert set(names) == set(['Spotify', 'Spreaker', 'radioPup'])
 
 def test_create_music_service():
     ms = MusicService('Spotify')
