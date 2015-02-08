@@ -19,6 +19,7 @@ import atexit
 
 import requests
 
+from soco import config
 from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
                      Queue,)
 from .xml import XML
@@ -259,8 +260,9 @@ class EventServerThread(threading.Thread):
         self.address = address
 
     def run(self):
-        # Start the server on the local IP at port 1400.  Handling of requests
-        # is delegated to instances of the EventNotifyHandler class
+        # Start the server on the local IP at port 1400 (default).
+        # Handling of requests is delegated to instances of the
+        # EventNotifyHandler class
         listener = EventServer(self.address, EventNotifyHandler)
         log.info("Event listener running on %s", listener.server_address)
         # Listen for events untill told to stop
@@ -286,6 +288,7 @@ class EventListener(object):
 
     def start(self, any_zone):
         """Start the event listener listening on the local machine at port 1400
+        (default)
 
         Make sure that your firewall allows connections to this port
 
@@ -300,14 +303,11 @@ class EventListener(object):
         # Sonos net, see http://stackoverflow.com/q/166506
 
         temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        temp_sock.connect((any_zone.ip_address, 1400))
+        temp_sock.connect((any_zone.ip_address, config.EVENT_LISTENER_PORT))
         ip_address = temp_sock.getsockname()[0]
         temp_sock.close()
         # Start the event listener server in a separate thread.
-        # Hardcoded to listen on port 1400. Any free port could
-        # be used but this seems appropriate for Sonos, and avoids the need
-        # to find a free port.
-        self.address = (ip_address, 1400)
+        self.address = (ip_address, config.EVENT_LISTENER_PORT)
         self._listener_thread = EventServerThread(self.address)
         self._listener_thread.daemon = True
         self._listener_thread.start()
