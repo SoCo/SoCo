@@ -5,7 +5,7 @@
 # see https://github.com/SoCo/SoCo/issues/127
 # duplicate code check disabled whilst refactoring of wimp plugin is in
 # progress
-disable=too-many-lines,locally-disabled,duplicate-code
+disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods
 
 [REPORTS]
 
