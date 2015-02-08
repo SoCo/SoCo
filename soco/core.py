@@ -138,6 +138,7 @@ class SoCo(_SocoSingletonBase):
         search_track -- Search for an artist, artist's albums, or track.
         get_albums_for_artist -- Get albums for an artist.
         get_tracks_for_album -- Get tracks for an artist's album.
+        start_library_update -- Trigger an update of the music library.
 
     Properties::
 
@@ -152,6 +153,8 @@ class SoCo(_SocoSingletonBase):
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
         queue_size -- Get size of queue.
+        library_updating -- Whether music library update is in progress.
+        album_artist_display_option -- album artist display option
 
     .. warning::
 
@@ -1818,6 +1821,46 @@ class SoCo(_SocoSingletonBase):
             complete_result=True)
         result._metadata['search_type'] = 'tracks_for_album'
         return result
+
+    @property
+    def library_updating(self):
+        """True if the music library is in the process of being updated
+
+        :returns: True if the music library is in the process of being updated
+        :rtype: bool
+        """
+        result = self.contentDirectory.GetShareIndexInProgress()
+        return result['IsIndexing'] != '0'
+
+    def start_library_update(self, album_artist_display_option=''):
+        """Start an update of the music library.
+
+        If specified, album_artist_display_option changes the album
+        artist compilation setting (see also album_artist_display_option).
+        """
+        return self.contentDirectory.RefreshShareIndex([
+            ('AlbumArtistDisplayOption', album_artist_display_option),
+        ])
+
+    @property
+    def album_artist_display_option(self):
+        """Return the current value of the album artist compilation
+        setting (see
+        http://www.sonos.com/support/help/3.4/en/sonos_user_guide/
+        Chap07_new/Compilation_albums.htm)
+
+        This is a string. Possible values:
+
+        * "WMP" - Use Album Artists
+        * "ITUNES" - Use iTunes® Compilations
+        * "NONE" - Do not group compilations
+
+        To change the current setting, call `start_library_update` and
+        pass the new setting.
+        """
+        result = self.contentDirectory.GetAlbumArtistDisplayOption()
+        return result['AlbumArtistDisplayOption']
+
 
 # definition section
 
