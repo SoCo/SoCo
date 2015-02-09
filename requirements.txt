@@ -1,2 +1,2 @@
 requests
-http://github.com/pysimplesoap/pysimplesoap/archive/master.zip#egg=PySimpleSOAP-1.17
+https://github.com/lawrenceakka/pysimplesoap/archive/fault-no-wsdl.zip#egg=PySimpleSOAP-1.17
