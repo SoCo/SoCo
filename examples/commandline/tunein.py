@@ -8,6 +8,9 @@ as the second argument, that radio station will be played. Otherwise a short
 clip from each preset will be played.
 
 """
+
+from __future__ import unicode_literals
+
 import sys
 import time
 
