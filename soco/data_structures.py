@@ -759,6 +759,20 @@ class DidlMusicAlbumFavorite(DidlAlbum):
     tag = 'item'
 
 
+class DidlMusicAlbumCompilation(DidlAlbum):
+
+    """Class that represents a Sonos favorite music library compilation.
+
+    This class is not part of the DIDL spec and is Sonos specific.
+
+    """
+    # These classes appear when browsing the library and Sonos has been set
+    # to group albums using compilations.
+    # See https://github.com/SoCo/SoCo/issues/280
+    item_class = 'object.container.album.musicAlbum.compilation'
+    tag = 'container'
+
+
 class DidlPerson(DidlContainer):
 
     """A content directory class representing a person."""
