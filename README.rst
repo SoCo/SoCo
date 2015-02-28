@@ -13,15 +13,15 @@ For more background on the project, please see Rahim's `blog post
    :target: https://travis-ci.org/SoCo/SoCo
    :alt: Build Status
 
-.. image:: https://requires.io/github/SoCo/SoCo/requirements.png?branch=master
+.. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
    :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
    :alt: Requirements Status
 
-.. image:: https://pypip.in/download/soco/badge.png
+.. image:: https://pypip.in/download/soco/badge.svg?style=flat
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
 
-.. image:: https://pypip.in/version/soco/badge.png
+.. image:: https://pypip.in/version/soco/badge.svg?style=flat
     :target: https://pypi.python.org/pypi/soco/
     :alt: Number of PyPI downloads
 
@@ -167,6 +167,7 @@ SoCo supports the following controls amongst others:
 -  Get the saved favorite radio stations and shows (title and stream
    URI)
 -  Search for and play item from your music library
+-  Start a music library update and determine if one is in progress
 
 SoCo also supports lower level access from Python to all Sonos services (eg
 Alarms)

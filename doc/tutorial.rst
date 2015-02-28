@@ -10,13 +10,12 @@ library.
 Discovery
 ---------
 
-For discovering the Sonos devices in your network, use the ``SonosDiscovery``
-class.
+For discovering the Sonos devices in your network, use the ``soco.discover()``
+method.
 
 .. code-block:: python
 
-    sd = SonosDiscovery()
-    ips = sd.get_speaker_ips()
+    zones = list(soco.discover())
 
 
 Music

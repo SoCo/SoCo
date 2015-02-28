@@ -9,9 +9,9 @@ import pytest
 
 from soco.xml import XML
 
-from soco.data_structures import MSTrack, MSAlbum, MSArtist, \
+from soco.ms_data_structures import MSTrack, MSAlbum, MSArtist, \
     MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
-from soco.exceptions import CannotCreateDIDLMetadata
+from soco.exceptions import DIDLMetadataError
 
 ##############################################################################
 # Example XML and the content dict to compare with for MS items              #
@@ -269,7 +269,7 @@ def common_tests(class_, xml_, dict_, parent_id):
         assert XML.tostring(item_from_dict.didl_metadata).decode('ascii') == \
             didl
     else:
-        with pytest.raises(CannotCreateDIDLMetadata):
+        with pytest.raises(DIDLMetadataError):
             # pylint: disable=pointless-statement
             item_from_xml.didl_metadata
 

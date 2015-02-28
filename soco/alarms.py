@@ -8,7 +8,8 @@ import logging
 from datetime import datetime
 import re
 import weakref
-from .core import discover, PLAY_MODES
+from .core import PLAY_MODES
+from .discovery import discover
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -52,6 +53,7 @@ def is_valid_recurrence(text):
 
 
 class Alarm(object):
+
     """A class representing a Sonos Alarm.
 
     Alarms may be created or updated and saved to, or removed from the Sonos
@@ -172,7 +174,6 @@ class Alarm(object):
 
     @property
     def recurrence(self):
-
         """A string representing how often the alarm should be triggered.
 
         Can be 'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or of the form
@@ -213,7 +214,7 @@ class Alarm(object):
             ('PlayMode', self.play_mode),
             ('Volume', self.volume),
             ('IncludeLinkedZones', '1' if self.include_linked_zones else '0')
-            ]
+        ]
         if self._alarm_id is None:
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response['AssignedID']

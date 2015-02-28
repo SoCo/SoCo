@@ -1,141 +1,34 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0302,fixme, protected-access
-""" The core module contains SonosDiscovery and SoCo classes that implement
+""" The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
 
 from __future__ import unicode_literals
 
-import select
 import socket
 import logging
-from textwrap import dedent
 import re
-import itertools
 import requests
-import time
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import CannotCreateDIDLMetadata
-from .data_structures import get_ml_item, QueueItem, URI, MLSonosPlaylist,\
-    MLShare, SearchResult, Queue, MusicLibraryItem
-from .utils import really_utf8, camel_to_underscore
+from .exceptions import DIDLMetadataError, SoCoUPnPException
+from .data_structures import DidlPlaylistContainer,\
+    SearchResult, Queue, DidlObject, DidlMusicAlbum,\
+    from_didl_string, to_didl_string, DidlResource
+from .utils import really_utf8, camel_to_underscore, really_unicode,\
+    url_escape_path
 from .xml import XML
 from soco import config
 
-LOGGER = logging.getLogger(__name__)
-
-
-def discover(timeout=1, include_invisible=False):
-    """ Discover Sonos zones on the local network.
-
-    Return an set of visible SoCo instances for each zone found.
-    Include invisible zones (bridges and slave zones in stereo pairs if
-    `include_invisible` is True. Will block for up to `timeout` seconds, after
-    which return `None` if no zones found.
-
-    """
-
-    # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent("""\
-        M-SEARCH * HTTP/1.1
-        HOST: 239.255.255.250:1900
-        MAN: "ssdp:discover"
-        MX: 1
-        ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """).encode('utf-8')
-    MCAST_GRP = "239.255.255.250"
-    MCAST_PORT = 1900
-
-    _sock = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    # UPnP v1.0 requires a TTL of 4
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
-    # Send a few times. UDP is unreliable
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-
-    t0 = time.time()
-    while True:
-        # Check if the timeout is exceeded. We could do this check just
-        # before the currently only continue statement of this loop,
-        # but I feel it is safer to do it here, so that we do not forget
-        # to do it if/when another continue statement is added later.
-        # Note: this is sensitive to clock adjustments. AFAIK there
-        # is no monotonic timer available before Python 3.3.
-        t1 = time.time()
-        if t1-t0 > timeout:
-            return None
-
-        # The timeout of the select call is set to be no greater than
-        # 100ms, so as not to exceed (too much) the required timeout
-        # in case the loop is executed more than once.
-        response, _, _ = select.select([_sock], [], [], min(timeout, 0.1))
-
-        # Only Zone Players should respond, given the value of ST in the
-        # PLAYER_SEARCH message. However, to prevent misbehaved devices
-        # on the network to disrupt the discovery process, we check that
-        # the response contains the "Sonos" string; otherwise we keep
-        # waiting for a correct response.
-        #
-        # Here is a sample response from a real Sonos device (actual numbers
-        # have been redacted):
-        # HTTP/1.1 200 OK
-        # CACHE-CONTROL: max-age = 1800
-        # EXT:
-        # LOCATION: http://***.***.***.***:1400/xml/device_description.xml
-        # SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)
-        # ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        # USN: uuid:RINCON_B8*************00::urn:schemas-upnp-org:device:
-        #                                                     ZonePlayer:1
-        # X-RINCON-BOOTSEQ: 3
-        # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
-
-        if response:
-            data, addr = _sock.recvfrom(1024)
-            if "Sonos" not in data:
-                continue
-
-            # Now we have an IP, we can build a SoCo instance and query that
-            # player for the topology to find the other players. It is much
-            # more efficient to rely upon the Zone Player's ability to find
-            # the others, than to wait for query responses from them
-            # ourselves.
-            zone = config.SOCO_CLASS(addr[0])
-            if include_invisible:
-                return zone.all_zones
-            else:
-                return zone.visible_zones
-        else:
-            return None
-
-
-class SonosDiscovery(object):  # pylint: disable=R0903
-    """Retained for backward compatibility only. Will be removed in future
-    releases
-
-    .. deprecated:: 0.7
-       Use :func:`discover` instead.
-
-    """
-
-    def __init__(self):
-        import warnings
-        warnings.warn("SonosDiscovery is deprecated. Use discover instead.")
-
-    @staticmethod
-    def get_speaker_ips():
-        """ Deprecated in favour of discover() """
-        import warnings
-        warnings.warn("get_speaker_ips is deprecated. Use discover instead.")
-        return [i.ip_address for i in discover()]
+_LOG = logging.getLogger(__name__)
 
 
 class _ArgsSingleton(type):
+
     """ A metaclass which permits only a single instance of each derived class
     sharing the same `_class_group` class attribute to exist for any given set
     of positional arguments.
@@ -178,6 +71,7 @@ class _ArgsSingleton(type):
 
 class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
         _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
+
     """ The base class for the SoCo class.
 
     Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
@@ -190,6 +84,7 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
 
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
+
     """A simple class for controlling a Sonos speaker.
 
     For any given set of arguments to __init__, only one instance of this class
@@ -239,6 +134,11 @@ class SoCo(_SocoSingletonBase):
                                             from the current queue.
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
+        get_item_album_art_uri -- Get an item's Album Art absolute URI.
+        search_track -- Search for an artist, artist's albums, or track.
+        get_albums_for_artist -- Get albums for an artist.
+        get_tracks_for_album -- Get tracks for an artist's album.
+        start_library_update -- Trigger an update of the music library.
 
     Properties::
 
@@ -253,6 +153,8 @@ class SoCo(_SocoSingletonBase):
         player_name  -- The speaker's name.
         play_mode -- The queue's repeat/shuffle settings.
         queue_size -- Get size of queue.
+        library_updating -- Whether music library update is in progress.
+        album_artist_display_option -- album artist display option
         is_playing_tv -- Is the playbar speaker input from TV?
         is_playing_radio -- Is the speaker input from radio?
         is_playing_line_in -- Is the speaker input from line-in?
@@ -313,6 +215,8 @@ class SoCo(_SocoSingletonBase):
         self._visible_zones = set()
         self._zgs_cache = None
 
+        _LOG.debug("Created SoCo instance for ip: %s", ip_address)
+
     def __str__(self):
         return "<{0} object at ip {1}>".format(
             self.__class__.__name__, self.ip_address)
@@ -338,7 +242,7 @@ class SoCo(_SocoSingletonBase):
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
             ('DesiredConfiguration', '')
-            ])
+        ])
 
     @property
     def uid(self):
@@ -407,7 +311,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def play_mode(self):
-        """ The queue's play mode. Case-insensitive options are::
+        """ The queue's play mode. Case-insensitive options are:
 
         NORMAL -- Turns off shuffle and repeat.
         REPEAT_ALL -- Turns on repeat and turns off shuffle.
@@ -417,7 +321,7 @@ class SoCo(_SocoSingletonBase):
         """
         result = self.avTransport.GetTransportSettings([
             ('InstanceID', 0),
-            ])
+        ])
         return result['PlayMode']
 
     @play_mode.setter
@@ -430,7 +334,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetPlayMode([
             ('InstanceID', 0),
             ('NewPlayMode', playmode)
-            ])
+        ])
 
     @property
     def cross_fade(self):
@@ -439,7 +343,7 @@ class SoCo(_SocoSingletonBase):
 
         response = self.avTransport.GetCrossfadeMode([
             ('InstanceID', 0),
-            ])
+        ])
         cross_fade_state = response['CrossfadeMode']
         return True if int(cross_fade_state) else False
 
@@ -450,29 +354,19 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetCrossfadeMode([
             ('InstanceID', 0),
             ('CrossfadeMode', crossfade_value)
-            ])
+        ])
 
-    @property
-    def speaker_ip(self):
-        """Retained for backward compatibility only. Will be removed in future
-        releases
-
-        .. deprecated:: 0.7
-           Use :attr:`ip_address` instead.
-
-        """
-        import warnings
-        warnings.warn("speaker_ip is deprecated. Use ip_address instead.")
-        return self.ip_address
-
-    def play_from_queue(self, index):
+    def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
 
         index: the index of the track to play; first item in the queue is 0
+        start: If the item that has been set should start playing
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
+        False if the track did not start (this may be because it was not
+        requested to start because "start=False")
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -488,17 +382,19 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
         # second, set the track number with a seek command
         self.avTransport.Seek([
             ('InstanceID', 0),
             ('Unit', 'TRACK_NR'),
             ('Target', index + 1)
-            ])
+        ])
 
-        # finally, just play what's set
-        return self.play()
+        # finally, just play what's set if needed
+        if start:
+            return self.play()
+        return False
 
     def play(self):
         """Play the currently selected track.
@@ -512,9 +408,9 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Play([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
-    def play_uri(self, uri='', meta='', title=''):
+    def play_uri(self, uri='', meta='', title='', start=True):
         """ Play a given stream. Pauses the queue.
         If there is no metadata passed in and there is a title set then a
         metadata object will be created. This is often the case if you have
@@ -525,9 +421,12 @@ class SoCo(_SocoSingletonBase):
         uri -- URI of a stream to be played.
         meta -- The track metadata to show in the player, DIDL format.
         title -- The track title to show in the player
+        start -- If the URI that has been set should start playing
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
+        False if the track did not start (this may be because it was not
+        requested to start because "start=False")
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -550,9 +449,11 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', uri),
             ('CurrentURIMetaData', meta)
-            ])
-        # The track is enqueued, now play it.
-        return self.play()
+        ])
+        # The track is enqueued, now play it if needed
+        if start:
+            return self.play()
+        return False
 
     def pause(self):
         """ Pause the currently playing track.
@@ -566,7 +467,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Pause([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def stop(self):
         """ Stop the currently playing track.
@@ -580,7 +481,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Stop([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
@@ -599,7 +500,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Unit', 'REL_TIME'),
             ('Target', timestamp)
-            ])
+        ])
 
     def next(self):
         """ Go to the next track.
@@ -619,7 +520,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Next([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def previous(self):
         """ Go back to the previously played track.
@@ -638,7 +539,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Previous([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     @property
     def mute(self):
@@ -647,7 +548,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetMute([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
         mute_state = response['CurrentMute']
         return True if int(mute_state) else False
 
@@ -659,7 +560,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredMute', mute_value)
-            ])
+        ])
 
     @property
     def volume(self):
@@ -668,7 +569,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetVolume([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         volume = response['CurrentVolume']
         return int(volume)
 
@@ -681,7 +582,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredVolume', volume)
-            ])
+        ])
 
     @property
     def bass(self):
@@ -690,7 +591,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetBass([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         bass = response['CurrentBass']
         return int(bass)
 
@@ -702,7 +603,7 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl.SetBass([
             ('InstanceID', 0),
             ('DesiredBass', bass)
-            ])
+        ])
 
     @property
     def treble(self):
@@ -711,7 +612,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetTreble([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         treble = response['CurrentTreble']
         return int(treble)
 
@@ -723,7 +624,7 @@ class SoCo(_SocoSingletonBase):
         self.renderingControl.SetTreble([
             ('InstanceID', 0),
             ('DesiredTreble', treble)
-            ])
+        ])
 
     @property
     def loudness(self):
@@ -737,7 +638,7 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetLoudness([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ])
+        ])
         loudness = response["CurrentLoudness"]
         return True if int(loudness) else False
 
@@ -749,7 +650,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
-            ])
+        ])
 
     def _parse_zone_group_state(self):
         """ The Zone Group State contains a lot of useful information. Retrieve
@@ -795,6 +696,31 @@ class SoCo(_SocoSingletonBase):
 # </ZoneGroups>
 #
 
+        def parse_zone_group_member(member_element):
+            """ Parse a ZoneGroupMember or Satellite element from Zone Group
+            State, create a SoCo instance for the member, set basic attributes
+            and return it. """
+            # Create a SoCo instance for each member. Because SoCo
+            # instances are singletons, this is cheap if they have already
+            # been created, and useful if they haven't. We can then
+            # update various properties for that instance.
+            member_attribs = member_element.attrib
+            ip_addr = member_attribs['Location'].\
+                split('//')[1].split(':')[0]
+            zone = config.SOCO_CLASS(ip_addr)
+            # uid doesn't change, but it's not harmful to (re)set it, in case
+            # the zone is as yet unseen.
+            zone._uid = member_attribs['UUID']
+            zone._player_name = member_attribs['ZoneName']
+            # add the zone to the set of all members, and to the set
+            # of visible members if appropriate
+            is_visible = False if member_attribs.get(
+                'Invisible') == '1' else True
+            if is_visible:
+                self._visible_zones.add(zone)
+            self._all_zones.add(zone)
+            return zone
+
         # This is called quite frequently, so it is worth optimising it.
         # Maintain a private cache. If the zgt has not changed, there is no
         # need to repeat all the XML parsing. In addition, switch on network
@@ -817,15 +743,10 @@ class SoCo(_SocoSingletonBase):
             group_coordinator = None
             members = set()
             for member_element in group_element.findall('ZoneGroupMember'):
-                # Create a SoCo instance for each member. Because SoCo
-                # instances are singletons, this is cheap if they have already
-                # been created, and useful if they haven't. We can then
-                # update various properties for that instance.
-                member_attribs = member_element.attrib
-                ip_addr = member_attribs['Location'].\
-                    split('//')[1].split(':')[0]
-                zone = config.SOCO_CLASS(ip_addr)
-                zone._uid = member_attribs['UUID']
+                zone = parse_zone_group_member(member_element)
+                # Perform extra processing relevant to direct zone group
+                # members
+                #
                 # If this element has the same UUID as the coordinator, it is
                 # the coordinator
                 if zone._uid == coordinator_uid:
@@ -833,20 +754,22 @@ class SoCo(_SocoSingletonBase):
                     zone._is_coordinator = True
                 else:
                     zone._is_coordinator = False
-                zone._player_name = member_attribs['ZoneName']
-                # uid and is_bridge do not change, but it does no real harm to
-                # set/reset them here, just in case the zone has not been seen
+                # is_bridge doesn't change, but it does no real harm to
+                # set/reset it here, just in case the zone has not been seen
                 # before
-                zone._is_bridge = True if member_attribs.get(
+                zone._is_bridge = True if member_element.attrib.get(
                     'IsZoneBridge') == '1' else False
-                is_visible = False if member_attribs.get(
-                    'Invisible') == '1' else True
-                # add the zone to the members for this group, and to the set of
-                # all members, and to the set of visible members if appropriate
+                # add the zone to the members for this group
                 members.add(zone)
-                self._all_zones.add(zone)
-                if is_visible:
-                    self._visible_zones.add(zone)
+                # Loop over Satellite elements if present, and process as for
+                # ZoneGroup elements
+                for satellite_element in member_element.findall('Satellite'):
+                    zone = parse_zone_group_member(satellite_element)
+                    # Assume a satellite can't be a bridge or coordinator, so
+                    # no need to check.
+                    #
+                    # Add the zone to the members for this group.
+                    members.add(zone)
                 # Now create a ZoneGroup with this info and add it to the list
                 # of groups
             self._groups.add(ZoneGroup(group_uid, group_coordinator, members))
@@ -919,7 +842,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -937,7 +860,7 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
             ('InstanceID', 0)
-            ])
+        ])
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
@@ -957,7 +880,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     @property
     def is_playing_radio(self):
@@ -1016,7 +939,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('CurrentURI', 'x-sonos-htastream:{0}:spdif'.format(self.uid)),
             ('CurrentURIMetaData', '')
-            ])
+        ])
 
     @property
     def status_light(self):
@@ -1034,7 +957,19 @@ class SoCo(_SocoSingletonBase):
         led_state = 'On' if led_on else 'Off'
         self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
-            ])
+        ])
+
+    def _build_album_art_full_uri(self, url):
+        """ Ensure an Album Art URI is an absolute URI
+
+        :param url: The album art URI
+        """
+
+        # Add on the full album art link, as the URI version
+        # does not include the ipaddress
+        if not url.startswith(('http:', 'https:')):
+            url = 'http://' + self.ip_address + ':1400' + url
+        return url
 
     def get_current_track_info(self):
         """ Get information about the currently playing track.
@@ -1054,7 +989,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
 
         track = {'title': '', 'artist': '', 'album': '', 'album_art': '',
                  'position': ''}
@@ -1079,8 +1014,13 @@ class SoCo(_SocoSingletonBase):
                 track['artist'] = trackinfo[:index]
                 track['title'] = trackinfo[index + 3:]
             else:
-                LOGGER.warning('Could not handle track info: "%s"', trackinfo)
-                track['title'] = trackinfo
+                # Might find some kind of title anyway in metadata
+                track['title'] = metadata.findtext('.//{http://purl.org/dc/'
+                                                   'elements/1.1/}title')
+                if not track['title']:
+                    _LOG.warning('Could not handle track info: "%s"',
+                                 trackinfo)
+                    track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
@@ -1104,16 +1044,11 @@ class SoCo(_SocoSingletonBase):
             if md_album:
                 track['album'] = md_album
 
-            album_art = metadata.findtext(
+            album_art_url = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-            if album_art is not None:
-                url = metadata.findtext(
-                    './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
-                if url.startswith(('http:', 'https:')):
-                    track['album_art'] = url
-                else:
-                    track['album_art'] = 'http://' + self.ip_address + ':1400'\
-                        + url
+            if album_art_url is not None:
+                track['album_art'] = self._build_album_art_full_uri(
+                    album_art_url)
 
         return track
 
@@ -1150,38 +1085,6 @@ class SoCo(_SocoSingletonBase):
 
             return self.speaker_info
 
-    def get_group_coordinator(self, zone_name):
-        """     .. deprecated:: 0.8
-                   Use :meth:`group` or :meth:`all_groups` instead.
-
-        """
-        import warnings
-        warnings.warn(
-            "get_group_coordinator is deprecated. "
-            "Use the group or all_groups methods instead")
-        for group in self.all_groups:
-            for member in group:
-                if member.player_name == zone_name:
-                    return group.coordinator.ip_address
-        return None
-
-    def get_speakers_ip(self, refresh=False):
-        """ Get the IP addresses of all the Sonos speakers in the network.
-
-        Arguments:
-        refresh -- Refresh the speakers IP cache. Ignored. For backward
-            compatibility only
-
-        Returns:
-        a set of IP addresses of the Sonos speakers.
-
-        .. deprecated:: 0.8
-
-
-        """
-        # pylint: disable=star-args, unused-argument
-        return set(z.ip_address for z in itertools.chain(*self.all_groups))
-
     def get_current_transport_info(self):
         """ Get the current playback state
 
@@ -1197,7 +1100,7 @@ class SoCo(_SocoSingletonBase):
         """
         response = self.avTransport.GetTransportInfo([
             ('InstanceID', 0),
-            ])
+        ])
 
         playstate = {
             'current_transport_status': '',
@@ -1234,7 +1137,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
         result = response['Result']
 
         metadata = {}
@@ -1247,10 +1150,8 @@ class SoCo(_SocoSingletonBase):
             # pylint: disable=star-args
             return Queue(queue, **metadata)
 
-        result_dom = XML.fromstring(really_utf8(result))
-        for element in result_dom.findall(
-                '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-            item = QueueItem.from_xml(element)
+        items = from_didl_string(result)
+        for item in items:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
                 self._update_album_art_to_full_uri(item)
@@ -1269,7 +1170,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', 0),
             ('RequestedCount', 1),
             ('SortCriteria', '')
-            ])
+        ])
         dom = XML.fromstring(really_utf8(response['Result']))
 
         queue_size = None
@@ -1282,84 +1183,71 @@ class SoCo(_SocoSingletonBase):
 
         return queue_size
 
-    def get_sonos_playlists(self, start=0, max_items=100,
-                            full_album_art_uri=False):
+    def get_sonos_playlists(self, *args, **kwargs):
         """ Convenience method for:
             get_music_library_information('sonos_playlists')
             Refer to the docstring for that method
 
         """
-        out = self.get_music_library_information(
-            'sonos_playlists',
-            start,
-            max_items,
-            full_album_art_uri)
-        return out
+        args = tuple(['sonos_playlists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_artists(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_artists(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='artists'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        out = self.get_music_library_information('artists', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['artists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_album_artists(self, start=0, max_items=100,
-                          full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_album_artists(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='album_artists'`. For details on remaining arguments
         refer to the docstring for that method.
 
         """
-        out = self.get_music_library_information('album_artists',
-                                                 start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['album_artists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_albums(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_albums(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='albums'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        out = self.get_music_library_information('albums', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['albums'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_genres(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_genres(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='genres'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        out = self.get_music_library_information('genres', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['genres'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_composers(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_composers(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='composers'`. For details on remaining arguments
         refer to the docstring for that method.
 
         """
-        out = self.get_music_library_information('composers', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['composers'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_tracks(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_tracks(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='tracks'`. For details on remaining arguments refer
         to the docstring for that method.
 
         """
-        out = self.get_music_library_information('tracks', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['tracks'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
-    def get_playlists(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Convinience method for :py:meth:`get_music_library_information`
+    def get_playlists(self, *args, **kwargs):
+        """ Convenience method for :py:meth:`get_music_library_information`
         with `search_type='playlists'`. For details on remaining arguments
         refer to the docstring for that method.
 
@@ -1367,26 +1255,83 @@ class SoCo(_SocoSingletonBase):
         imported from the music library, they are not the Sonos playlists.
 
         """
-        out = self.get_music_library_information('playlists', start, max_items,
-                                                 full_album_art_uri)
-        return out
+        args = tuple(['playlists'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
 
+    # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
     def get_music_library_information(self, search_type, start=0,
-                                      max_items=100, full_album_art_uri=False):
-        """ Retrieve information about the music library
+                                      max_items=100, full_album_art_uri=False,
+                                      search_term=None, subcategories=None,
+                                      complete_result=False):
+        """ Retrieve music information objects from the music library
+
+        This method is the main method to get music information items, like
+        e.g. tracks, albums etc., from the music library with. It can be used
+        in a few different ways:
+
+        The **search_term** argument performs a fuzzy search on that string in
+        the results, so e.g calling::
+
+          get_music_library_items('artist', search_term='Metallica')
+
+        will perform a fuzzy search for the term 'Metallica' among all the
+        artists.
+
+        Using the **subcategories** argument, will jump directly into that
+        subcategory of the search and return results from there. So. e.g
+        knowing that among the artist is one called 'Metallica', calling::
+
+          get_music_library_items('artist', subcategories=['Metallica'])
+
+        will jump directly into the 'Metallica' sub category and return the
+        albums associated with Metallica and::
+
+          get_music_library_items('artist', subcategories=['Metallica',
+                                                           'Black'])
+
+        will return the tracks of the album 'Black' by the artist 'Metallica'.
+        The order of sub category types is: Genres->Artists->Albums->Tracks.
+        It is also possible to combine the two, to perform a fuzzy search in a
+        sub category.
+
+        The **start**, **max_items** and **complete_result** arguments all
+        has to do with paging of the results. Per default, the searches are
+        always paged, because there is a limit to how many items we can get at
+        a time. This paging is exposed to the user with the start and max_items
+        arguments. So calling::
+
+          get_music_library_items('artists', start=0, max_items=100)
+          get_music_library_items('artists', start=100, max_items=100)
+
+        will get the first and next 100 items, respectively. It is also
+        possible to ask for all the elements at once::
+
+          get_music_library_items('artists', complete_result=True)
+
+        This will perform the paging internally and simply return all the
+        items.
 
         :param search_type: The kind of information to retrieve. Can be one of:
             'artists', 'album_artists', 'albums', 'genres', 'composers',
             'tracks', 'share', 'sonos_playlists', and 'playlists', where
             playlists are the imported file based playlists from the
             music library
-        :param start: Starting number of returned matches
+        :param start: Starting number of returned matches (zero based).
         :param max_items: Maximum number of returned matches. NOTE: The maximum
             may be restricted by the unit, presumably due to transfer
             size consideration, so check the returned number against the
             requested.
         :param full_album_art_uri: If the album art URI should include the
             IP address
+        :param search_term: A string that will be used to perform a fuzzy
+            search among the search results. If used in combination with
+            subcategories, the fuzzy search will be performed in the
+            subcategory
+        :param subcategories: A list of strings that indicate one or more
+            subcategories to dive into
+        :param complete_result: Will disable paging (ignore start and
+            max_items) and return all results for the search. WARNING! Getting
+            e.g. all the tracks in a large collection might take some time.
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object
         :raises: :py:class:`SoCoException` upon errors
 
@@ -1401,66 +1346,115 @@ class SoCo(_SocoSingletonBase):
 
         """
         search = self.SEARCH_TRANSLATION[search_type]
-        response, metadata = self._music_lib_search(search, start, max_items)
-        metadata['search_type'] = search_type
 
-        # Parse the results
-        dom = XML.fromstring(really_utf8(response['Result']))
+        # Add sub categories
+        if subcategories is not None:
+            for category in subcategories:
+                search += '/' + url_escape_path(really_unicode(category))
+        # Add fuzzy search
+        if search_term is not None:
+            search += ':' + url_escape_path(really_unicode(search_term))
+
         item_list = []
-        for container in dom:
-            if search_type == 'sonos_playlists':
-                item = MLSonosPlaylist.from_xml(container)
-            elif search_type == 'share':
-                item = MLShare.from_xml(container)
-            else:
-                item = get_ml_item(container)
-            # Check if the album art URI should be fully qualified
-            if full_album_art_uri:
-                self._update_album_art_to_full_uri(item)
-            # Append the item to the list
-            item_list.append(item)
+        metadata = {'total_matches': 100000}
+        while len(item_list) < metadata['total_matches']:
+            # Change start and max for complete searches
+            if complete_result:
+                start, max_items = len(item_list), 100000
+
+            # Try and get this batch of results
+            try:
+                response, metadata =\
+                    self._music_lib_search(search, start, max_items)
+            except SoCoUPnPException as exception:
+                # 'No such object' UPnP errors
+                if exception.error_code == '701':
+                    return SearchResult([], search_type, 0, 0, None)
+                else:
+                    raise exception
+
+            # Parse the results
+            items = from_didl_string(response['Result'])
+            for item in items:
+                # Check if the album art URI should be fully qualified
+                if full_album_art_uri:
+                    self._update_album_art_to_full_uri(item)
+                # Append the item to the list
+                item_list.append(item)
+
+            # If we are not after the complete results, the stop after 1
+            # iteration
+            if not complete_result:
+                break
+
+        metadata['search_type'] = search_type
+        if complete_result:
+            metadata['number_returned'] = len(item_list)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
     def browse(self, ml_item=None, start=0, max_items=100,
-               full_album_art_uri=False):
+               full_album_art_uri=False, search_term=None, subcategories=None):
         """Browse (get sub-elements) a music library item
 
-        Keyword arguments:
-            ml_item (MusicLibraryItem): The MusicLibraryItem to browse, if left
-                out or passed None, the items at the base level will be
-                returned
-            start (int): The starting index of the results
-            max_items (int): The maximum number of items to return
-            full_album_art_uri(bool): If the album art URI should include the
-                IP address
-
-        Returns:
-            dict: A :py:class:`~.soco.data_structures.SearchResult` object
-
-        Raises:
-            AttributeError: If ``ml_item`` has no ``item_id`` attribute
+        :param ml_item: The MusicLibraryItem to browse, if left out or passed
+            None, the items at the base level will be returned
+        :type ml_item: MusicLibraryItem
+        :param start: The starting index of the results
+        :type start: int
+        :param max_items: The maximum number of items to return
+        :type max_items: int
+        :param full_album_art_uri: If the album art URI should include the IP
+            address
+        :type full_album_art_uri: bool
+        :param search_term: A string that will be used to perform a fuzzy
+            search among the search results. If used in combination with
+            subcategories, the fuzzy search will be performed on the
+            subcategory. NOTE: Searching will not work if ml_item is None.
+        :type search_term: str
+        :param subcategories: A list of strings that indicate one or more
+            subcategories to dive into. NOTE: Providing sub categories will
+            not work if ml_item is None.
+        :type subcategories: list
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        :raises: AttributeError: If ``ml_item`` has no ``item_id`` attribute
             SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-                browsed
+            browsed
         """
         if ml_item is None:
             search = 'A:'
         else:
             search = ml_item.item_id
 
-        response, metadata = self._music_lib_search(search, start, max_items)
+        # Add sub categories
+        if subcategories is not None:
+            for category in subcategories:
+                search += '/' + url_escape_path(really_unicode(category))
+        # Add fuzzy search
+        if search_term is not None:
+            search += ':' + url_escape_path(really_unicode(search_term))
+
+        try:
+            response, metadata =\
+                self._music_lib_search(search, start, max_items)
+        except SoCoUPnPException as exception:
+            # 'No such object' UPnP errors
+            if exception.error_code == '701':
+                return SearchResult([], 'browse', 0, 0, None)
+            else:
+                raise exception
         metadata['search_type'] = 'browse'
 
         # Parse the results
-        dom = XML.fromstring(really_utf8(response['Result']))
+        containers = from_didl_string(response['Result'])
         item_list = []
-        for container in dom:
-            item = get_ml_item(container)
+        for container in containers:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
-                self._update_album_art_to_full_uri(item)
-            item_list.append(item)
+                self._update_album_art_to_full_uri(container)
+            item_list.append(container)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
@@ -1490,13 +1484,19 @@ class SoCo(_SocoSingletonBase):
         search = self.SEARCH_TRANSLATION[search_type]
 
         # Check if the string ID already has the type, if so we do not want to
-        # add one
-        if idstring.startswith(search):
+        # add one also Imported playlist have a full path to them, so they do
+        # not require the A:PLAYLISTS part first
+        if idstring.startswith(search) or (search_type == 'playlists'):
             search = ""
 
-        search_uri = "#{0}{1}".format(search, idstring)
-
-        search_item = MusicLibraryItem(uri=search_uri, title='', parent_id='')
+        search_item_id = search + idstring
+        search_uri = "#" + search_item_id
+        # Not sure about the res protocol. But this seems to work
+        res = [DidlResource(
+            uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
+        search_item = DidlObject(
+            resources=res, title='', parent_id='',
+            item_id=search_item_id)
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
@@ -1535,7 +1535,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
 
         # Get result information
         metadata = {}
@@ -1549,35 +1549,23 @@ class SoCo(_SocoSingletonBase):
         :param uri: The URI to be added to the queue
         :type uri: str
         """
-        item = URI(uri)
+        # FIXME: The res.protocol_info should probably represent the mime type
+        # etc of the uri. But this seems OK.
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        item = DidlObject(resources=res, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
-        # Check if teh required attributes are there
-        for attribute in ['didl_metadata', 'uri']:
-            if not hasattr(queueable_item, attribute):
-                message = 'queueable_item has no attribute {0}'.\
-                    format(attribute)
-                raise AttributeError(message)
-        # Get the metadata
-        try:
-            metadata = XML.tostring(queueable_item.didl_metadata)
-        except CannotCreateDIDLMetadata as exception:
-            message = ('The queueable item could not be enqueued, because it '
-                       'raised a CannotCreateDIDLMetadata exception with the '
-                       'following message:\n{0}').format(str(exception))
-            raise ValueError(message)
-        if isinstance(metadata, str):
-            metadata = metadata.encode('utf-8')
-
+        metadata = to_didl_string(queueable_item)
+        metadata.encode('utf-8')
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
-            ('EnqueuedURI', queueable_item.uri),
+            ('EnqueuedURI', queueable_item.resources[0].uri),
             ('EnqueuedURIMetaData', metadata),
             ('DesiredFirstTrackNumberEnqueued', 0),
             ('EnqueueAsNext', 1)
-            ])
+        ])
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
@@ -1600,7 +1588,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('ObjectID', objid),
             ('UpdateID', updid),
-            ])
+        ])
 
     def clear_queue(self):
         """ Removes all tracks from the queue.
@@ -1613,7 +1601,7 @@ class SoCo(_SocoSingletonBase):
         """
         self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
-            ])
+        ])
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """ Get favorite radio shows from Sonos' Radio app.
@@ -1667,7 +1655,7 @@ class SoCo(_SocoSingletonBase):
             ('StartingIndex', start),
             ('RequestedCount', max_items),
             ('SortCriteria', '')
-            ])
+        ])
         result = {}
         favorites = []
         results_xml = response['Result']
@@ -1692,18 +1680,13 @@ class SoCo(_SocoSingletonBase):
         return result
 
     def _update_album_art_to_full_uri(self, item):
-        """Updated the Album Art URI to be fully qualified
+        """Update an item's Album Art URI to be an absolute URI
 
         :param item: The item to update the URI for
         """
-        if not getattr(item, 'album_art_uri', False):
-            return
-
-        # Add on the full album art link, as the URI version
-        # does not include the ipaddress
-        if not item.album_art_uri.startswith(('http:', 'https:')):
-            item.album_art_uri = 'http://' + self.ip_address + ':1400' +\
-                item.album_art_uri
+        if getattr(item, 'album_art_uri', False):
+            item.album_art_uri = self._build_album_art_full_uri(
+                item.album_art_uri)
 
     def create_sonos_playlist(self, title):
         """ Create a new empty Sonos playlist.
@@ -1711,7 +1694,7 @@ class SoCo(_SocoSingletonBase):
         :params title: Name of the playlist
 
         :returns: An instance of
-            :py:class:`~.soco.data_structures.MLSonosPlaylist`
+            :py:class:`~.soco.data_structures.DidlPlaylistContainer`
 
         """
         response = self.avTransport.CreateSavedQueue([
@@ -1719,12 +1702,15 @@ class SoCo(_SocoSingletonBase):
             ('Title', title),
             ('EnqueuedURI', ''),
             ('EnqueuedURIMetaData', ''),
-            ])
+        ])
 
-        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        item_id = response['AssignedObjectID']
+        obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
 
-        return MLSonosPlaylist(uri, title, 'SQ:')
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        return DidlPlaylistContainer(
+            resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
@@ -1733,7 +1719,7 @@ class SoCo(_SocoSingletonBase):
             :params title: Name of the playlist
 
             :returns: An instance of
-                :py:class:`~.soco.data_structures.MLSonosPlaylist`
+                :py:class:`~.soco.data_structures.DidlPlaylistContainer`
 
         """
         # Note: probably same as Queue service method SaveAsSonosPlaylist
@@ -1744,16 +1730,19 @@ class SoCo(_SocoSingletonBase):
             ('Title', title),
             ('ObjectID', '')
         ])
-        obj_id = response['AssignedObjectID'].split(':', 2)[1]
+        item_id = response['AssignedObjectID']
+        obj_id = item_id.split(':', 2)[1]
         uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
-
-        return MLSonosPlaylist(uri, title, 'SQ:')
+        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+        return DidlPlaylistContainer(
+            resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist
-        :param queueable_item: the item to add to the Sonos' playlist
-        :param sonos_playlist: the Sonos' playlist to which the item should
-                               be added
+
+            :param queueable_item: the item to add to the Sonos' playlist
+            :param sonos_playlist: the Sonos' playlist to which the item should
+                be added
 
         """
         # Check if the required attributes are there
@@ -1765,9 +1754,9 @@ class SoCo(_SocoSingletonBase):
         # Get the metadata
         try:
             metadata = XML.tostring(queueable_item.didl_metadata)
-        except CannotCreateDIDLMetadata as exception:
+        except DIDLMetadataError as exception:
             message = ('The queueable item could not be enqueued, because it '
-                       'raised a CannotCreateDIDLMetadata exception with the '
+                       'raised a DIDLMetadataError exception with the '
                        'following message:\n{0}').format(str(exception))
             raise ValueError(message)
         if isinstance(metadata, str):
@@ -1784,7 +1773,136 @@ class SoCo(_SocoSingletonBase):
             ('AddAtIndex', 4294967295)  # this field has always this value, we
                                         # do not known the meaning of this
                                         # "magic" number.
-            ])
+        ])
+
+    def get_item_album_art_uri(self, item):
+        """ Get an item's Album Art absolute URI. """
+
+        if getattr(item, 'album_art_uri', False):
+            return self._build_album_art_full_uri(item.album_art_uri)
+        else:
+            return None
+
+    # pylint: disable=too-many-locals
+    def search_track(self, artist, album=None, track=None,
+                     full_album_art_uri=False):
+        """Search for an artist, artist's albums, or specific track.
+
+        :param artist: Artist name
+        :type artist: str
+        :param album: Album name
+        :type album: str
+        :param track: Track name
+        :type track: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+
+        """
+        subcategories = [artist]
+        subcategories.append(album or '')
+
+        # Perform the search
+        result = self.get_album_artists(
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories, search_term=track,
+            complete_result=True)
+        result._metadata['search_type'] = 'search_track'
+        return result
+
+    def get_albums_for_artist(self, artist, full_album_art_uri=False):
+        """Get albums for an artist.
+
+        :param artist: Artist name
+        :type artist: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+
+        """
+        subcategories = [artist]
+        result = self.get_album_artists(
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories,
+            complete_result=True)
+
+        reduced = [item for item in result if item.__class__ == DidlMusicAlbum]
+        # It is necessary to update the list of items in two places, due to
+        # a bug in SearchResult
+        result[:] = reduced
+        result._metadata.update({
+            'item_list': reduced,
+            'search_type': 'albums_for_artist',
+            'number_returned': len(reduced),
+            'total_matches': len(reduced)
+        })
+        return result
+
+    def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
+        """Get tracks for an artist's album.
+
+        :param artist: Artist name
+        :type artist: str
+        :param album: Album name
+        :type album: str
+        :param full_album_art_uri: If the album art URI should include the
+            IP address
+        :type full_album_art_uri: bool
+        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
+        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+
+        """
+        subcategories = [artist, album]
+        result = self.get_album_artists(
+            full_album_art_uri=full_album_art_uri,
+            subcategories=subcategories,
+            complete_result=True)
+        result._metadata['search_type'] = 'tracks_for_album'
+        return result
+
+    @property
+    def library_updating(self):
+        """True if the music library is in the process of being updated
+
+        :returns: True if the music library is in the process of being updated
+        :rtype: bool
+        """
+        result = self.contentDirectory.GetShareIndexInProgress()
+        return result['IsIndexing'] != '0'
+
+    def start_library_update(self, album_artist_display_option=''):
+        """Start an update of the music library.
+
+        If specified, album_artist_display_option changes the album
+        artist compilation setting (see also album_artist_display_option).
+        """
+        return self.contentDirectory.RefreshShareIndex([
+            ('AlbumArtistDisplayOption', album_artist_display_option),
+        ])
+
+    @property
+    def album_artist_display_option(self):
+        """Return the current value of the album artist compilation
+        setting (see
+        http://www.sonos.com/support/help/3.4/en/sonos_user_guide/
+        Chap07_new/Compilation_albums.htm)
+
+        This is a string. Possible values:
+
+        * "WMP" - Use Album Artists
+        * "ITUNES" - Use iTunes® Compilations
+        * "NONE" - Do not group compilations
+
+        To change the current setting, call `start_library_update` and
+        pass the new setting.
+        """
+        result = self.contentDirectory.GetAlbumArtistDisplayOption()
+        return result['AlbumArtistDisplayOption']
+
 
 # definition section
 

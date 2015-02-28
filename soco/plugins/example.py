@@ -11,6 +11,7 @@ __all__ = ['ExamplePlugin']
 
 
 class ExamplePlugin(SoCoPlugin):
+
     """ This file serves as an example of a SoCo plugin """
 
     def __init__(self, soco, username):
@@ -37,7 +38,7 @@ class ExamplePlugin(SoCoPlugin):
         self.soco.avTransport.Play([
             ('InstanceID', 0),
             ('Speed', 1)
-            ])
+        ])
 
     def music_plugin_stop(self):
         """ Stop the music

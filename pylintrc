@@ -3,7 +3,9 @@
 # locally disable too-many-lines is only possible if the disable statement is
 # put into the first line, which is not good practice
 # see https://github.com/SoCo/SoCo/issues/127
-disable=too-many-lines,locally-disabled
+# duplicate code check disabled whilst refactoring of wimp plugin is in
+# progress
+disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods
 
 [REPORTS]
 

@@ -66,6 +66,7 @@ zone_group_state_shared_cache = Cache()
 
 # pylint: disable=too-many-instance-attributes
 class Service(object):
+
     """ An class representing a UPnP service. The base class for all Sonos
     Service classes
 
@@ -107,10 +108,6 @@ class Service(object):
         #: A cache for storing the result of network calls. By default, this is
         #: TimedCache(default_timeout=0). See :class:`TimedCache`
         self.cache = Cache(default_timeout=0)
-        log.debug(
-            "Created service %s, ver %s, id %s, base_url %s, control_url %s",
-            self.service_type, self.version, self.service_id, self.base_url,
-            self.control_url)
 
         # From table 3.3 in
         # http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf
@@ -294,6 +291,9 @@ class Service(object):
             action=action)
         headers = {'Content-Type': 'text/xml; charset="utf-8"',
                    'SOAPACTION': soap_action}
+        # Note that although we set the charset to utf-8 here, in fact the
+        # body is still unicode. It will only be converted to bytes when it
+        # is set over the network
         return (headers, body)
 
     def send_command(self, action, args=None, cache=None, cache_timeout=None):
@@ -329,20 +329,25 @@ class Service(object):
         headers, body = self.build_command(action, args)
         log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
+        # Convert the body to bytes, and send it.
         response = requests.post(
-            self.base_url + self.control_url, headers=headers, data=body)
+            self.base_url + self.control_url,
+            headers=headers,
+            data=body.encode('utf-8')
+        )
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
+        log.info(
+            "Received status %s from %s", status, self.soco.ip_address)
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
-            # params are returned.
+            # params are returned. By using response.text, we rely upon
+            # the requests library to convert to unicode for us.
             result = self.unwrap_arguments(response.text) or True
             # Store in the cache. There is no need to do this if there was an
             # error, since we would want to try a network call again.
             cache.put(result, action, args, timeout=cache_timeout)
-            log.info(
-                "Received status %s from %s", status, self.soco.ip_address)
             return result
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
@@ -410,7 +415,7 @@ class Service(object):
                 error_code=error_code,
                 error_description=description,
                 error_xml=xml_error
-                )
+            )
         else:
             # Unknown error, so just return the entire response
             log.error("Unknown error received from %s", self.soco.ip_address)
@@ -477,8 +482,10 @@ class Service(object):
         # default value
         # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
-        scpd_body = requests.get(self.base_url + self.scpd_url).text
-        tree = XML.fromstring(scpd_body.encode('utf-8'))
+        # get the scpd body as bytes, and feed directly to elementtree
+        # which likes to receive bytes
+        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
         srvStateTables = tree.findall('{0}serviceStateTable'.format(ns))
@@ -533,7 +540,9 @@ class Service(object):
 
 
 class AlarmClock(Service):
+
     """ Sonos alarm service, for setting and getting time and alarms. """
+
     def __init__(self, soco):
         super(AlarmClock, self).__init__(soco)
         self.UPNP_ERRORS.update(
@@ -543,29 +552,37 @@ class AlarmClock(Service):
 
 
 class MusicServices(Service):
+
     """ Sonos music services service, for functions related to 3rd party
     music services. """
+
     def __init__(self, soco):
         super(MusicServices, self).__init__(soco)
 
 
 class DeviceProperties(Service):
+
     """ Sonos device properties service, for functions relating to zones,
     LED state, stereo pairs etc. """
+
     def __init__(self, soco):
         super(DeviceProperties, self).__init__(soco)
 
 
 class SystemProperties(Service):
+
     """ Sonos system properties service, for functions relating to
     authentication etc """
+
     def __init__(self, soco):
         super(SystemProperties, self).__init__(soco)
 
 
 class ZoneGroupTopology(Service):
+
     """ Sonos zone group topology service, for functions relating to network
     topology, diagnostics and updates. """
+
     def __init__(self, soco):
         super(ZoneGroupTopology, self).__init__(soco)
 
@@ -577,20 +594,26 @@ class ZoneGroupTopology(Service):
 
 
 class GroupManagement(Service):
+
     """ Sonos group management service, for services relating to groups. """
+
     def __init__(self, soco):
         super(GroupManagement, self).__init__(soco)
 
 
 class QPlay(Service):
+
     """ Sonos Tencent QPlay service (a Chinese music service) """
+
     def __init__(self, soco):
         super(QPlay, self).__init__(soco)
 
 
 class ContentDirectory(Service):
+
     """ UPnP standard Content Directory service, for functions relating to
     browsing, searching and listing available music. """
+
     def __init__(self, soco):
         super(ContentDirectory, self).__init__(soco)
         self.control_url = "/MediaServer/ContentDirectory/Control"
@@ -621,7 +644,9 @@ class ContentDirectory(Service):
 
 
 class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
+
     """ UPnP standard connection manager service for the media server."""
+
     def __init__(self, soco):
         super(MS_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
@@ -630,8 +655,10 @@ class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 
 class RenderingControl(Service):
+
     """ UPnP standard redering control service, for functions relating to
     playback rendering, eg bass, treble, volume and EQ. """
+
     def __init__(self, soco):
         super(RenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
@@ -639,7 +666,9 @@ class RenderingControl(Service):
 
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
+
     """ UPnP standard connection manager service for the media renderer."""
+
     def __init__(self, soco):
         super(MR_ConnectionManager, self).__init__(soco)
         self.service_type = "ConnectionManager"
@@ -648,8 +677,10 @@ class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 
 class AVTransport(Service):
+
     """ UPnP standard AV Transport service, for functions relating to
     transport management, eg play, stop, seek, playlists etc. """
+
     def __init__(self, soco):
         super(AVTransport, self).__init__(soco)
         self.control_url = "/MediaRenderer/AVTransport/Control"
@@ -678,12 +709,14 @@ class AVTransport(Service):
             737: 'No DNS Server',
             738: 'Bad Domain Name',
             739: 'Server Error',
-            })
+        })
 
 
 class Queue(Service):
+
     """ Sonos queue service, for functions relating to queue management, saving
     queues etc. """
+
     def __init__(self, soco):
         super(Queue, self).__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
@@ -691,8 +724,10 @@ class Queue(Service):
 
 
 class GroupRenderingControl(Service):
+
     """ Sonos group rendering control service, for functions relating to
     group volume etc. """
+
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"

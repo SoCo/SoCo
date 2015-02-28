@@ -1,9 +1,12 @@
 sphinx
+sphinxcontrib-napoleon # can be removed once sphinx 1.3 comes out
 pytest >= 2.5
 mock >= 1.0.1
 graphviz
 flake8
-pylint
+astroid==1.2.1 # pinned as 1.3 drops support for python 2.6
+pylint==1.3.1 # pinned as 1.4 drops support for python 2.6
+logilab-common==0.62.1  # requirement of pylint; pinned as 0.63.0 has problems
 coveralls
 pytest-cov
 wheel

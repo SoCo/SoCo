@@ -1,0 +1,83 @@
+SoCo 0.10 release notes
+***********************
+
+**SoCo 0.10** is a new version of the SoCo library. This release adds new features
+and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features
+============
+
+* Add support for taking a snapshot of the Sonos state, and then to restore it
+  later (`#224 <https://github.com/SoCo/SoCo/pull/224>`_, `#251
+  <https://github.com/SoCo/SoCo/pull/251>`_)
+
+* Added create_sonos_playlist_from_queue. Creates a new Sonos playlist from the
+  current queue (`#229 <https://github.com/SoCo/SoCo/pull/229>`_)
+
+
+Improvements
+============
+
+* Added a queue_size property to quickly return the size of the queue without
+  reading any items (`#217 <https://github.com/SoCo/SoCo/pull/217>`_)
+
+* Add metadata to return structure of get_current_track_info (`#220
+  <https://github.com/SoCo/SoCo/pull/220>`_)
+
+* Add option to play_uri that allows for the item to be set and then optionally
+  played (`#219 <https://github.com/SoCo/SoCo/pull/219>`_)
+
+* Add option to play_uri that allows playing with a URI and title instead of
+  metadata (`#221 <https://github.com/SoCo/SoCo/pull/221>`_)
+
+* Get the item ID from the XML responses which enables adding tracks for music
+  services such as Rhapsody which do not have all the detail in the item URI
+  (`#233 <https://github.com/SoCo/SoCo/pull/233>`_)
+
+* Added label and short_label properties, to provide a consistent readable
+  label for group members (`#228 <https://github.com/SoCo/SoCo/pull/228>`_)
+
+* Improved documentation (`#248 <https://github.com/SoCo/SoCo/pull/248>`_,
+  `#253 <https://github.com/SoCo/SoCo/pull/253>`_,
+  `#259 <https://github.com/SoCo/SoCo/pull/259>`_)
+
+* Improved code examples (`#250 <https://github.com/SoCo/SoCo/pull/250>`_,
+  `#252 <https://github.com/SoCo/SoCo/pull/252>`_)
+
+
+Bugfixes
+========
+
+* Fixed a bug where ``get_ml_item()`` would fail if a radio station was played
+  (`#226 <https://github.com/SoCo/SoCo/pull/226>`_)
+
+* Fixed a timeout-related regression in ``soco.discover()`` (
+  `#244 <https://github.com/SoCo/SoCo/pull/244>`_)
+
+* Discovery code fixed to account for closing of multicast sockets by certain
+  devices (`#202 <https://github.com/SoCo/SoCo/pull/202>`_,
+  `#201 <https://github.com/SoCo/SoCo/pull/201>`_)
+
+* Fixed a bug where sometimes zone groups would be created without a
+  coordinator (`#230 <https://github.com/SoCo/SoCo/pull/230>`_)
+
+
+Backwards Compatability
+=======================
+
+The metadata classes (``ML*``) have all been renamed (generally to ``Didl*``),
+and aligned more closely with the underlying XML. The Music Services data
+structures (``MS*``) have been moved to their own module, and metadata for
+radio broadcasts is now returned properly (`#243
+<https://github.com/SoCo/SoCo/pull/243>`_).
+
+The ``URI`` class has been removed. As an alternative the method
+:meth:`soco.SoCo.play_uri` can be used to enqueue and play an URI. The class
+:class:`soco.data_structures.DIDLObject` can be used if an object is required.
+
+Work is still ongoing on the metadata classes, so further changes should be
+expected.

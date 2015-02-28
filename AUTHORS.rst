@@ -29,6 +29,7 @@ Contributors
 * Dave O'Connor
 * Dennnis O'Reilly
 * phut
+* Dan Poirier
 * Jason Ting
 * Scott G Waters
 

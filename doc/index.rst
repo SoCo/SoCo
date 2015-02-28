@@ -19,7 +19,7 @@ Contents
    plugins
    unittests
    data-structures-mod
-   release_notes
+   releases/index
    release-howto
 
 

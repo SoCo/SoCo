@@ -14,6 +14,7 @@ __all__ = ['Spotify']
 
 
 class SpotifyTrack(object):
+
     """ Class that represents a Spotify track
 
     usage example: SpotifyTrack('spotify:track:20DfkHC5grnKNJCzZQB6KC') """
@@ -96,6 +97,7 @@ class SpotifyTrack(object):
 
 
 class SpotifyAlbum(object):
+
     """ Class that represents a Spotifyalbum
 
     usage example: SpotifyAlbum('spotify:album:6a50SaJpvdWDp13t0wUcPU') """
@@ -178,6 +180,7 @@ class SpotifyAlbum(object):
 
 
 class Spotify(SoCoPlugin):
+
     """ Class that implements spotify plugin"""
 
     sid = '9'
