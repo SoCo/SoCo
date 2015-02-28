@@ -891,7 +891,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
         track_uri = response['TrackURI']
         return re.match(r'^x-rincon-mp3radio:', track_uri) is not None
 
@@ -904,7 +904,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
         track_uri = response['TrackURI']
         return re.match(r'^x-rincon-stream:', track_uri) is not None
 
@@ -917,7 +917,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
-            ])
+        ])
         track_uri = response['TrackURI']
         return re.match(r'^x-sonos-htastream:', track_uri) is not None
 
