@@ -10,12 +10,13 @@ import socket
 import logging
 import re
 import requests
+from functools import wraps
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import SoCoUPnPException
+from .exceptions import SoCoUPnPException, SoCoSlaveException
 from .data_structures import DidlPlaylistContainer,\
     SearchResult, Queue, DidlObject, DidlMusicAlbum,\
     from_didl_string, to_didl_string, DidlResource
@@ -80,6 +81,19 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
 
     """
     pass
+
+
+def only_on_master(function):
+    """Decorator that raises SoCoSlaveException on master call on slave"""
+    @wraps(function)
+    def inner_function(self, *args, **kwargs):
+        """Master checking inner function"""
+        if not self.is_coordinator:
+            message = 'The method "{}" can only be called on the '\
+              'coordinator in a group'.format(function.__name__)
+            raise SoCoSlaveException(message)
+        return function(self, *args, **kwargs)
+    return inner_function
 
 
 # pylint: disable=R0904,too-many-instance-attributes
@@ -393,6 +407,7 @@ class SoCo(_SocoSingletonBase):
             return self.play()
         return False
 
+    @only_on_master
     def play(self):
         """Play the currently selected track.
 
@@ -452,6 +467,7 @@ class SoCo(_SocoSingletonBase):
             return self.play()
         return False
 
+    @only_on_master
     def pause(self):
         """ Pause the currently playing track.
 
