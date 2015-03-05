@@ -8,7 +8,7 @@ from soco import SoCo
 from soco.groups import ZoneGroup
 from soco.xml import XML
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoUPnPException, SoCoSlaveException
 
 IP_ADDR = '192.168.1.101'
 
@@ -182,33 +182,61 @@ class TestAVTransport:
         )
 
     def test_soco_play(self, moco):
-        moco.play()
-        moco.avTransport.Play.assert_called_once_with(
-            [('InstanceID', 0), ('Speed', 1)]
-        )
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = True
+            moco.play()
+            moco.avTransport.Play.assert_called_once_with(
+                [('InstanceID', 0), ('Speed', 1)]
+            )
+            is_coord.assert_called_once_with()
+
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = False
+            with pytest.raises(SoCoSlaveException):
+                moco.play()
+            is_coord.assert_called_once_with()
 
     def test_soco_play_uri(self, moco):
-        uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
-        moco.play_uri(uri)
-        moco.avTransport.SetAVTransportURI.assert_called_once_with([
-            ('InstanceID', 0),
-            ('CurrentURI', uri),
-            ('CurrentURIMetaData', '')
-        ])
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = True
+            uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
+            moco.play_uri(uri)
+            moco.avTransport.SetAVTransportURI.assert_called_once_with([
+                ('InstanceID', 0),
+                ('CurrentURI', uri),
+                ('CurrentURIMetaData', '')
+            ])
 
     def test_soco_play_uri_calls_play(self, moco):
-        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
-        moco.play_uri(uri)
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = True
+            uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+            moco.play_uri(uri)
 
-        moco.avTransport.Play.assert_called_with(
-            [('InstanceID', 0), ('Speed', 1)]
-        )
+            moco.avTransport.Play.assert_called_with(
+                [('InstanceID', 0), ('Speed', 1)]
+            )
 
     def test_soco_pause(self, moco):
-        moco.pause()
-        moco.avTransport.Pause.assert_called_once_with(
-            [('InstanceID', 0), ('Speed', 1)]
-        )
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = True
+            moco.pause()
+            moco.avTransport.Pause.assert_called_once_with(
+                [('InstanceID', 0), ('Speed', 1)]
+            )
+            is_coord.assert_called_once_with()
+
+        with mock.patch("soco.SoCo.is_coordinator",
+                        new_callable=mock.PropertyMock) as is_coord:
+            is_coord.return_value = False
+            with pytest.raises(SoCoSlaveException):
+                moco.pause()
+            is_coord.assert_called_once_with()
 
     def test_soco_stop(self, moco):
         moco.stop()
