@@ -1010,11 +1010,14 @@ class SoCo(_SocoSingletonBase):
 
         return track
 
-    def get_speaker_info(self, refresh=False):
+    def get_speaker_info(self, refresh=False, timeout=(3,5)):
         """ Get information about the Sonos speaker.
 
         Arguments:
         refresh -- Refresh the speaker info cache.
+        timeout -- How long to wait for the server to send
+                   data before giving up, as a float, or a
+                   (`connect timeout, read timeout`_) tuple.
 
         Returns:
         Information about the Sonos speaker, such as the UID, MAC Address, and
@@ -1025,7 +1028,7 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
         else:
             response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/zp')
+                                    ':1400/status/zp', timeout=timeout)
             dom = XML.fromstring(response.content)
 
         if dom.findtext('.//ZoneName') is not None:
