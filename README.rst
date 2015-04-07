@@ -74,7 +74,7 @@ If you prefer a list to a set:
 
 .. code:: python
 
-    >>> zone_list = list(soco.discover)
+    >>> zone_list = list(soco.discover())
     >>> zone_list
     [SoCo("192.168.1.101"), SoCo("192.168.1.102")]
     >>> zone_list[0].mute()
@@ -177,7 +177,7 @@ Related Projects
 ----------------
 
 Socos is a command line tool for controlling Sonos devices. It is developed
-in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_
+in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_.
 
 More of a Ruby fan? Not a problem, `Sam Soffes`_ is building out an
 awesome `Ruby gem`_.
