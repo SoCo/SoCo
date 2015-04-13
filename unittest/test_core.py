@@ -15,7 +15,28 @@ IP_ADDR = '192.168.1.101'
 
 @pytest.yield_fixture()
 def moco():
-    """ A mock soco with fake services.
+    """A mock soco with fake services and hardcoded is_coordinator
+
+    Allows calls to services to be tracked. Should not cause any network access
+    """
+    services = (
+        'AVTransport', 'RenderingControl', 'DeviceProperties',
+        'ContentDirectory', 'ZoneGroupTopology')
+    patchers = [mock.patch('soco.core.{0}'.format(service))
+                for service in services]
+    for patch in patchers:
+        patch.start()
+    with mock.patch("soco.SoCo.is_coordinator",
+                    new_callable=mock.PropertyMock) as is_coord:
+        is_coord = True
+        yield SoCo(IP_ADDR)
+    for patch in reversed(patchers):
+        patch.stop()
+
+
+@pytest.yield_fixture()
+def moco_only_on_master():
+    """A mock soco with fake services.
 
     Allows calls to services to be tracked. Should not cause any network access
     """
@@ -182,61 +203,33 @@ class TestAVTransport:
         )
 
     def test_soco_play(self, moco):
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = True
-            moco.play()
-            moco.avTransport.Play.assert_called_once_with(
-                [('InstanceID', 0), ('Speed', 1)]
-            )
-            is_coord.assert_called_once_with()
-
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = False
-            with pytest.raises(SoCoSlaveException):
-                moco.play()
-            is_coord.assert_called_once_with()
+        moco.play()
+        moco.avTransport.Play.assert_called_once_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
 
     def test_soco_play_uri(self, moco):
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = True
-            uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
-            moco.play_uri(uri)
-            moco.avTransport.SetAVTransportURI.assert_called_once_with([
-                ('InstanceID', 0),
-                ('CurrentURI', uri),
-                ('CurrentURIMetaData', '')
-            ])
+        uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
+        moco.play_uri(uri)
+        moco.avTransport.SetAVTransportURI.assert_called_once_with([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', '')
+        ])
 
     def test_soco_play_uri_calls_play(self, moco):
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = True
-            uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
-            moco.play_uri(uri)
+        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+        moco.play_uri(uri)
 
-            moco.avTransport.Play.assert_called_with(
-                [('InstanceID', 0), ('Speed', 1)]
-            )
+        moco.avTransport.Play.assert_called_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
 
     def test_soco_pause(self, moco):
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = True
-            moco.pause()
-            moco.avTransport.Pause.assert_called_once_with(
-                [('InstanceID', 0), ('Speed', 1)]
-            )
-            is_coord.assert_called_once_with()
-
-        with mock.patch("soco.SoCo.is_coordinator",
-                        new_callable=mock.PropertyMock) as is_coord:
-            is_coord.return_value = False
-            with pytest.raises(SoCoSlaveException):
-                moco.pause()
-            is_coord.assert_called_once_with()
+        moco.pause()
+        moco.avTransport.Pause.assert_called_once_with(
+            [('InstanceID', 0), ('Speed', 1)]
+        )
 
     def test_soco_stop(self, moco):
         moco.stop()
@@ -759,3 +752,18 @@ class TestZoneGroupTopology:
                 'ZoneGroupState': ZGS
             }
         assert g.short_label == "Kitchen + 1"
+
+
+def test_only_on_master_true(moco_only_on_master):
+    with mock.patch('soco.SoCo.is_coordinator', new_callable=mock.PropertyMock) as is_coord:
+        is_coord.return_value = True
+        moco_only_on_master.play()
+        is_coord.assert_called_once_with()
+
+
+def test_not_on_master_false(moco_only_on_master):
+    with mock.patch('soco.SoCo.is_coordinator', new_callable=mock.PropertyMock) as is_coord:
+        is_coord.return_value = False
+        with pytest.raises(SoCoSlaveException):
+            moco_only_on_master.play()
+        is_coord.assert_called_once_with()
