@@ -859,12 +859,14 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0)
         ])
 
-    def switch_to_line_in(self):
+    def switch_to_line_in(self, speaker = self):
         """ Switch the speaker's input to line-in.
-
+        
+        note:: optional SoCo instance to be passed as `speaker`, to use play line in for
+        
         Returns:
         True if the Sonos speaker successfully switched to line-in.
-
+        
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
@@ -875,7 +877,7 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
+            ('CurrentURI', 'x-rincon-stream:{0}'.format(speaker.uid)),
             ('CurrentURIMetaData', '')
         ])
 
