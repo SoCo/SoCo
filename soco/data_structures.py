@@ -686,6 +686,17 @@ class DidlAudioBroadcast(DidlAudioItem):
     )
 
 
+class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
+
+    """Class that represents an audio broadcast sonos favorite."""
+
+    # Note: The sonos-favorite part of the class spec obviously isn't part of
+    # the DIDL spec, so just assume that it has the same definition as the
+    # regular object.item.audioItem.audioBroadcast
+
+    item_class = 'object.item.audioItem.audioBroadcast.sonos-favorite'
+
+
 ###############################################################################
 # OBJECT.CONTAINER HIERARCHY                                                  #
 ###############################################################################
