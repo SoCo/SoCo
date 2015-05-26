@@ -187,6 +187,11 @@ class SoCo(_SocoSingletonBase):
 
     _class_group = 'SoCo'
 
+    radio_translation = {
+        'radio_stations': 0,
+        'radio_shows': 1,
+    }
+
     # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
@@ -1340,7 +1345,7 @@ class SoCo(_SocoSingletonBase):
         get the entire list of favorites.
         """
 
-        return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
+        return self.__get_radio_favorites('radio_shows', start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
@@ -1355,50 +1360,34 @@ class SoCo(_SocoSingletonBase):
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
         """
-        return self.__get_radio_favorites(RADIO_STATIONS, start, max_items)
+        return self.__get_radio_favorites('radio_stations', start, max_items)
 
     def __get_radio_favorites(self, favorite_type, start=0, max_items=100):
         """ Helper method for `get_favorite_radio_*` methods.
 
         Arguments:
-        favorite_type -- Specify either `RADIO_STATIONS` or `RADIO_SHOWS`.
+        favorite_type -- Specify either `radio_stations` or `radio_shows`.
         start -- Which number to start the retrieval from. Used for paging.
         max_items -- The total number of results to return.
 
         """
-        if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
-            favorite_type = RADIO_STATIONS
+        try:
+            browse_type = favorite_type
+            favorite_type = self.radio_translation[favorite_type]
+        except KeyError:
+            favorite_type = self.radio_translation['radio_stations']
+            browse_type = 'radio_stations'
 
-        response = self.contentDirectory.Browse([
-            ('ObjectID', 'R:0/{0}'.format(favorite_type)),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', start),
-            ('RequestedCount', max_items),
-            ('SortCriteria', '')
-        ])
-        result = {}
-        favorites = []
-        results_xml = response['Result']
+        response, metadata = self._music_lib_search(
+            'R:0/{0}'.format(favorite_type), start, max_items
+        )
+        metadata['search_type'] = 'browse_favorite_' + browse_type
 
-        if results_xml != '':
-            # Favorites are returned in DIDL-Lite format
-            metadata = XML.fromstring(really_utf8(results_xml))
+        # Parse the results
+        containers = from_didl_string(response['Result'])
 
-            for item in metadata.findall(
-                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-                favorite = {}
-                favorite['title'] = item.findtext(
-                    '{http://purl.org/dc/elements/1.1/}title')
-                favorite['uri'] = item.findtext(
-                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
-                favorites.append(favorite)
-
-        result['total'] = response['TotalMatches']
-        result['returned'] = len(favorites)
-        result['favorites'] = favorites
-
-        return result
+        # pylint: disable=star-args
+        return SearchResult(containers, **metadata)
 
     def _update_album_art_to_full_uri(self, item):
         """Update an item's Album Art URI to be an absolute URI.
