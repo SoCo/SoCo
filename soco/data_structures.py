@@ -19,6 +19,7 @@ items such as tracks, playlists, composers, albums etc.
 
 from __future__ import unicode_literals
 
+import sys
 import warnings
 warnings.simplefilter('always', DeprecationWarning)
 import textwrap
@@ -52,7 +53,10 @@ def to_didl_string(*args):
         })
     for arg in args:
         didl.append(arg.to_element())
-    return XML.tostring(didl)
+    if sys.version_info[0] == 2:
+        return XML.tostring(didl)
+    else:
+        return XML.tostring(didl, encoding='unicode')
 
 
 def from_didl_string(string):
