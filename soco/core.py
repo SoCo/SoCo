@@ -1018,6 +1018,9 @@ class SoCo(_SocoSingletonBase):
         timeout -- How long to wait for the server to send
                    data before giving up, as a float, or a
                    (`connect timeout, read timeout`_) tuple.
+                   If not specified a default (3, 5) timeout
+                   will be used, to disable it at all set
+                   explicitly to None.
 
         Returns:
         Information about the Sonos speaker, such as the UID, MAC Address, and
