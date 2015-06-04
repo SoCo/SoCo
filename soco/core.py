@@ -1010,7 +1010,7 @@ class SoCo(_SocoSingletonBase):
 
         return track
 
-    def get_speaker_info(self, refresh=False, timeout=(3,5)):
+    def get_speaker_info(self, refresh=False, timeout=(3, 5)):
         """ Get information about the Sonos speaker.
 
         Arguments:
