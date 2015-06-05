@@ -1516,7 +1516,6 @@ class SoCo(_SocoSingletonBase):
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
         metadata = to_didl_string(queueable_item)
-        metadata.encode('utf-8')
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
             ('EnqueuedURI', queueable_item.resources[0].uri),
