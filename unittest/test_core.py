@@ -7,7 +7,7 @@ import mock
 from soco import SoCo
 from soco.groups import ZoneGroup
 from soco.xml import XML
-from soco.data_structures import DidlMusicTrack
+from soco.data_structures import DidlMusicTrack, to_didl_string
 from soco.exceptions import SoCoUPnPException
 
 IP_ADDR = '192.168.1.101'
@@ -378,9 +378,12 @@ class TestAVTransport:
         playlist = mock.Mock()
         playlist.item_id = 7
 
+        ressource = mock.Mock()
+        ressource.uri  = 'fake_uri'
         track = mock.Mock()
+        track.resources = [ressource]
         track.uri = 'fake_uri'
-        track.didl_metadata = XML.Element('a')
+        track.to_element.return_value = XML.Element('a')
 
         update_id = 100
 
@@ -405,7 +408,7 @@ class TestAVTransport:
              ('UpdateID', update_id),
              ('ObjectID', playlist.item_id),
              ('EnqueuedURI', track.uri),
-             ('EnqueuedURIMetaData', XML.tostring(track.didl_metadata)),
+             ('EnqueuedURIMetaData', to_didl_string(track)),
              ('AddAtIndex', 4294967295)]
         )
 
