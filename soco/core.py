@@ -17,7 +17,6 @@ from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
 from .exceptions import SoCoUPnPException, SoCoSlaveException
-    SoCoSlaveException
 from .data_structures import DidlPlaylistContainer,\
     SearchResult, Queue, DidlObject, DidlMusicAlbum,\
     from_didl_string, to_didl_string, DidlResource
