@@ -60,3 +60,7 @@ class MusicServiceException(SoCoException):
 class UnknownXMLStructure(SoCoException):
 
     """Raised if XML with and unknown or unexpected structure is returned"""
+
+
+class SoCoSlaveException(SoCoException):
+    """Raised when a master command is called on a slave"""

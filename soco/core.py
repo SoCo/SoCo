@@ -10,12 +10,13 @@ import socket
 import logging
 import re
 import requests
+from functools import wraps
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
 from .services import AlarmClock
 from .groups import ZoneGroup
-from .exceptions import SoCoUPnPException
+from .exceptions import SoCoUPnPException, SoCoSlaveException
 from .data_structures import DidlPlaylistContainer,\
     SearchResult, Queue, DidlObject, DidlMusicAlbum,\
     from_didl_string, to_didl_string, DidlResource
@@ -80,6 +81,19 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
 
     """
     pass
+
+
+def only_on_master(function):
+    """Decorator that raises SoCoSlaveException on master call on slave"""
+    @wraps(function)
+    def inner_function(self, *args, **kwargs):
+        """Master checking inner function"""
+        if not self.is_coordinator:
+            message = 'The method or property "{0}" can only be called/used '\
+                'on the coordinator in a group'.format(function.__name__)
+            raise SoCoSlaveException(message)
+        return function(self, *args, **kwargs)
+    return inner_function
 
 
 # pylint: disable=R0904,too-many-instance-attributes
@@ -334,6 +348,7 @@ class SoCo(_SocoSingletonBase):
         ])
 
     @property
+    @only_on_master  # Only for symmetry with the setter
     def cross_fade(self):
         """ The speaker's cross fade state.
         True if enabled, False otherwise """
@@ -345,6 +360,7 @@ class SoCo(_SocoSingletonBase):
         return True if int(cross_fade_state) else False
 
     @cross_fade.setter
+    @only_on_master
     def cross_fade(self, crossfade):
         """ Set the speaker's cross fade state. """
         crossfade_value = '1' if crossfade else '0'
@@ -353,6 +369,7 @@ class SoCo(_SocoSingletonBase):
             ('CrossfadeMode', crossfade_value)
         ])
 
+    @only_on_master
     def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
@@ -393,6 +410,7 @@ class SoCo(_SocoSingletonBase):
             return self.play()
         return False
 
+    @only_on_master
     def play(self):
         """Play the currently selected track.
 
@@ -407,6 +425,7 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
         ])
 
+    @only_on_master
     def play_uri(self, uri='', meta='', title='', start=True):
         """ Play a given stream. Pauses the queue.
         If there is no metadata passed in and there is a title set then a
@@ -452,6 +471,7 @@ class SoCo(_SocoSingletonBase):
             return self.play()
         return False
 
+    @only_on_master
     def pause(self):
         """ Pause the currently playing track.
 
@@ -466,6 +486,7 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
         ])
 
+    @only_on_master
     def stop(self):
         """ Stop the currently playing track.
 
@@ -480,6 +501,7 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
         ])
 
+    @only_on_master
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
         format of HH:MM:SS or H:MM:SS.
@@ -499,6 +521,7 @@ class SoCo(_SocoSingletonBase):
             ('Target', timestamp)
         ])
 
+    @only_on_master
     def next(self):
         """ Go to the next track.
 
@@ -519,6 +542,7 @@ class SoCo(_SocoSingletonBase):
             ('Speed', 1)
         ])
 
+    @only_on_master
     def previous(self):
         """ Go back to the previously played track.
 
@@ -1501,6 +1525,7 @@ class SoCo(_SocoSingletonBase):
             metadata[camel_to_underscore(tag)] = int(response[tag])
         return response, metadata
 
+    @only_on_master
     def add_uri_to_queue(self, uri):
         """Adds the URI to the queue
 
@@ -1513,6 +1538,7 @@ class SoCo(_SocoSingletonBase):
         item = DidlObject(resources=res, title='', parent_id='', item_id='')
         return self.add_to_queue(item)
 
+    @only_on_master
     def add_to_queue(self, queueable_item):
         """ Adds a queueable item to the queue """
         metadata = to_didl_string(queueable_item)
@@ -1526,6 +1552,7 @@ class SoCo(_SocoSingletonBase):
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
 
+    @only_on_master
     def remove_from_queue(self, index):
         """ Remove a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
@@ -1547,6 +1574,7 @@ class SoCo(_SocoSingletonBase):
             ('UpdateID', updid),
         ])
 
+    @only_on_master
     def clear_queue(self):
         """ Removes all tracks from the queue.
 
@@ -1669,6 +1697,7 @@ class SoCo(_SocoSingletonBase):
         return DidlPlaylistContainer(
             resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
+    @only_on_master
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
         """ Create a new Sonos playlist from the current queue.

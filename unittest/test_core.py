@@ -8,14 +8,35 @@ from soco import SoCo
 from soco.groups import ZoneGroup
 from soco.xml import XML
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoUPnPException, SoCoSlaveException
 
 IP_ADDR = '192.168.1.101'
 
 
 @pytest.yield_fixture()
 def moco():
-    """ A mock soco with fake services.
+    """A mock soco with fake services and hardcoded is_coordinator
+
+    Allows calls to services to be tracked. Should not cause any network access
+    """
+    services = (
+        'AVTransport', 'RenderingControl', 'DeviceProperties',
+        'ContentDirectory', 'ZoneGroupTopology')
+    patchers = [mock.patch('soco.core.{0}'.format(service))
+                for service in services]
+    for patch in patchers:
+        patch.start()
+    with mock.patch("soco.SoCo.is_coordinator",
+                    new_callable=mock.PropertyMock) as is_coord:
+        is_coord = True
+        yield SoCo(IP_ADDR)
+    for patch in reversed(patchers):
+        patch.stop()
+
+
+@pytest.yield_fixture()
+def moco_only_on_master():
+    """A mock soco with fake services.
 
     Allows calls to services to be tracked. Should not cause any network access
     """
@@ -731,3 +752,18 @@ class TestZoneGroupTopology:
                 'ZoneGroupState': ZGS
             }
         assert g.short_label == "Kitchen + 1"
+
+
+def test_only_on_master_true(moco_only_on_master):
+    with mock.patch('soco.SoCo.is_coordinator', new_callable=mock.PropertyMock) as is_coord:
+        is_coord.return_value = True
+        moco_only_on_master.play()
+        is_coord.assert_called_once_with()
+
+
+def test_not_on_master_false(moco_only_on_master):
+    with mock.patch('soco.SoCo.is_coordinator', new_callable=mock.PropertyMock) as is_coord:
+        is_coord.return_value = False
+        with pytest.raises(SoCoSlaveException):
+            moco_only_on_master.play()
+        is_coord.assert_called_once_with()
