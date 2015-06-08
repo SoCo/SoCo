@@ -1,0 +1,91 @@
+SoCo 0.11 release notes
+***********************
+
+**SoCo 0.11** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* The new properties ``is_playing_tv``, ``is_playing_radio`` and
+  ``is_playing_line_in`` have been added
+  (`#225 <https://github.com/SoCo/SoCo/pull/225>`_)
+
+* A method ``get_item_album_art_uri`` has been added to return the absolute
+  album art full uri so that it is easy to put the album art in user
+  interfaces (`#240 <https://github.com/SoCo/SoCo/pull/240>`_).
+
+* Added support for satellite speaker detection in network topology parsing
+  code (`#245 <https://github.com/SoCo/SoCo/pull/245>`_)
+
+* Added support to search the music library for tracks, an artists' albums and
+  an artist's album's tracks (`#246 <https://github.com/SoCo/SoCo/pull/246>`_)
+
+* A fairly extensive re-organisation of the DIDL metadata handling code, which
+  brings SoCo more into line with the DIDL-Lite spec, as adopted by Sonos. DIDL
+  objects can have now have multiple URIs, and the interface is much simpler.
+  (`#256 <https://github.com/SoCo/SoCo/pull/256>`_)
+
+* Event objects now have a timestamp field
+  (`#273 <https://github.com/SoCo/SoCo/pull/273>`_)
+
+* The IP address (ie network interface) for discovering Sonos speakers can
+  now be specified (`#277 <https://github.com/SoCo/SoCo/pull/277>`_)
+
+* It is now possible to trigger an update of the music library
+  (`#286 <https://github.com/SoCo/SoCo/pull/286>`_)
+
+* The event listener port is now configurable
+  (`#288 <https://github.com/SoCo/SoCo/pull/288>`_)
+
+* Methods that can only be executed on master speakers will now raise a
+  ``SoCoSlaveException`` (`#296 <https://github.com/SoCo/SoCo/pull/296>`_)
+
+* An example has been added that shows how to play local files by setting up a
+  temporary HTTP server in python
+  (`#307 <https://github.com/SoCo/SoCo/pull/307>`_)
+
+* Test cleanup (`#309 <https://github.com/SoCo/SoCo/pull/309>`_)
+
+
+Bugfixes
+========
+
+* The value of the IP_MULTICAST_TTL option is now ensured to be one byte long
+  (`#269 <https://github.com/SoCo/SoCo/pull/269>`_)
+
+* Various encoding issues have been fixed
+  (`#293 <https://github.com/SoCo/SoCo/issues/293>`_,
+  `#281 <https://github.com/SoCo/SoCo/issues/281>`_,
+  `#306 <https://github.com/SoCo/SoCo/pull/306>`_)
+
+* Fix bug with browsing of imported playlists
+  (`#265 <https://github.com/SoCo/SoCo/pull/265>`_)
+
+* The ``discover`` method was broken in Python 3.4
+  (`#271 <https://github.com/SoCo/SoCo/issues/271>`_)
+
+* An unknown / missing UPnP class in event subscriptions has been added
+  (`#266 <https://github.com/SoCo/SoCo/issues/266>`_,
+  `#301 <https://github.com/SoCo/SoCo/issues/301>`_,
+  `#303 <https://github.com/SoCo/SoCo/pull/303>`_)
+
+* Fix ``add_to_queue`` which was broken since the data structure refactoring
+  (`#308 <https://github.com/SoCo/SoCo/issues/308>`_,
+  `#310 <https://github.com/SoCo/SoCo/pull/310>`_)
+
+
+Backwards Compatability
+=======================
+
+* The exception ``DidlCannotCreateMetadata`` has been deprecated.
+  ``DidlMetadataError`` should be used instead.
+  (`#256 <https://github.com/SoCo/SoCo/pull/256>`_)
+
+* Code which has been deprecated for more than 3 releases has been removed. See
+  previous release notes for deprecation notices.
+  (`#273 <https://github.com/SoCo/SoCo/pull/273>`_)
