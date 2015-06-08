@@ -118,7 +118,7 @@ class SoCo(_SocoSingletonBase):
         next -- Go to the next track.
         previous -- Go back to the previous track.
         switch_to_line_in -- Switch the speaker's input to line-in.
-        switch_to_tv -- Switch the speaker's input to TV.
+        switch_to_tv -- Switch the playbar speaker's input to TV.
         get_current_track_info -- Get information about the currently playing
                                   track.
         get_speaker_info -- Get information about the Sonos speaker.
@@ -169,6 +169,9 @@ class SoCo(_SocoSingletonBase):
         queue_size -- Get size of queue.
         library_updating -- Whether music library update is in progress.
         album_artist_display_option -- album artist display option
+        is_playing_tv -- Is the playbar speaker input from TV?
+        is_playing_radio -- Is the speaker input from radio?
+        is_playing_line_in -- Is the speaker input from line-in?
 
     .. warning::
 
@@ -903,8 +906,47 @@ class SoCo(_SocoSingletonBase):
             ('CurrentURIMetaData', '')
         ])
 
+    @property
+    def is_playing_radio(self):
+        """ Is the speaker playing radio?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+        ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-rincon-mp3radio:', track_uri) is not None
+
+    @property
+    def is_playing_line_in(self):
+        """ Is the speaker playing line-in?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+        ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-rincon-stream:', track_uri) is not None
+
+    @property
+    def is_playing_tv(self):
+        """ Is the playbar speaker input from TV?
+
+        return True or False
+        """
+        response = self.avTransport.GetPositionInfo([
+            ('InstanceID', 0),
+            ('Channel', 'Master')
+        ])
+        track_uri = response['TrackURI']
+        return re.match(r'^x-sonos-htastream:', track_uri) is not None
+
     def switch_to_tv(self):
-        """ Switch the speaker's input to TV.
+        """ Switch the playbar speaker's input to TV.
 
         Returns:
         True if the Sonos speaker successfully switched to TV.
