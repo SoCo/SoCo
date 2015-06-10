@@ -1568,31 +1568,29 @@ class SoCo(_SocoSingletonBase):
         return response, metadata
 
     @only_on_master
-    def add_uri_to_queue(self, uri, meta=''):
+    def add_uri_to_queue(self, uri, meta=None):
         """Adds the URI to the queue
 
         :param uri: The URI to be added to the queue
         :type uri: str
         :param meta: The track metadata to show in the player, DIDL format.
-        :type uri: str
+        :type meta: str
         """
         # FIXME: The res.protocol_info should probably represent the mime type
         # etc of the uri. But this seems OK.
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
-        if meta == '':
+        if meta is None:
             item = DidlObject(resources=res,
                               title='', parent_id='', item_id='')
         else:
             didl_objects = from_didl_string(meta)
             if didl_objects is None or len(didl_objects) == 0:
-                _LOG.debug('Failed to construct metadata object'
-                           'from string')
-                return False
-            if len(didl_objects) > 0:
-                if len(didl_objects) > 1:
-                    _LOG.info('More than one metadata object'
-                              'was passed. Using the first one')
-                item = didl_objects[0]
+                raise ValueError('Failed to construct metadata object'
+                                 'from string')
+            if len(didl_objects) > 1:
+                _LOG.info('More than one metadata object'
+                          'was passed. Using the first one')
+            item = didl_objects[0]
 
         return self.add_to_queue(item)
 
