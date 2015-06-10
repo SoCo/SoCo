@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import io
 import sys
 import re
 import warnings
@@ -21,7 +22,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-src = open('soco/__init__.py').read()
+src = io.open('soco/__init__.py', encoding='utf-8').read()
 metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
 docstrings = re.findall('"""(.*?)"""', src, re.MULTILINE | re.DOTALL)
 
@@ -59,7 +60,7 @@ CLASSIFIERS = [
       'Topic :: Software Development :: Libraries :: Python Modules',
 ]
 
-with open('README.rst') as file:
+with io.open('README.rst', encoding='utf-8') as file:
     LONG_DESCRIPTION = file.read()
 
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
