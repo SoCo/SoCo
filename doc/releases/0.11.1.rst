@@ -1,0 +1,16 @@
+SoCo 0.11.1 release notes
+*************************
+
+**SoCo 0.11.1** is a new version of the SoCo library. This release fixes a bug
+with the installation of SoCo.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+Bugfixes
+========
+
+* Installation fails on systems where the default encoding is not UTF-8
+  (`#312 <https://github.com/SoCo/SoCo/issues/312>`_,
+  `#313 <https://github.com/SoCo/SoCo/pull/313>`_)
