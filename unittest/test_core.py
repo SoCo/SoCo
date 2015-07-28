@@ -323,19 +323,19 @@ class TestAVTransport:
         assert queue_size == 384
         moco.contentDirectory.reset_mock()
 
-    def test_join(self, moco):
+    def test_join(self, moco_zgs):
         moco2 = mock.Mock()
         moco2.uid = "RINCON_000XXX1400"
-        moco.join(moco2)
-        moco.avTransport.SetAVTransportURI.assert_called_once_with(
+        moco_zgs.join(moco2)
+        moco_zgs.avTransport.SetAVTransportURI.assert_called_once_with(
             [('InstanceID', 0),
-                ('CurrentURI', 'x-rincon:RINCON_000XXX1400'),
-                ('CurrentURIMetaData', '')]
+             ('CurrentURI', 'x-rincon:RINCON_000XXX1400'),
+             ('CurrentURIMetaData', '')]
         )
 
-    def test_unjoin(self, moco):
-        moco.unjoin()
-        moco.avTransport.BecomeCoordinatorOfStandaloneGroup\
+    def test_unjoin(self, moco_zgs):
+        moco_zgs.unjoin()
+        moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup\
             .assert_called_once_with([('InstanceID', 0)])
 
     def test_switch_to_line_in(self, moco_zgs):
