@@ -14,7 +14,7 @@ from functools import wraps
 
 from .services import DeviceProperties, ContentDirectory
 from .services import RenderingControl, AVTransport, ZoneGroupTopology
-from .services import AlarmClock
+from .services import AlarmClock, zone_group_state_shared_cache
 from .groups import ZoneGroup
 from .exceptions import SoCoUPnPException, SoCoSlaveException
 from .data_structures import DidlPlaylistContainer,\
@@ -867,6 +867,8 @@ class SoCo(_SocoSingletonBase):
             ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
             ('CurrentURIMetaData', '')
         ])
+        zone_group_state_shared_cache.clear()
+        self._parse_zone_group_state()
 
     def unjoin(self):
         """ Remove this speaker from a group.
@@ -885,6 +887,8 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
             ('InstanceID', 0)
         ])
+        zone_group_state_shared_cache.clear()
+        self._parse_zone_group_state()
 
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
