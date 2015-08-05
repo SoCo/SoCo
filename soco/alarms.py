@@ -9,7 +9,6 @@ from datetime import datetime
 import re
 import weakref
 from .core import PLAY_MODES
-from .discovery import discover
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -260,7 +259,7 @@ def get_alarms(soco=None):
     """
     # Get a soco instance to query. It doesn't matter which.
     if soco is None:
-        soco = discover().pop()
+        soco = soco.Soco.any_soco()
     response = soco.alarmClock.ListAlarms()
     alarm_list = response['CurrentAlarmList']
     tree = XML.fromstring(alarm_list.encode('utf-8'))
