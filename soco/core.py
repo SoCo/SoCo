@@ -922,6 +922,7 @@ class SoCo(_SocoSingletonBase):
         ])
         zone_group_state_shared_cache.clear()
         self._parse_zone_group_state()
+
     def switch_to_line_in(self):
         """ Switch the speaker's input to line-in.
 
