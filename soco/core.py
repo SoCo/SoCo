@@ -492,22 +492,24 @@ class SoCo(_SocoSingletonBase):
             return self.play()
         return False
 
+    @only_on_master
     def play_stream(self, stream_object, start=True):
         """Play a DIDL object as a stream
 
-        To play as a stream means that it will this single item without
+        To play as a stream means that this single will be played without
         affecting the queue
 
         Args:
             stream_object (DidlObject): A Didl Object that represents a stream
             start (bool): Whether to start play back after adding the stream
+
         """
         # E.g. radio favorites are returned without an desc element. This hack
         # may turn out to be insufficient if we want to try and play radio
         # stations from music services in the future
         if stream_object.desc is None:
             stream_object.desc = 'SA_RINCON65031_'
-        meta = to_didl_string(stream_object).encode('utf-8')
+        meta = to_didl_string(stream_object)
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', stream_object.resources[0].uri),
