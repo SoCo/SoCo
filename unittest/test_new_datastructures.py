@@ -73,6 +73,21 @@ class TestResource():
         assert data_structures.DidlResource.from_element(elt).__dict__ == \
             res.__dict__
 
+    def test_didl_resource_to_dict(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = res.to_dict()
+        assert rez['uri'] == 'a%20uri'
+        assert rez['protocol_info'] == 'a:protocol:info:xx'
+        assert len(rez) == 12
+
+    def test_didl_resource_to_dict_optimized(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = res.to_dict(optimized=True)
+        assert rez['uri'] == 'a%20uri'
+        assert rez['protocol_info'] == 'a:protocol:info:xx'
+        assert len(rez) == 2
+
+
 class TestDidlObject():
     """ Testing the DidlObject base class"""
 
