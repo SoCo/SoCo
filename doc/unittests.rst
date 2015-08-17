@@ -34,6 +34,19 @@ There are different ways of running the unit tests. The easiest is to use ``py.t
 	
 For others, see the `py.test documentation <http://pytest.org/latest/usage.html>`_
 
+.. note:: To run the unittests in this way, the soco package must be
+   importable, i.e. the folder that contains it (the root folder of
+   the git archive) must be in the list of paths that Python can
+   import from (the PYTHONPATH). The easiest way to set this up, if
+   you are using a virtual environment, is to install SoCo from the
+   git archive in editable mode. This is done by executing the
+   following command from the git archive root:
+
+   .. code-block:: sh
+
+      pip install -e .
+
+
 Running the integration tests
 =============================
 
