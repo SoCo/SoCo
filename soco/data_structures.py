@@ -598,7 +598,7 @@ class DidlAudioItem(DidlItem):
 
     """An audio item."""
 
-    item_class = 'object.item.audioitem'
+    item_class = 'object.item.audioItem'
     _translation = DidlItem._translation.copy()
     _translation.update(
         {
