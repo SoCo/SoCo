@@ -79,7 +79,7 @@ def replay_event_stream(binary_file_like_object):
             size = int(size_bytes)
             xml_event = binary_file_like_object.read(size)
             event = parse_event_xml(xml_event)
-            print('########## {} ##########'.format(message))
+            print('########## {0} ##########'.format(message))
             print(event)
             message += 1
         except IOError:
