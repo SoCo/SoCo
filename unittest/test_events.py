@@ -3,7 +3,10 @@
 
 from __future__ import unicode_literals
 import pytest
-from soco.events import parse_event_xml, Event
+import mock
+from six import BytesIO
+from soco.events import parse_event_xml, Event, activate_event_stream_logging
+from soco import events
 
 DUMMY_EVENT = """
 <e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
@@ -61,6 +64,7 @@ DUMMY_EVENT = """
     </e:property>
 </e:propertyset>
 """
+DUMMY_EVENT_LENGTH = '{0:0>20}'.format(len(DUMMY_EVENT))
 
 
 def test_event_object():
@@ -89,3 +93,54 @@ def test_event_parsing():
     assert event_dict['alarm_run_sequence'] == 'RINCON_000EXXXXXX0:56:0'
     assert event_dict['zone_group_id'] == "RINCON_000XXXX01400:57"
 
+
+def test_activate_event_stream_logging():
+    """Test the activate_event_stream_logging function"""
+    # Simply test that the object we pass into acivate, gets set on a module
+    # variable
+    activate_event_stream_logging(47)
+    assert events.event_stream == 47
+    events.event_stream = None
+
+def test_save_event_to_stream():
+    """Test the save_event_to_stream function"""
+    # Mock the event_stream and event_stream_lock module variables
+    with mock.patch("soco.events.event_stream") as event_stream:
+        with mock.patch("soco.events.event_stream_lock") as event_stream_lock:
+            # Save the cummy event
+            events.save_event_to_stream(DUMMY_EVENT.encode('ascii'))
+
+            # Test that both the 20 width zero padded with and the dummt event
+            # has been written to the mock stream
+            calls = [mock.call(DUMMY_EVENT_LENGTH.encode('ascii')),
+                     mock.call(DUMMY_EVENT.encode('ascii'))]
+            event_stream.write.assert_has_calls(calls)
+            event_stream.flush.assert_has_calls([mock.call()])
+
+            # Assert that the lock has been used
+            event_stream_lock.__enter__.assert_called_with()
+            event_stream_lock.__exit__.assert_called_with(None, None, None)
+
+def test_replay_event_stream(capsys):
+    """Test the replay_event_stream function"""
+    # Pre-prpogram responses for three calls to read on the mock stream
+    stream = mock.Mock()
+    stream.read.side_effect = [string.encode('ascii') for string in
+                               [DUMMY_EVENT_LENGTH, DUMMY_EVENT, '']]
+    events.replay_event_stream(stream)
+    # and check that it has been called
+    stream.read.assert_has_calls(
+        [mock.call(20), mock.call(int(DUMMY_EVENT_LENGTH)), mock.call(20)]
+    )
+
+    # Get the output captured by py.test
+    out, _ = capsys.readouterr()
+
+    # We can never be sure of the order of the elements in the dict and
+    # therefore of the print order, so we test the keys
+    assert out.startswith('########## 0 ##########\n')
+    event_dict = events.parse_event_xml(DUMMY_EVENT)
+    for key, value in event_dict.items():
+        if key in ['zone_group_state']:
+            continue
+        assert out.find(key) > -1
