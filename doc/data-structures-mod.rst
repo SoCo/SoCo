@@ -48,7 +48,6 @@ Functions
 =========
 
 .. autofunction:: soco.data_structures.ns_tag
-.. autofunction:: soco.data_structures.get_didl_object
 
 
 DidlObject
