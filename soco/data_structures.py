@@ -255,7 +255,9 @@ class DidlResource(object):
         if remove_nones:
             # delete any elements that have a value of None to optimize size
             # of the returned structure
-            content = {k: v for k, v in content.items() if v is not None}
+            nones = [k for k in content if content[k] is None]
+            for k in nones:
+                del content[k]
         return content
 
     @classmethod
@@ -649,7 +651,7 @@ class DidlAudioItem(DidlItem):
 
     """An audio item."""
 
-    item_class = 'object.item.audioItem'
+    item_class = 'object.item.audioitem'
     _translation = DidlItem._translation.copy()
     _translation.update(
         {
