@@ -52,6 +52,7 @@ def assert_xml_equal(left, right, explain=None):
         header = "Comparing XML elements %s and %s"%(left, right)
         assert False, header + '\n'.join(explain)
 
+
 class TestResource():
     """ Testing the Resource class"""
 
@@ -70,8 +71,7 @@ class TestResource():
         elt = res.to_element()
         assert XML.tostring(elt) == (
             b'<res bitrate="3" protocolInfo="a:protocol:info:xx">a%20uri</res>')
-        assert data_structures.DidlResource.from_element(elt).__dict__ == \
-            res.__dict__
+        assert data_structures.DidlResource.from_element(elt) == res
 
     def test_didl_resource_to_dict(self):
         res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
