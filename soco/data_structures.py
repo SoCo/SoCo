@@ -267,7 +267,7 @@ class DidlResource(object):
         An alternative constructor. Equivalent to DidlResource(**content).
 
         Arg:
-            content (dict): Dict containing metadata information.Required and
+            content (dict): Dict containing metadata information. Required and
             valid arguments are the same as for the ``__init__`` method.
 
         """
@@ -650,7 +650,7 @@ class DidlAudioItem(DidlItem):
 
     """An audio item."""
 
-    item_class = 'object.item.audioitem'
+    item_class = 'object.item.audioItem'
     _translation = DidlItem._translation.copy()
     _translation.update(
         {
