@@ -80,12 +80,30 @@ class TestResource():
         assert rez['protocol_info'] == 'a:protocol:info:xx'
         assert len(rez) == 12
 
-    def test_didl_resource_to_dict_optimized(self):
+    def test_didl_resource_to_dict_remove_nones(self):
         res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
-        rez = res.to_dict(optimized=True)
+        rez = res.to_dict(remove_nones=True)
         assert rez['uri'] == 'a%20uri'
         assert rez['protocol_info'] == 'a:protocol:info:xx'
         assert len(rez) == 2
+
+    def test_didl_resource_from_dict(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = data_structures.DidlResource.from_dict(res.to_dict())
+        assert res == rez
+
+    def test_didl_resource_from_dict_remove_nones(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = data_structures.DidlResource.from_dict(
+                                            res.to_dict(remove_nones=True))
+        assert res == rez
+
+    def test_didl_resource_eq(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        assert res != data_structures.DidlObject(title='a_title',
+                      parent_id='pid', item_id='iid')
+        assert res is not None
+        assert res == res
 
 
 class TestDidlObject():
