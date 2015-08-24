@@ -316,14 +316,16 @@ class GetSpeakerInfo(unittest.TestCase):
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
         # the test doc string
-        self.info_keys = sorted(['zone_name', 'zone_icon', 'uid',
+        self.info_keys = sorted(['zone_name', 'player_icon', 'uid',
                                  'serial_number', 'software_version',
-                                 'hardware_version', 'mac_address'])
+                                 'hardware_version', 'mac_address',
+                                 'model_name', 'model_number',
+                                 'display_version'])
 
     def test(self):
         """ Tests if the return value is a dictionary that contains the keys:
-        zone_name, zone_icon, uid, serial_number, software_version,
-        hardware_version, mac_address
+        zone_name, player_icon, uid, serial_number, software_version,
+        hardware_version, mac_address, model_name, model_number, display_version
         and that values have been found for all keys, i.e. they are not None
         """
         speaker_info = SOCO.get_speaker_info()
