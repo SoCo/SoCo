@@ -17,7 +17,7 @@ For more background on the project, please see Rahim's `blog post
    :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
    :alt: Requirements Status
 
-.. image:: https://https://img.shields.io/pypi/v/soco.svg?style=flat
+.. image:: https://img.shields.io/pypi/v/soco.svg?style=flat
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
 
