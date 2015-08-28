@@ -231,6 +231,58 @@ class DidlResource(object):
         root.text = self.uri
         return root
 
+    def to_dict(self, remove_nones=False):
+        """Return a dictionary representation of the DidlResource
+
+        Args:
+            remove_nones (bool): Optionally remove dictionary elements when
+            their value is None.
+        """
+        content = {
+            'uri': self.uri,
+            'protocol_info': self.protocol_info,
+            'import_uri': self.import_uri,
+            'size': self.size,
+            'duration': self.duration,
+            'bitrate': self.bitrate,
+            'sample_frequency': self.sample_frequency,
+            'bits_per_sample': self.bits_per_sample,
+            'nr_audio_channels': self.nr_audio_channels,
+            'resolution': self.resolution,
+            'color_depth': self.color_depth,
+            'protection': self.protection,
+        }
+        if remove_nones:
+            # delete any elements that have a value of None to optimize size
+            # of the returned structure
+            nones = [k for k in content if content[k] is None]
+            for k in nones:
+                del content[k]
+        return content
+
+    @classmethod
+    def from_dict(cls, content):
+        """Create an instance from a dict.
+
+        An alternative constructor. Equivalent to DidlResource(**content).
+
+        Arg:
+            content (dict): Dict containing metadata information. Required and
+            valid arguments are the same as for the ``__init__`` method.
+
+        """
+        return cls(**content)
+
+    def __eq__(self, resource):
+        """Compare with another ``resource``.
+
+        Returns:
+            (bool): True if items are equal, else False
+        """
+        if not isinstance(resource, DidlResource):
+            return False
+        return self.to_dict() == resource.to_dict()
+
 
 ###############################################################################
 # BASE OBJECTS                                                                #

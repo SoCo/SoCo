@@ -52,6 +52,7 @@ def assert_xml_equal(left, right, explain=None):
         header = "Comparing XML elements %s and %s"%(left, right)
         assert False, header + '\n'.join(explain)
 
+
 class TestResource():
     """ Testing the Resource class"""
 
@@ -70,8 +71,40 @@ class TestResource():
         elt = res.to_element()
         assert XML.tostring(elt) == (
             b'<res bitrate="3" protocolInfo="a:protocol:info:xx">a%20uri</res>')
-        assert data_structures.DidlResource.from_element(elt).__dict__ == \
-            res.__dict__
+        assert data_structures.DidlResource.from_element(elt) == res
+
+    def test_didl_resource_to_dict(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = res.to_dict()
+        assert rez['uri'] == 'a%20uri'
+        assert rez['protocol_info'] == 'a:protocol:info:xx'
+        assert len(rez) == 12
+
+    def test_didl_resource_to_dict_remove_nones(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = res.to_dict(remove_nones=True)
+        assert rez['uri'] == 'a%20uri'
+        assert rez['protocol_info'] == 'a:protocol:info:xx'
+        assert len(rez) == 2
+
+    def test_didl_resource_from_dict(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = data_structures.DidlResource.from_dict(res.to_dict())
+        assert res == rez
+
+    def test_didl_resource_from_dict_remove_nones(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        rez = data_structures.DidlResource.from_dict(
+                                            res.to_dict(remove_nones=True))
+        assert res == rez
+
+    def test_didl_resource_eq(self):
+        res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+        assert res != data_structures.DidlObject(title='a_title',
+                      parent_id='pid', item_id='iid')
+        assert res is not None
+        assert res == res
+
 
 class TestDidlObject():
     """ Testing the DidlObject base class"""
