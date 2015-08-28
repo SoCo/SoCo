@@ -1095,21 +1095,38 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
         else:
             response = requests.get('http://' + self.ip_address +
-                                    ':1400/status/zp')
-            dom = XML.fromstring(response.content)
+                                    ':1400/xml/device_description.xml')
+            dom = XML.fromstring(response.content.encode('UTF-8'))
 
-        if dom.findtext('.//ZoneName') is not None:
-            self.speaker_info['zone_name'] = \
-                dom.findtext('.//ZoneName')
-            self.speaker_info['zone_icon'] = dom.findtext('.//ZoneIcon')
+        device = dom.find('{urn:schemas-upnp-org:device-1-0}device')
+        if device is not None:
+            self.speaker_info['zone_name'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}roomName')
+
+            # no zone icon in device_description.xml -> player icon
+            self.speaker_info['player_icon'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}iconList/'
+                '{urn:schemas-upnp-org:device-1-0}icon/'
+                '{urn:schemas-upnp-org:device-1-0}url'
+            )
+
             self.speaker_info['uid'] = self.uid
-            self.speaker_info['serial_number'] = \
-                dom.findtext('.//SerialNumber')
-            self.speaker_info['software_version'] = \
-                dom.findtext('.//SoftwareVersion')
-            self.speaker_info['hardware_version'] = \
-                dom.findtext('.//HardwareVersion')
-            self.speaker_info['mac_address'] = dom.findtext('.//MACAddress')
+            self.speaker_info['serial_number'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}serialNum')
+            self.speaker_info['software_version'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}softwareVersion')
+            self.speaker_info['hardware_version'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}hardwareVersion')
+            self.speaker_info['model_number'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}modelNumber')
+            self.speaker_info['model_name'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}modelName')
+            self.speaker_info['display_version'] = device.findtext(
+                '{urn:schemas-upnp-org:device-1-0}displayVersion')
+
+            # no mac adress - extract from serial number
+            mac = self.speaker_info['serial_number'].split(':')[0]
+            self.speaker_info['mac_address'] = mac
 
             return self.speaker_info
 

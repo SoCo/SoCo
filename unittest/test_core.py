@@ -143,25 +143,155 @@ def moco_zgs(moco):
     yield moco
 
 
-@pytest.mark.parametrize('bad_ip_addr', [
-    'not_ip', '555.555.555.555'
-])
-def test_soco_bad_ip(bad_ip_addr):
-    with pytest.raises(ValueError):
-            speaker = SoCo(bad_ip_addr)
+class TestSoco:
+    device_description = """<?xml version="1.0" encoding="utf-8" ?>
+        <root xmlns="urn:schemas-upnp-org:device-1-0">
+          <specVersion>
+            <major>1</major>
+            <minor>0</minor>
+          </specVersion>
+          <device>
+            <deviceType>urn:schemas-upnp-org:device:ZonePlayer:1</deviceType>
+            <friendlyName>""" + IP_ADDR + """ - Sonos PLAY:3</friendlyName>
+            <manufacturer>Sonos, Inc.</manufacturer>
+            <manufacturerURL>http://www.sonos.com</manufacturerURL>
+            <modelNumber>S3</modelNumber>
+            <modelDescription>Sonos PLAY:3</modelDescription>
+            <modelName>Sonos PLAY:3</modelName>
+            <modelURL>http://www.sonos.com/products/zoneplayers/S3</modelURL>
+            <softwareVersion>29.5-91030</softwareVersion>
+            <hardwareVersion>1.8.1.2-2</hardwareVersion>
+            <serialNum>00-11-22-33-44-55:E</serialNum>
+            <UDN>uuid:RINCON_00112233445501400</UDN>
+            <iconList>
+              <icon>
+                <id>0</id>
+                <mimetype>image/png</mimetype>
+                <width>48</width>
+                <height>48</height>
+                <depth>24</depth>
+                <url>/img/icon-S3.png</url>
+              </icon>
+            </iconList>
+            <minCompatibleVersion>28.0-00000</minCompatibleVersion>
+            <legacyCompatibleVersion>24.0-0000</legacyCompatibleVersion>
+            <displayVersion>5.4</displayVersion>
+            <extraVersion>OTP: </extraVersion>
+            <roomName>Room</roomName>
+          </device>
+        </root>
+    """
 
+    @pytest.mark.parametrize('bad_ip_addr', ['not_ip', '555.555.555.555'])
+    def test_soco_bad_ip(self, bad_ip_addr):
+        with pytest.raises(ValueError):
+                speaker = SoCo(bad_ip_addr)
 
-def test_soco_init(moco):
-    assert moco.ip_address == IP_ADDR
-    assert moco.speaker_info == {}
+    def test_soco_init(self, moco):
+        assert moco.ip_address == IP_ADDR
+        assert moco.speaker_info == {}
 
+    def test_soco_str(self, moco):
+        assert str(moco) == "<SoCo object at ip {0}>".format(IP_ADDR)
 
-def test_soco_str(moco):
-    assert str(moco) == "<SoCo object at ip {0}>".format(IP_ADDR)
+    def test_soco_repr(self, moco):
+        assert repr(moco) == 'SoCo("{0}")'.format(IP_ADDR)
 
+    @mock.patch("soco.core.requests")
+    @pytest.mark.parametrize('refresh', [None, False, True])
+    def test_soco_get_speaker_info_speaker_not_set_refresh(
+            self, mocr, moco_zgs, refresh):
+        """
+        Internal speaker_info not set; Refresh all values (default, False, True)
+        => should update
+        """
+        response = mock.MagicMock()
+        mocr.get.return_value = response
+        response.content = self.device_description
+        # save old state
+        old = moco_zgs.speaker_info
+        moco_zgs.speaker_info = {}
+        if refresh is None:
+            res = moco_zgs.get_speaker_info()
+        else:
+            res = moco_zgs.get_speaker_info(refresh)
+        # restore original value
+        moco_zgs.speaker_info = old
+        mocr.get.assert_called_once_with(
+            'http://' + IP_ADDR + ':1400/xml/device_description.xml')
+        should = {
+            'zone_name': "Room",
+            'player_icon': "/img/icon-S3.png",
+            'uid': "RINCON_000XXX1400",
+            'serial_number': "00-11-22-33-44-55:E",
+            'software_version': "29.5-91030",
+            'hardware_version': "1.8.1.2-2",
+            'model_number': "S3",
+            'model_name': "Sonos PLAY:3",
+            'display_version': "5.4",
+            'mac_address': "00-11-22-33-44-55"
+        }
+        assert should == res
 
-def test_soco_repr(moco):
-    assert repr(moco) == 'SoCo("{0}")'.format(IP_ADDR)
+    @mock.patch("soco.core.requests")
+    @pytest.mark.parametrize('refresh', [None, False])
+    def test_soco_get_speaker_info_speaker_set_no_refresh(
+            self, mocr, moco_zgs, refresh):
+        """
+        Internal speaker_info set; No refresh (default, False)
+        => should not update
+        """
+        should = {
+            'info': "yes"
+        }
+        # save old state
+        old = moco_zgs.speaker_info
+        moco_zgs.speaker_info = should
+        if refresh is None:
+            res = moco_zgs.get_speaker_info()
+        else:
+            res = moco_zgs.get_speaker_info(refresh)
+        # restore original value
+        moco_zgs.speaker_info = old
+        # got 'should' returned
+        assert res is should
+        # no network request performed
+        assert not mocr.get.called
+
+    @mock.patch("soco.core.requests")
+    @pytest.mark.parametrize('should', [{}, {'info': "yes"}])
+    def test_soco_get_speaker_info_speaker_set_no_refresh(
+            self, mocr, moco_zgs, should):
+        """
+        Internal speaker_info not set/set; Refresh True
+        => should update
+        """
+        response = mock.MagicMock()
+        mocr.get.return_value = response
+        response.content = self.device_description
+        # save old state
+        old = moco_zgs.speaker_info
+        moco_zgs.speaker_info = should
+        res = moco_zgs.get_speaker_info(True)
+        # restore original value
+        moco_zgs.speaker_info = old
+        mocr.get.assert_called_once_with(
+            'http://' + IP_ADDR + ':1400/xml/device_description.xml')
+        # get_speaker_info only updates internal speaker_info and does not
+        # replace it
+        should.update({
+            'zone_name': "Room",
+            'player_icon': "/img/icon-S3.png",
+            'uid': "RINCON_000XXX1400",
+            'serial_number': "00-11-22-33-44-55:E",
+            'software_version': "29.5-91030",
+            'hardware_version': "1.8.1.2-2",
+            'model_number': "S3",
+            'model_name': "Sonos PLAY:3",
+            'display_version': "5.4",
+            'mac_address': "00-11-22-33-44-55"
+        })
+        assert should == res
 
 
 class TestAVTransport:
