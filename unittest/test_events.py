@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import pytest
 import mock
-from six import BytesIO
+from io import BytesIO
 from soco.events import parse_event_xml, Event, activate_event_stream_logging
 from soco import events
 
