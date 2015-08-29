@@ -7,7 +7,7 @@ Classes to handle Sonos UPnP Events and Subscriptions
 
 """
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 
 import threading
@@ -29,9 +29,64 @@ from .data_structures import from_didl_string
 
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
+event_stream = None  # pylint: disable=invalid-name
+event_stream_lock = threading.Lock()  # pylint: disable=invalid-name
 
 
-def parse_event_xml(xml_event):
+def activate_event_stream_logging(binary_file_like_object):
+    """Activate event stream logging
+
+    Args:
+        binary_file_like_object (file_like_object): A file like object or
+            stream, writable and in binary mode
+    """
+    global event_stream  # pylint: disable=global-statement,invalid-name
+    event_stream = binary_file_like_object
+
+
+def save_event_to_stream(xml_event):
+    """Save a single event to the stream
+
+    The format of the event stream is a simple 20 digit zero padded number of
+    bytes that the event content consists of and then the content.
+    """
+    length = '{0:0>20}'.format(len(xml_event)).encode('ascii')
+    with event_stream_lock:
+        event_stream.write(length)
+        event_stream.write(xml_event)
+        try:
+            event_stream.flush()
+        except AttributeError:
+            pass
+
+
+def replay_event_stream(binary_file_like_object):
+    """Replay an event stream.
+
+    Replay will start at current position. See save_event_to_stream for
+    specification on the format.
+
+    Args:
+        binary_file_like_object (file_like_object): A file like object or
+            stream in binary mode
+    """
+    message = 0
+    while True:
+        try:
+            size_bytes = binary_file_like_object.read(20)
+            if len(size_bytes) != 20:
+                break
+            size = int(size_bytes)
+            xml_event = binary_file_like_object.read(size)
+            print('########## {0} ##########'.format(message))
+            event = parse_event_xml(xml_event)
+            print(event)
+            message += 1
+        except IOError:
+            break
+
+
+def parse_event_xml(xml_event):  # pylint: disable=too-many-branches
     """ Parse the body of a UPnP event
 
     Arg:
@@ -86,6 +141,9 @@ def parse_event_xml(xml_event):
 
 
     """
+    # If activated, save the event to the event stream
+    if event_stream is not None:
+        save_event_to_stream(xml_event)
 
     result = {}
     tree = XML.fromstring(xml_event)
