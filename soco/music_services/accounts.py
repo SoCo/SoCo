@@ -2,7 +2,7 @@
 
 """Accounts for Third Party music services."""
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import weakref
 import logging
@@ -111,6 +111,8 @@ class Account(object):
         """
 
         root = XML.fromstring(cls._get_account_xml(soco))
+        # _get_account_xml returns an ElementTree element like this:
+
         # <ZPSupportInfo type="User">
         #   <Accounts
         #   LastUpdateDevice="RINCON_000XXXXXXXX400"
@@ -134,34 +136,49 @@ class Account(object):
 
         # pylint: disable=protected-access
 
-        accounts = root.findall('.//Account')
+        xml_accounts = root.findall('.//Account')
         result = {}
-        for account in accounts:
-            serial_number = account.get('SerialNum')
-            is_deleted = True if account.get('Deleted') == '1' else False
+        for xml_account in xml_accounts:
+            serial_number = xml_account.get('SerialNum')
+            is_deleted = True if xml_account.get('Deleted') == '1' else False
+            # cls._all_accounts is a weakvaluedict keyed by serial number.
+            # We use it as a database to store details of the accounts we
+            # know about. We need to update it with info obtained from the
+            # XML just obtained, so (1) check to see if we already have an
+            # entry in cls._all_accounts for the account we have found in
+            # XML; (2) if so, delete it if the XML says it has been deleted;
+            # and (3) if not, create an entry for it
             if cls._all_accounts.get(serial_number):
+                # We have an existing entry in our database. Do we need to
+                # delete it?
                 if is_deleted:
+                    # Yes, so delete it and move to the next XML account
                     del cls._all_accounts[serial_number]
                     continue
                 else:
-                    acct = cls._all_accounts.get(serial_number)
+                    # No, so load up its details, ready to update them
+                    account = cls._all_accounts.get(serial_number)
             else:
+                # We have no existing entry for this account
                 if is_deleted:
+                    # but it is marked as deleted, so we don't need one
                     continue
-                acct = Account()
-                acct.serial_number = serial_number
-                cls._all_accounts[serial_number] = acct
+                # If it is not marked as deleted, we need to create an entry
+                account = Account()
+                account.serial_number = serial_number
+                cls._all_accounts[serial_number] = account
 
-            acct.service_type = account.get('Type')
-            acct.deleted = is_deleted
-            acct.username = account.findtext('UN')
+            # Now, update the entry in our database with the details from XML
+            account.service_type = xml_account.get('Type')
+            account.deleted = is_deleted
+            account.username = xml_account.findtext('UN')
             # Not sure what 'MD' stands for.  Metadata?
-            acct.metadata = account.findtext('MD')
-            acct.nickname = account.findtext('NN')
-            acct.oa_device_id = account.findtext('OADevID')
-            acct.key = account.findtext('Key')
+            account.metadata = xml_account.findtext('MD')
+            account.nickname = xml_account.findtext('NN')
+            account.oa_device_id = xml_account.findtext('OADevID')
+            account.key = xml_account.findtext('Key')
 
-            result[serial_number] = acct
+            result[serial_number] = account
         return result
 
     @classmethod

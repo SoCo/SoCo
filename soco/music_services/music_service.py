@@ -5,80 +5,263 @@
 This module provides the MusicService class and related functionality.
 
 """
+# pylint: disable=fixme
 
-from __future__ import unicode_literals
-
-import requests
+from __future__ import unicode_literals, absolute_import
 
 import logging
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
+from xmltodict import parse
+import requests
+
 from soco import SoCo
 from soco.xml import XML
 from soco.exceptions import MusicServiceException
-from soco.music_services.soap_types import (MEDIAMETADATA_TYPE, MEDIALIST_TYPE)
-# pylint: disable=unused-import
-from soco.music_services import soap_transport  # noqa
+from soco.soap import SoapMessage, SoapFault
+
 from soco.compat import urlparse, parse_qs
 from soco.music_services.accounts import Account
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
+class MusicServiceSoapClient(object):
+
+    """A SOAP client for accessing Music Services
+
+    This class handles all the necessary authentication for accessing third
+    party music services. You are unlikely to need to use it yourself.
+
+    """
+
+    def __init__(self, endpoint, timeout, music_service):
+        """ Initialise the instance
+
+        Args:
+             endpoint (str): The SOAP endpoint. A url.
+             timeout (int): Timeout the connection after this number of
+                 seconds
+             music_service (MusicService): The MusicService object to which
+                 this client belongs
+
+        """
+
+        self.endpoint = endpoint
+        self.timeout = timeout
+        self.music_service = music_service
+        self.namespace = 'http://www.sonos.com/Services/1.1'
+
+        self._cached_soap_header = None
+
+        # Spotify uses gzip. Others may do so as well. Unzipping is handled
+        # for us by the requests library. We set the user agent to a genuine
+        # Sonos value since in some tests Google Play music seems to want
+        # this. The firmware release number (after 'Sonos/') is obviously
+        # fake, and higher than current values, in case Google only offers
+        # certain services to certain firmware releases. ") Although we have
+        # access to a real SONOS user agent string (one is returned, eg,
+        # in the SERVER header of discovery packets and looks like this:
+        # Linux UPnP/1.0 Sonos/29.5-91030 (ZPS3)) it is a bit too much
+        # trouble here to access it, when this seems to work
+
+        self.http_headers = {
+            'Accept-Encoding': 'gzip, deflate',
+            'User-agent': '"Linux UPnP/1.0 Sonos/99 (ZPS3)"'
+        }
+        self._device = SoCo.any_soco()
+        self._device_id = self._device.systemProperties.GetString(
+            [('VariableName', 'R_TrialZPSerial')])['StringValue']
+
+    def get_soap_header(self):
+        """ Generate the SOAP authentication header for the related service.
+
+        This header contains all the necessary authentication details.
+
+        Returns:
+            (str): A string representation of the XML content of the SOAP
+                header
+
+        """
+
+        # According to the SONOS SMAPI, this header must be sent with all
+        # SOAP requests. Building this is an expensive operation (though
+        # occasionally necessary), so f we have a cached value, return it
+        if self._cached_soap_header is not None:
+            return self._cached_soap_header
+        music_service = self.music_service
+        credentials_header = XML.Element(
+            "credentials", {'xmlns': "http://www.sonos.com/Services/1.1"})
+        device_id = XML.SubElement(credentials_header, 'deviceId')
+        device_id.text = self._device_id
+        device_provider = XML.SubElement(credentials_header, 'deviceProvider')
+        device_provider.text = 'Sonos'
+        if music_service.account.oa_device_id:
+            # OAuth account credentials are present. We must use them to
+            # authenticate.
+            login_token = XML.Element('loginToken')
+            token = XML.SubElement(login_token, 'token')
+            token.text = music_service.account.oa_device_id
+            key = XML.SubElement(login_token, 'key')
+            key.text = music_service.account.key
+            household_id = XML.SubElement(login_token, 'householdId')
+            household_id.text = self._device.household_id
+            credentials_header.append(login_token)
+
+        # otherwise, perhaps use DeviceLink or UserId auth
+        elif music_service.auth_type in ['DeviceLink', 'UserId']:
+            # We need a session ID from Sonos
+            session_id = self._device.musicServices.GetSessionId([
+                ('ServiceId', music_service.service_id),
+                ('Username', music_service.account.username)
+            ])['SessionId']
+            session_elt = XML.Element('sessionId')
+            session_elt.text = session_id
+            credentials_header.append(session_elt)
+
+        # Anonymous auth. No need for anything further.
+        self._cached_soap_header = XML.tostring(credentials_header)
+        return self._cached_soap_header
+
+    def call(self, method, args=None):
+        """ Call a method on the server
+
+        Args:
+            method (str): The name of the method to call.
+             args (list): A list of (parameter, value) pairs representing
+                 the parameters of the method. Default None.
+
+        Returns:
+            (OrderedDict): An OrderedDict representing the response
+
+        Raises:
+            MusicServiceException
+
+        """
+        message = SoapMessage(
+            endpoint=self.endpoint,
+            method=method,
+            parameters=[] if args is None else args,
+            http_headers=self.http_headers,
+            soap_action="http://www.sonos.com/Services/1"
+                        ".1#{0}".format(method),
+            soap_header=self.get_soap_header(),
+            namespace=self.namespace,
+            timeout=self.timeout)
+
+        try:
+            result_elt = message.call()
+        except SoapFault as exc:
+            if 'Client.TokenRefreshRequired' in exc.faultcode:
+                log.debug('Token refresh required. Trying again')
+                # Remove any cached value for the SOAP header
+                self._cached_soap_header = None
+
+                # <detail>
+                #   <refreshAuthTokenResult>
+                #       <authToken>xxxxxxx</authToken>
+                #       <privateKey>zzzzzz</privateKey>
+                #   </refreshAuthTokenResult>
+                # </detail>
+                auth_token = exc.detail.findtext('.//authToken')
+                private_key = exc.detail.findtext('.//privateKey')
+                # We have new details - update the account
+                self.music_service.account.oa_device_id = auth_token
+                self.music_service.account.key = private_key
+                message = SoapMessage(
+                    endpoint=self.endpoint,
+                    method=method,
+                    parameters=args,
+                    http_headers=self.http_headers,
+                    soap_action="http://www.sonos.com/Services/1"
+                                ".1#{0}".format(method),
+                    soap_header=self.get_soap_header(),
+                    namespace=self.namespace,
+                    timeout=self.timeout)
+                result_elt = message.call()
+
+            else:
+                raise MusicServiceException(exc.faultstring, exc.faultcode)
+
+        # The top key in the OrderedDict will be the methodResult. Its
+        # value may be None if no results were returned.
+        result = parse(
+            XML.tostring(result_elt), process_namespaces=True,
+            namespaces={'http://www.sonos.com/Services/1.1': None}
+        ).values()[0]
+
+        return result if result is not None else {}
 
 
 # pylint: disable=too-many-instance-attributes
 class MusicService(object):
 
-    """The MusicService class provides access to third party music services.
+    """ The MusicService class provides access to third party music services.
 
     Example:
 
         Print all the services Sonos knows about
 
         >>> from soco.music_services import MusicService
-        >>> from pprint import pprint
-        >>> print (MusicService.get_all_music_services_names())
-        ['Spotify',
-         'The Hype Machine',
-         'Saavn',
-         'Bandcamp',
-         'Stitcher SmartRadio',
-         'Concert Vault',
+        >>> print(MusicService.get_all_music_services_names())
+        ['Spotify', 'The Hype Machine', 'Saavn', 'Bandcamp',
+         'Stitcher SmartRadio', 'Concert Vault',
          ...
          ]
 
-        Or just those tho which you are subscribed
+        Or just those to which you are subscribed
 
-        >>> pprint (MusicService.get_subscribed_services_names())
+        >>> print(MusicService.get_subscribed_services_names())
         ['Spotify', 'radioPup', 'Spreaker']
 
         Interact with TuneIn
 
         >>> tunein = MusicService('TuneIn')
-        >>> print tunein
+        >>> print (tunein)
         <MusicService 'TuneIn' at 0x10ad84e10>
 
-        Browse an item. By default, the root item is used.
+        Browse an item. By default, the root item is used. An OrderedDict is
+        returned.
 
-        >>> pprint (tunein.get_metadata())
-        {'count': 5,
-         'index': 0,
-         'mediaCollection': ({'albumArtURI': u'http://spotify-...',
-                              'canEnumerate': True,
-                              'canPlay': False,
-                              'canScroll': False,
-                              'id': u'playlists',
-                              'itemType': u'favorites',
-                              'title': u'Playlists'},
-                             {'albumArtURI': u'http://spotify-...',
-                              'canEnumerate': True,
-                              'canPlay': True,
-                              'canScroll': False,
-                              'id': u'starred',
-                              'itemType': u'favorites',
-                              'title': u'Starred'},
-                            ...),
-         'total': 5}
+        >>> from json import dumps # Used for pretty printing ordereddicts
+        >>> print(dumps(tunein.get_metadata(), indent=4)
+        {
+            "index": "0",
+            "count": "7",
+            "total": "7",
+            "mediaCollection": [
+                {
+                    "id": "featured:c100000150",
+                    "title": "Blue Note on SONOS",
+                    "itemType": "container",
+                    "authRequired": "false",
+                    "canPlay": "false",
+                    "canEnumerate": "true",
+                    "canCache": "true",
+                    "homogeneous": "false",
+                    "canAddToFavorite": "false",
+                    "canScroll": "false",
+                    "albumArtURI":
+                    "http://cdn-albums.tunein.com/sonos/channel_legacy.png"
+                },
+                {
+                    "id": "y1",
+                    "title": "Music",
+                    "itemType": "container",
+                    "authRequired": "false",
+                    "canPlay": "false",
+                    "canEnumerate": "true",
+                    "canCache": "true",
+                    "homogeneous": "false",
+                    "canAddToFavorite": "false",
+                    "canScroll": "false",
+                    "albumArtURI": "http://cdn-albums.tunein.com/sonos...
+                    .png"
+                },
+         ...
+
+            ]
+        }
+
 
         Interact with Spotify (assuming you are subscribed)
 
@@ -88,21 +271,27 @@ class MusicService(object):
 
         >>> response =  spotify.get_media_metadata(
         ... item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
-        >>> print (response)
-        {'mediaMetadata': [{'id': u'spotify:track:6NmXV4o6bmp704aPGyTVVG'},
-                           {'itemType': u'track'},
-                           {'title': u'B?n Fra Helvete (Live)'},
-                           {'mimeType': u'audio/x-spotify'},
-                           {'trackMetadata': {'album': u'Mann Mot Mann (Ep)',
-                                              'albumArtURI': u'http://o.s...9',
-                                              'albumId': u'spotify:album:...',
-                                              'artist': u'Kaizers Orchestra',
-                                              'artistId': u'spotify:artist...',
-                                              'canAddToFavorites': True,
-                                              'canPlay': True,
-                                              'canSkip': True,
-                                              'duration': 317}}]}
-
+        >>> print(dumps(response, indent=4)
+        {
+            "mediaMetadata": {
+                "id": "spotify:track:6NmXV4o6bmp704aPGyTVVG",
+                "itemType": "track",
+                "title": "B\u00f8n Fra Helvete (Live)",
+                "mimeType": "audio/x-spotify",
+                "trackMetadata": {
+                    "artistId": "spotify:artist:1s1DnVoBDfp3jxjjew8cBR",
+                    "artist": "Kaizers Orchestra",
+                    "albumId": "spotify:album:6K8NUknbPh5TGaKeZdDwSg",
+                    "album": "Mann Mot Mann (Ep)",
+                    "duration": "317",
+                    "albumArtURI":
+                    "http://o.scdn.co/image/7b76a5074416e83fa3f3cd...9",
+                    "canPlay": "true",
+                    "canSkip": "true",
+                    "canAddToFavorites": "true"
+                }
+            }
+}
         or even a playlist
 
         >>> response =  spotify.get_metadata(
@@ -116,18 +305,24 @@ class MusicService(object):
         Find the available search categories, and use them
 
         # and a search
-        >>> pprint (spotify.available_search_categories)
+        >>> print(spotify.available_search_categories)
         ['albums', 'tracks', 'artists']
         >>> result =  spotify.search(category='artists', term='miles')
+
+
+    Note:
+        Some of this code is still unstable, and in particular the data
+        structures returned by methods such as `get_metadata` may change in
+        future.
 
     """
 
     _music_services_data = None
 
     def __init__(self, service_name, account=None):
-        """Constructor.
+        """Initialise the instance.
 
-        Arg:
+        Args:
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
             account (Account): The account to use to access this service.
@@ -169,23 +364,9 @@ class MusicService(object):
                 raise MusicServiceException(
                     "No account found for service: '%s'" % service_name)
 
-        self.soap_client = soap_transport.SoapClient(
-            location=self.secure_uri,
-            action='http://www.sonos.com/Services/1.1#',
-            namespace='http://www.sonos.com/Services/1.1',
-            soap_ns='soap',
+        self.soap_client = MusicServiceSoapClient(
+            endpoint=self.secure_uri,
             timeout=9,  # The default is 60
-
-            # Spotify uses gzip. Others may do so as well. Unzipping is handled
-            # for us by the requests library. We need to set the user agent to
-            # a genuine Sonos value. Google Play music seems to want this. The
-            # firmware release number (after 'Sonos/" is obviously fake, and
-            # higher than current values, in case Google only offers certain
-            # services to certain firmware rel eases. ") #
-            http_headers={
-                'Accept-Encoding': 'gzip, deflate',
-                'User-agent': 'Linux UPnP/1.0 Sonos/99.9-99999'
-            },
             music_service=self
         )
 
@@ -328,127 +509,6 @@ class MusicService(object):
         raise MusicServiceException(
             "Unknown music service: '%s'" % service_name)
 
-    ########################################################################
-    #                                                                      #
-    #                           SOAP METHODS.                              #
-    #                                                                      #
-    ########################################################################
-
-    #  Looking at various services, we see that the following SOAP methods
-    #  are implemented, but not all in each service. Probably, the
-    #  Capabilities property indicates which features are implemented, but
-    #  it is not clear precisely how. Some of the more common/useful
-    #  features have been wrapped into instance methods, below
-
-    #    createItem(xs:string favorite)
-    #    createTrialAccount(xs:string deviceId)
-    #    deleteItem(xs:string favorite)
-    #    getAccount()
-    #    getExtendedMetadata(xs:string id)
-    #    getExtendedMetadataText(xs:string id, xs:string Type)
-    #    getLastUpdate()
-    #    getMediaMetadata(xs:string id)
-    #    getMediaURI(xs:string id)
-    #    getMetadata(xs:string id, xs:int index, xs:int count,xs:boolean
-    #                recursive)
-    #    getScrollIndices(xs:string id)
-    #    getSessionId(xs:string username, xs:string password)
-    #    mergeTrialccount(xs:string deviceId)
-    #    rateItem(id id, xs:integer rating)
-    #    search(xs:string id, xs:string term, xs:string index, xs:int count)
-    #    setPlayedSeconds(id id, xs:int seconds)
-
-    def get_media_metadata(self, item_id):
-        """Get metadata for a media item.
-
-        Args:
-            item_id (str): The item for which metadata is required
-        Returns:
-            (dict): The item's metadata
-
-        """
-
-        types = {'getMediaMetadataResult': {
-            'mediaMetadata': [MEDIAMETADATA_TYPE]
-        }}
-
-        response = self.soap_client.call(
-            'getMediaMetadata',
-            ('id', item_id))
-        return response.getMediaMetadataResult.unmarshall(
-            types, strict=False)['getMediaMetadataResult']
-
-    def get_media_uri(self, item_id):
-        """Get the URI for an item.
-
-        Args:
-            item_id (str): The item for which the URI is required
-        Returns:
-            (str): The item's URI
-
-        """
-        response = self.soap_client.call(
-            'getMediaURI',
-            ('id', item_id))
-        return response.getMediaURIResult.unmarshall(
-            types={'getMediaURIResult': str},
-            strict=False)['getMediaURIResult']
-
-    def get_metadata(
-            self, item_id='root', index=0, count=100, recursive=False):
-        """Get metadata for a container or item.
-
-        Args:
-            item_id (str): The container or item to browse. Defaults to the
-                root item
-            index (int): The starting index. Default 0
-            count (int): The maximum number of items to return. Default 100
-            recursive (bool): Whether the browse should recurse into sub-items
-                (Does not always work). Defaults to False
-        Returns:
-            (dict): The item or containers metadata
-
-        """
-        types = {'getMetadataResult': MEDIALIST_TYPE}
-        response = self.soap_client.call(
-            'getMetadata',
-            ('id', item_id), ('index', index),
-            ('count', count), ('recursive', recursive)
-        )
-        return response.getMetadataResult.unmarshall(
-            types, strict=False)['getMetadataResult']
-
-    def search(self, category, term='', index=0, count=100):
-        """Search for an item in a category.
-
-        Args:
-            category (str): The search category to use. Standard Sonos search
-                categories are 'artists', 'albums', 'tracks', 'playlists',
-                'genres', 'stations', 'tags'. Not all are available for each
-                music service. Call available_search_categories for a list for
-                this service.
-            term (str): The term to search for
-            index (int): The starting index. Default 0
-            count (int): The maximum number of items to return. Default 100
-
-        Returns:
-            (dict): The search results
-
-        """
-        types = {'searchResult': MEDIALIST_TYPE}
-        search_category = self._get_search_prefix_map().get(category, None)
-        if search_category is None:
-            raise MusicServiceException(
-                "%s does not support the '%s' search category" % (
-                    self.service_name, category))
-
-        response = self.soap_client.call(
-            'search',
-            ('id', search_category), ('term', term), ('index', index),
-            ('count', count))
-        return response.searchResult.unmarshall(
-            types, strict=False)['searchResult']
-
     def _get_search_prefix_map(self):
         """Fetch and parse the service search category mapping.
 
@@ -508,6 +568,173 @@ class MusicService(object):
         """
         # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
+
+    ########################################################################
+    #                                                                      #
+    #                           SOAP METHODS.                              #
+    #                                                                      #
+    ########################################################################
+
+    #  Looking at various services, we see that the following SOAP methods
+    #  are implemented, but not all in each service. Probably, the
+    #  Capabilities property indicates which features are implemented, but
+    #  it is not clear precisely how. Some of the more common/useful
+    #  features have been wrapped into instance methods, below.
+    #  See generally: http://musicpartners.sonos.com/node/81
+
+    #    createItem(xs:string favorite)
+    #    createTrialAccount(xs:string deviceId)
+    #    deleteItem(xs:string favorite)
+    #    getAccount()
+    #    getExtendedMetadata(xs:string id)
+    #    getExtendedMetadataText(xs:string id, xs:string Type)
+    #    getLastUpdate()
+    #    getMediaMetadata(xs:string id)
+    #    getMediaURI(xs:string id)
+    #    getMetadata(xs:string id, xs:int index, xs:int count,xs:boolean
+    #                recursive)
+    #    getScrollIndices(xs:string id)
+    #    getSessionId(xs:string username, xs:string password)
+    #    mergeTrialccount(xs:string deviceId)
+    #    rateItem(id id, xs:integer rating)
+    #    search(xs:string id, xs:string term, xs:string index, xs:int count)
+    #    setPlayedSeconds(id id, xs:int seconds)
+
+    def get_metadata(
+            self, item_id='root', index=0, count=100, recursive=False):
+        """Get metadata for a container or item.
+
+        Args:
+            item_id (str): The container or item to browse. Defaults to the
+                root item
+            index (int): The starting index. Default 0
+            count (int): The maximum number of items to return. Default 100
+            recursive (bool): Whether the browse should recurse into sub-items
+                (Does not always work). Defaults to False
+        Returns:
+            (OrderedDict): The item or container's metadata, or None.
+                See http://musicpartners.sonos.com/node/83
+
+        """
+        response = self.soap_client.call(
+            'getMetadata', [
+                ('id', item_id),
+                ('index', index), ('count', count),
+                ('recursive', 1 if recursive else 0)]
+        )
+        return response.get('getMetadataResult', None)
+
+    def search(self, category, term='', index=0, count=100):
+        """Search for an item in a category.
+
+        Args:
+            category (str): The search category to use. Standard Sonos search
+                categories are 'artists', 'albums', 'tracks', 'playlists',
+                'genres', 'stations', 'tags'. Not all are available for each
+                music service. Call available_search_categories for a list for
+                this service.
+            term (str): The term to search for
+            index (int): The starting index. Default 0
+            count (int): The maximum number of items to return. Default 100
+
+        Returns:
+            (OrderedDict): The search results, or None
+                See http://musicpartners.sonos.com/node/86
+
+        """
+        search_category = self._get_search_prefix_map().get(category, None)
+        if search_category is None:
+            raise MusicServiceException(
+                "%s does not support the '%s' search category" % (
+                    self.service_name, category))
+
+        response = self.soap_client.call(
+            'search',
+            [
+                ('id', search_category), ('term', term), ('index', index),
+                ('count', count)])
+        return response.get('searchResult', None)
+
+    def get_media_metadata(self, item_id):
+        """Get metadata for a media item.
+
+        Args:
+            item_id (str): The item for which metadata is required
+        Returns:
+            (OrderedDict): The item's metadata, or None
+                See http://musicpartners.sonos.com/node/83
+
+        """
+
+        response = self.soap_client.call(
+            'getMediaMetadata',
+            [('id', item_id)])
+        return response.get('getMediaMetadataResult', None)
+
+    def get_media_uri(self, item_id):
+        """Get the URI for an item.
+
+        Args:
+            item_id (str): The item for which the URI is required
+        Returns:
+            (str): The item's URI
+
+        """
+        response = self.soap_client.call(
+            'getMediaURI',
+            [('id', item_id)])
+        return response.get('getMediaURIResult', None)
+
+    def get_last_update(self):
+        """Get last_update details for this music service.
+
+        Returns:
+            (OrderedDict): A dictionary with keys 'catalog', and 'favorites'.
+                The value of each is a string which changes each time
+                the catalog or favorites change. You can use this to
+                detect when any caches need to be updated.
+
+        """
+        # TODO: Maybe create a favorites/catalog cache which is invalidated
+        # TODO: when these values change?
+        response = self.soap_client.call('getLastUpdate')
+        return response.get('getLastUpdateResult', None)
+
+    def get_extended_metadata(self, item_id):
+        """Get extended metadata for a media item, such as related items.
+
+        Args:
+            item_id (str): The item for which metadata is required
+        Returns:
+            (OrderedDict): The item's extended metadata or None
+                http://musicpartners.sonos.com/node/128
+
+        """
+
+        response = self.soap_client.call(
+            'getExtendedMetadata',
+            [('id', item_id)])
+        return response.get('getExtendedMetadataResult', None)
+
+    def get_extended_metadata_text(self, item_id, metadata_type):
+        """Get extended metadata text for a media item
+
+        Args:
+            item_id (str): The item for which metadata is required
+            metadata_type (str): The type of text to return, eg ARTIST_BIO, or
+                ALBUM_NOTES. A `get_extended_metadata` for the item will show
+                which extended metadata_types are available (under
+                relatedBrowse and relatedText)
+        Returns:
+            (str): The item's extended metadata text or None
+                http://musicpartners.sonos.com/node/127
+
+        """
+
+        response = self.soap_client.call(
+            'getExtendedMetadataText',
+            [('id', item_id), ('type', metadata_type)])
+        return response.get('getExtendedMetadataTextResult', None)
 
 
 def desc_from_uri(uri):

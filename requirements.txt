@@ -1,2 +1,2 @@
 requests
-https://github.com/lawrenceakka/pysimplesoap/archive/fault-no-wsdl.zip#egg=PySimpleSOAP-1.17
+xmltodict

@@ -7,11 +7,10 @@ import mock
 
 from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
-from soco.music_services.music_service import MusicService
+from soco.music_services.music_service import MusicService, \
+    MusicServiceSoapClient
 from soco.music_services.music_service import desc_from_uri
-from soco.music_services import soap_transport
-
-
+import soco.soap
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
 ACCOUNT_DATA="""<?xml version="1.0" ?>
 <ZPSupportInfo type="User">
@@ -173,14 +172,18 @@ SERVICES_DESCRIPTOR_LIST = """<?xml version="1.0"?>
 
 @pytest.fixture(autouse=True)
 def patch_music_services(monkeypatch):
-    """Patch MusicService, Account and SoapClient to avoid network requests
+    """Patch MusicService, Account and SoapMessage to avoid network requests
     and use dummy data."""
     monkeypatch.setattr(
         MusicService, '_get_music_services_data_xml',
         mock.Mock(return_value=SERVICES_DESCRIPTOR_LIST))
     monkeypatch.setattr(
-        soap_transport, 'SoapClient',
+        soco.soap, 'SoapMessage',
         mock.Mock())
+    monkeypatch.setattr(
+        soco.music_services.music_service, 'MusicServiceSoapClient',
+        mock.Mock()
+    )
     monkeypatch.setattr(
         Account, '_get_account_xml',
         mock.Mock(return_value=ACCOUNT_DATA))

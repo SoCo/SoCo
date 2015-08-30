@@ -65,13 +65,11 @@ with io.open('README.rst', encoding='utf-8') as file:
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
-REQUIREMENTS = ['requests']
-# For some versions of python (2.6) we need the importlib
-# as it is not in the standard install
-try:
-    import importlib
-except ImportError:
-    REQUIREMENTS.append('importlib')
+REQUIREMENTS = list(open('requirements.txt'))
+# Python 2.6 does not have importlib or OrderedDicts, so we need to install
+# the backports
+if sys.version_info < (2,7):
+    REQUIREMENTS.extend(['importlib', 'ordereddict'])
 
 
 setup(name=NAME,
