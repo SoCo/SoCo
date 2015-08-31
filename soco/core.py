@@ -148,6 +148,7 @@ class SoCo(_SocoSingletonBase):
         create_sonos_playlist -- Create a new empty Sonos playlist
         create_sonos_playlist_from_queue -- Create a new Sonos playlist
                                             from the current queue.
+        remove_sonos_playlist -- Remove a Sonos playlist.
         add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
                                        playlist
         get_item_album_art_uri -- Get an item's Album Art absolute URI.
@@ -1818,6 +1819,22 @@ class SoCo(_SocoSingletonBase):
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         return DidlPlaylistContainer(
             resources=res, title=title, parent_id='SQ:', item_id=item_id)
+
+    @only_on_master
+    def remove_sonos_playlist(self, object_id):
+        """ Remove a Sonos playlist.
+
+        Args:
+            object_id (str): Id of the Sonos playlist to remove. i.e. SQ:10
+
+        Returns:
+            bool: True if succesful, False otherwise
+
+        Raises:
+            SoCoUPnPException: If object_id does not point to a valid object.
+
+        """
+        return self.contentDirectory.DestroyObject([('ObjectID', object_id)])
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """ Adds a queueable item to a Sonos' playlist

@@ -602,7 +602,7 @@ class TestAVTransport:
         moco.add_item_to_sonos_playlist(track, playlist)
         moco.contentDirectory.Browse.assert_called_once_with([
             ('ObjectID', playlist.item_id),
-            ('BrowseFlag', 'BrowseDirectChildren'), 
+            ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', 0),
             ('RequestedCount', 1),
@@ -766,6 +766,15 @@ class TestContentDirectory:
         moco.contentDirectory.RefreshShareIndex.assert_called_with([
             ('AlbumArtistDisplayOption', ''),
         ])
+
+    def test_remove_sonos_playlist_success(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.return_value = True
+        result = moco.remove_sonos_playlist('SQ:10')
+        moco.contentDirectory.DestroyObject.assert_called_once_with(
+            [('ObjectID', 'SQ:10')]
+        )
+        assert result
 
 
 class TestRenderingControl:
