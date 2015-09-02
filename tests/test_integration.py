@@ -23,6 +23,7 @@ import time
 import pytest
 
 import soco as soco_module
+from soco.data_structures import DidlMusicTrack
 
 # Mark all tests in this module with the pytest custom "integration" marker so
 # they can be selected or deselected as a whole, eg:
@@ -61,7 +62,7 @@ def soco():
     soco.stop()
     soco.clear_queue()
     for track in state['queue']:
-        soco.add_to_queue(track['uri'])
+        soco.add_to_queue(track)
     soco.play_from_queue(
         int(state['current_track_info']['playlist_position']) - 1)
     soco.seek(state['current_track_info']['position'])
@@ -187,7 +188,7 @@ class TestTreble(object):
         """ Test if the set functionality produces the expected "coerce in
         range" functionality when given a value outside its range.
         """
-         # Values on the boundaries of the two invalid equivalence partitions
+        # Values on the boundaries of the two invalid equivalence partitions
         soco.treble = self.valid_values[0] - 1
         wait()
         assert soco.treble == self.valid_values[0]
@@ -288,7 +289,7 @@ class TestTransport(object):
 class TestGetCurrentTrackInfo(object):
     """ Integration test for the get_current_track_info method. """
 
-    info_keys = sorted(['album', 'artist', 'title', 'uri',
+    info_keys = sorted(['album', 'artist', 'title', 'uri', 'metadata',
                         'playlist_position', 'duration', 'album_art',
                         'position'])
 
@@ -330,19 +331,20 @@ class TestGetQueue(object):
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
-    queue_element_keys = sorted(['album', 'artist', 'uri',
-                                'album_art', 'title'])
+    queue_element_keys = sorted(['album', 'creator', 'resources',
+                                'album_art_uri', 'title'])
 
     def test_get(self, soco):
-        """ Test is return value is a list of dictionaries and if each of
-        the dictionaries contain the keys: album, artist, uri, album_art and
-        title.
+        """ Test is return value is a list of DidlMusicTracks and if each of
+        the objects contain the attributes: album, creator, resources,
+        album_art_uri and title.
         """
         queue = soco.get_queue(0, 100)
         assert isinstance(queue, list)
         for item in queue:
-            assert isinstance(item, dict)
-            assert sorted(item.keys()) == self.queue_element_keys
+            assert isinstance(item, DidlMusicTrack)
+            for key in self.queue_element_keys:
+                assert getattr(item, key)
 
 
 class TestAddToQueue(object):
@@ -356,13 +358,11 @@ class TestAddToQueue(object):
 
         old_queue = soco.get_queue(0, 1000)
         # Add new element and check
-        assert (soco.add_to_queue(old_queue[-1]['uri'])) == len(old_queue) + 1
+        assert (soco.add_to_queue(old_queue[-1])) == len(old_queue) + 1
         wait()
         new_queue = soco.get_queue()
         assert (len(new_queue) - 1) == len(old_queue)
-        assert (new_queue[-1]) == (new_queue[-2])
-        # Restore queue again? Probably no need, since queue is restored on
-        # tear down anyway.
+        assert (new_queue[-1].title) == (new_queue[-2].title)
 
 
 class TestRemoveFromQueue(object):
@@ -371,15 +371,10 @@ class TestRemoveFromQueue(object):
     def test(self, soco):
         """ Test if the remove_from_queue method works. """
         old_queue = soco.get_queue()
-        track_to_remove = old_queue[-1]
-        soco.remove_from_queue(len(old_queue))
+        soco.remove_from_queue(len(old_queue)-1)  # queue index is 0 based
         wait()
         new_queue = soco.get_queue()
         assert old_queue != new_queue, (
             'No difference between '
             'queues before and after removing the last item')
         assert len(new_queue) == len(old_queue) - 1
-        # Clean up
-        soco.add_to_queue(track_to_remove['uri'])
-        wait()
-        assert old_queue == soco.get_queue()
