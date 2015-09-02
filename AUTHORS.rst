@@ -22,6 +22,7 @@ Contributors
 * Aaron Daubman
 * Johan Elmerfjord
 * David H
+* Jeff Hinrichs
 * Jeroen Idserda
 * Todd Neal
 * nixscripter

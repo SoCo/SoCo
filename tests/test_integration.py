@@ -391,7 +391,8 @@ class TestSonosPlaylist(object):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
             self.existing_playlists = soco.get_sonos_playlists()
-            if self.playlist_name in [x.title for x in self.existing_playlists]:
+            if self.playlist_name in [x.title
+                                      for x in self.existing_playlists]:
                 msg = '%s is an existing playlist.' % self.playlist_name
                 pytest.fail(msg)
 
@@ -413,10 +414,10 @@ class TestSonosPlaylist(object):
 
     def test_create_from_queue(self, soco):
         """Test creating a Sonos playlist from the current queue."""
-        new_playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
-        assert type(new_playlist) is DidlPlaylistContainer
+        playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
+        assert type(playlist) is DidlPlaylistContainer
 
-        prslt = soco.browse(ml_item=new_playlist)
+        prslt = soco.browse(ml_item=playlist)
         qrslt = soco.get_queue()
         assert len(prslt) == len(qrslt)
         assert prslt.total_matches == qrslt.total_matches
@@ -441,16 +442,376 @@ class TestSonosPlaylist(object):
             if sonos_playlist.title == self.playlist_name:
                 found = True
                 break
-        assert found == False, "new_playlist was not removed by item_id"
+        assert found is False, "new_playlist was not removed by item_id"
 
     def test_remove_playlist_bad_id(self, soco):
         """Test attempting to remove a Sonos playlist using a bad id."""
         # junky bad
         with pytest.raises(SoCoUPnPException):
-            _ = soco.remove_sonos_playlist('SQ:-7')
+            soco.remove_sonos_playlist('SQ:-7')
         # realistic non-existing
         hpl_i = max([int(x.item_id.split(':')[1])
                      for x in soco.get_sonos_playlists()])
         with pytest.raises(SoCoUPnPException):
-            _ = soco.remove_sonos_playlist('SQ:{0}'.format(hpl_i + 1))
+            soco.remove_sonos_playlist('SQ:{0}'.format(hpl_i + 1))
 
+
+class TestReorderSonosPlaylist(object):
+    """Integration tests for Sonos Playlist Management."""
+    existing_playlists = None
+    playlist_name = 'zSocoTestPlayList42'
+    test_playlist = None
+
+    @pytest.yield_fixture(autouse=True, scope="class")
+    def restore_sonos_playlists(self, soco):
+        """A fixture which cleans up after each sonos playlist test."""
+        if self.existing_playlists is None:
+            self.existing_playlists = soco.get_sonos_playlists()
+        if self.playlist_name in [x.title for x in self.existing_playlists]:
+            msg = '%s is an existing playlist.' % self.playlist_name
+            pytest.fail(msg)
+
+        queue_list = soco.get_queue()
+        if len(queue_list) < 2:
+            msg = 'You must have 3 or more items in your queue for testing.'
+            pytest.fail(msg)
+        playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
+        self.test_playlist = playlist
+        yield
+
+        # soco.remove_sonos_playlist(object_id=self.test_playlist.item_id)
+        soco.contentDirectory.DestroyObject([('ObjectID',
+                                              self.test_playlist.item_id)])
+
+    def _reset_spl_contents(self, soco):
+        """Ensure test playlist matches queue for each test."""
+        test_playlist = soco.get_sonos_playlist_by_attr('title',
+                                                        self.playlist_name)
+        response = soco.clear_sonos_playlist(test_playlist)
+        if response['length']:
+            msg = 'Failed to empty playlist. Unexpected result.'
+            pytest.fail(msg)
+        que = soco.get_queue()
+        num_tracks = 0
+        for track in que:
+            soco.add_item_to_sonos_playlist(track, test_playlist)
+            num_tracks += 1
+        return test_playlist, num_tracks
+
+    def test_reverse_track_order(self, soco):
+        """Test reversing the tracks in the Sonos playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = ','.join([str(x) for x in reversed(range(num_tracks))])
+        new_pos = ','.join([str(x) for x in range(num_tracks)])
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == 0
+        assert response['length'] == num_tracks
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        for s_item, q_item in zip(spl, reversed(soco.get_queue())):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_swap_first_two_items(self, soco):
+        """Test a use case in doc string. Swapping the positions of the first
+            two tracks in the Sonos playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = [0, ]
+        new_pos = [1, ]
+
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == 0
+        assert response['length'] == num_tracks
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[1].resources[0].uri
+        assert spl[1].resources[0].uri == que[0].resources[0].uri
+        for s_item, q_item in zip(spl[2:], que[2:]):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_first_track(self, soco):
+        """Test removing first track from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = [0, ]
+        new_pos = [None, ]
+
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks - 1
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()[1:]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_first_track_full(self, soco):
+        """Test removing first track from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = [0] + range(num_tracks - 1)        # [0, 0, 1, ..., n-1]
+        new_pos = [None, ] + range(num_tracks - 1)  # [None, 0, ..., n-1]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks - 1
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()[1:]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_last_track(self, soco):
+        """Test removing last track from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = range(num_tracks)
+        new_pos = range(num_tracks - 1) + [None, ]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks - 1
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()[:-1]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_between_track(self, soco):
+        """Test removing a middle track from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        ndx = int(num_tracks / 2)
+        tracks = [ndx]
+        new_pos = [None]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks - 1
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        del que[ndx]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_some_tracks(self, soco):    # pylint: disable=R0914
+        """Test removing some tracks from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        # get rid of the even numbered tracks
+        tracks = sorted([x for x in range(num_tracks) if not x & 1],
+                        reverse=True)
+        new_pos = [None for _ in tracks]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1 * len(new_pos)
+        assert response['length'] == num_tracks + response['change']
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        for ndx in tracks:
+            del que[ndx]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_all_tracks(self, soco):
+        """Test removing all tracks from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        # get rid of the even numbered tracks
+        tracks = sorted(range(num_tracks), reverse=True)
+        new_pos = [None for _ in tracks]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1 * num_tracks
+        assert response['length'] == num_tracks + response['change']
+        assert response['length'] == 0
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        assert len(spl) == 0
+
+    def test_reorder_and_remove_track(self, soco):
+        """Test reorder and removing a track from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = [1, 2]
+        new_pos = [0, None]
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks + response['change']
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[1].resources[0].uri
+
+    def test_object_id_is_object(self, soco):
+        """Test removing all tracks from Sonos Playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = sorted(range(num_tracks), reverse=True)
+        new_pos = [None for _ in tracks]
+        args = {'sonos_playlist': test_playlist,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1 * num_tracks
+        assert response['length'] == num_tracks + response['change']
+        assert response['length'] == 0
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        assert len(spl) == 0
+
+    def test_remove_all_string(self, soco):
+        """Remove all in one op by using strings."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        # we know what we are doing
+        tracks = ','.join([str(x) for x in range(num_tracks)])
+        new_pos = ''
+        args = {'sonos_playlist': test_playlist,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1 * num_tracks
+        assert response['length'] == num_tracks + response['change']
+        assert response['length'] == 0
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        assert len(spl) == 0
+
+    def test_remove_and_reorder_string(self, soco):
+        """test remove then reorder using string arguments."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = '0,2'      # trackA, trackB, trackC, ...
+        new_pos = ',0'      # trackC, trackB, ...
+        args = {'sonos_playlist': test_playlist,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks + response['change']
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[2].resources[0].uri
+        assert spl[1].resources[0].uri == que[1].resources[0].uri
+
+    def test_move_track_string(self, soco):
+        """Test a simple move with strings."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = "0"
+        new_pos = "1"
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == 0
+        assert response['length'] == num_tracks
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[1].resources[0].uri
+        assert spl[1].resources[0].uri == que[0].resources[0].uri
+        for s_item, q_item in zip(spl[2:], que[2:]):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_move_track_int(self, soco):
+        """Test a simple move with ints."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        tracks = 1
+        new_pos = 0
+        args = {'sonos_playlist': test_playlist.item_id,
+                'tracks': tracks,
+                'new_pos': new_pos}
+        response = soco.reorder_sonos_playlist(**args)
+        assert response['change'] == 0
+        assert response['length'] == num_tracks
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[1].resources[0].uri
+        assert spl[1].resources[0].uri == que[0].resources[0].uri
+        for s_item, q_item in zip(spl[2:], que[2:]):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_clear_sonos_playlist(self, soco):
+        """Test the clear_sonos_playlist helper function."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        response = soco.clear_sonos_playlist(test_playlist)
+        assert response['change'] == -1 * num_tracks
+        assert response['length'] == num_tracks + response['change']
+        assert response['length'] == 0
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        assert len(spl) == 0
+
+    def test_clear_empty_sonos_playlist(self, soco):
+        """Test clearing an already empty Sonos playlist."""
+        test_playlist, _ = self._reset_spl_contents(soco)
+        response = soco.clear_sonos_playlist(test_playlist)
+        assert response['length'] == 0
+        update_id = response['update_id']
+        new_response = soco.clear_sonos_playlist(test_playlist,
+                                                 update_id=update_id)
+        assert new_response['change'] == 0
+        assert new_response['length'] == 0
+        assert new_response['update_id'] == update_id
+
+    def test_move_in_sonos_playlist(self, soco):
+        """Test method move_in_sonos_playlist."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        args = {'sonos_playlist': test_playlist.item_id,
+                'track': 0,
+                'new_pos': 1}
+        response = soco.move_in_sonos_playlist(**args)
+        assert response['change'] == 0
+        assert response['length'] == num_tracks
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()
+        assert spl[0].resources[0].uri == que[1].resources[0].uri
+        assert spl[1].resources[0].uri == que[0].resources[0].uri
+        for s_item, q_item in zip(spl[2:], que[2:]):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_remove_from_sonos_playlist(self, soco):
+        """Test remove_from_sonos_playlist method."""
+        test_playlist, num_tracks = self._reset_spl_contents(soco)
+        args = {'sonos_playlist': test_playlist.item_id,
+                'track': 0}
+        response = soco.remove_from_sonos_playlist(**args)
+        assert response['change'] == -1
+        assert response['length'] == num_tracks - 1
+        assert response['update_id'] != 0
+        spl = soco.music_library.browse(ml_item=test_playlist)
+        que = soco.get_queue()[1:]
+        for s_item, q_item in zip(spl, que):
+            assert s_item.resources[0].uri == q_item.resources[0].uri
+
+    def test_get_sonos_playlist_by_attr(self, soco):
+        """Test test_get_sonos_playlist_by_attr."""
+        test_playlist, _ = self._reset_spl_contents(soco)
+        by_name = soco.get_sonos_playlist_by_attr('title', self.playlist_name)
+        assert test_playlist == by_name
+        by_id = soco.get_sonos_playlist_by_attr('item_id',
+                                                test_playlist.item_id)
+        assert test_playlist == by_id
+        with pytest.raises(AttributeError):
+            soco.get_sonos_playlist_by_attr('fred', 'wilma')
+
+        with pytest.raises(ValueError):
+            soco.get_sonos_playlist_by_attr('item_id', 'wilma')
