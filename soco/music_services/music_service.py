@@ -297,11 +297,6 @@ class MusicService(object):
         >>> response =  spotify.get_metadata(
         ...    item_id='spotify:user:spotify:playlist:0FQk6BADgIIYd3yTLCThjg')
 
-        or a URI
-
-        >>> response =  spotify.get_media_URI(
-        ...    item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
-
         Find the available search categories, and use them
 
         # and a search
@@ -563,6 +558,12 @@ class MusicService(object):
         # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
 
+    def sonos_uri_from_id(self, item_id):
+        """ Return a uri which can be sent for playing
+
+        URIs are of the form: track%3a3402413.mp3?sid=2&amp;sn=4
+        """
+
     ########################################################################
     #                                                                      #
     #                           SOAP METHODS.                              #
@@ -666,7 +667,16 @@ class MusicService(object):
         return response.get('getMediaMetadataResult', None)
 
     def get_media_uri(self, item_id):
-        """Get the URI for an item.
+        """Get a streaming URI for an item.
+
+        You should not need to use this directly. It is used by the Sonos
+        players (not the controllers) to obtain the uri of the media stream.
+        If you want to have a player play a media item, you should add add it
+        to the queue using its id and let the player work out where to get
+        the stream from (see `On
+        Demand Playback <http://http://musicpartners.sonos.com/node/421>`_
+        and `Programmed
+        Radio <http://http://musicpartners.sonos.com/node/422>`_)
 
         Args:
             item_id (str): The item for which the URI is required
