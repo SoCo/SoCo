@@ -191,7 +191,8 @@ def patch_music_services(monkeypatch):
 def test_initialise_account():
     assert len(Account._all_accounts) == 0
     accounts = Account.get_accounts()
-    assert len(accounts) == 3
+    assert len(accounts) == 4 # TuneIn account is added automatically
+    assert accounts['0'].service_type == '65031' # TuneIn
     assert accounts['1'].username == '12345678'
     assert accounts['1'].service_type == '2311'
     assert accounts['1'].deleted == False
@@ -200,7 +201,7 @@ def test_initialise_account():
 
 def test_get_all_accounts():
     a = Account.get_accounts()
-    assert len(a) == 3
+    assert len(a) == 4 # Including TuneIn
 
 def test_get_accounts_for_service():
     a = Account.get_accounts_for_service('2311')
@@ -234,8 +235,8 @@ def test_get_names():
 
 def test_get_subscribed_names():
     names = MusicService.get_subscribed_services_names()
-    assert len(names) == 3
-    assert set(names) == set(['Spotify', 'Spreaker', 'radioPup'])
+    assert len(names) == 4
+    assert set(names) == set(['TuneIn', 'Spotify', 'Spreaker', 'radioPup'])
 
 def test_create_music_service():
     ms = MusicService('Spotify')
@@ -251,6 +252,9 @@ def test_tunein():
     """TuneIn is handles specially by MusicServices"""
     tunein = MusicService('TuneIn')
     assert tunein
+    assert tunein.service_id == '254'
+    assert tunein.service_type == '65031'
+    assert tunein.account.serial_number == '0'
 
 def test_search():
     spotify = MusicService('Spotify')
@@ -272,6 +276,8 @@ def test_desc_from_uri():
     assert desc_from_uri(URI) == 'SA_RINCON2311_12345678'
     SID_ONLY = 'x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32'
     assert desc_from_uri(SID_ONLY) == 'SA_RINCON2311_12345678'
+    TUNEIN_URI = 'x-sonosapi-stream:s49815?sid=254&amp;flags=8224&amp;sn=0'
+    assert desc_from_uri(TUNEIN_URI) == 'SA_RINCON65031_'
     UNKNOWN_AC_AND_SID = 'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=400'
     UNKNOWN_AC_WITH_SID = 'x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32&amp;sn=400'
     assert desc_from_uri(UNKNOWN_AC_WITH_SID) == 'SA_RINCON2311_12345678'

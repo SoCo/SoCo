@@ -350,10 +350,6 @@ class MusicService(object):
         self.service_type = data['ServiceType']
         if account is not None:
             self.account = account
-        elif service_name == "TuneIn":
-            # TuneIn is always present, but will have no account data, so we
-            # need to handle it specially. Create a dummy account
-            self.account = Account()
         else:
             # try to find an account for this service
             for acct in Account.get_accounts().values():
@@ -482,8 +478,6 @@ class MusicService(object):
     @classmethod
     def get_subscribed_services_names(cls):
         """Get a list of the names of all subscribed music services.
-
-        The TuneIn service is always subscribed but will not appear in the list
 
         Returns:
             (list): A list of strings
@@ -751,7 +745,7 @@ def desc_from_uri(uri):
     """
     #
     # If there is an sn parameter (which is the serial number of an account),
-    # we can obtain all the infomration we need from that, because we can find
+    # we can obtain all the information we need from that, because we can find
     # the relevant service_id in the account database (it is the same as the
     # service_type). Consequently, the sid parameter is unneeded. But if sn is
     # missing, we need the sid (service_type) parameter to find a relevant

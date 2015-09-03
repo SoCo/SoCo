@@ -103,10 +103,8 @@ class Account(object):
             instance. Accounts which have been marked as deleted are excluded.
 
         Note:
-            Although an Account for TuneIn is always present, it is handled
-            specially by Sonos, and will not appear in the returned dict. Any
-            existing Account instance will have its attributes updated to
-            those currently stored on the Sonos system.
+            Any existing Account instance will have its attributes updated
+            to those currently stored on the Sonos system.
 
         """
 
@@ -172,13 +170,26 @@ class Account(object):
             account.service_type = xml_account.get('Type')
             account.deleted = is_deleted
             account.username = xml_account.findtext('UN')
-            # Not sure what 'MD' stands for.  Metadata?
+            # Not sure what 'MD' stands for.  Metadata? May Delete?
             account.metadata = xml_account.findtext('MD')
             account.nickname = xml_account.findtext('NN')
             account.oa_device_id = xml_account.findtext('OADevID')
             account.key = xml_account.findtext('Key')
-
             result[serial_number] = account
+            # There is always a TuneIn account, but it is handled separately
+            #  by Sonos, and does not appear in the xml account data. We
+            # need to add it ourselves.
+            tunein = Account()
+            tunein.service_type = '65031'  # Is this always the case?
+            tunein.deleted = False
+            tunein.username = ''
+            tunein.metadata = ''
+            tunein.nickname = ''
+            tunein.oa_device_id = ''
+            tunein.key = ''
+            tunein.serial_number = '0'
+            result['0'] = tunein
+
         return result
 
     @classmethod
