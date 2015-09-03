@@ -111,7 +111,7 @@ class TestDidlObject():
 
     def test_create_didl_object_with_no_params(self):
         with pytest.raises(TypeError):
-            didl_object=data_structures.DidlObject()
+            didl_object = data_structures.DidlObject()
 
     def test_create_didl_object_with_disallowed_params(self):
         with pytest.raises(ValueError) as excinfo:
@@ -200,6 +200,47 @@ class TestDidlObject():
         assert data_structures.DidlObject.from_dict(the_dict).to_dict() == \
             the_dict
 
+    def test_didl_object_from_dict_resources(self):
+        resources_list = [data_structures.DidlResource('a%20uri',
+                                                       'a:protocol:info:xx')]
+        didl_object = data_structures.DidlObject(title='a_title',
+                                                 parent_id='pid',
+                                                 item_id='iid',
+                                                 creator='a_creator',
+                                                 desc='dummy',
+                                                 resources=resources_list)
+        the_dict = {
+            'title': 'a_title',
+            'parent_id': 'pid',
+            'item_id': 'iid',
+            'creator': 'a_creator',
+            'restricted': True,
+            'desc': 'dummy',
+            'resources': [resource.to_dict() for resource in resources_list]
+        }
+        assert data_structures.DidlObject.from_dict(the_dict) == didl_object
+
+    def test_didl_object_from_dict_resources_remove_nones(self):
+        resources_list = [data_structures.DidlResource('a%20uri',
+                                                       'a:protocol:info:xx')]
+        didl_object = data_structures.DidlObject(title='a_title',
+                                                 parent_id='pid',
+                                                 item_id='iid',
+                                                 creator='a_creator',
+                                                 desc='dummy',
+                                                 resources=resources_list)
+        the_dict = {
+            'title': 'a_title',
+            'parent_id': 'pid',
+            'item_id': 'iid',
+            'creator': 'a_creator',
+            'restricted': True,
+            'desc': 'dummy',
+            'resources': [resource.to_dict(remove_nones=True)
+                          for resource in resources_list]
+        }
+        assert data_structures.DidlObject.from_dict(the_dict) == didl_object
+
     def test_didl_comparisons(self):
         didl_object_1 = data_structures.DidlObject(title='a_title',
             parent_id='pid', item_id='iid', creator='a_creator')
@@ -225,11 +266,50 @@ class TestDidlObject():
         }
         assert didl_object.to_dict() == the_dict
         # adding in an attibute not in _translation should make no difference
-        didl_object.other='other'
+        didl_object.other = 'other'
         assert didl_object.to_dict() == the_dict
         # but changing on the other should
         didl_object.creator = 'another'
         assert didl_object.to_dict() != the_dict
+
+    def test_didl_object_to_dict_resources(self):
+        resources_list = [data_structures.DidlResource('a%20uri',
+                                                       'a:protocol:info:xx')]
+        didl_object = data_structures.DidlObject(title='a_title',
+                                                 parent_id='pid',
+                                                 item_id='iid',
+                                                 creator='a_creator',
+                                                 resources=resources_list)
+        the_dict = {
+            'title': 'a_title',
+            'parent_id': 'pid',
+            'item_id': 'iid',
+            'creator': 'a_creator',
+            'restricted': True,
+            'desc': 'RINCON_AssociatedZPUDN',
+            'resources': [resource.to_dict() for resource in resources_list]
+        }
+        assert didl_object.to_dict() == the_dict
+
+    def test_didl_object_to_dict_resources_remove_nones(self):
+        resources_list = [data_structures.DidlResource('a%20uri',
+                                                       'a:protocol:info:xx')]
+        didl_object = data_structures.DidlObject(title='a_title',
+                                                 parent_id='pid',
+                                                 item_id='iid',
+                                                 creator='a_creator',
+                                                 resources=resources_list)
+        the_dict = {
+            'title': 'a_title',
+            'parent_id': 'pid',
+            'item_id': 'iid',
+            'creator': 'a_creator',
+            'restricted': True,
+            'desc': 'RINCON_AssociatedZPUDN',
+            'resources': [resource.to_dict(remove_nones=True)
+                          for resource in resources_list]
+        }
+        assert didl_object.to_dict(remove_nones=True) == the_dict
 
     def test_didl_object_to_element(self):
         didl_object = data_structures.DidlObject(title='a_title',

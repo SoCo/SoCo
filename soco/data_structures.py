@@ -481,7 +481,10 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
         """
         # Do we really need this constructor? Could use DidlObject(**content)
-        # instead.
+        # instead.  -- We do now
+        if 'resources' in content:
+            content['resources'] = [DidlResource.from_dict(x)
+                                    for x in content['resources']]
         return cls(**content)
 
     def __eq__(self, playable_item):
@@ -537,8 +540,13 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         """
         return self.__repr__()
 
-    def to_dict(self):
-        """Return the dict representation of the instance."""
+    def to_dict(self, remove_nones=False):
+        """Return the dict representation of the instance.
+
+        Args:
+            remove_nones (bool): remove dictionary elements when value is None
+
+        """
         content = {}
         # Get the value of each attribute listed in _translation, and add it
         # to the content dict
@@ -552,7 +560,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         content['restricted'] = self.restricted
         content['title'] = self.title
         if self.resources != []:
-            content['resources'] = self.resources
+            content['resources'] = [resource.to_dict(remove_nones=remove_nones)
+                                    for resource in self.resources]
         content['desc'] = self.desc
         return content
 
