@@ -954,6 +954,13 @@ class DidlMusicGenre(DidlGenre):
     tag = 'item'
 
 
+class DidlRadioShow(DidlContainer):
+
+    """Class that represents a music genre."""
+
+    item_class = 'object.container.radioShow'
+
+
 ###############################################################################
 # SPECIAL LISTS                                                               #
 ###############################################################################
