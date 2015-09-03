@@ -1,4 +1,24 @@
-include requirements.txt
-include requirements-dev.txt
-include README.rst AUTHORS.rst LICENSE.rst
+# Specifies files to be included in a python sdist
+
+# Top level directory
+include requirements.txt requirements-dev.txt
+include setup.cfg pylintrc makefile
+include *.rst
+
+# dev-tools
+recursive-include dev_tools *.ini *.py *.bat *.sh
+
+# Documentation
+
+recursive-include doc *
+recursive-exclude doc *.pyc *.pyo *.rej *.orig .DS_Store
+# We don't want any built docs
+prune doc/_build
+
+# Tests
 recursive-include tests *.py
+
+# Examples
+recursive-include examples *
+recursive-exclude examples *.pyc *.pyo *.rej *.orig .DS_Store
+
