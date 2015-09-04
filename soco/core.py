@@ -25,7 +25,6 @@ from .utils import really_utf8, camel_to_underscore, really_unicode,\
     url_escape_path
 from .xml import XML
 from soco import config
-from soco.discovery import discover
 
 _LOG = logging.getLogger(__name__)
 
@@ -243,20 +242,6 @@ class SoCo(_SocoSingletonBase):
 
     def __repr__(self):
         return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
-
-    @classmethod
-    def any_soco(cls):
-        """ Return any soco device, for when it doesn't matter which """
-
-        # Try to obtain an existing instance, or use discover if necessary.
-        # Note that this assumes that the existing instance has not left
-        # the network.
-        try:
-            # pylint: disable=no-member
-            device = list(cls._instances[cls._class_group].values())[0]
-        except KeyError:
-            device = discover().pop()
-        return device
 
     @property
     def player_name(self):

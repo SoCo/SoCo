@@ -259,7 +259,7 @@ def get_alarms(soco=None):
     """
     # Get a soco instance to query. It doesn't matter which.
     if soco is None:
-        soco = soco.Soco.any_soco()
+        soco = soco.discovery.any_soco()
     response = soco.alarmClock.ListAlarms()
     alarm_list = response['CurrentAlarmList']
     tree = XML.fromstring(alarm_list.encode('utf-8'))

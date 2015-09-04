@@ -15,13 +15,13 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 from xmltodict import parse
 import requests
 
-from soco import SoCo
 from soco.xml import XML
 from soco.exceptions import MusicServiceException
 from soco.soap import SoapMessage, SoapFault
 
 from soco.compat import urlparse, parse_qs
 from soco.music_services.accounts import Account
+from soco import discovery
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
@@ -68,7 +68,7 @@ class MusicServiceSoapClient(object):
             'Accept-Encoding': 'gzip, deflate',
             'User-agent': '"Linux UPnP/1.0 Sonos/99 (ZPS3)"'
         }
-        self._device = SoCo.any_soco()
+        self._device = discovery.any_soco()
         self._device_id = self._device.systemProperties.GetString(
             [('VariableName', 'R_TrialZPSerial')])['StringValue']
 
@@ -381,7 +381,7 @@ class MusicService(object):
             (str): a string containing the music services data xml
 
         """
-        device = soco or SoCo.any_soco()
+        device = soco or discovery.any_soco()
         log.debug("Fetching music services data from %s", device)
         available_services = device.musicServices.ListAvailableServices()
         descriptor_list_xml = available_services[

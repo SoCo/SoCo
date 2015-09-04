@@ -138,3 +138,27 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
                 return zone.all_zones
             else:
                 return zone.visible_zones
+
+
+def any_soco():
+    """ Return any soco device, for when it doesn't matter which.
+
+    Try to obtain an existing instance, or use discover if necessary.
+    Note that this assumes that the existing instance has not left
+    the network.
+
+    Returns:
+        (SoCo): A SoCo instance (or subclass if config.SOCO_CLASS is set,
+        or None if no instances are found
+
+    """
+
+    cls = config.SOCO_CLASS
+    # pylint: disable=no-member, protected-access
+    try:
+        device = list(cls._instances[cls._class_group].values())[0]
+    except KeyError:
+        devices = discover()
+        return None if devices is None else devices.pop()
+
+    return device

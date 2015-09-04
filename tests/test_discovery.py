@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from mock import patch, Mock
 
 from soco import discover
-from soco import config
 
 IP_ADDR = '192.168.1.101'
 TIMEOUT = 5

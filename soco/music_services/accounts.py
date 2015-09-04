@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 import requests
 
-from soco.core import SoCo
+from soco import discovery
 from soco.xml import XML
 
 
@@ -81,7 +81,7 @@ class Account(object):
         # via a call to
         # systemProperties.GetStringX([('VariableName','R_SvcAccounts')]))
         # This returns an encrypted string, and, so far, we cannot decrypt it
-        device = soco or SoCo.any_soco()
+        device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
         settings_url = "http://{0}:1400/status/accounts".format(
             device.ip_address)
