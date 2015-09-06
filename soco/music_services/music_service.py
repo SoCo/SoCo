@@ -7,25 +7,20 @@ This module provides the MusicService class and related functionality.
 
 """
 
-from __future__ import (
-    absolute_import, unicode_literals
-)
+from __future__ import absolute_import, unicode_literals
 
 import logging
 
 import requests
 
+from xmltodict import parse
+
 from .. import discovery
-from ..compat import (
-    parse_qs, urlparse
-)
+from ..compat import parse_qs, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
-from ..soap import (
-    SoapFault, SoapMessage
-)
+from ..soap import SoapFault, SoapMessage
 from ..xml import XML
-from xmltodict import parse
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
