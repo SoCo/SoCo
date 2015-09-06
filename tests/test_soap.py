@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
-""" Tests for the soap module """
+"""Tests for the soap module."""
 
 from __future__ import unicode_literals
+
+from soco.soap import SoapMessage
+from soco.xml import XML
 
 try:
     from unittest import mock
 except ImportError:
     import mock
 
-from soco.soap import SoapMessage
-from soco.xml import XML
 
 DUMMY_VALID_RESPONSE = "".join([
     '<?xml version="1.0"?>',
@@ -26,7 +27,7 @@ DUMMY_VALID_RESPONSE = "".join([
 
 
 def test_init():
-    """ Tests for initialisation of classes """
+    """Tests for initialisation of classes."""
     s = SoapMessage('http://endpoint_url', 'a_method')
     assert s.endpoint == "http://endpoint_url"
     assert s.method == 'a_method'
@@ -39,7 +40,7 @@ def test_init():
 
 
 def test_prepare_headers():
-    """ Check http_headers are correctly prepared """
+    """Check http_headers are correctly prepared."""
     s = SoapMessage('endpoint', 'method')
     h = s.prepare_headers({'test1': 'one', 'test2': 'two'}, None)
     assert h == {'Content-Type': 'text/xml; charset="utf-8"',
@@ -52,7 +53,7 @@ def test_prepare_headers():
 
 
 def test_prepare_soap_header():
-    """ Check that the SOAP header is correctly wrapped """
+    """Check that the SOAP header is correctly wrapped."""
     s = SoapMessage('endpoint', 'method')
     h = s.prepare_soap_header('<a><b></b></a>')
     assert h == "<s:Header><a><b></b></a></s:Header>"
@@ -63,7 +64,7 @@ def test_prepare_soap_header():
 
 
 def test_prepare_soap_body():
-    """ Check that the SOAP body is correctly prepared """
+    """Check that the SOAP body is correctly prepared."""
     # No params
     s = SoapMessage('endpoint', 'method')
     b = s.prepare_soap_body('a_method', [], None)
@@ -87,8 +88,7 @@ def test_prepare_soap_body():
 
 
 def test_prepare():
-    """ Test preparation of whole SOAP message
-    """
+    """Test preparation of whole SOAP message."""
     s = SoapMessage(
         endpoint='endpoint',
         method='getData',
@@ -108,7 +108,7 @@ def test_prepare():
 
 
 def test_call():
-    """ Calling a command should result in an http request"""
+    """Calling a command should result in an http request."""
 
     s = SoapMessage(
         endpoint='http://endpoint.example.com',

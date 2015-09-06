@@ -1,23 +1,29 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import pytest
 import mock
+import pytest
 
 from soco import SoCo
+from soco.data_structures import (
+    DidlMusicTrack, to_didl_string
+)
+from soco.exceptions import (
+    SoCoSlaveException, SoCoUPnPException
+)
 from soco.groups import ZoneGroup
 from soco.xml import XML
-from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoUPnPException, SoCoSlaveException
 
 IP_ADDR = '192.168.1.101'
 
 
 @pytest.yield_fixture()
 def moco():
-    """A mock soco with fake services and hardcoded is_coordinator
+    """
+    A mock soco with fake services and hardcoded is_coordinator.
 
-    Allows calls to services to be tracked. Should not cause any network access
+    Allows calls to services to be tracked. Should not cause any network
+    access
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
@@ -36,9 +42,11 @@ def moco():
 
 @pytest.yield_fixture()
 def moco_only_on_master():
-    """A mock soco with fake services.
+    """
+    A mock soco with fake services.
 
-    Allows calls to services to be tracked. Should not cause any network access
+    Allows calls to services to be tracked. Should not cause any network
+    access
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
@@ -134,9 +142,10 @@ ZGS = """<ZoneGroups>
       </ZoneGroup>
     </ZoneGroups>"""
 
+
 @pytest.yield_fixture
 def moco_zgs(moco):
-    """A mock soco with zone group state"""
+    """A mock soco with zone group state."""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {
         'ZoneGroupState': ZGS
     }
@@ -185,7 +194,7 @@ class TestSoco:
     @pytest.mark.parametrize('bad_ip_addr', ['not_ip', '555.555.555.555'])
     def test_soco_bad_ip(self, bad_ip_addr):
         with pytest.raises(ValueError):
-                speaker = SoCo(bad_ip_addr)
+            speaker = SoCo(bad_ip_addr)
 
     def test_soco_init(self, moco):
         assert moco.ip_address == IP_ADDR
@@ -202,7 +211,9 @@ class TestSoco:
     def test_soco_get_speaker_info_speaker_not_set_refresh(
             self, mocr, moco_zgs, refresh):
         """
-        Internal speaker_info not set; Refresh all values (default, False, True)
+        Internal speaker_info not set; Refresh all values (default, False,
+        True)
+
         => should update
         """
         response = mock.MagicMock()
@@ -239,6 +250,7 @@ class TestSoco:
             self, mocr, moco_zgs, refresh):
         """
         Internal speaker_info set; No refresh (default, False)
+
         => should not update
         """
         should = {
@@ -263,7 +275,8 @@ class TestSoco:
     def test_soco_get_speaker_info_speaker_set_no_refresh(
             self, mocr, moco_zgs, should):
         """
-        Internal speaker_info not set/set; Refresh True
+        Internal speaker_info not set/set; Refresh True.
+
         => should update
         """
         response = mock.MagicMock()
@@ -397,11 +410,11 @@ class TestAVTransport:
         '12:78:78'  # Should this really be valid?
     ])
     def test_soco_seek_valid(self, moco, timestamp):
-            moco.seek(timestamp)
-            moco.avTransport.Seek.assert_called_once_with(
-                [('InstanceID', 0), ('Unit', 'REL_TIME'),
-                    ('Target', timestamp)])
-            moco.avTransport.reset_mock()
+        moco.seek(timestamp)
+        moco.avTransport.Seek.assert_called_once_with(
+            [('InstanceID', 0), ('Unit', 'REL_TIME'),
+                ('Target', timestamp)])
+        moco.avTransport.reset_mock()
 
     def test_soco_current_transport_info(self, moco):
         moco.avTransport.GetTransportInfo.return_value = {
@@ -418,10 +431,10 @@ class TestAVTransport:
 
     def test_soco_get_queue(self, moco):
         moco.contentDirectory.Browse.return_value = {
-            'Result' : '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="Q:0/1" parentID="Q:0" restricted="true"><res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" duration="0:02:32">radea:Tra.12345678.mp3</res><upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3</upnp:albumArtURI><dc:title>Item 1 Title</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Item 1 Creator</dc:creator><upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>',
+            'Result': '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="Q:0/1" parentID="Q:0" restricted="true"><res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" duration="0:02:32">radea:Tra.12345678.mp3</res><upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3</upnp:albumArtURI><dc:title>Item 1 Title</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Item 1 Creator</dc:creator><upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>',
             'NumberReturned': '1',
             'TotalMatches': '10',
-            'UpdateID' : '1'}
+            'UpdateID': '1'}
         queue = moco.get_queue(start=8, max_items=32)
         moco.contentDirectory.Browse.assert_called_once_with([
             ('ObjectID', 'Q:0'),
@@ -584,7 +597,7 @@ class TestAVTransport:
         playlist.item_id = 7
 
         ressource = mock.Mock()
-        ressource.uri  = 'fake_uri'
+        ressource.uri = 'fake_uri'
         track = mock.Mock()
         track.resources = [ressource]
         track.uri = 'fake_uri'
@@ -602,7 +615,7 @@ class TestAVTransport:
         moco.add_item_to_sonos_playlist(track, playlist)
         moco.contentDirectory.Browse.assert_called_once_with([
             ('ObjectID', playlist.item_id),
-            ('BrowseFlag', 'BrowseDirectChildren'), 
+            ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', 0),
             ('RequestedCount', 1),
@@ -648,7 +661,8 @@ class TestAVTransport:
         moco.contentDirectory.reset_mock()
         # Browse returns an exception if the artist can't be found
         # <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><s:Fault><faultcode>s:Client</faultcode><faultstring>UPnPError</faultstring><detail><UPnPError xmlns="urn:schemas-upnp-org:control-1-0"><errorCode>701</errorCode></UPnPError></detail></s:Fault></s:Body></s:Envelope>
-        moco.contentDirectory.Browse.side_effect = SoCoUPnPException("No such object", "701", "error XML")
+        moco.contentDirectory.Browse.side_effect = SoCoUPnPException(
+            "No such object", "701", "error XML")
 
         result = moco.search_track("artist")
 
@@ -754,10 +768,12 @@ class TestAVTransport:
 class TestContentDirectory:
 
     def test_soco_library_updating(self, moco):
-        moco.contentDirectory.GetShareIndexInProgress.return_value = {'IsIndexing': '0'}
+        moco.contentDirectory.GetShareIndexInProgress.return_value = {
+            'IsIndexing': '0'}
         assert not moco.library_updating
         moco.contentDirectory.reset_mock()
-        moco.contentDirectory.GetShareIndexInProgress.return_value = {'IsIndexing': '1'}
+        moco.contentDirectory.GetShareIndexInProgress.return_value = {
+            'IsIndexing': '1'}
         assert moco.library_updating
 
     def test_soco_start_library_update(self, moco):

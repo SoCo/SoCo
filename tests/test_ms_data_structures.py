@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=star-args,no-member
 
-"""Unit tests for the music service data structures"""
+"""Unit tests for the music service data structures."""
 
 from __future__ import unicode_literals
+
 from xml.sax.saxutils import escape
+
 import pytest
 
-from soco.xml import XML
-
-from soco.ms_data_structures import MSTrack, MSAlbum, MSArtist, \
-    MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
 from soco.exceptions import DIDLMetadataError
+from soco.ms_data_structures import (
+    MSAlbum, MSAlbumList, MSArtist, MSArtistTracklist,
+    MSCollection, MSFavorites, MSPlaylist, MSTrack
+)
+from soco.xml import XML
 
 ##############################################################################
 # Example XML and the content dict to compare with for MS items              #
@@ -180,14 +183,15 @@ MS_PLAYLIST_SEARCH_DICT = {
 
 
 class FakeMusicService(object):
-    """A fake music service"""
+    """A fake music service."""
+
     def __init__(self, username):
         self.description = 'SA_RINCON5127_{0}'.format(username)
         self.service_id = 20
 
     @staticmethod
     def id_to_extended_id(item_id, item_class):
-        """ID to extended ID method"""
+        """ID to extended ID method."""
         id_prefix = {
             MSTrack: '00030020',
             MSAlbum: '0004002c',
@@ -205,7 +209,7 @@ class FakeMusicService(object):
 
     @staticmethod
     def form_uri(item_content, item_class):
-        """Form the URI"""
+        """Form the URI."""
         mime_type_to_extension = {'audio/aac': 'mp4'}
         uris = {
             MSTrack: 'x-sonos-http:{item_id}.{extension}?sid={service_id}&'
@@ -229,13 +233,13 @@ FAKE_MUSIC_SERVICE = FakeMusicService('4542255535')
 
 
 def getter_attributes_test(name, from_xml, from_dict, result):
-    """Test if the getters return the right value"""
+    """Test if the getters return the right value."""
     assert getattr(from_xml, name) == result
     assert getattr(from_dict, name) == result
 
 
 def common_tests(class_, xml_, dict_, parent_id):
-    """Common tests for the MS classes"""
+    """Common tests for the MS classes."""
     xml_content = XML.fromstring(xml_.encode('utf8'))
 
     # MusicServiceItem.from_xml and MusicServiceItem.to_dict
@@ -288,7 +292,7 @@ def common_tests(class_, xml_, dict_, parent_id):
 
 
 def test_ms_track_search():
-    """Test the MSTrack item when instantiated from a search"""
+    """Test the MSTrack item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSTrack,
         MS_TRACK_SEARCH_XML,
@@ -302,7 +306,7 @@ def test_ms_track_search():
 
 
 def test_ms_album_search():
-    """Test the MSAlbum item when instantiated from a search"""
+    """Test the MSAlbum item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSAlbum,
         MS_ALBUM_SEARCH_XML,
@@ -316,7 +320,7 @@ def test_ms_album_search():
 
 
 def test_ms_artist_search():
-    """Test the MSAlbum item when instantiated from a search"""
+    """Test the MSAlbum item when instantiated from a search."""
     common_tests(
         MSArtist,
         MS_ARTIST_SEARCH_XML,
@@ -326,7 +330,7 @@ def test_ms_artist_search():
 
 
 def test_ms_playlist_search():
-    """Test the MSAlbum item when instantiated from a search"""
+    """Test the MSAlbum item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSAlbumList,
         MS_PLAYLIST_SEARCH_XML,

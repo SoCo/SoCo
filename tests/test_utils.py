@@ -2,9 +2,13 @@
 """ Tests for the utils module """
 
 from __future__ import unicode_literals
+
 from soco.utils import deprecated
 
+
 # Deprecation decorator
+
+
 def test_deprecation(recwarn):
 
     @deprecated('0.7')
@@ -31,8 +35,3 @@ def test_deprecation(recwarn):
                              "better_function instead."
     assert w.filename
     assert w.lineno
-
-
-
-
-
