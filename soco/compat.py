@@ -1,5 +1,5 @@
 
-""" Module that contains various compatability definitions and imports """
+"""Module that contains various compatability definitions and imports."""
 
 # pylint: disable=unused-import,import-error,no-name-in-module
 

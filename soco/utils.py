@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" Provides general utility functions to be used across modules """
+"""Provides general utility functions to be used across modules."""
 
 from __future__ import unicode_literals, absolute_import, print_function
 
@@ -13,11 +13,8 @@ from .xml import XML
 
 
 def really_unicode(in_string):
-    """
-    Ensures s is returned as a unicode string and not just a string through
-    a series of progressively relaxed decodings
-
-    """
+    """Ensures s is returned as a unicode string and not just a string through
+    a series of progressively relaxed decodings."""
     if type(in_string) is StringType:
         for args in (('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
@@ -66,7 +63,8 @@ def prettify(unicode_text):
 
 
 def show_xml(xml):
-    """Pretty print an ElementTree XML object
+    """
+    Pretty print an ElementTree XML object.
 
     Args:
         xml (ElementTree): The :py:class:`xml.etree.ElementTree` to pretty
@@ -81,7 +79,8 @@ def show_xml(xml):
 
 class deprecated(object):
 
-    """ A decorator to mark deprecated objects.
+    """
+    A decorator to mark deprecated objects.
 
     Causes a warning to be issued when the object is used, and marks the object
     as deprecated in the Sphinx docs.
@@ -97,8 +96,6 @@ class deprecated(object):
             @deprecated(since="0.7", alternative="new_function")
             def old_function(args):
                 pass
-
-
     """
     # pylint really doesn't like decorators!
     # pylint: disable=invalid-name, too-few-public-methods
@@ -138,11 +135,11 @@ class deprecated(object):
 
 
 def url_escape_path(path):
-    """ Escape a string value for a URL request path
+    """
+    Escape a string value for a URL request path.
 
     >>> url_escape_path("Foo, bar & baz / the hackers")
     u'Foo%2C%20bar%20%26%20baz%20%2F%20the%20hackers'
-
     """
     # Using 'safe' arg does not seem to work for python 2.6
     return quote_url(path.encode('utf-8')).replace('/', '%2F')

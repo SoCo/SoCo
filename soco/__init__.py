@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-""" SoCo (Sonos Controller) is a simple library to control Sonos speakers """
+"""SoCo (Sonos Controller) is a simple library to control Sonos speakers."""
 
 # There is no need for all strings here to be unicode, and Py2 cannot import
 # modules with unicode names

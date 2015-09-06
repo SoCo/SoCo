@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Discovery of Sonos devices on the network. """
+"""Discovery of Sonos devices on the network."""
 
 from __future__ import unicode_literals
 
@@ -17,7 +17,8 @@ _LOG = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False, interface_addr=None):
-    """ Discover Sonos zones on the local network.
+    """
+    Discover Sonos zones on the local network.
 
     Return an set of SoCo instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
@@ -51,7 +52,6 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
             This should provide you with a list of values to try for
             interface_addr if you are having trouble finding your Sonos devices
-
     """
 
     # pylint: disable=invalid-name
@@ -141,7 +141,8 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
 
 def any_soco():
-    """ Return any soco device, for when it doesn't matter which.
+    """
+    Return any soco device, for when it doesn't matter which.
 
     Try to obtain an existing instance, or use discover if necessary.
     Note that this assumes that the existing instance has not left
@@ -150,7 +151,6 @@ def any_soco():
     Returns:
         (SoCo): A SoCo instance (or subclass if config.SOCO_CLASS is set,
         or None if no instances are found
-
     """
 
     cls = config.SOCO_CLASS

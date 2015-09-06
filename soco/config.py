@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-""" Configuration variables.
+"""
+Configuration variables.
 
 These may be set by your code as follows::
 
     from soco import config
     ...
     config.VARIABLE = value
-
-
 """
 from __future__ import unicode_literals
 

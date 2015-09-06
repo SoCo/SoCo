@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-""" Classes for handling SoCo's basis SOAP requirements.
+"""
+Classes for handling SoCo's basis SOAP requirements.
 
 This module does not handle anything like the full SOAP specification, but is
 enough for SoCo's needs.
 
 Sonos uses SOAP for UPnP communications, and for communication with third party
 music services.
-
 """
 
 # pylint: disable=fixme
@@ -43,7 +43,7 @@ _LOG = logging.getLogger(__name__)
 
 class SoapFault(SoCoException):
 
-    """ An exception encapsulating a SOAP Fault. """
+    """An exception encapsulating a SOAP Fault."""
 
     def __init__(self, faultcode, faultstring, detail=None):
         """ Args:
@@ -102,9 +102,11 @@ class SoapFault(SoCoException):
 
 class SoapMessage(object):
 
-    """ A SOAP Message representing a remote procedure call.
+    """
+    A SOAP Message representing a remote procedure call.
 
-    Uses the Requests library for communication with a SOAP server."""
+    Uses the Requests library for communication with a SOAP server.
+    """
 
     def __init__(self, endpoint, method, parameters=None, http_headers=None,
                  soap_action=None, soap_header=None, namespace=None,
@@ -139,7 +141,7 @@ class SoapMessage(object):
         self.request_args = request_args
 
     def prepare_headers(self, http_headers, soap_action):
-        """ Prepare the http headers for sending """
+        """Prepare the http headers for sending."""
 
         headers = {'Content-Type': 'text/xml; charset="utf-8"'}
         if soap_action is not None:
@@ -149,7 +151,7 @@ class SoapMessage(object):
         return headers
 
     def prepare_soap_header(self, soap_header):
-        """ Prepare the SOAP header for sending """
+        """Prepare the SOAP header for sending."""
 
         if soap_header is not None:
             return '<s:Header>{0}</s:Header>'.format(soap_header)
@@ -157,7 +159,7 @@ class SoapMessage(object):
             return ''
 
     def prepare_soap_body(self, method, parameters, namespace):
-        """ Prepare the SOAP message body for sending """
+        """Prepare the SOAP message body for sending."""
 
         tags = []
         for name, value in parameters:
@@ -189,7 +191,7 @@ class SoapMessage(object):
         return soap_body
 
     def prepare_soap_envelope(self, prepared_soap_header, prepared_soap_body):
-        """ Prepare the SOAP Envelope for sending """
+        """Prepare the SOAP Envelope for sending."""
 
         # pylint: disable=bad-continuation
         soap_env_template = (
@@ -206,9 +208,7 @@ class SoapMessage(object):
             soap_body=prepared_soap_body)
 
     def prepare(self):
-        """ Prepare the SOAP message for sending to the server
-
-        """
+        """Prepare the SOAP message for sending to the server."""
         headers = self.prepare_headers(self.http_headers, self.soap_action)
 
         soap_header = self.prepare_soap_header(self.soap_header)
@@ -219,7 +219,7 @@ class SoapMessage(object):
         return (headers, data)
 
     def call(self):
-        """ Call the SOAP method on the server """
+        """Call the SOAP method on the server."""
 
         headers, data = self.prepare()
 

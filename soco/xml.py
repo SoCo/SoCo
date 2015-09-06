@@ -1,5 +1,5 @@
 
-""" Module that contains XML related utility functions """
+"""Module that contains XML related utility functions."""
 
 # pylint: disable=unused-import, invalid-name, no-member
 
@@ -27,7 +27,7 @@ except AttributeError:
     import xml.etree.ElementTree as XML2
 
     def register_namespace(a_prefix, a_uri):
-        " Registers a namespace prefix to assist in serialization"
+        """Registers a namespace prefix to assist in serialization."""
         # pylint: disable=protected-access
         XML2._namespace_map[a_uri] = a_prefix
 
@@ -36,8 +36,10 @@ for prefix, uri in NAMESPACES.items():
 
 
 def ns_tag(ns_id, tag):
-    """Return a namespace/tag item. The ns_id is translated to a full name
-    space via the NAMESPACES variable.
+    """
+    Return a namespace/tag item.
 
+    The ns_id is translated to a full name space via the NAMESPACES
+    variable.
     """
     return '{{{0}}}{1}'.format(NAMESPACES[ns_id], tag)

@@ -21,7 +21,6 @@ Classes representing Sonos UPnP services.
 
 >>> for action, in_args, out_args in s.QPlay.iter_actions():
 ...    print action, in_args, out_args
-
 """
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
@@ -67,13 +66,13 @@ zone_group_state_shared_cache = Cache()
 # pylint: disable=too-many-instance-attributes
 class Service(object):
 
-    """ An class representing a UPnP service. The base class for all Sonos
-    Service classes
+    """
+    An class representing a UPnP service. The base class for all Sonos Service
+    classes.
 
-    This class has a dynamic method dispatcher. Calls to methods which are not
-    explicitly defined here are dispatched automatically to the service action
-    with the same name.
-
+    This class has a dynamic method dispatcher. Calls to methods which
+    are not explicitly defined here are dispatched automatically to the
+    service action with the same name.
     """
     # pylint: disable=bad-continuation
     soap_body_template = (
@@ -141,18 +140,18 @@ class Service(object):
         }
 
     def __getattr__(self, action):
-        """ A Python magic method which is called whenever an undefined method
-        is invoked on the instance.
+        """
+        A Python magic method which is called whenever an undefined method is
+        invoked on the instance.
 
-        The name of the unknown method called is passed as a parameter, and the
-        return value is the callable to be invoked.
-
+        The name of the unknown method called is passed as a parameter,
+        and the return value is the callable to be invoked.
         """
 
         # Define a function to be invoked as the method, which calls
         # send_command.
         def _dispatcher(self, *args, **kwargs):
-            """ Dispatch to send_command """
+            """Dispatch to send_command."""
             return self.send_command(action, *args, **kwargs)
 
         # rename the function so it appears to be the called method. We
@@ -174,7 +173,8 @@ class Service(object):
 
     @staticmethod
     def wrap_arguments(args=None):
-        """ Wrap a list of tuples in xml ready to pass into a SOAP request.
+        """
+        Wrap a list of tuples in xml ready to pass into a SOAP request.
 
         args is a list of (name, value) tuples specifying the name of each
         argument and its value, eg [('InstanceID', 0), ('Speed', 1)]. The value
@@ -186,7 +186,6 @@ class Service(object):
         >>> s = Service(device)
         >>> s.wrap_arguments([('InstanceID', 0), ('Speed', 1)])
         <InstanceID>0</InstanceID><Speed>1</Speed>'
-
         """
         if args is None:
             args = []
@@ -205,11 +204,11 @@ class Service(object):
 
     @staticmethod
     def unwrap_arguments(xml_response):
-        """ Extract arguments and their values from a SOAP response.
+        """
+        Extract arguments and their values from a SOAP response.
 
-        Given an soap/xml response, return a dict of {argument_name, value)}
-        items
-
+        Given an soap/xml response, return a dict of {argument_name,
+        value)} items
         """
 
         # A UPnP SOAP response (including headers) looks like this:
@@ -248,14 +247,14 @@ class Service(object):
         return dict((i.tag, i.text or "") for i in action_response)
 
     def build_command(self, action, args=None):
-        """ Build a SOAP request.
+        """
+        Build a SOAP request.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
         of (name, value) tuples, return a tuple containing the POST headers (as
         a dict) and a string containing the relevant SOAP body. Does not set
         content-length, or host headers, which are completed upon sending.
-
         """
 
         # A complete request should look something like this:
@@ -297,7 +296,8 @@ class Service(object):
         return (headers, body)
 
     def send_command(self, action, args=None, cache=None, cache_timeout=None):
-        """ Send a command to a Sonos device.
+        """
+        Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
@@ -317,7 +317,6 @@ class Service(object):
 
         Return a dict of {argument_name, value)} items or True on success.
         Raise an exception on failure.
-
         """
         if cache is None:
             cache = self.cache
@@ -364,11 +363,12 @@ class Service(object):
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
-        """ Disect a UPnP error, and raise an appropriate exception
+        """
+        Disect a UPnP error, and raise an appropriate exception.
 
-        xml_error is a unicode string containing the body of the UPnP/SOAP
-        Fault response. Raises an exception containing the error code
-
+        xml_error is a unicode string containing the body of the
+        UPnP/SOAP Fault response. Raises an exception containing the
+        error code
         """
 
         # An error code looks something like this:
@@ -423,7 +423,8 @@ class Service(object):
 
     def subscribe(
             self, requested_timeout=None, auto_renew=False, event_queue=None):
-        """Subscribe to the service's events.
+        """
+        Subscribe to the service's events.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
@@ -437,7 +438,6 @@ class Service(object):
         Returns a Subscription object, representing the new subscription
 
         To unsubscribe, call the `unsubscribe` method on the returned object.
-
         """
         subscription = Subscription(
             self, event_queue)
@@ -446,7 +446,8 @@ class Service(object):
         return subscription
 
     def _update_cache_on_event(self, event):
-        """ Update the cache when an event is received.
+        """
+        Update the cache when an event is received.
 
         This will be called before an event is put onto the event queue. Events
         will often indicate that the Sonos device's state has changed, so this
@@ -460,13 +461,13 @@ class Service(object):
             You *must not* access any class, instance or global variables
             without appropriate locks. Treat all parameters passed to this
             method as read only.
-
         """
         pass
 
     def iter_actions(self):
-        """ Yield the service's actions with their in_arguments (ie parameters
-        to pass to the action) and out_arguments (ie returned values).
+        """
+        Yield the service's actions with their in_arguments (ie parameters to
+        pass to the action) and out_arguments (ie returned values).
 
         Each action is an Action namedtuple, consisting of action_name (a
         string), in_args (a list of Argument namedtuples consisting of name and
@@ -475,7 +476,8 @@ class Service(object):
         Action(name='SetFormat',
             in_args=[Argument(name='DesiredTimeFormat', vartype='string'),
                      Argument(name='DesiredDateFormat', vartype='string')],
-            out_args=[]) """
+            out_args=[])
+        """
 
         # pylint: disable=too-many-locals
         # TODO: Provide for Allowed value list, Allowed value range,
@@ -518,10 +520,10 @@ class Service(object):
                     yield Action(action_name, in_args, out_args)
 
     def iter_event_vars(self):
-        """ Yield an iterator over the services eventable variables.
+        """
+        Yield an iterator over the services eventable variables.
 
         Yields a tuple of (variable name, data type)
-
         """
 
         # pylint: disable=invalid-name
@@ -541,7 +543,7 @@ class Service(object):
 
 class AlarmClock(Service):
 
-    """ Sonos alarm service, for setting and getting time and alarms. """
+    """Sonos alarm service, for setting and getting time and alarms."""
 
     def __init__(self, soco):
         super(AlarmClock, self).__init__(soco)
@@ -553,8 +555,8 @@ class AlarmClock(Service):
 
 class MusicServices(Service):
 
-    """ Sonos music services service, for functions related to 3rd party
-    music services. """
+    """Sonos music services service, for functions related to 3rd party music
+    services."""
 
     def __init__(self, soco):
         super(MusicServices, self).__init__(soco)
@@ -562,8 +564,8 @@ class MusicServices(Service):
 
 class DeviceProperties(Service):
 
-    """ Sonos device properties service, for functions relating to zones,
-    LED state, stereo pairs etc. """
+    """Sonos device properties service, for functions relating to zones, LED
+    state, stereo pairs etc."""
 
     def __init__(self, soco):
         super(DeviceProperties, self).__init__(soco)
@@ -571,8 +573,8 @@ class DeviceProperties(Service):
 
 class SystemProperties(Service):
 
-    """ Sonos system properties service, for functions relating to
-    authentication etc """
+    """Sonos system properties service, for functions relating to
+    authentication etc."""
 
     def __init__(self, soco):
         super(SystemProperties, self).__init__(soco)
@@ -580,22 +582,22 @@ class SystemProperties(Service):
 
 class ZoneGroupTopology(Service):
 
-    """ Sonos zone group topology service, for functions relating to network
-    topology, diagnostics and updates. """
+    """Sonos zone group topology service, for functions relating to network
+    topology, diagnostics and updates."""
 
     def __init__(self, soco):
         super(ZoneGroupTopology, self).__init__(soco)
 
     def GetZoneGroupState(self, *args, **kwargs):
-        """ Overrides default handling to use the global shared zone group
-        state cache, unless another cache is speciified """
+        """Overrides default handling to use the global shared zone group state
+        cache, unless another cache is speciified."""
         kwargs['cache'] = kwargs.get('cache', zone_group_state_shared_cache)
         return self.send_command('GetZoneGroupState', *args, **kwargs)
 
 
 class GroupManagement(Service):
 
-    """ Sonos group management service, for services relating to groups. """
+    """Sonos group management service, for services relating to groups."""
 
     def __init__(self, soco):
         super(GroupManagement, self).__init__(soco)
@@ -603,7 +605,7 @@ class GroupManagement(Service):
 
 class QPlay(Service):
 
-    """ Sonos Tencent QPlay service (a Chinese music service) """
+    """Sonos Tencent QPlay service (a Chinese music service)"""
 
     def __init__(self, soco):
         super(QPlay, self).__init__(soco)
@@ -611,8 +613,8 @@ class QPlay(Service):
 
 class ContentDirectory(Service):
 
-    """ UPnP standard Content Directory service, for functions relating to
-    browsing, searching and listing available music. """
+    """UPnP standard Content Directory service, for functions relating to
+    browsing, searching and listing available music."""
 
     def __init__(self, soco):
         super(ContentDirectory, self).__init__(soco)
@@ -645,7 +647,7 @@ class ContentDirectory(Service):
 
 class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
 
-    """ UPnP standard connection manager service for the media server."""
+    """UPnP standard connection manager service for the media server."""
 
     def __init__(self, soco):
         super(MS_ConnectionManager, self).__init__(soco)
@@ -656,8 +658,8 @@ class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 class RenderingControl(Service):
 
-    """ UPnP standard redering control service, for functions relating to
-    playback rendering, eg bass, treble, volume and EQ. """
+    """UPnP standard redering control service, for functions relating to
+    playback rendering, eg bass, treble, volume and EQ."""
 
     def __init__(self, soco):
         super(RenderingControl, self).__init__(soco)
@@ -667,7 +669,7 @@ class RenderingControl(Service):
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
 
-    """ UPnP standard connection manager service for the media renderer."""
+    """UPnP standard connection manager service for the media renderer."""
 
     def __init__(self, soco):
         super(MR_ConnectionManager, self).__init__(soco)
@@ -678,8 +680,8 @@ class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 class AVTransport(Service):
 
-    """ UPnP standard AV Transport service, for functions relating to
-    transport management, eg play, stop, seek, playlists etc. """
+    """UPnP standard AV Transport service, for functions relating to transport
+    management, eg play, stop, seek, playlists etc."""
 
     def __init__(self, soco):
         super(AVTransport, self).__init__(soco)
@@ -714,8 +716,8 @@ class AVTransport(Service):
 
 class Queue(Service):
 
-    """ Sonos queue service, for functions relating to queue management, saving
-    queues etc. """
+    """Sonos queue service, for functions relating to queue management, saving
+    queues etc."""
 
     def __init__(self, soco):
         super(Queue, self).__init__(soco)
@@ -725,8 +727,8 @@ class Queue(Service):
 
 class GroupRenderingControl(Service):
 
-    """ Sonos group rendering control service, for functions relating to
-    group volume etc. """
+    """Sonos group rendering control service, for functions relating to group
+    volume etc."""
 
     def __init__(self, soco):
         super(GroupRenderingControl, self).__init__(soco)

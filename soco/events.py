@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-many-public-methods
 
-"""
-
-Classes to handle Sonos UPnP Events and Subscriptions
-
-"""
+"""Classes to handle Sonos UPnP Events and Subscriptions."""
 
 from __future__ import unicode_literals
 
@@ -32,7 +28,8 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 def parse_event_xml(xml_event):
-    """ Parse the body of a UPnP event
+    """
+    Parse the body of a UPnP event.
 
     Arg:
         xml_event (str): a byte string containing the body of the event
@@ -83,8 +80,6 @@ def parse_event_xml(xml_event):
                     sub2.unsubscribe()
                     event_listener.stop()
                     break
-
-
     """
 
     result = {}
@@ -194,7 +189,8 @@ class Event(object):
             raise AttributeError('No such attribute: %s' % name)
 
     def __setattr__(self, name, value):
-        """ Disables (most) attempts to set attributes
+        """
+        Disables (most) attempts to set attributes.
 
         This is not completely foolproof. It just acts as a warning!
         """
@@ -204,16 +200,20 @@ class Event(object):
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
 
-    """ A TCP server which handles each new request in a new thread """
+    """A TCP server which handles each new request in a new thread."""
     allow_reuse_address = True
 
 
 class EventNotifyHandler(SimpleHTTPRequestHandler):
 
-    """ Handles HTTP NOTIFY Verbs sent to the listener server """
+    """Handles HTTP NOTIFY Verbs sent to the listener server."""
 
     def do_NOTIFY(self):  # pylint: disable=invalid-name
-        """ Handle a NOTIFY request.  See the UPnP Spec for details."""
+        """
+        Handle a NOTIFY request.
+
+        See the UPnP Spec for details.
+        """
         timestamp = time.time()
         headers = requests.structures.CaseInsensitiveDict(self.headers)
         seq = headers['seq']  # Event sequence number
@@ -250,7 +250,7 @@ class EventNotifyHandler(SimpleHTTPRequestHandler):
 
 class EventServerThread(threading.Thread):
 
-    """The thread in which the event listener server will run"""
+    """The thread in which the event listener server will run."""
 
     def __init__(self, address):
         super(EventServerThread, self).__init__()
@@ -272,10 +272,12 @@ class EventServerThread(threading.Thread):
 
 class EventListener(object):
 
-    """The Event Listener.
+    """
+    The Event Listener.
 
-    Runs an http server in a thread which is an endpoint for NOTIFY messages
-    from sonos devices"""
+    Runs an http server in a thread which is an endpoint for NOTIFY
+    messages from sonos devices
+    """
 
     def __init__(self):
         super(EventListener, self).__init__()
@@ -287,7 +289,8 @@ class EventListener(object):
         self.address = ()
 
     def start(self, any_zone):
-        """Start the event listener listening on the local machine at port 1400
+        """
+        Start the event listener listening on the local machine at port 1400
         (default)
 
         Make sure that your firewall allows connections to this port
@@ -296,7 +299,6 @@ class EventListener(object):
             any_zone (SoCo): Any Sonos device on the network. It does not
                 matter which device. It is used only to find a local IP address
                 reachable by the Sonos net.
-
         """
 
         # Find our local network IP address which is accessible to the
@@ -315,7 +317,7 @@ class EventListener(object):
         log.info("Event listener started")
 
     def stop(self):
-        """Stop the event listener"""
+        """Stop the event listener."""
         # Signal the thread to stop before handling the next request
         self._listener_thread.stop_flag.set()
         # Send a dummy request in case the http server is currently listening
@@ -334,14 +336,15 @@ class EventListener(object):
 
 class Subscription(object):
 
-    """ A class representing the subscription to a UPnP event
-
-    """
+    """A class representing the subscription to a UPnP event."""
 # pylint: disable=too-many-instance-attributes
 
     def __init__(self, service, event_queue=None):
-        """ Pass a SoCo Service instance as a parameter. If event_queue is
-        specified, use it for the queue """
+        """
+        Pass a SoCo Service instance as a parameter.
+
+        If event_queue is specified, use it for the queue
+        """
         super(Subscription, self).__init__()
         self.service = service
         #: A unique ID for this subscription
@@ -364,7 +367,8 @@ class Subscription(object):
         self._auto_renew_thread_flag = threading.Event()
 
     def subscribe(self, requested_timeout=None, auto_renew=False):
-        """ Subscribe to the service.
+        """
+        Subscribe to the service.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
@@ -385,9 +389,8 @@ class Subscription(object):
 
         class AutoRenewThread(threading.Thread):
 
-            """ Used by the auto_renew code to renew a subscription from
-                within a thread.
-                """
+            """Used by the auto_renew code to renew a subscription from within
+            a thread."""
 
             def __init__(self, interval, stop_flag, sub, *args, **kwargs):
                 # pylint: disable=bad-super-call
@@ -471,7 +474,8 @@ class Subscription(object):
         auto_renew_thread.start()
 
     def renew(self, requested_timeout=None):
-        """Renew the event subscription.
+        """
+        Renew the event subscription.
 
         You should not try to renew a subscription which has been
         unsubscribed, or once it has expired.
@@ -480,7 +484,6 @@ class Subscription(object):
             requested_timeout (int, optional): The period for which a renewal
                 request should be made. If None (the default), use the timeout
                 requested on subscription.
-
         """
         # NB This code is sometimes called from a separate thread (when
         # subscriptions are auto-renewed. Be careful to ensure thread-safety
@@ -527,10 +530,10 @@ class Subscription(object):
             self.sid)
 
     def unsubscribe(self):
-        """Unsubscribe from the service's events
+        """
+        Unsubscribe from the service's events.
 
         Once unsubscribed, a Subscription instance should not be reused
-
         """
         # Trying to unsubscribe if already unsubscribed, or not yet
         # subscribed, fails silently
@@ -573,10 +576,10 @@ class Subscription(object):
     @property
     def time_left(self):
         """
-        The amount of time left until the subscription expires, in seconds
+        The amount of time left until the subscription expires, in seconds.
 
-        If the subscription is unsubscribed (or not yet subscribed) return 0
-
+        If the subscription is unsubscribed (or not yet subscribed)
+        return 0
         """
         if self._timestamp is None:
             return 0
