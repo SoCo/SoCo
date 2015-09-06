@@ -1184,7 +1184,7 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['display_version'] = device.findtext(
                 '{urn:schemas-upnp-org:device-1-0}displayVersion')
 
-            # no mac adress - extract from serial number
+            # no mac address - extract from serial number
             mac = self.speaker_info['serial_number'].split(':')[0]
             self.speaker_info['mac_address'] = mac
 

@@ -8,8 +8,8 @@ SoCo class.
 PLEASE TAKE NOTE: All of these unit tests are designed to run on a sonos
 system without interfering with normal service. This means that they will not
 raise the volume or leave the player in another state than it started in. They
-have been made this way, since sonos is developed by volounteers, that in all
-likelyhood does not have a dedicated test system, so the tests must be able to
+have been made this way, since sonos is developed by volunteers, that in all
+likelihood does not have a dedicated test system, so the tests must be able to
 run on an ordinary system without annoying the neighboors and it should return
 to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
@@ -407,7 +407,7 @@ class Mute(unittest.TestCase):
         SOCO.mute = True
         wait()
         new = SOCO.mute
-        self.assertEqual(new, 1, 'The unit did not succesfully mute')
+        self.assertEqual(new, 1, 'The unit did not successfully mute')
         SOCO.mute = False
         wait()
 
@@ -425,7 +425,7 @@ class RemoveFromQueue(unittest.TestCase):
         self.assertNotEqual(old_queue, new_queue, 'No difference between '
                             'queues before and after removing the last item')
         self.assertEqual(len(new_queue), len(old_queue) - 1, 'The length of '
-                         'queue after removing a track is not lenght before - '
+                         'queue after removing a track is not length before - '
                          '1')
         # Clean up
         SOCO.add_to_queue(track_to_remove['uri'])

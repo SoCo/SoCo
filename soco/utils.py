@@ -50,7 +50,7 @@ ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 def camel_to_underscore(string):
     """ Convert camelcase to lowercase and underscore
-    Recipy from http://stackoverflow.com/a/1176023
+    Recipe from http://stackoverflow.com/a/1176023
     """
     string = FIRST_CAP_RE.sub(r'\1_\2', string)
     return ALL_CAP_RE.sub(r'\1_\2', string).lower()

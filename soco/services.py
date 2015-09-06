@@ -457,7 +457,7 @@ class Service(object):
 
         This will be called before an event is put onto the event queue. Events
         will often indicate that the Sonos device's state has changed, so this
-        opportunity is made availabe for the service to update its cache. The
+        opportunity is made available for the service to update its cache. The
         event will be put onto the event queue once this method returns.
 
         `event` is an Event namedtuple: ('sid', 'seq', 'service', 'variables')
@@ -596,7 +596,7 @@ class ZoneGroupTopology(Service):
 
     def GetZoneGroupState(self, *args, **kwargs):
         """Overrides default handling to use the global shared zone group state
-        cache, unless another cache is speciified."""
+        cache, unless another cache is specified."""
         kwargs['cache'] = kwargs.get('cache', zone_group_state_shared_cache)
         return self.send_command('GetZoneGroupState', *args, **kwargs)
 
@@ -664,7 +664,7 @@ class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 class RenderingControl(Service):
 
-    """UPnP standard redering control service, for functions relating to
+    """UPnP standard rendering control service, for functions relating to
     playback rendering, eg bass, treble, volume and EQ."""
 
     def __init__(self, soco):

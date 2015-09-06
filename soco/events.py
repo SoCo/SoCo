@@ -264,7 +264,7 @@ class EventServerThread(threading.Thread):
         # EventNotifyHandler class
         listener = EventServer(self.address, EventNotifyHandler)
         log.info("Event listener running on %s", listener.server_address)
-        # Listen for events untill told to stop
+        # Listen for events until told to stop
         while not self.stop_flag.is_set():
             listener.handle_request()
 
