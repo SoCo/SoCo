@@ -3,8 +3,7 @@
 """ Example implementation of a plugin """
 
 from __future__ import (
-    print_function,
-    unicode_literals
+    print_function, unicode_literals
 )
 
 from ..plugins import SoCoPlugin

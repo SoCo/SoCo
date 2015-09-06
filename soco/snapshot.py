@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-instance-attributes
+
 """
 Class to support snap-shotting the current Sonos State, and then
 restoring it later
@@ -8,7 +10,6 @@ and then back again to what was playing previously
 """
 
 
-# pylint: disable=too-many-instance-attributes
 class Snapshot(object):
 
     """

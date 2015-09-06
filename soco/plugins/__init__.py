@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pylint: disable=R0201,E0711
 
 """This is the __init__ module for the plugins. It contains the base class for

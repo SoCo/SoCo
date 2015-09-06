@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=star-args, too-many-arguments, fixme
 
-
-""" This module contains classes for handling DIDL-Lite metadata.
+"""
+This module contains classes for handling DIDL-Lite metadata.
 
 This is the XML schema used by Sonos for carrying metadata representing many
 items such as tracks, playlists, composers, albums etc.
-
-
 """
 
 # It tries to follow the class hierarchy provided by the DIDL-Lite schema
@@ -26,8 +24,7 @@ import warnings
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
 from .xml import (
-    XML,
-    ns_tag
+    XML, ns_tag
 )
 
 warnings.simplefilter('always', DeprecationWarning)

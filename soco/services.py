@@ -22,11 +22,11 @@ Classes representing Sonos UPnP services.
 >>> for action, in_args, out_args in s.QPlay.iter_actions():
 ...    print action, in_args, out_args
 """
+
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
 from __future__ import (
-    absolute_import,
-    unicode_literals
+    absolute_import, unicode_literals
 )
 
 import logging
@@ -38,8 +38,7 @@ import requests
 from .cache import Cache
 from .events import Subscription
 from .exceptions import (
-    SoCoUPnPException,
-    UnknownSoCoException
+    SoCoUPnPException, UnknownSoCoException
 )
 from .utils import prettify
 from .xml import XML

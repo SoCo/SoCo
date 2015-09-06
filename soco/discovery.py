@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """Discovery of Sonos devices on the network."""
 
 from __future__ import unicode_literals

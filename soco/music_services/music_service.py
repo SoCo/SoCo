@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=fixme
 
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
 
 """
-# pylint: disable=fixme
 
 from __future__ import (
-    absolute_import,
-    unicode_literals
+    absolute_import, unicode_literals
 )
 
 import logging
@@ -18,14 +17,12 @@ import requests
 
 from soco import discovery
 from soco.compat import (
-    parse_qs,
-    urlparse
+    parse_qs, urlparse
 )
 from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.soap import (
-    SoapFault,
-    SoapMessage
+    SoapFault, SoapMessage
 )
 from soco.xml import XML
 from xmltodict import parse

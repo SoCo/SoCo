@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """Exceptions that are used by SoCo."""
 
 from __future__ import unicode_literals

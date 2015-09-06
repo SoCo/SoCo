@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=fixme
+
 """
 Classes for handling SoCo's basis SOAP requirements.
 
@@ -8,8 +10,6 @@ enough for SoCo's needs.
 Sonos uses SOAP for UPnP communications, and for communication with third party
 music services.
 """
-
-# pylint: disable=fixme
 
 # The state of Python's SOAP libraries is poor. In any event, the two main
 # libraries, PySimpleSOAP and SUDS (or the more up-to-date SUDS-Jurko),
@@ -26,10 +26,8 @@ music services.
 # Some is the same as that in services.py.
 # TODO: refactor services.py to depend on this code
 
-
 from __future__ import (
-    absolute_import,
-    unicode_literals
+    absolute_import, unicode_literals
 )
 
 import logging

@@ -16,11 +16,7 @@ import requests
 
 from soco import config
 from .compat import (
-    Queue,
-    SimpleHTTPRequestHandler,
-    URLError,
-    socketserver,
-    urlopen
+    Queue, SimpleHTTPRequestHandler, URLError, socketserver, urlopen
 )
 from .data_structures import from_didl_string
 from .exceptions import SoCoException

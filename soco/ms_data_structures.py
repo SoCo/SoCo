@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=star-args,too-many-arguments
-
-# This needs to be integrated with Music Library data structures
+# pylint: disable = star-args, too-many-arguments
 
 """This module contains all the data structures for music service plugins."""
+
+# This needs to be integrated with Music Library data structures
 
 from __future__ import unicode_literals
 
 from .exceptions import DIDLMetadataError
 from .utils import camel_to_underscore
 from .xml import (
-    NAMESPACES,
-    XML,
-    ns_tag
+    NAMESPACES, XML, ns_tag
 )
 
 

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 """
 Configuration variables.
 
@@ -8,6 +9,7 @@ These may be set by your code as follows::
     ...
     config.VARIABLE = value
 """
+
 from __future__ import unicode_literals
 
 #: The class object to use when SoCo instances are created. Specify the actual

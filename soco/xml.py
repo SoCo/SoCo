@@ -1,11 +1,10 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=unused-import, invalid-name, no-member
 
 """Module that contains XML related utility functions."""
 
-# pylint: disable=unused-import, invalid-name, no-member
-
 from __future__ import (
-    absolute_import,
-    unicode_literals
+    absolute_import, unicode_literals
 )
 
 try:

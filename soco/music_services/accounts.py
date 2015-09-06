@@ -3,8 +3,7 @@
 """Accounts for Third Party music services."""
 
 from __future__ import (
-    absolute_import,
-    unicode_literals
+    absolute_import, unicode_literals
 )
 
 import logging

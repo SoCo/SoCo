@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=star-args
+
 """ Plugin for the Wimp music service (Service ID 20) """
 
 from __future__ import unicode_literals
@@ -10,19 +11,11 @@ import socket
 import requests
 
 from ..exceptions import (
-    SoCoUPnPException,
-    UnknownXMLStructure
+    SoCoUPnPException, UnknownXMLStructure
 )
 from ..ms_data_structures import (
-    MSAlbum,
-    MSAlbumList,
-    MSArtist,
-    MSArtistTracklist,
-    MSCollection,
-    MSFavorites,
-    MSPlaylist,
-    MSTrack,
-    get_ms_item
+    MSAlbum, MSAlbumList, MSArtist, MSArtistTracklist,
+    MSCollection, MSFavorites, MSPlaylist, MSTrack, get_ms_item
 )
 from ..services import MusicServices
 from ..utils import really_utf8
