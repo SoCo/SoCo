@@ -1,5 +1,6 @@
 
 """Module that contains various compatability definitions and imports."""
+from __future__ import unicode_literals
 
 # pylint: disable=unused-import,import-error,no-name-in-module
 

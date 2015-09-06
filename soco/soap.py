@@ -27,16 +27,19 @@ music services.
 # TODO: refactor services.py to depend on this code
 
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import (
+    absolute_import,
+    unicode_literals
+)
 
 import logging
 from xml.sax.saxutils import escape
 
 import requests
 
+from soco.exceptions import SoCoException
 from soco.utils import prettify
 from soco.xml import XML
-from soco.exceptions import SoCoException
 
 _LOG = logging.getLogger(__name__)
 

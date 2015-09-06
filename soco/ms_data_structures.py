@@ -7,9 +7,13 @@
 
 from __future__ import unicode_literals
 
-from .xml import XML, ns_tag, NAMESPACES
 from .exceptions import DIDLMetadataError
 from .utils import camel_to_underscore
+from .xml import (
+    NAMESPACES,
+    XML,
+    ns_tag
+)
 
 
 def get_ms_item(xml, service, parent_id):

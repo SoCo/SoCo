@@ -7,21 +7,30 @@ This module provides the MusicService class and related functionality.
 """
 # pylint: disable=fixme
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import (
+    absolute_import,
+    unicode_literals
+)
 
 import logging
-log = logging.getLogger(__name__)  # pylint: disable=C0103
 
-from xmltodict import parse
 import requests
 
-from soco.xml import XML
-from soco.exceptions import MusicServiceException
-from soco.soap import SoapMessage, SoapFault
-
-from soco.compat import urlparse, parse_qs
-from soco.music_services.accounts import Account
 from soco import discovery
+from soco.compat import (
+    parse_qs,
+    urlparse
+)
+from soco.exceptions import MusicServiceException
+from soco.music_services.accounts import Account
+from soco.soap import (
+    SoapFault,
+    SoapMessage
+)
+from soco.xml import XML
+from xmltodict import parse
+
+log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes, protected-access

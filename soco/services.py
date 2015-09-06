@@ -24,7 +24,25 @@ Classes representing Sonos UPnP services.
 """
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import (
+    absolute_import,
+    unicode_literals
+)
+
+import logging
+from collections import namedtuple
+from xml.sax.saxutils import escape
+
+import requests
+
+from .cache import Cache
+from .events import Subscription
+from .exceptions import (
+    SoCoUPnPException,
+    UnknownSoCoException
+)
+from .utils import prettify
+from .xml import XML
 
 # UNICODE NOTE
 # UPnP requires all XML to be transmitted/received with utf-8 encoding. All
@@ -37,17 +55,6 @@ from __future__ import unicode_literals, absolute_import
 # http://bugs.python.org/issue11033 TODO: Keep an eye on this when it comes to
 # Python 3 compatibility
 
-
-from collections import namedtuple
-from xml.sax.saxutils import escape
-import logging
-
-import requests
-from .cache import Cache
-from .exceptions import SoCoUPnPException, UnknownSoCoException
-from .utils import prettify
-from .events import Subscription
-from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()

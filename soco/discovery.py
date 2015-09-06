@@ -4,11 +4,11 @@
 from __future__ import unicode_literals
 
 import logging
-import socket
 import select
-from textwrap import dedent
-import time
+import socket
 import struct
+import time
+from textwrap import dedent
 
 from soco import config
 from .utils import really_utf8

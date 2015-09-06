@@ -1,29 +1,53 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0302,fixme, protected-access
+
 """The core module contains the SoCo class that implements the main entry to
 the SoCo functionality."""
 
+# pylint: disable=C0302,fixme, protected-access
+
 from __future__ import unicode_literals
 
-import socket
 import logging
 import re
-import requests
+import socket
 from functools import wraps
 
-from .services import DeviceProperties, ContentDirectory
-from .services import RenderingControl, AVTransport, ZoneGroupTopology
-from .services import AlarmClock, SystemProperties, MusicServices,\
-    zone_group_state_shared_cache
-from .groups import ZoneGroup
-from .exceptions import SoCoUPnPException, SoCoSlaveException
-from .data_structures import DidlPlaylistContainer,\
-    SearchResult, Queue, DidlObject, DidlMusicAlbum,\
-    from_didl_string, to_didl_string, DidlResource
-from .utils import really_utf8, camel_to_underscore, really_unicode,\
-    url_escape_path
-from .xml import XML
+import requests
+
 from soco import config
+from .data_structures import (
+    DidlMusicAlbum,
+    DidlObject,
+    DidlPlaylistContainer,
+    DidlResource,
+    Queue,
+    SearchResult,
+    from_didl_string,
+    to_didl_string
+)
+from .exceptions import (
+    SoCoSlaveException,
+    SoCoUPnPException
+)
+from .groups import ZoneGroup
+from .services import (
+    AlarmClock,
+    AVTransport,
+    ContentDirectory,
+    DeviceProperties,
+    MusicServices,
+    RenderingControl,
+    SystemProperties,
+    ZoneGroupTopology,
+    zone_group_state_shared_cache
+)
+from .utils import (
+    camel_to_underscore,
+    really_unicode,
+    really_utf8,
+    url_escape_path
+)
+from .xml import XML
 
 _LOG = logging.getLogger(__name__)
 

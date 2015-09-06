@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 import threading
 from time import time
 
-from .compat import dumps
 from soco import config
+from .compat import dumps
 
 
 class _BaseCache(object):

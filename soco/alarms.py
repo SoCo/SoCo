@@ -5,9 +5,10 @@
 from __future__ import unicode_literals
 
 import logging
-from datetime import datetime
 import re
 import weakref
+from datetime import datetime
+
 from .core import PLAY_MODES
 from .xml import XML
 

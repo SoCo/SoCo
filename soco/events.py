@@ -5,24 +5,27 @@
 
 from __future__ import unicode_literals
 
-
-import threading
-import socket
-import logging
-import weakref
-import time
 import atexit
+import logging
+import socket
+import threading
+import time
+import weakref
 
 import requests
 
 from soco import config
-from .compat import (SimpleHTTPRequestHandler, urlopen, URLError, socketserver,
-                     Queue,)
-from .xml import XML
+from .compat import (
+    Queue,
+    SimpleHTTPRequestHandler,
+    URLError,
+    socketserver,
+    urlopen
+)
+from .data_structures import from_didl_string
 from .exceptions import SoCoException
 from .utils import camel_to_underscore
-from .data_structures import from_didl_string
-
+from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 

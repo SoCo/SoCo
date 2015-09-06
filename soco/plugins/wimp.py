@@ -3,19 +3,31 @@
 """ Plugin for the Wimp music service (Service ID 20) """
 
 from __future__ import unicode_literals
-import socket
+
 import locale
+import socket
 
 import requests
 
+from ..exceptions import (
+    SoCoUPnPException,
+    UnknownXMLStructure
+)
+from ..ms_data_structures import (
+    MSAlbum,
+    MSAlbumList,
+    MSArtist,
+    MSArtistTracklist,
+    MSCollection,
+    MSFavorites,
+    MSPlaylist,
+    MSTrack,
+    get_ms_item
+)
 from ..services import MusicServices
-from ..xml import XML
-from ..ms_data_structures import get_ms_item, MSTrack, MSAlbum, MSArtist, \
-    MSAlbumList, MSFavorites, MSCollection, MSPlaylist, MSArtistTracklist
 from ..utils import really_utf8
-from ..exceptions import SoCoUPnPException, UnknownXMLStructure
+from ..xml import XML
 from .__init__ import SoCoPlugin
-
 
 __all__ = ['Wimp']
 

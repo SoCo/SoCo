@@ -3,7 +3,10 @@
 
 # pylint: disable=unused-import, invalid-name, no-member
 
-from __future__ import absolute_import
+from __future__ import (
+    absolute_import,
+    unicode_literals
+)
 
 try:
     import xml.etree.cElementTree as XML

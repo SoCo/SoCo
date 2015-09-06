@@ -2,13 +2,21 @@
 
 """Provides general utility functions to be used across modules."""
 
-from __future__ import unicode_literals, absolute_import, print_function
+from __future__ import (
+    absolute_import,
+    print_function,
+    unicode_literals
+)
 
-import re
 import functools
+import re
 import warnings
 
-from .compat import StringType, UnicodeType, quote_url
+from .compat import (
+    StringType,
+    UnicodeType,
+    quote_url
+)
 from .xml import XML
 
 

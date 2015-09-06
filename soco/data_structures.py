@@ -20,14 +20,17 @@ items such as tracks, playlists, composers, albums etc.
 from __future__ import unicode_literals
 
 import sys
-import warnings
-warnings.simplefilter('always', DeprecationWarning)
 import textwrap
-
-from .xml import XML, ns_tag
+import warnings
 
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
+from .xml import (
+    XML,
+    ns_tag
+)
+
+warnings.simplefilter('always', DeprecationWarning)
 
 
 ###############################################################################
