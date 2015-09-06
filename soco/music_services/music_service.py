@@ -15,16 +15,16 @@ import logging
 
 import requests
 
-from soco import discovery
-from soco.compat import (
+from .. import discovery
+from ..compat import (
     parse_qs, urlparse
 )
-from soco.exceptions import MusicServiceException
-from soco.music_services.accounts import Account
-from soco.soap import (
+from ..exceptions import MusicServiceException
+from ..music_services.accounts import Account
+from ..soap import (
     SoapFault, SoapMessage
 )
-from soco.xml import XML
+from ..xml import XML
 from xmltodict import parse
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103

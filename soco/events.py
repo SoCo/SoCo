@@ -14,7 +14,7 @@ import weakref
 
 import requests
 
-from soco import config
+from . import config
 from .compat import (
     Queue, SimpleHTTPRequestHandler, URLError, socketserver, urlopen
 )

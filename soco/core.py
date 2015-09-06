@@ -13,7 +13,7 @@ from functools import wraps
 
 import requests
 
-from soco import config
+from . import config
 from .data_structures import (
     DidlMusicAlbum, DidlObject, DidlPlaylistContainer, DidlResource,
     Queue, SearchResult, from_didl_string, to_didl_string

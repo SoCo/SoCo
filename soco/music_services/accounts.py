@@ -11,8 +11,8 @@ import weakref
 
 import requests
 
-from soco import discovery
-from soco.xml import XML
+from .. import discovery
+from ..xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 

@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import threading
 from time import time
 
-from soco import config
+from . import config
 from .compat import dumps
 
 

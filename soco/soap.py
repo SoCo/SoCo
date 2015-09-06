@@ -35,9 +35,9 @@ from xml.sax.saxutils import escape
 
 import requests
 
-from soco.exceptions import SoCoException
-from soco.utils import prettify
-from soco.xml import XML
+from .exceptions import SoCoException
+from .utils import prettify
+from .xml import XML
 
 _LOG = logging.getLogger(__name__)
 
