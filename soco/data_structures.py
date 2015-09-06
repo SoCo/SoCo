@@ -411,7 +411,8 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         if not element.tag.endswith(cls.tag):
             raise DIDLMetadataError(
                 "Wrong element. Expected '<{0}>',"
-                " got '<{1}>'".format(cls.tag, element.tag))
+                " got '<{1}>' for class {2}'".format(
+                    cls.tag, element.tag, cls.item_class))
         # and that the upnp matches what we are expecting
         item_class = element.find(ns_tag('upnp', 'class')).text
         if item_class != cls.item_class:
@@ -854,6 +855,7 @@ class DidlPerson(DidlContainer):
     """A content directory class representing a person."""
 
     item_class = 'object.container.person'
+    tag = 'item'
     _translation = DidlContainer._translation.copy()
     _translation.update(
         {
@@ -900,6 +902,7 @@ class DidlPlaylistContainer(DidlContainer):
     """Class that represents a music library play list."""
 
     item_class = 'object.container.playlistContainer'
+    tag = 'item'  # Yes, really. Sonos uses the item tag, not the container tag
     # name: (ns, tag)
     _translation = DidlContainer._translation.copy()
     _translation.update(
@@ -950,6 +953,7 @@ class DidlMusicGenre(DidlGenre):
     """Class that represents a music genre."""
 
     item_class = 'object.container.genre.musicGenre'
+    tag = 'item'
 
 
 ###############################################################################
