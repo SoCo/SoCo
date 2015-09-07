@@ -135,8 +135,8 @@ class TestDidlObject():
         elt = XML.fromstring("""<res>URI</res>""")
         with pytest.raises(DIDLMetadataError) as excinfo:
             didl_object = data_structures.DidlObject.from_element(elt)
-        assert "Wrong element. Expected '<item>', got '<res>' for class object" in str(
-            excinfo.value)
+        assert "Wrong element. Expected <item> or <container>, "
+        "got <res> for class object" in str(excinfo.value)
 
     def test_didl_object_from_element(self):
         elt = XML.fromstring(\

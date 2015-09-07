@@ -405,14 +405,16 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             xml (Element): An :py:class:`xml.etree.ElementTree.Element` object.
 
         """
-        # Check we have the right sort of element. tag can be an empty string
-        # which indicates that any tag is allowed (see eg the musicAlbum DIDL
-        # class)
-        if not element.tag.endswith(cls.tag):
+        # We used to check here that we have the right sort of element,
+        # ie a container or an item. But Sonos seems to use both
+        # indiscriminately, eg a playlistContainer can be an item or a
+        # container. So we now just check that it is one or the other.
+        tag = element.tag
+        if not (tag.endswith('item') or tag.endswith('container')):
             raise DIDLMetadataError(
-                "Wrong element. Expected '<{0}>',"
-                " got '<{1}>' for class {2}'".format(
-                    cls.tag, element.tag, cls.item_class))
+                "Wrong element. Expected <item> or <container>,"
+                " got <{0}> for class {1}'".format(
+                    tag, cls.item_class))
         # and that the upnp matches what we are expecting
         item_class = element.find(ns_tag('upnp', 'class')).text
         if item_class != cls.item_class:
@@ -902,7 +904,12 @@ class DidlPlaylistContainer(DidlContainer):
     """Class that represents a music library play list."""
 
     item_class = 'object.container.playlistContainer'
-    tag = 'item'  # Yes, really. Sonos uses the item tag, not the container tag
+    # Yes, really. Sonos uses the item tag, not the container tag. But
+    # sometimes it uses the container tag, eg:
+    # >>> s=soco.SoCo('192.168.1.102')
+    # >>> s.get_playlists()
+    # See https://github.com/SoCo/SoCo/issues/353
+    tag = 'item'
     # name: (ns, tag)
     _translation = DidlContainer._translation.copy()
     _translation.update(
