@@ -1867,7 +1867,7 @@ class SoCo(_SocoSingletonBase):
             full_album_art_uri=full_album_art_uri,
             subcategories=subcategories, search_term=track,
             complete_result=True)
-        result._metadata['search_type'] = 'search_track'
+        result.search_type = 'search_track'
         return result
 
     def get_albums_for_artist(self, artist, full_album_art_uri=False):
@@ -1892,12 +1892,10 @@ class SoCo(_SocoSingletonBase):
         # It is necessary to update the list of items in two places, due to
         # a bug in SearchResult
         result[:] = reduced
-        result._metadata.update({
-            'item_list': reduced,
-            'search_type': 'albums_for_artist',
-            'number_returned': len(reduced),
-            'total_matches': len(reduced)
-        })
+        result.item_list = reduced
+        result.search_type = 'albums_for_artist'
+        result.number_returned = len(reduced)
+        result.total_matches = len(reduced)
         return result
 
     def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
@@ -1919,7 +1917,7 @@ class SoCo(_SocoSingletonBase):
             full_album_art_uri=full_album_art_uri,
             subcategories=subcategories,
             complete_result=True)
-        result._metadata['search_type'] = 'tracks_for_album'
+        result.search_type = 'tracks_for_album'
         return result
 
     @property
