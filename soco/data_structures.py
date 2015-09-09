@@ -394,6 +394,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             # way.
             setattr(self, key, value)
 
+    # pylint: disable=too-many-locals
     @classmethod
     def from_element(cls, element):
         """Create an instance of this class from an ElementTree xml Element.
