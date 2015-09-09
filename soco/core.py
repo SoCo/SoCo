@@ -1825,7 +1825,7 @@ class SoCo(_SocoSingletonBase):
         """ Remove a Sonos playlist.
 
         Args:
-            object_id (str): Id of the Sonos playlist to remove. i.e. SQ:10
+            object_id (DidlPlaylistContainer): Sonos playlist to remove.
 
         Returns:
             bool: True if succesful, False otherwise
@@ -1834,6 +1834,7 @@ class SoCo(_SocoSingletonBase):
             SoCoUPnPException: If object_id does not point to a valid object.
 
         """
+        object_id = getattr(object_id, 'item_id', object_id)
         return self.contentDirectory.DestroyObject([('ObjectID', object_id)])
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):

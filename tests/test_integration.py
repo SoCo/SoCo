@@ -400,7 +400,7 @@ class TestSonosPlaylist(object):
         yield
         for spl in soco.get_sonos_playlists():
             if spl.title == self.pl_name:
-                soco.remove_sonos_playlist(object_id=spl.item_id)
+                soco.remove_sonos_playlist(object_id=spl)
 
     def test_create(self, soco):
         """ Test creating a new empty Sonos playlist """
