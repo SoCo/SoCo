@@ -13,8 +13,7 @@ from .compat import dumps
 
 class _BaseCache(object):
 
-    """
-    A base class for the cache.
+    """A base class for the cache.
 
     Does nothing by itself.
     """
@@ -29,8 +28,7 @@ class _BaseCache(object):
         self.enabled = True
 
     def get(self, *args, **kwargs):
-        """
-        Get an item from the cache for this combination of args and kwargs.
+        """Get an item from the cache for this combination of args and kwargs.
 
         Returns None, indicating that no item has been found.
         """
@@ -53,8 +51,7 @@ class _BaseCache(object):
 
 class NullCache(_BaseCache):
 
-    """
-    A cache which does nothing.
+    """A cache which does nothing.
 
     Useful for debugging.
     """
@@ -80,8 +77,7 @@ class TimedCache(_BaseCache):
         self._cache_lock = threading.Lock()
 
     def get(self, *args, **kwargs):
-        """
-        Get an item from the cache for this combination of args and kwargs.
+        """Get an item from the cache for this combination of args and kwargs.
 
         Return None if no unexpired item is found. This means that there
         is no point storing an item in the cache if it is None.
@@ -105,8 +101,7 @@ class TimedCache(_BaseCache):
         return None
 
     def put(self, item, *args, **kwargs):
-        """
-        Put an item into the cache, for this combination of args and kwargs.
+        """Put an item into the cache, for this combination of args and kwargs.
 
         If `timeout` is specified as one of the keyword arguments, the
         item will remain available for retrieval for `timeout` seconds.
@@ -157,8 +152,7 @@ class TimedCache(_BaseCache):
 
 class Cache(_BaseCache):
 
-    """
-    A factory class which returns an instance of a cache subclass.
+    """A factory class which returns an instance of a cache subclass.
 
     If config.CACHE_ENABLED is False, the dummy inactive cache will be
     returned

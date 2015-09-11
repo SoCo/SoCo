@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=fixme
 
-"""
-Classes for handling SoCo's basis SOAP requirements.
+"""Classes for handling SoCo's basis SOAP requirements.
 
 This module does not handle anything like the full SOAP specification, but is
 enough for SoCo's needs.
@@ -103,8 +102,7 @@ class SoapFault(SoCoException):
 
 class SoapMessage(object):
 
-    """
-    A SOAP Message representing a remote procedure call.
+    """A SOAP Message representing a remote procedure call.
 
     Uses the Requests library for communication with a SOAP server.
     """

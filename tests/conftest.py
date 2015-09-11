@@ -1,5 +1,4 @@
-"""
-py.test hooks.
+"""py.test hooks.
 
 Add the --ip command line option, and skip all tests marked the with
 'integration' marker unless the option is included

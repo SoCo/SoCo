@@ -17,8 +17,7 @@ TIME_FORMAT = "%H:%M:%S"
 
 
 def is_valid_recurrence(text):
-    """
-    Check that text is a valid recurrence string.
+    """Check that text is a valid recurrence string.
 
     A valid recurrence string is  'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or
     of the form 'ON_DDDDDD' where D is a number from 0-7 representing a day
@@ -54,8 +53,7 @@ def is_valid_recurrence(text):
 
 class Alarm(object):
 
-    """
-    A class representing a Sonos Alarm.
+    """A class representing a Sonos Alarm.
 
     Alarms may be created or updated and saved to, or removed from the Sonos
     system. An alarm is not automatically saved. Call `save()` to do that.
@@ -144,8 +142,7 @@ class Alarm(object):
 
     @property
     def play_mode(self):
-        """
-        The play mode for the alarm.
+        """The play mode for the alarm.
 
         Can be one of 'NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE',
         'REPEAT_ALL'.
@@ -174,8 +171,7 @@ class Alarm(object):
 
     @property
     def recurrence(self):
-        """
-        A string representing how often the alarm should be triggered.
+        """A string representing how often the alarm should be triggered.
 
         Can be 'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or of the form
         'ON_DDDDDDD' where D is a number from 0-7 representing a day of the
@@ -193,8 +189,7 @@ class Alarm(object):
         self._recurrence = recurrence
 
     def save(self):
-        """
-        Save the alarm to the Sonos system.
+        """Save the alarm to the Sonos system.
 
         Raises:
             SoCoUPnPError if the alarm cannot be created because there is
@@ -225,8 +220,7 @@ class Alarm(object):
             self.zone.alarmClock.UpdateAlarm(args)
 
     def remove(self):
-        """
-        Removes the alarm.
+        """Removes the alarm.
 
         Removes the alarm from the Sonos system. There is no need to
         call `save`. The Python instance is not deleted, and can be
@@ -244,8 +238,7 @@ class Alarm(object):
 
 
 def get_alarms(soco=None):
-    """
-    Get a set of all alarms known to the Sonos system.
+    """Get a set of all alarms known to the Sonos system.
 
     Args:
         soco (SoCo, optional): a SoCo instance to query. If None, a random

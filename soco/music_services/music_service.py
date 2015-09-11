@@ -4,7 +4,6 @@
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
-
 """
 
 from __future__ import absolute_import, unicode_literals
@@ -28,15 +27,15 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 # pylint: disable=too-many-instance-attributes, protected-access
 class MusicServiceSoapClient(object):
 
-    """A SOAP client for accessing Music Services
+    """A SOAP client for accessing Music Services.
 
-    This class handles all the necessary authentication for accessing third
-    party music services. You are unlikely to need to use it yourself.
-
+    This class handles all the necessary authentication for accessing
+    third party music services. You are unlikely to need to use it
+    yourself.
     """
 
     def __init__(self, endpoint, timeout, music_service):
-        """ Initialise the instance
+        """Initialise the instance.
 
         Args:
              endpoint (str): The SOAP endpoint. A url.
@@ -44,7 +43,6 @@ class MusicServiceSoapClient(object):
                  seconds
              music_service (MusicService): The MusicService object to which
                  this client belongs
-
         """
 
         self.endpoint = endpoint
@@ -74,14 +72,13 @@ class MusicServiceSoapClient(object):
             [('VariableName', 'R_TrialZPSerial')])['StringValue']
 
     def get_soap_header(self):
-        """ Generate the SOAP authentication header for the related service.
+        """Generate the SOAP authentication header for the related service.
 
         This header contains all the necessary authentication details.
 
         Returns:
             (str): A string representation of the XML content of the SOAP
                 header
-
         """
 
         # According to the SONOS SMAPI, this header must be sent with all
@@ -124,7 +121,7 @@ class MusicServiceSoapClient(object):
         return self._cached_soap_header
 
     def call(self, method, args=None):
-        """ Call a method on the server
+        """Call a method on the server.
 
         Args:
             method (str): The name of the method to call.
@@ -136,7 +133,6 @@ class MusicServiceSoapClient(object):
 
         Raises:
             MusicServiceException
-
         """
         message = SoapMessage(
             endpoint=self.endpoint,
@@ -196,7 +192,7 @@ class MusicServiceSoapClient(object):
 # pylint: disable=too-many-instance-attributes
 class MusicService(object):
 
-    """ The MusicService class provides access to third party music services.
+    """The MusicService class provides access to third party music services.
 
     Example:
 
@@ -310,7 +306,6 @@ class MusicService(object):
         Some of this code is still unstable, and in particular the data
         structures returned by methods such as `get_metadata` may change in
         future.
-
     """
 
     _music_services_data = None
@@ -327,7 +322,6 @@ class MusicService(object):
 
         Raises:
             MusicServiceException
-
         """
 
         self.service_name = service_name
@@ -380,7 +374,6 @@ class MusicService(object):
 
         Returns:
             (str): a string containing the music services data xml
-
         """
         device = soco or discovery.any_soco()
         log.debug("Fetching music services data from %s", device)
@@ -397,7 +390,6 @@ class MusicService(object):
         Returns:
             (dict): A dict. Each key is a service_type, and each value is a
                 dict containing relevant data
-
         """
         # Return from cache if we have it.
         if cls._music_services_data is not None:
@@ -464,7 +456,6 @@ class MusicService(object):
 
         Returns:
             (list): A list of strings
-
         """
         return [
             service['Name'] for service in
@@ -505,7 +496,6 @@ class MusicService(object):
         Standard Sonos search categories are 'all', 'artists', 'albums',
         'tracks', 'playlists', 'genres', 'stations', 'tags'. Not all are
         available for each music service
-
         """
         # TuneIn does not have a pmap. Its search keys are is search:station,
         # search:show, search:host
@@ -554,13 +544,12 @@ class MusicService(object):
 
         May include 'artists', 'albums', 'tracks', 'playlists',
         'genres', 'stations', 'tags', or others depending on the service
-
         """
         # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
 
     def sonos_uri_from_id(self, item_id):
-        """ Return a uri which can be sent for playing
+        """Return a uri which can be sent for playing.
 
         URIs are of the form: track%3a3402413.mp3?sid=2&amp;sn=4
         """
@@ -610,7 +599,6 @@ class MusicService(object):
         Returns:
             (OrderedDict): The item or container's metadata, or None.
                 See http://musicpartners.sonos.com/node/83
-
         """
         response = self.soap_client.call(
             'getMetadata', [
@@ -636,7 +624,6 @@ class MusicService(object):
         Returns:
             (OrderedDict): The search results, or None
                 See http://musicpartners.sonos.com/node/86
-
         """
         search_category = self._get_search_prefix_map().get(category, None)
         if search_category is None:
@@ -659,7 +646,6 @@ class MusicService(object):
         Returns:
             (OrderedDict): The item's metadata, or None
                 See http://musicpartners.sonos.com/node/83
-
         """
 
         response = self.soap_client.call(
@@ -683,7 +669,6 @@ class MusicService(object):
             item_id (str): The item for which the URI is required
         Returns:
             (str): The item's URI
-
         """
         response = self.soap_client.call(
             'getMediaURI',
@@ -698,7 +683,6 @@ class MusicService(object):
                 The value of each is a string which changes each time
                 the catalog or favorites change. You can use this to
                 detect when any caches need to be updated.
-
         """
         # TODO: Maybe create a favorites/catalog cache which is invalidated
         # TODO: when these values change?
@@ -713,7 +697,6 @@ class MusicService(object):
         Returns:
             (OrderedDict): The item's extended metadata or None
                 http://musicpartners.sonos.com/node/128
-
         """
 
         response = self.soap_client.call(
@@ -722,7 +705,7 @@ class MusicService(object):
         return response.get('getExtendedMetadataResult', None)
 
     def get_extended_metadata_text(self, item_id, metadata_type):
-        """Get extended metadata text for a media item
+        """Get extended metadata text for a media item.
 
         Args:
             item_id (str): The item for which metadata is required
@@ -733,7 +716,6 @@ class MusicService(object):
         Returns:
             (str): The item's extended metadata text or None
                 http://musicpartners.sonos.com/node/127
-
         """
 
         response = self.soap_client.call(
@@ -743,7 +725,7 @@ class MusicService(object):
 
 
 def desc_from_uri(uri):
-    """Create the content of DIDL desc element from a uri
+    """Create the content of DIDL desc element from a uri.
 
     Args:
         uri (str): A uri, eg:
@@ -752,7 +734,6 @@ def desc_from_uri(uri):
     Returns:
         (str): The content of a desc element for that uri, eg
             SA_RINCON519_email@example.com
-
     """
     #
     # If there is an sn parameter (which is the serial number of an account),

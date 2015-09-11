@@ -18,8 +18,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def discover(timeout=1, include_invisible=False, interface_addr=None):
-    """
-    Discover Sonos zones on the local network.
+    """Discover Sonos zones on the local network.
 
     Return an set of SoCo instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
@@ -142,8 +141,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
 
 def any_soco():
-    """
-    Return any soco device, for when it doesn't matter which.
+    """Return any soco device, for when it doesn't matter which.
 
     Try to obtain an existing instance, or use discover if necessary.
     Note that this assumes that the existing instance has not left

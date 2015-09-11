@@ -24,7 +24,6 @@ class Account(object):
 
     Each service may have more than one account: see
     http://www.sonos.com/en-gb/software/release/5-2
-
     """
 
     _all_accounts = weakref.WeakValueDictionary()
@@ -43,7 +42,6 @@ class Account(object):
             metadata (str): Metadata for the account
             oa_device_id (str): Used for OpenAuth id for some services
             key (str): Used for OpenAuthid for some services
-
         """
 
         super(Account, self).__init__()
@@ -78,7 +76,6 @@ class Account(object):
 
         Returns:
             (str): a byte string containing the account data xml
-
         """
         # It is likely that the same information is available over UPnP as well
         # via a call to
@@ -108,7 +105,6 @@ class Account(object):
         Note:
             Any existing Account instance will have its attributes updated
             to those currently stored on the Sonos system.
-
         """
 
         root = XML.fromstring(cls._get_account_xml(soco))
@@ -204,7 +200,6 @@ class Account(object):
 
         Returns:
             (list): A list of MusicAccount instances
-
         """
         return [
             a for a in cls.get_accounts().values()

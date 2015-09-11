@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=too-few-public-methods, redefined-outer-name, no-self-use
 
-"""
-This file contains the classes used to perform integration tests on the methods
-in the SoCo class. They access a real Sonos system.
+"""This file contains the classes used to perform integration tests on the
+methods in the SoCo class. They access a real Sonos system.
 
 PLEASE TAKE NOTE: All of these tests are designed to run on a Sonos system
 without interfering with normal service. This means that they must not raise
@@ -122,8 +121,7 @@ class TestVolume(object):
 
 
 class TestBass(object):
-    """
-    Integration tests for the bass property.
+    """Integration tests for the bass property.
 
     This class implements a full boundary value test.
     """
@@ -161,8 +159,7 @@ class TestBass(object):
 
 
 class TestTreble(object):
-    """
-    Integration tests for the treble property.
+    """Integration tests for the treble property.
 
     This class implements a full boundary value test.
     """

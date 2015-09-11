@@ -28,8 +28,7 @@ class Snapshot(object):
     """
 
     def __init__(self, device, snapshot_queue=False):
-        """
-        Construct the Snapshot object.
+        """Construct the Snapshot object.
 
         :params device: Device to snapshot
         :params snapshot_queue: If the queue is to be snapshotted
@@ -126,8 +125,7 @@ class Snapshot(object):
 
     # pylint: disable=too-many-branches
     def restore(self, fade=False):
-        """
-        Restores the state of a device that was previously saved.
+        """Restores the state of a device that was previously saved.
 
         For coordinator devices restore everything For slave devices
         only restore volume etc. not transport info (transport info
@@ -238,8 +236,7 @@ class Snapshot(object):
                 total = total + num_return
 
     def _restore_queue(self):
-        """
-        Restores the previous state of the queue.
+        """Restores the previous state of the queue.
 
         Note: The restore currently adds the items back into the queue
         using the URI, for items the Sonos system already knows about

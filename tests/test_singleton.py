@@ -31,8 +31,7 @@ class FourthSingleton(ASingleton):
 
 
 def test_singleton():
-    """
-    Check basic functionality.
+    """Check basic functionality.
 
     For a given arg, there is only one instance
     """
@@ -47,8 +46,7 @@ def test_singleton_inherit():
 
 
 def test_class_group_singleton():
-    """
-    Check _class_group functionality.
+    """Check _class_group functionality.
 
     For a given arg, instances of FourthGroup are Instances of
     ThirdGroup because they share a `_class_group` valur

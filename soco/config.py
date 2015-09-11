@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""
-Configuration variables.
+"""Configuration variables.
 
 These may be set by your code as follows::
 

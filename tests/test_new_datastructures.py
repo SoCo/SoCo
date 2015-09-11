@@ -11,8 +11,7 @@ from soco.xml import XML
 
 
 def assert_xml_equal(left, right, explain=None):
-    """
-    Helper function for comparing XML elements.
+    """Helper function for comparing XML elements.
 
     Causes useful information to be output under pytest as to the differences
     between elements

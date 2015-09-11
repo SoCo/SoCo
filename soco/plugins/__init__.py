@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201,E0711
 
-"""This is the __init__ module for the plugins. It contains the base class for
-all plugins
+"""This is the __init__ module for the plugins.
+
+It contains the base class for all plugins
 """
 
 import logging
@@ -14,7 +15,7 @@ _LOG = logging.getLogger(__name__)
 
 class SoCoPlugin(object):
 
-    """ The base class for SoCo plugins """
+    """The base class for SoCo plugins."""
 
     def __init__(self, soco):
         cls = self.__class__.__name__
@@ -28,7 +29,7 @@ class SoCoPlugin(object):
 
     @classmethod
     def from_name(cls, fullname, soco, *args, **kwargs):
-        """ Instantiate a plugin by its full name """
+        """Instantiate a plugin by its full name."""
 
         _LOG.info('Loading plugin %s', fullname)
 

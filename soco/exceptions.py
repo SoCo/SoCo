@@ -12,8 +12,7 @@ class SoCoException(Exception):
 
 class UnknownSoCoException(SoCoException):
 
-    """
-    raised if reason of the error can not be extracted.
+    """raised if reason of the error can not be extracted.
 
     The exception object will contain the raw response sent back from
     the speaker
@@ -46,8 +45,7 @@ class CannotCreateDIDLMetadata(SoCoException):
 
 class DIDLMetadataError(CannotCreateDIDLMetadata):
 
-    """
-    Raised if a data container class cannot create the DIDL metadata due to
+    """Raised if a data container class cannot create the DIDL metadata due to
     missing information.
 
     For backward compatibility, this is currently a subclass of

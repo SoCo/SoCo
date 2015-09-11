@@ -19,8 +19,7 @@ IP_ADDR = '192.168.1.101'
 
 @pytest.yield_fixture()
 def moco():
-    """
-    A mock soco with fake services and hardcoded is_coordinator.
+    """A mock soco with fake services and hardcoded is_coordinator.
 
     Allows calls to services to be tracked. Should not cause any network
     access
@@ -42,8 +41,7 @@ def moco():
 
 @pytest.yield_fixture()
 def moco_only_on_master():
-    """
-    A mock soco with fake services.
+    """A mock soco with fake services.
 
     Allows calls to services to be tracked. Should not cause any network
     access
@@ -210,8 +208,7 @@ class TestSoco:
     @pytest.mark.parametrize('refresh', [None, False, True])
     def test_soco_get_speaker_info_speaker_not_set_refresh(
             self, mocr, moco_zgs, refresh):
-        """
-        Internal speaker_info not set; Refresh all values (default, False,
+        """Internal speaker_info not set; Refresh all values (default, False,
         True)
 
         => should update
@@ -248,8 +245,7 @@ class TestSoco:
     @pytest.mark.parametrize('refresh', [None, False])
     def test_soco_get_speaker_info_speaker_set_no_refresh(
             self, mocr, moco_zgs, refresh):
-        """
-        Internal speaker_info set; No refresh (default, False)
+        """Internal speaker_info set; No refresh (default, False)
 
         => should not update
         """
@@ -274,8 +270,7 @@ class TestSoco:
     @pytest.mark.parametrize('should', [{}, {'info': "yes"}])
     def test_soco_get_speaker_info_speaker_set_no_refresh(
             self, mocr, moco_zgs, should):
-        """
-        Internal speaker_info not set/set; Refresh True.
+        """Internal speaker_info not set/set; Refresh True.
 
         => should update
         """

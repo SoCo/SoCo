@@ -38,8 +38,7 @@ for prefix, uri in NAMESPACES.items():
 
 
 def ns_tag(ns_id, tag):
-    """
-    Return a namespace/tag item.
+    """Return a namespace/tag item.
 
     The ns_id is translated to a full name space via the NAMESPACES
     variable.

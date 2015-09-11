@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Tests for the utils module """
+"""Tests for the utils module."""
 
 from __future__ import unicode_literals
 
@@ -13,12 +13,12 @@ def test_deprecation(recwarn):
 
     @deprecated('0.7')
     def dummy(args):
-        """My docs"""
+        """My docs."""
         pass
 
     @deprecated('0.8', 'better_function', '0.12')
     def dummy2(args):
-        """My docs"""
+        """My docs."""
         pass
 
     assert dummy.__doc__ == "My docs\n\n  .. deprecated:: 0.7\n"

@@ -15,8 +15,7 @@ from .xml import (
 
 
 def get_ms_item(xml, service, parent_id):
-    """
-    Return the music service item that corresponds to xml.
+    """Return the music service item that corresponds to xml.
 
     The class is identified by getting the type from the 'itemType' tag
     """
@@ -56,8 +55,7 @@ class MusicServiceItem(object):
 
     @classmethod
     def from_xml(cls, xml, service, parent_id):
-        """
-        Return a Music Service item generated from xml.
+        """Return a Music Service item generated from xml.
 
         :param xml: Object XML. All items containing text are added to the
             content of the item. The class variable ``valid_fields`` of each of
@@ -147,8 +145,7 @@ class MusicServiceItem(object):
 
     @classmethod
     def from_dict(cls, dict_in):
-        """
-        Initialize the class from a dict.
+        """Initialize the class from a dict.
 
         :param dict_in: The dictionary that contains the item content. Required
             fields are listed class variable by that name
@@ -172,8 +169,7 @@ class MusicServiceItem(object):
         return self.content != playable_item.content
 
     def __repr__(self):
-        """
-        Return the repr value for the item.
+        """Return the repr value for the item.
 
         The repr is on the form::
 
@@ -211,8 +207,7 @@ class MusicServiceItem(object):
 
     @property
     def didl_metadata(self):
-        """
-        Return the DIDL metadata for a Music Service Track.
+        """Return the DIDL metadata for a Music Service Track.
 
         The metadata is on the form:
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=star-args
 
-""" Plugin for the Wimp music service (Service ID 20) """
+"""Plugin for the Wimp music service (Service ID 20)"""
 
 from __future__ import unicode_literals
 
@@ -26,7 +26,7 @@ __all__ = ['Wimp']
 
 
 def _post(url, headers, body, retries=3, timeout=3.0):
-    """Try 3 times to request the content
+    """Try 3 times to request the content.
 
     :param headers: The HTTP headers
     :type headers: dict
@@ -37,7 +37,6 @@ def _post(url, headers, body, retries=3, timeout=3.0):
     :param timeout: The time to wait for the post to complete, before timing
         out
     :type timeout: float
-
     """
     retry = 0
     out = None
@@ -66,13 +65,12 @@ def _ns_tag(ns_id, tag):
     :type ns_id: str
     :param tag: The tag
     :type str: str
-
     """
     return '{{{0}}}{1}'.format(NS[ns_id], tag)
 
 
 def _get_header(soap_action):
-    """Return the HTTP for SOAP Action
+    """Return the HTTP for SOAP Action.
 
     :param soap_action: The soap action to include in the header. Can be either
         'search' or 'get_metadata'
@@ -100,7 +98,7 @@ def _get_header(soap_action):
 
 class Wimp(SoCoPlugin):
 
-    """Class that implements a Wimp plugin
+    """Class that implements a Wimp plugin.
 
     .. note:: There is an (apparent) in-consistency in the use of one data
     type from the Wimp service. When searching for playlists, the XML returned
@@ -119,11 +117,10 @@ class Wimp(SoCoPlugin):
     the containing data structure like e.g. the album they are on may report
     that they are playable. Trying to add one of these to the queue will
     return a SoCoUPnPException with error code '802'.
-
     """
 
     def __init__(self, soco, username, retries=3, timeout=3.0):
-        """ Initialize the plugin
+        """Initialize the plugin.
 
         :param soco: The soco instance to retrieve the session ID for the music
             service
@@ -171,23 +168,22 @@ class Wimp(SoCoPlugin):
 
     @property
     def username(self):
-        """Return the username"""
+        """Return the username."""
         return self._username
 
     @property
     def service_id(self):
-        """Return the service id"""
+        """Return the service id."""
         return self._service_id
 
     @property
     def description(self):
         """Return the music service description for the DIDL metadata on the
-        form SA_RINCON5127_...self.username...
-        """
+        form SA_RINCON5127_...self.username..."""
         return 'SA_RINCON5127_{0}'.format(self._username)
 
     def get_tracks(self, search, start=0, max_items=100):
-        """Search for tracks
+        """Search for tracks.
 
         See get_music_service_information for details on the arguments
         """
@@ -195,7 +191,7 @@ class Wimp(SoCoPlugin):
                                                   max_items)
 
     def get_albums(self, search, start=0, max_items=100):
-        """Search for albums
+        """Search for albums.
 
         See get_music_service_information for details on the arguments
         """
@@ -203,7 +199,7 @@ class Wimp(SoCoPlugin):
                                                   max_items)
 
     def get_artists(self, search, start=0, max_items=100):
-        """Search for artists
+        """Search for artists.
 
         See get_music_service_information for details on the arguments
         """
@@ -211,7 +207,7 @@ class Wimp(SoCoPlugin):
                                                   max_items)
 
     def get_playlists(self, search, start=0, max_items=100):
-        """Search for playlists
+        """Search for playlists.
 
         See get_music_service_information for details on the arguments.
 
@@ -223,7 +219,7 @@ class Wimp(SoCoPlugin):
 
     def get_music_service_information(self, search_type, search, start=0,
                                       max_items=100):
-        """Search for music service information items
+        """Search for music service information items.
 
         :param search_type: The type of search to perform, possible values are:
             'artists', 'albums', 'tracks' and 'playlists'
@@ -330,7 +326,7 @@ class Wimp(SoCoPlugin):
 
     @staticmethod
     def id_to_extended_id(item_id, item_class):
-        """Return the extended ID from an ID
+        """Return the extended ID from an ID.
 
         :param item_id: The ID of the music library item
         :type item_id: str
@@ -349,14 +345,13 @@ class Wimp(SoCoPlugin):
 
     @staticmethod
     def form_uri(item_content, item_class):
-        """Form the URI for a music service element
+        """Form the URI for a music service element.
 
         :param item_content: The content dict of the item
         :type item_content: dict
         :param item_class: The class of the item
         :type item_class: Sub-class of
         :py:class:`soco.data_structures.MusicServiceItem`
-
         """
         extension = None
         if 'mime_type' in item_content:
@@ -367,7 +362,7 @@ class Wimp(SoCoPlugin):
         return out
 
     def _search_body(self, search_type, search_term, start, max_items):
-        """Return the search XML body
+        """Return the search XML body.
 
         :param search_type: The search type
         :type search_type: str
@@ -408,7 +403,7 @@ class Wimp(SoCoPlugin):
         return XML.tostring(xml)
 
     def _browse_body(self, search_id):
-        """Return the browse XML body
+        """Return the browse XML body.
 
         The XML is formed by adding, to the envelope of the XML returned by
         ``self._base_body``, the following ``Body`` part:
@@ -426,7 +421,6 @@ class Wimp(SoCoPlugin):
         .. note:: The XML contains index and count, but the service does not
         seem to respect them, so therefore they have not been included as
         arguments.
-
         """
         xml = self._base_body()
 
@@ -476,10 +470,9 @@ class Wimp(SoCoPlugin):
         return xml
 
     def _check_for_errors(self, response):
-        """Check a response for errors
+        """Check a response for errors.
 
         :param response: the response from requests.post()
-
         """
         if response.status_code != 200:
             xml_error = really_utf8(response.text)

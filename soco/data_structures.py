@@ -35,8 +35,7 @@ warnings.simplefilter('always', DeprecationWarning)
 ###############################################################################
 
 def to_didl_string(*args):
-    """
-    Convert any number of DIDLObjects to a unicode xml string.
+    """Convert any number of DIDLObjects to a unicode xml string.
 
     Args:
         *args (DidlObject): One or more DidlObject (or subclass) instances
@@ -61,8 +60,7 @@ def to_didl_string(*args):
 
 
 def from_didl_string(string):
-    """
-    Convert a unicode xml string to a list of DIDLObjects.
+    """Convert a unicode xml string to a list of DIDLObjects.
 
     Arg:
         string (str): A unicode string containing an xml representation of one
@@ -98,8 +96,7 @@ def from_didl_string(string):
 
 class DidlResource(object):
 
-    """
-    Identifies a resource, typically some type of a binary asset, such as a
+    """Identifies a resource, typically some type of a binary asset, such as a
     song.
 
     A 'res' element contains a uri that identifies the resource.
@@ -112,8 +109,7 @@ class DidlResource(object):
                  duration=None, bitrate=None, sample_frequency=None,
                  bits_per_sample=None, nr_audio_channels=None, resolution=None,
                  color_depth=None, protection=None):
-        """
-        Constructor for the Resource class.
+        """Constructor for the Resource class.
 
         Args:
             uri (str): value of the res tag, typically a URI. It MUST be
@@ -155,8 +151,7 @@ class DidlResource(object):
 
     @classmethod
     def from_element(cls, element):
-        """
-        Set the resource properties from a <res> element.
+        """Set the resource properties from a <res> element.
 
         Arg:
             element (Element): An ElementTree Element
@@ -236,8 +231,7 @@ class DidlResource(object):
         return root
 
     def to_dict(self, remove_nones=False):
-        """
-        Return a dictionary representation of the DidlResource.
+        """Return a dictionary representation of the DidlResource.
 
         Args:
             remove_nones (bool): Optionally remove dictionary elements when
@@ -267,8 +261,7 @@ class DidlResource(object):
 
     @classmethod
     def from_dict(cls, content):
-        """
-        Create an instance from a dict.
+        """Create an instance from a dict.
 
         An alternative constructor. Equivalent to DidlResource(**content).
 
@@ -279,8 +272,7 @@ class DidlResource(object):
         return cls(**content)
 
     def __eq__(self, resource):
-        """
-        Compare with another ``resource``.
+        """Compare with another ``resource``.
 
         Returns:
             (bool): True if items are equal, else False
@@ -304,8 +296,7 @@ class DidlMetaClass(type):
     """Meta class for all Didl objects."""
 
     def __new__(mcs, name, bases, attrs):
-        """
-        Create a new instance.
+        """Create a new instance.
 
         Args:
             name: Name of the class
@@ -404,8 +395,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     # pylint: disable=too-many-locals
     @classmethod
     def from_element(cls, element):
-        """
-        Create an instance of this class from an ElementTree xml Element.
+        """Create an instance of this class from an ElementTree xml Element.
 
         An alternative constructor. The element must be a DIDL-Lite <item> or
         <container> element, and must be properly namespaced.
@@ -482,8 +472,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     @classmethod
     def from_dict(cls, content):
-        """
-        Create an instance from a dict.
+        """Create an instance from a dict.
 
         An alternative constructor. Equivalent to DidlObject(**content).
 
@@ -499,8 +488,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return cls(**content)
 
     def __eq__(self, playable_item):
-        """
-        Compare with another ``playable_item``.
+        """Compare with another ``playable_item``.
 
         Returns:
             (bool): True if items are equal, else False
@@ -510,8 +498,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return self.to_dict() == playable_item.to_dict()
 
     def __ne__(self, playable_item):
-        """
-        Compare with another ``playable_item``.
+        """Compare with another ``playable_item``.
 
         Returns:
             (bool): True if items are unequal, else False
@@ -521,8 +508,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return self.to_dict() != playable_item.to_dict()
 
     def __repr__(self):
-        """
-        Return the repr value for the item.
+        """Return the repr value for the item.
 
         The repr is of the form::
 
@@ -554,8 +540,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return self.__repr__()
 
     def to_dict(self, remove_nones=False):
-        """
-        Return the dict representation of the instance.
+        """Return the dict representation of the instance.
 
         Args:
             remove_nones (bool): remove dictionary elements when value is None
@@ -579,8 +564,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         return content
 
     def to_element(self, include_namespaces=False):
-        """
-        Return an ElementTree Element representing this instance.
+        """Return an ElementTree Element representing this instance.
 
         Arg:
             include_namespaces (bool, optional): If True, include xml
@@ -835,8 +819,7 @@ class DidlMusicAlbum(DidlAlbum):
 
 class DidlMusicAlbumFavorite(DidlAlbum):
 
-    """
-    Class that represents a Sonos favorite music library album.
+    """Class that represents a Sonos favorite music library album.
 
     This class is not part of the DIDL spec and is Sonos specific.
     """
@@ -850,8 +833,7 @@ class DidlMusicAlbumFavorite(DidlAlbum):
 
 class DidlMusicAlbumCompilation(DidlAlbum):
 
-    """
-    Class that represents a Sonos favorite music library compilation.
+    """Class that represents a Sonos favorite music library compilation.
 
     This class is not part of the DIDL spec and is Sonos specific.
     """
@@ -939,8 +921,7 @@ class DidlPlaylistContainer(DidlContainer):
 
 class DidlSameArtist(DidlPlaylistContainer):
 
-    """
-    Class that represents all tracks by a single artist.
+    """Class that represents all tracks by a single artist.
 
     This type is returned by browsing an artist or a composer
     """
@@ -991,8 +972,7 @@ class ListOfMusicInfoItems(list):
         }
 
     def __getitem__(self, key):
-        """
-        Legacy get metadata by string key or list item(s) by index.
+        """Legacy get metadata by string key or list item(s) by index.
 
         DEPRECATION: This overriding form of __getitem__ will be removed in
         the 3rd release after 0.8. The metadata can be fetched via the named
@@ -1036,8 +1016,7 @@ class ListOfMusicInfoItems(list):
 
 class SearchResult(ListOfMusicInfoItems):
 
-    """
-    Container class that represents a search or browse result.
+    """Container class that represents a search or browse result.
 
     (browse is just a special case of search)
     """

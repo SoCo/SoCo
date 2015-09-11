@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=R0904
 
-"""
-This file contains the classes used to perform unit tests on the methods in the
-SoCo class.
+"""This file contains the classes used to perform unit tests on the methods in
+the SoCo class.
 
 PLEASE TAKE NOTE: All of these unit tests are designed to run on a sonos
 system without interfering with normal service. This means that they will not
@@ -60,8 +59,7 @@ def get_state():
 
 
 def set_state(state):
-    """
-    Utility function to set the entire state.
+    """Utility function to set the entire state.
 
     Used to reset the unit after the unit tests have changed it
     """
@@ -147,8 +145,7 @@ class Volume(unittest.TestCase):
 
 
 class Bass(unittest.TestCase):
-    """
-    Unit tests for the bass method.
+    """Unit tests for the bass method.
 
     This class implements a full boundary value test.
     """

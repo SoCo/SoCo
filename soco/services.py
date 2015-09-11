@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=fixme, invalid-name
 
-"""
-Classes representing Sonos UPnP services.
+"""Classes representing Sonos UPnP services.
 
 >>> s = SoCo('192.168.1.102')
 >>> print s.RenderingControl.GetMute([('InstanceID', 0),
@@ -72,9 +71,8 @@ zone_group_state_shared_cache = Cache()
 # pylint: disable=too-many-instance-attributes
 class Service(object):
 
-    """
-    An class representing a UPnP service. The base class for all Sonos Service
-    classes.
+    """An class representing a UPnP service. The base class for all Sonos
+    Service classes.
 
     This class has a dynamic method dispatcher. Calls to methods which
     are not explicitly defined here are dispatched automatically to the
@@ -146,9 +144,8 @@ class Service(object):
         }
 
     def __getattr__(self, action):
-        """
-        A Python magic method which is called whenever an undefined method is
-        invoked on the instance.
+        """A Python magic method which is called whenever an undefined method
+        is invoked on the instance.
 
         The name of the unknown method called is passed as a parameter,
         and the return value is the callable to be invoked.
@@ -179,8 +176,7 @@ class Service(object):
 
     @staticmethod
     def wrap_arguments(args=None):
-        """
-        Wrap a list of tuples in xml ready to pass into a SOAP request.
+        """Wrap a list of tuples in xml ready to pass into a SOAP request.
 
         args is a list of (name, value) tuples specifying the name of each
         argument and its value, eg [('InstanceID', 0), ('Speed', 1)]. The value
@@ -210,8 +206,7 @@ class Service(object):
 
     @staticmethod
     def unwrap_arguments(xml_response):
-        """
-        Extract arguments and their values from a SOAP response.
+        """Extract arguments and their values from a SOAP response.
 
         Given an soap/xml response, return a dict of {argument_name,
         value)} items
@@ -253,8 +248,7 @@ class Service(object):
         return dict((i.tag, i.text or "") for i in action_response)
 
     def build_command(self, action, args=None):
-        """
-        Build a SOAP request.
+        """Build a SOAP request.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
@@ -302,8 +296,7 @@ class Service(object):
         return (headers, body)
 
     def send_command(self, action, args=None, cache=None, cache_timeout=None):
-        """
-        Send a command to a Sonos device.
+        """Send a command to a Sonos device.
 
         Given the name of an action (a string as specified in the service
         description XML file) to be sent, and the relevant arguments as a list
@@ -369,8 +362,7 @@ class Service(object):
             response.raise_for_status()
 
     def handle_upnp_error(self, xml_error):
-        """
-        Disect a UPnP error, and raise an appropriate exception.
+        """Disect a UPnP error, and raise an appropriate exception.
 
         xml_error is a unicode string containing the body of the
         UPnP/SOAP Fault response. Raises an exception containing the
@@ -429,8 +421,7 @@ class Service(object):
 
     def subscribe(
             self, requested_timeout=None, auto_renew=False, event_queue=None):
-        """
-        Subscribe to the service's events.
+        """Subscribe to the service's events.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
@@ -452,8 +443,7 @@ class Service(object):
         return subscription
 
     def _update_cache_on_event(self, event):
-        """
-        Update the cache when an event is received.
+        """Update the cache when an event is received.
 
         This will be called before an event is put onto the event queue. Events
         will often indicate that the Sonos device's state has changed, so this
@@ -471,9 +461,8 @@ class Service(object):
         pass
 
     def iter_actions(self):
-        """
-        Yield the service's actions with their in_arguments (ie parameters to
-        pass to the action) and out_arguments (ie returned values).
+        """Yield the service's actions with their in_arguments (ie parameters
+        to pass to the action) and out_arguments (ie returned values).
 
         Each action is an Action namedtuple, consisting of action_name (a
         string), in_args (a list of Argument namedtuples consisting of name and
@@ -526,8 +515,7 @@ class Service(object):
                     yield Action(action_name, in_args, out_args)
 
     def iter_event_vars(self):
-        """
-        Yield an iterator over the services eventable variables.
+        """Yield an iterator over the services eventable variables.
 
         Yields a tuple of (variable name, data type)
         """
