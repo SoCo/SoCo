@@ -21,8 +21,8 @@ def test_deprecation(recwarn):
         """My docs."""
         pass
 
-    assert dummy.__doc__ == "My docs\n\n  .. deprecated:: 0.7\n"
-    assert dummy2.__doc__ == "My docs\n\n  .. deprecated:: 0.8\n\n"\
+    assert dummy.__doc__ == "My docs.\n\n  .. deprecated:: 0.7\n"
+    assert dummy2.__doc__ == "My docs.\n\n  .. deprecated:: 0.8\n\n"\
                              "     Will be removed in version 0.12.\n" \
                              "     Use better_function instead."
     dummy(3)
