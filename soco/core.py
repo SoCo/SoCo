@@ -1102,7 +1102,7 @@ class SoCo(_SocoSingletonBase):
         else:
             response = requests.get('http://' + self.ip_address +
                                     ':1400/xml/device_description.xml')
-            dom = XML.fromstring(response.content.encode('UTF-8'))
+            dom = XML.fromstring(response.content)
 
         device = dom.find('{urn:schemas-upnp-org:device-1-0}device')
         if device is not None:
