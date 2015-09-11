@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=too-many-instance-attributes
+
 """
 Class to support snap-shotting the current Sonos State, and then
 restoring it later
@@ -8,7 +10,6 @@ and then back again to what was playing previously
 """
 
 
-# pylint: disable=too-many-instance-attributes
 class Snapshot(object):
 
     """
@@ -27,7 +28,8 @@ class Snapshot(object):
     """
 
     def __init__(self, device, snapshot_queue=False):
-        """ Construct the Snapshot object
+        """
+        Construct the Snapshot object.
 
         :params device: Device to snapshot
         :params snapshot_queue: If the queue is to be snapshotted
@@ -73,9 +75,7 @@ class Snapshot(object):
             self.queue = []
 
     def snapshot(self):
-        """ Record and store the current state of a device
-
-        """
+        """Record and store the current state of a device."""
         # Get information about the currently playing media
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
@@ -126,11 +126,12 @@ class Snapshot(object):
 
     # pylint: disable=too-many-branches
     def restore(self, fade=False):
-        """ Restores the state of a device that was previously saved
+        """
+        Restores the state of a device that was previously saved.
 
-            For coordinator devices restore everything
-            For slave devices only restore volume etc. not transport info
-            (transport info comes from the slaves coordinator).
+        For coordinator devices restore everything For slave devices
+        only restore volume etc. not transport info (transport info
+        comes from the slaves coordinator).
         """
 
         if self.is_coordinator:
@@ -216,9 +217,7 @@ class Snapshot(object):
                 self.device.stop()
 
     def _save_queue(self):
-        """ Saves the current state of the queue
-
-        """
+        """Saves the current state of the queue."""
         if self.queue is not None:
             # Maximum batch is 486, anything larger will still only
             # return 486
@@ -239,12 +238,13 @@ class Snapshot(object):
                 total = total + num_return
 
     def _restore_queue(self):
-        """ Restores the previous state of the queue
+        """
+        Restores the previous state of the queue.
 
-            Note: The restore currently adds the items back into the queue
-            using the URI, for items the Sonos system already knows about
-            this is OK, but for other items, they may be missing some of
-            their metadata as it will not be automatically picked up
+        Note: The restore currently adds the items back into the queue
+        using the URI, for items the Sonos system already knows about
+        this is OK, but for other items, they may be missing some of
+        their metadata as it will not be automatically picked up
         """
         if self.queue is not None:
             # Clear the queue so that it can be reset

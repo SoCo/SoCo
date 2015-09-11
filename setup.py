@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import io
-import sys
 import re
+import sys
+
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
 
@@ -71,7 +72,6 @@ REQUIREMENTS = list(open('requirements.txt'))
 # the backports
 if sys.version_info < (2, 7):
     REQUIREMENTS.extend(['importlib', 'ordereddict'])
-
 
 setup(
     name=NAME,

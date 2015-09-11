@@ -2,16 +2,19 @@
 
 """Accounts for Third Party music services."""
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import (
+    absolute_import, unicode_literals
+)
 
-import weakref
 import logging
-log = logging.getLogger(__name__)  # pylint: disable=C0103
+import weakref
 
 import requests
 
-from soco import discovery
-from soco.xml import XML
+from .. import discovery
+from ..xml import XML
+
+log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes

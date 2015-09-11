@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
-""" Tests for the music_service module """
+"""Tests for the music_service module."""
 
 from __future__ import unicode_literals
-import pytest
-import mock
 
+import mock
+import pytest
+
+import soco.soap
 from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
-from soco.music_services.music_service import MusicService, \
-    MusicServiceSoapClient
-from soco.music_services.music_service import desc_from_uri
-import soco.soap
+from soco.music_services.music_service import (
+    MusicService, MusicServiceSoapClient, desc_from_uri
+)
+
+
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
-ACCOUNT_DATA="""<?xml version="1.0" ?>
+ACCOUNT_DATA = """<?xml version="1.0" ?>
 <ZPSupportInfo type="User">
     <Accounts
     LastUpdateDevice="RINCON_000XXXXXXXX400" Version="8" NextSerialNum="5">
@@ -170,6 +173,7 @@ SERVICES_DESCRIPTOR_LIST = """<?xml version="1.0"?>
 </Services>
 """
 
+
 @pytest.fixture(autouse=True)
 def patch_music_services(monkeypatch):
     """Patch MusicService, Account and SoapMessage to avoid network requests
@@ -188,25 +192,29 @@ def patch_music_services(monkeypatch):
         Account, '_get_account_xml',
         mock.Mock(return_value=ACCOUNT_DATA))
 
+
 def test_initialise_account():
     assert len(Account._all_accounts) == 0
     accounts = Account.get_accounts()
-    assert len(accounts) == 4 # TuneIn account is added automatically
-    assert accounts['0'].service_type == '65031' # TuneIn
+    assert len(accounts) == 4  # TuneIn account is added automatically
+    assert accounts['0'].service_type == '65031'  # TuneIn
     assert accounts['1'].username == '12345678'
     assert accounts['1'].service_type == '2311'
     assert accounts['1'].deleted == False
     assert accounts['1'].nickname == 'mysonos'
     assert accounts.get('4') is None
 
+
 def test_get_all_accounts():
     a = Account.get_accounts()
-    assert len(a) == 4 # Including TuneIn
+    assert len(a) == 4  # Including TuneIn
+
 
 def test_get_accounts_for_service():
     a = Account.get_accounts_for_service('2311')
     assert len(a) == 1
     assert a[0].username == "12345678"
+
 
 def test_initialise_services():
     assert MusicService._music_services_data is None
@@ -219,13 +227,16 @@ def test_initialise_services():
     assert deezer['Version'] == '1.1'
     assert deezer['ContainerType'] == 'MService'
     assert deezer['Id'] == '2'
-    assert deezer['PresentationMapUri'] == 'http://sonos-pmap.ws.sonos.com/deezer_pmap.4.xml'
+    assert deezer[
+        'PresentationMapUri'] == 'http://sonos-pmap.ws.sonos.com/deezer_pmap.4.xml'
     assert deezer['ServiceType'] == '519'
+
 
 def test_get_data_for_name():
     s = MusicService.get_data_for_name('Spotify')
     assert s['Name'] == "Spotify"
     assert s['Capabilities'] == '2563'
+
 
 def test_get_names():
     names = MusicService.get_all_music_services_names()
@@ -233,10 +244,12 @@ def test_get_names():
     assert "Spotify" in names
     assert "Deezer" in names
 
+
 def test_get_subscribed_names():
     names = MusicService.get_subscribed_services_names()
     assert len(names) == 4
     assert set(names) == set(['TuneIn', 'Spotify', 'Spreaker', 'radioPup'])
+
 
 def test_create_music_service():
     ms = MusicService('Spotify')
@@ -248,13 +261,15 @@ def test_create_music_service():
         soundcloud = MusicService('SoundCloud')
     assert 'No account found' in str(excinfo.value)
 
+
 def test_tunein():
-    """TuneIn is handles specially by MusicServices"""
+    """TuneIn is handles specially by MusicServices."""
     tunein = MusicService('TuneIn')
     assert tunein
     assert tunein.service_id == '254'
     assert tunein.service_type == '65031'
     assert tunein.account.serial_number == '0'
+
 
 def test_search():
     spotify = MusicService('Spotify')
@@ -270,6 +285,7 @@ def test_search():
     with pytest.raises(MusicServiceException) as excinfo:
         spotify.search('badcategory')
     assert "support the 'badcategory' search category" in str(excinfo.value)
+
 
 def test_desc_from_uri():
     URI = 'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=1'

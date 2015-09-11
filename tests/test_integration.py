@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=too-few-public-methods, redefined-outer-name, no-self-use
 
-""" This file contains the classes used to perform integration tests on the
-methods in the SoCo class. They access a real Sonos system.
+"""
+This file contains the classes used to perform integration tests on the methods
+in the SoCo class. They access a real Sonos system.
 
 PLEASE TAKE NOTE: All of these tests are designed to run on a Sonos system
 without interfering with normal service. This means that they must not raise
@@ -14,12 +15,12 @@ the developers can listen to their music while coding, without having it
 interrupted at every unit test!
 
 PLEASE RESPECT THIS.
-
 """
 
 from __future__ import unicode_literals
 
 import time
+
 import pytest
 
 import soco as soco_module
@@ -35,7 +36,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.yield_fixture(scope='session')
 def soco():
-    """ Set up and tear down the soco fixture used by all tests. """
+    """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
     # Only one is used per test session, hence the decorator
     ip = pytest.config.option.IP
@@ -70,26 +71,26 @@ def soco():
 
 
 def wait(interval=0.1):
-    """ Convenience function to adjust sleep interval for all tests. """
+    """Convenience function to adjust sleep interval for all tests."""
     time.sleep(interval)
 
 
 class TestVolume(object):
-    """ Integration tests for the volume property """
+    """Integration tests for the volume property."""
 
     valid_values = range(101)
 
     @pytest.yield_fixture(autouse=True)
     def restore_volume(self, soco):
-        """ A fixture which restores volume after each test in the class is
-        run. """
+        """A fixture which restores volume after each test in the class is
+        run."""
         old = soco.volume
         yield
         soco.volume = old
         wait()
 
     def test_get_and_set(self, soco):
-        """ Test if the set functionlity works when given valid arguments. """
+        """Test if the set functionlity works when given valid arguments."""
         old = soco.volume
         assert old in self.valid_values
         if old == self.valid_values[0]:
@@ -101,9 +102,8 @@ class TestVolume(object):
         assert soco.volume == new
 
     def test_invalid_arguments(self, soco):
-        """ Test if the set functionality coerces into range when given
-        integers outside of allowed range.
-        """
+        """Test if the set functionality coerces into range when given integers
+        outside of allowed range."""
 
         # NOTE We don't test coerce from too large values, since that would
         # put the unit at full volume
@@ -122,23 +122,25 @@ class TestVolume(object):
 
 
 class TestBass(object):
-    """ Integration tests for the bass property. This class implements a full
-    boundary value test.
+    """
+    Integration tests for the bass property.
+
+    This class implements a full boundary value test.
     """
 
     valid_values = range(-10, 11)
 
     @pytest.yield_fixture(autouse=True)
     def restore_bass(self, soco):
-        """ A fixture which restores bass EQ after each test in the class is
-        run. """
+        """A fixture which restores bass EQ after each test in the class is
+        run."""
         old = soco.bass
         yield
         soco.bass = old
         wait()
 
     def test_get_and_set(self, soco):
-        """ Test if the set functionlity works when given valid arguments. """
+        """Test if the set functionlity works when given valid arguments."""
         assert soco.bass in self.valid_values
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
@@ -147,9 +149,8 @@ class TestBass(object):
             assert soco.bass == value
 
     def test_invalid_arguments(self, soco):
-        """ Test if the set functionality produces the expected "coerce in
-        range" functionality when given a value outside of its range.
-        """
+        """Test if the set functionality produces the expected "coerce in
+        range" functionality when given a value outside of its range."""
         # Values on the boundaries of the two invalid equivalence partitions
         soco.bass = self.valid_values[0] - 1
         wait()
@@ -160,23 +161,25 @@ class TestBass(object):
 
 
 class TestTreble(object):
-    """ Integration tests for the treble property. This class implements a full
-    boundary value test.
+    """
+    Integration tests for the treble property.
+
+    This class implements a full boundary value test.
     """
 
     valid_values = range(-10, 11)
 
     @pytest.yield_fixture(autouse=True)
     def restore_treble(self, soco):
-        """ A fixture which restores treble EQ after each test in the class is
-        run. """
+        """A fixture which restores treble EQ after each test in the class is
+        run."""
         old = soco.treble
         yield
         soco.treble = old
         wait()
 
     def test_get_and_set(self, soco):
-        """ Test if the set functionlity works when given valid arguments. """
+        """Test if the set functionlity works when given valid arguments."""
         assert soco.treble in self.valid_values
         # Values on the boundaries of the valid equivalence partition
         for value in [self.valid_values[0], self.valid_values[-1]]:
@@ -185,9 +188,8 @@ class TestTreble(object):
             assert soco.treble == value
 
     def test_invalid_arguments(self, soco):
-        """ Test if the set functionality produces the expected "coerce in
-        range" functionality when given a value outside its range.
-        """
+        """Test if the set functionality produces the expected "coerce in
+        range" functionality when given a value outside its range."""
         # Values on the boundaries of the two invalid equivalence partitions
         soco.treble = self.valid_values[0] - 1
         wait()
@@ -198,10 +200,10 @@ class TestTreble(object):
 
 
 class TestMute(object):
-    """ Integration test for the mute method. """
+    """Integration test for the mute method."""
 
     def test(self, soco):
-        """ Test if the mute method works """
+        """Test if the mute method works."""
         old = soco.mute
         assert old is False, ('The unit should not be muted when running '
                               'the unit tests.')
@@ -215,7 +217,7 @@ class TestMute(object):
 
 
 class TestGetCurrentTransportInfo(object):
-    """ Integration test for the get_current_transport_info method. """
+    """Integration test for the get_current_transport_info method."""
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
@@ -237,10 +239,10 @@ class TestGetCurrentTransportInfo(object):
 
 
 class TestTransport(object):
-    """ Integration tests for transport methods (play, pause etc). """
+    """Integration tests for transport methods (play, pause etc)."""
 
     def test_pause_and_play(self, soco):
-        """ Test if the pause and play methods work """
+        """Test if the pause and play methods work."""
         soco.pause()
         wait(1)
         on_pause = soco.get_current_transport_info()['current_transport_state']
@@ -251,7 +253,7 @@ class TestTransport(object):
         assert on_play == 'PLAYING'
 
     def test_stop(self, soco):
-        """ Test if the stop method works """
+        """Test if the stop method works."""
         soco.stop()
         wait(1)
         new = soco.get_current_transport_info()['current_transport_state']
@@ -262,7 +264,7 @@ class TestTransport(object):
         assert on_play == 'PLAYING'
 
     def test_seek_valid(self, soco):
-        """ Test if the seek method works with valid input """
+        """Test if the seek method works with valid input."""
         original_position = soco.get_current_track_info()['position']
         # Format 1
         soco.seek('0:00:00')
@@ -280,14 +282,14 @@ class TestTransport(object):
         wait()
 
     def test_seek_invald(self, soco):
-        """ Test if the seek method properly fails with invalid input. """
+        """Test if the seek method properly fails with invalid input."""
         for string in ['invalid_time_string', '5:12', '6', 'aa:aa:aa']:
             with pytest.raises(ValueError):
                 soco.seek(string)
 
 
 class TestGetCurrentTrackInfo(object):
-    """ Integration test for the get_current_track_info method. """
+    """Integration test for the get_current_track_info method."""
 
     info_keys = sorted(['album', 'artist', 'title', 'uri', 'metadata',
                         'playlist_position', 'duration', 'album_art',
@@ -304,7 +306,7 @@ class TestGetCurrentTrackInfo(object):
 
 
 class TestGetSpeakerInfo(object):
-    """ Integration test for the get_speaker_info method. """
+    """Integration test for the get_speaker_info method."""
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
@@ -327,12 +329,12 @@ class TestGetSpeakerInfo(object):
 
 
 class TestGetQueue(object):
-    """ Integration test for the get_queue method. """
+    """Integration test for the get_queue method."""
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
     queue_element_keys = sorted(['album', 'creator', 'resources',
-                                'album_art_uri', 'title'])
+                                 'album_art_uri', 'title'])
 
     def test_get(self, soco):
         """ Test is return value is a list of DidlMusicTracks and if each of
@@ -348,13 +350,12 @@ class TestGetQueue(object):
 
 
 class TestAddToQueue(object):
-    """ Integration test for the add_to_queue method. """
+    """Integration test for the add_to_queue method."""
 
     def test_add_to_queue(self, soco):
-        """ Get the current queue, add the last item of the current queue
-        and then compare the length of the old queue with the new and
-        check that the last two elements are identical.
-        """
+        """Get the current queue, add the last item of the current queue and
+        then compare the length of the old queue with the new and check that
+        the last two elements are identical."""
 
         old_queue = soco.get_queue(0, 1000)
         # Add new element and check
@@ -366,12 +367,12 @@ class TestAddToQueue(object):
 
 
 class TestRemoveFromQueue(object):
-    """ Integration test for the remove_from_queue method. """
+    """Integration test for the remove_from_queue method."""
 
     def test(self, soco):
-        """ Test if the remove_from_queue method works. """
+        """Test if the remove_from_queue method works."""
         old_queue = soco.get_queue()
-        soco.remove_from_queue(len(old_queue)-1)  # queue index is 0 based
+        soco.remove_from_queue(len(old_queue) - 1)  # queue index is 0 based
         wait()
         new_queue = soco.get_queue()
         assert old_queue != new_queue, (

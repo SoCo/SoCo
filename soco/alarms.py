@@ -5,9 +5,10 @@
 from __future__ import unicode_literals
 
 import logging
-from datetime import datetime
 import re
 import weakref
+from datetime import datetime
+
 from .core import PLAY_MODES
 from .xml import XML
 
@@ -16,7 +17,8 @@ TIME_FORMAT = "%H:%M:%S"
 
 
 def is_valid_recurrence(text):
-    """Check that text is a valid recurrence string.
+    """
+    Check that text is a valid recurrence string.
 
     A valid recurrence string is  'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or
     of the form 'ON_DDDDDD' where D is a number from 0-7 representing a day
@@ -44,7 +46,6 @@ def is_valid_recurrence(text):
             True
             >>> is_valid_recurrence('ON_123456789') # Too many digits
             False
-
     """
     if text in ("DAILY", "ONCE", "WEEKDAYS", "WEEKENDS"):
         return True
@@ -53,7 +54,8 @@ def is_valid_recurrence(text):
 
 class Alarm(object):
 
-    """A class representing a Sonos Alarm.
+    """
+    A class representing a Sonos Alarm.
 
     Alarms may be created or updated and saved to, or removed from the Sonos
     system. An alarm is not automatically saved. Call `save()` to do that.
@@ -79,7 +81,6 @@ class Alarm(object):
             >>> alarm.remove()
             >>> print get_alarms()
             set([])
-
     """
     # pylint: disable=too-many-instance-attributes
 
@@ -143,11 +144,11 @@ class Alarm(object):
 
     @property
     def play_mode(self):
-        """The play mode for the alarm.
+        """
+        The play mode for the alarm.
 
         Can be one of 'NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE',
         'REPEAT_ALL'.
-
         """
         return self._play_mode
 
@@ -173,13 +174,13 @@ class Alarm(object):
 
     @property
     def recurrence(self):
-        """A string representing how often the alarm should be triggered.
+        """
+        A string representing how often the alarm should be triggered.
 
         Can be 'DAILY', 'ONCE', 'WEEKDAYS', 'WEEKENDS' or of the form
         'ON_DDDDDDD' where D is a number from 0-7 representing a day of the
         week (Sunday is 0), e.g. 'ON_034' meaning Sunday, Wednesday and
         Thursday.
-
         """
         return self._recurrence
 
@@ -192,12 +193,12 @@ class Alarm(object):
         self._recurrence = recurrence
 
     def save(self):
-        """Save the alarm to the Sonos system.
+        """
+        Save the alarm to the Sonos system.
 
         Raises:
             SoCoUPnPError if the alarm cannot be created because there is
                 already an alarm for this room at the specified time
-
         """
         # pylint: disable=bad-continuation
         args = [
@@ -224,12 +225,12 @@ class Alarm(object):
             self.zone.alarmClock.UpdateAlarm(args)
 
     def remove(self):
-        """Removes the alarm.
+        """
+        Removes the alarm.
 
         Removes the alarm from the Sonos system. There is no need to
         call `save`. The Python instance is not deleted, and can be
         saved back to Sonos again if desired.
-
         """
         self.zone.alarmClock.DestroyAlarm([
             ('ID', self._alarm_id)
@@ -243,7 +244,8 @@ class Alarm(object):
 
 
 def get_alarms(soco=None):
-    """Get a set of all alarms known to the Sonos system.
+    """
+    Get a set of all alarms known to the Sonos system.
 
     Args:
         soco (SoCo, optional): a SoCo instance to query. If None, a random
@@ -255,7 +257,6 @@ def get_alarms(soco=None):
     Note:
         Any existing Alarm instance will have its attributes updated to those
         currently stored on the Sonos system.
-
     """
     # Get a soco instance to query. It doesn't matter which.
     if soco is None:

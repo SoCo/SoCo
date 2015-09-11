@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
-""" Tests for the services module """
+"""Tests for the services module."""
 
 from __future__ import unicode_literals
+
 import pytest
-from soco.events import parse_event_xml, Event
+
+from soco.events import (
+    Event, parse_event_xml
+)
+
 
 DUMMY_EVENT = """
 <e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">
@@ -69,8 +74,8 @@ def test_event_object():
     assert dummy_event.sid == '123'
     assert dummy_event.seq == '456'
     assert dummy_event.timestamp == 123456.7
-    assert dummy_event.service =='dummy'
-    assert dummy_event.variables == {'zone':'kitchen'}
+    assert dummy_event.service == 'dummy'
+    assert dummy_event.variables == {'zone': 'kitchen'}
     # attribute access
     assert dummy_event.zone == 'kitchen'
     # Should not access non-existent attributes
@@ -88,4 +93,3 @@ def test_event_parsing():
     assert event_dict['zone_group_state']
     assert event_dict['alarm_run_sequence'] == 'RINCON_000EXXXXXX0:56:0'
     assert event_dict['zone_group_id'] == "RINCON_000XXXX01400:57"
-

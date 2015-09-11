@@ -1,37 +1,44 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=C0302,fixme, protected-access
-""" The core module contains the SoCo class that implements
-the main entry to the SoCo functionality
-"""
+# pylint: disable=C0302, fixme, protected-access
+
+"""The core module contains the SoCo class that implements the main entry to
+the SoCo functionality."""
 
 from __future__ import unicode_literals
 
-import socket
 import logging
 import re
-import requests
+import socket
 from functools import wraps
 
-from .services import DeviceProperties, ContentDirectory
-from .services import RenderingControl, AVTransport, ZoneGroupTopology
-from .services import AlarmClock, SystemProperties, MusicServices,\
-    zone_group_state_shared_cache
+import requests
+
+from . import config
+from .data_structures import (
+    DidlMusicAlbum, DidlObject, DidlPlaylistContainer, DidlResource,
+    Queue, SearchResult, from_didl_string, to_didl_string
+)
+from .exceptions import (
+    SoCoSlaveException, SoCoUPnPException
+)
 from .groups import ZoneGroup
-from .exceptions import SoCoUPnPException, SoCoSlaveException
-from .data_structures import DidlPlaylistContainer,\
-    SearchResult, Queue, DidlObject, DidlMusicAlbum,\
-    from_didl_string, to_didl_string, DidlResource
-from .utils import really_utf8, camel_to_underscore, really_unicode,\
-    url_escape_path
+from .services import (
+    AlarmClock, AVTransport, ContentDirectory, DeviceProperties,
+    MusicServices, RenderingControl, SystemProperties,
+    ZoneGroupTopology, zone_group_state_shared_cache
+)
+from .utils import (
+    camel_to_underscore, really_unicode, really_utf8, url_escape_path
+)
 from .xml import XML
-from soco import config
 
 _LOG = logging.getLogger(__name__)
 
 
 class _ArgsSingleton(type):
 
-    """ A metaclass which permits only a single instance of each derived class
+    """
+    A metaclass which permits only a single instance of each derived class
     sharing the same `_class_group` class attribute to exist for any given set
     of positional arguments.
 
@@ -57,8 +64,7 @@ class _ArgsSingleton(type):
     >>> assert First('hi') is First('bye')
     AssertionError
     >>> assert First('hi') is Second('hi')
-
-     """
+    """
     _instances = {}
 
     def __call__(cls, *args, **kwargs):
@@ -74,21 +80,21 @@ class _ArgsSingleton(type):
 class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
         _ArgsSingleton(str('ArgsSingletonMeta'), (object,), {})):
 
-    """ The base class for the SoCo class.
+    """
+    The base class for the SoCo class.
 
     Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
     here: http://www.artima.com/weblogs/viewpost.jsp?thread=236234 and
     here: http://mikewatkins.ca/2008/11/29/python-2-and-3-metaclasses/
-
     """
     pass
 
 
 def only_on_master(function):
-    """Decorator that raises SoCoSlaveException on master call on slave"""
+    """Decorator that raises SoCoSlaveException on master call on slave."""
     @wraps(function)
     def inner_function(self, *args, **kwargs):
-        """Master checking inner function"""
+        """Master checking inner function."""
         if not self.is_coordinator:
             message = 'The method or property "{0}" can only be called/used '\
                 'on the coordinator in a group'.format(function.__name__)
@@ -100,7 +106,8 @@ def only_on_master(function):
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
 
-    """A simple class for controlling a Sonos speaker.
+    """
+    A simple class for controlling a Sonos speaker.
 
     For any given set of arguments to __init__, only one instance of this class
     may be created. Subsequent attempts to create an instance with the same
@@ -180,7 +187,6 @@ class SoCo(_SocoSingletonBase):
         These properties are not cached and will obtain information over the
         network, so may take longer than expected to set or return a value. It
         may be a good idea for you to cache the value in your own code.
-
     """
 
     _class_group = 'SoCo'
@@ -245,7 +251,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def player_name(self):
-        """  The speaker's name. A string. """
+        """
+        The speaker's name.
+
+        A string.
+        """
         # We could get the name like this:
         # result = self.deviceProperties.GetZoneAttributes()
         # return result["CurrentZoneName"]
@@ -256,7 +266,7 @@ class SoCo(_SocoSingletonBase):
 
     @player_name.setter
     def player_name(self, playername):
-        """ Set the speaker's name """
+        """Set the speaker's name."""
         self.deviceProperties.SetZoneAttributes([
             ('DesiredZoneName', playername),
             ('DesiredIcon', ''),
@@ -265,7 +275,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def uid(self):
-        """ A unique identifier.  Looks like: RINCON_000XXXXXXXXXX1400 """
+        """
+        A unique identifier.
+
+        Looks like: RINCON_000XXXXXXXXXX1400
+        """
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, there is no need to go further
         if self._uid is not None:
@@ -289,10 +303,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def household_id(self):
-        """ A unique identifier for all players in a household.
+        """
+        A unique identifier for all players in a household.
 
         Looks like: Sonos_asahHKgjgJGjgjGjggjJgjJG34
-       """
+        """
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, return the cached version
         if self._household_id is None:
@@ -302,11 +317,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_visible(self):
-        """ Is this zone visible? A zone might be invisible if, for example it
-        is a bridge, or the slave part of stereo pair.
+        """
+        Is this zone visible? A zone might be invisible if, for example it is a
+        bridge, or the slave part of stereo pair.
 
         return True or False
-
         """
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
@@ -316,7 +331,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_bridge(self):
-        """ Is this zone a bridge? """
+        """Is this zone a bridge?"""
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, there is no need to go further
         if self._is_bridge is not None:
@@ -329,10 +344,10 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_coordinator(self):
-        """ Return True if this zone is a group coordinator, otherwise False.
+        """
+        Return True if this zone is a group coordinator, otherwise False.
 
         return True or False
-
         """
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
@@ -358,7 +373,7 @@ class SoCo(_SocoSingletonBase):
 
     @play_mode.setter
     def play_mode(self, playmode):
-        """ Set the speaker's mode """
+        """Set the speaker's mode."""
         playmode = playmode.upper()
         if playmode not in PLAY_MODES:
             raise KeyError("'%s' is not a valid play mode" % playmode)
@@ -371,8 +386,11 @@ class SoCo(_SocoSingletonBase):
     @property
     @only_on_master  # Only for symmetry with the setter
     def cross_fade(self):
-        """ The speaker's cross fade state.
-        True if enabled, False otherwise """
+        """
+        The speaker's cross fade state.
+
+        True if enabled, False otherwise
+        """
 
         response = self.avTransport.GetCrossfadeMode([
             ('InstanceID', 0),
@@ -383,7 +401,7 @@ class SoCo(_SocoSingletonBase):
     @cross_fade.setter
     @only_on_master
     def cross_fade(self, crossfade):
-        """ Set the speaker's cross fade state. """
+        """Set the speaker's cross fade state."""
         crossfade_value = '1' if crossfade else '0'
         self.avTransport.SetCrossfadeMode([
             ('InstanceID', 0),
@@ -433,13 +451,13 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play(self):
-        """Play the currently selected track.
+        """
+        Play the currently selected track.
 
         Returns:
         True if the Sonos speaker successfully started playing the track.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
         self.avTransport.Play([
             ('InstanceID', 0),
@@ -448,11 +466,11 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_uri(self, uri='', meta='', title='', start=True):
-        """ Play a given stream. Pauses the queue.
-        If there is no metadata passed in and there is a title set then a
-        metadata object will be created. This is often the case if you have
-        a custom stream, it will need at least the title in the metadata in
-        order to play.
+        """
+        Play a given stream. Pauses the queue. If there is no metadata passed
+        in and there is a title set then a metadata object will be created.
+        This is often the case if you have a custom stream, it will need at
+        least the title in the metadata in order to play.
 
         Arguments:
         uri -- URI of a stream to be played.
@@ -466,7 +484,6 @@ class SoCo(_SocoSingletonBase):
         requested to start because "start=False")
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
         if meta == '' and title != '':
             meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'\
@@ -494,13 +511,13 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def pause(self):
-        """ Pause the currently playing track.
+        """
+        Pause the currently playing track.
 
         Returns:
         True if the Sonos speaker successfully paused the track.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
         self.avTransport.Pause([
             ('InstanceID', 0),
@@ -509,13 +526,13 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def stop(self):
-        """ Stop the currently playing track.
+        """
+        Stop the currently playing track.
 
         Returns:
         True if the Sonos speaker successfully stopped the playing track.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
         self.avTransport.Stop([
             ('InstanceID', 0),
@@ -544,7 +561,8 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def next(self):
-        """ Go to the next track.
+        """
+        Go to the next track.
 
         Returns:
         True if the Sonos speaker successfully skipped to the next track.
@@ -556,7 +574,6 @@ class SoCo(_SocoSingletonBase):
         Pandora and you call next() several times in quick succession an error
         code will likely be returned (since Pandora has limits on how many
         songs can be skipped).
-
         """
         self.avTransport.Next([
             ('InstanceID', 0),
@@ -565,7 +582,8 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def previous(self):
-        """ Go back to the previously played track.
+        """
+        Go back to the previously played track.
 
         Returns:
         True if the Sonos speaker successfully went to the previous track.
@@ -576,7 +594,6 @@ class SoCo(_SocoSingletonBase):
         for a variety of reasons. For example, previous() will return an error
         code (error code 701) if the Sonos is streaming Pandora since you can't
         go back on tracks.
-
         """
         self.avTransport.Previous([
             ('InstanceID', 0),
@@ -585,7 +602,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def mute(self):
-        """ The speaker's mute state. True if muted, False otherwise """
+        """
+        The speaker's mute state.
+
+        True if muted, False otherwise
+        """
 
         response = self.renderingControl.GetMute([
             ('InstanceID', 0),
@@ -596,7 +617,7 @@ class SoCo(_SocoSingletonBase):
 
     @mute.setter
     def mute(self, mute):
-        """ Mute (or unmute) the speaker """
+        """Mute (or unmute) the speaker."""
         mute_value = '1' if mute else '0'
         self.renderingControl.SetMute([
             ('InstanceID', 0),
@@ -606,7 +627,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def volume(self):
-        """ The speaker's volume. An integer between 0 and 100. """
+        """
+        The speaker's volume.
+
+        An integer between 0 and 100.
+        """
 
         response = self.renderingControl.GetVolume([
             ('InstanceID', 0),
@@ -617,7 +642,7 @@ class SoCo(_SocoSingletonBase):
 
     @volume.setter
     def volume(self, volume):
-        """ Set the speaker's volume """
+        """Set the speaker's volume."""
         volume = int(volume)
         volume = max(0, min(volume, 100))  # Coerce in range
         self.renderingControl.SetVolume([
@@ -628,7 +653,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def bass(self):
-        """ The speaker's bass EQ. An integer between -10 and 10. """
+        """
+        The speaker's bass EQ.
+
+        An integer between -10 and 10.
+        """
 
         response = self.renderingControl.GetBass([
             ('InstanceID', 0),
@@ -639,7 +668,7 @@ class SoCo(_SocoSingletonBase):
 
     @bass.setter
     def bass(self, bass):
-        """ Set the speaker's bass """
+        """Set the speaker's bass."""
         bass = int(bass)
         bass = max(-10, min(bass, 10))  # Coerce in range
         self.renderingControl.SetBass([
@@ -649,7 +678,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def treble(self):
-        """ The speaker's treble EQ. An integer between -10 and 10. """
+        """
+        The speaker's treble EQ.
+
+        An integer between -10 and 10.
+        """
 
         response = self.renderingControl.GetTreble([
             ('InstanceID', 0),
@@ -660,7 +693,7 @@ class SoCo(_SocoSingletonBase):
 
     @treble.setter
     def treble(self, treble):
-        """ Set the speaker's treble """
+        """Set the speaker's treble."""
         treble = int(treble)
         treble = max(-10, min(treble, 10))  # Coerce in range
         self.renderingControl.SetTreble([
@@ -670,12 +703,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def loudness(self):
-        """ The Sonos speaker's loudness compensation. True if on, otherwise
-        False.
+        """
+        The Sonos speaker's loudness compensation. True if on, otherwise False.
 
         Loudness is a complicated topic. You can find a nice summary about this
         feature here: http://forums.sonos.com/showthread.php?p=4698#post4698
-
         """
         response = self.renderingControl.GetLoudness([
             ('InstanceID', 0),
@@ -686,7 +718,7 @@ class SoCo(_SocoSingletonBase):
 
     @loudness.setter
     def loudness(self, loudness):
-        """ Switch on/off the speaker's loudness compensation """
+        """Switch on/off the speaker's loudness compensation."""
         loudness_value = '1' if loudness else '0'
         self.renderingControl.SetLoudness([
             ('InstanceID', 0),
@@ -695,8 +727,11 @@ class SoCo(_SocoSingletonBase):
         ])
 
     def _parse_zone_group_state(self):
-        """ The Zone Group State contains a lot of useful information. Retrieve
-        and parse it, and populate the relevant properties. """
+        """
+        The Zone Group State contains a lot of useful information.
+
+        Retrieve and parse it, and populate the relevant properties.
+        """
 
 # zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like
 # this:
@@ -739,9 +774,9 @@ class SoCo(_SocoSingletonBase):
 #
 
         def parse_zone_group_member(member_element):
-            """ Parse a ZoneGroupMember or Satellite element from Zone Group
+            """Parse a ZoneGroupMember or Satellite element from Zone Group
             State, create a SoCo instance for the member, set basic attributes
-            and return it. """
+            and return it."""
             # Create a SoCo instance for each member. Because SoCo
             # instances are singletons, this is cheap if they have already
             # been created, and useful if they haven't. We can then
@@ -818,15 +853,17 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_groups(self):
-        """  Return a set of all the available groups"""
+        """Return a set of all the available groups."""
         self._parse_zone_group_state()
         return self._groups
 
     @property
     def group(self):
-        """The Zone Group of which this device is a member.
+        """
+        The Zone Group of which this device is a member.
 
-        group will be None if this zone is a slave in a stereo pair."""
+        group will be None if this zone is a slave in a stereo pair.
+        """
 
         for group in self.all_groups:
             if self in group:
@@ -846,18 +883,19 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_zones(self):
-        """ Return a set of all the available zones"""
+        """Return a set of all the available zones."""
         self._parse_zone_group_state()
         return self._all_zones
 
     @property
     def visible_zones(self):
-        """ Return an set of all visible zones"""
+        """Return an set of all visible zones."""
         self._parse_zone_group_state()
         return self._visible_zones
 
     def partymode(self):
-        """ Put all the speakers in the network in the same group, a.k.a Party
+        """
+        Put all the speakers in the network in the same group, a.k.a Party
         Mode.
 
         This blog shows the initial research responsible for this:
@@ -866,19 +904,18 @@ class SoCo(_SocoSingletonBase):
         The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
-
         """
         # Tell every other visible zone to join this one
         # pylint: disable = expression-not-assigned
         [zone.join(self) for zone in self.visible_zones if zone is not self]
 
     def join(self, master):
-        """ Join this speaker to another "master" speaker.
+        """
+        Join this speaker to another "master" speaker.
 
         ..  note:: The signature of this method has changed in 0.8. It now
             requires a SoCo instance to be passed as `master`, not an IP
             address
-
         """
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
@@ -889,7 +926,8 @@ class SoCo(_SocoSingletonBase):
         self._parse_zone_group_state()
 
     def unjoin(self):
-        """ Remove this speaker from a group.
+        """
+        Remove this speaker from a group.
 
         Seems to work ok even if you remove what was previously the group
         master from it's own group. If the speaker was not in a group also
@@ -899,7 +937,6 @@ class SoCo(_SocoSingletonBase):
         True if this speaker has left the group.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
@@ -930,7 +967,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_radio(self):
-        """ Is the speaker playing radio?
+        """
+        Is the speaker playing radio?
 
         return True or False
         """
@@ -956,7 +994,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_tv(self):
-        """ Is the playbar speaker input from TV?
+        """
+        Is the playbar speaker input from TV?
 
         return True or False
         """
@@ -968,7 +1007,8 @@ class SoCo(_SocoSingletonBase):
         return re.match(r'^x-sonos-htastream:', track_uri) is not None
 
     def switch_to_tv(self):
-        """ Switch the playbar speaker's input to TV.
+        """
+        Switch the playbar speaker's input to TV.
 
         Returns:
         True if the Sonos speaker successfully switched to TV.
@@ -978,7 +1018,6 @@ class SoCo(_SocoSingletonBase):
         speaker will be returned.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
 
         self.avTransport.SetAVTransportURI([
@@ -989,9 +1028,11 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def status_light(self):
-        """ The white Sonos status light between the mute button and the volume
-        up button on the speaker. True if on, otherwise False.
+        """
+        The white Sonos status light between the mute button and the volume up
+        button on the speaker.
 
+        True if on, otherwise False.
         """
         result = self.deviceProperties.GetLEDState()
         LEDState = result["CurrentLEDState"]  # pylint: disable=invalid-name
@@ -999,14 +1040,15 @@ class SoCo(_SocoSingletonBase):
 
     @status_light.setter
     def status_light(self, led_on):
-        """ Switch on/off the speaker's status light """
+        """Switch on/off the speaker's status light."""
         led_state = 'On' if led_on else 'Off'
         self.deviceProperties.SetLEDState([
             ('DesiredLEDState', led_state),
         ])
 
     def _build_album_art_full_uri(self, url):
-        """ Ensure an Album Art URI is an absolute URI
+        """
+        Ensure an Album Art URI is an absolute URI.
 
         :param url: The album art URI
         """
@@ -1018,7 +1060,8 @@ class SoCo(_SocoSingletonBase):
         return url
 
     def get_current_track_info(self):
-        """ Get information about the currently playing track.
+        """
+        Get information about the currently playing track.
 
         Returns:
         A dictionary containing the following information about the currently
@@ -1030,7 +1073,6 @@ class SoCo(_SocoSingletonBase):
         values. For example, a track may not have complete metadata and be
         missing an album name. In this case track['album'] will be an empty
         string.
-
         """
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
@@ -1099,7 +1141,8 @@ class SoCo(_SocoSingletonBase):
         return track
 
     def get_speaker_info(self, refresh=False):
-        """ Get information about the Sonos speaker.
+        """
+        Get information about the Sonos speaker.
 
         Arguments:
         refresh -- Refresh the speaker info cache.
@@ -1107,7 +1150,6 @@ class SoCo(_SocoSingletonBase):
         Returns:
         Information about the Sonos speaker, such as the UID, MAC Address, and
         Zone Name.
-
         """
         if self.speaker_info and refresh is False:
             return self.speaker_info
@@ -1142,14 +1184,15 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['display_version'] = device.findtext(
                 '{urn:schemas-upnp-org:device-1-0}displayVersion')
 
-            # no mac adress - extract from serial number
+            # no mac address - extract from serial number
             mac = self.speaker_info['serial_number'].split(':')[0]
             self.speaker_info['mac_address'] = mac
 
             return self.speaker_info
 
     def get_current_transport_info(self):
-        """ Get the current playback state
+        """
+        Get the current playback state.
 
         Returns:
         A dictionary containing the following information about the speakers
@@ -1159,7 +1202,6 @@ class SoCo(_SocoSingletonBase):
 
         This allows us to know if speaker is playing or not. Don't know other
         states of CurrentTransportStatus and CurrentSpeed.
-
         """
         response = self.avTransport.GetTransportInfo([
             ('InstanceID', 0),
@@ -1180,7 +1222,8 @@ class SoCo(_SocoSingletonBase):
         return playstate
 
     def get_queue(self, start=0, max_items=100, full_album_art_uri=False):
-        """ Get information about the queue
+        """
+        Get information about the queue.
 
         :param start: Starting number of returned matches
         :param max_items: Maximum number of returned matches
@@ -1190,7 +1233,6 @@ class SoCo(_SocoSingletonBase):
 
         This method is heavly based on Sam Soffes (aka soffes) ruby
         implementation
-
         """
         queue = []
         response = self.contentDirectory.Browse([
@@ -1225,7 +1267,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def queue_size(self):
-        """ Get size of queue """
+        """Get size of queue."""
         response = self.contentDirectory.Browse([
             ('ObjectID', 'Q:0'),
             ('BrowseFlag', 'BrowseMetadata'),
@@ -1326,7 +1368,8 @@ class SoCo(_SocoSingletonBase):
                                       max_items=100, full_album_art_uri=False,
                                       search_term=None, subcategories=None,
                                       complete_result=False):
-        """ Retrieve music information objects from the music library
+        """
+        Retrieve music information objects from the music library.
 
         This method is the main method to get music information items, like
         e.g. tracks, albums etc., from the music library with. It can be used
@@ -1406,7 +1449,6 @@ class SoCo(_SocoSingletonBase):
         of the query has been gathered from the Janos project:
         http://sourceforge.net/projects/janos/ Props to the authors of that
         project.
-
         """
         search = self.SEARCH_TRANSLATION[search_type]
 
@@ -1565,7 +1607,8 @@ class SoCo(_SocoSingletonBase):
         return self.browse(search_item, start, max_items, full_album_art_uri)
 
     def _music_lib_search(self, search, start, max_items):
-        """Perform a music library search and extract search numbers
+        """
+        Perform a music library search and extract search numbers.
 
         You can get an overview of all the relevant search prefixes (like
         'A:') and their meaning with the request:
@@ -1608,7 +1651,8 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def add_uri_to_queue(self, uri):
-        """Adds the URI to the queue
+        """
+        Adds the URI to the queue.
 
         :param uri: The URI to be added to the queue
         :type uri: str
@@ -1621,7 +1665,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def add_to_queue(self, queueable_item):
-        """ Adds a queueable item to the queue """
+        """Adds a queueable item to the queue."""
         metadata = to_didl_string(queueable_item)
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
@@ -1657,20 +1701,21 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def clear_queue(self):
-        """ Removes all tracks from the queue.
+        """
+        Removes all tracks from the queue.
 
         Returns:
         True if the Sonos speaker cleared the queue.
 
         Raises SoCoException (or a subclass) upon errors.
-
         """
         self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
         ])
 
     def get_favorite_radio_shows(self, start=0, max_items=100):
-        """ Get favorite radio shows from Sonos' Radio app.
+        """
+        Get favorite radio shows from Sonos' Radio app.
 
         Returns:
         A list containing the total number of favorites, the number of
@@ -1681,13 +1726,13 @@ class SoCo(_SocoSingletonBase):
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
-
         """
 
         return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
-        """ Get favorite radio stations from Sonos' Radio app.
+        """
+        Get favorite radio stations from Sonos' Radio app.
 
         Returns:
         A list containing the total number of favorites, the number of
@@ -1698,7 +1743,6 @@ class SoCo(_SocoSingletonBase):
         total number of favorites is greater than the amount you
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
-
         """
         return self.__get_radio_favorites(RADIO_STATIONS, start, max_items)
 
@@ -1746,7 +1790,8 @@ class SoCo(_SocoSingletonBase):
         return result
 
     def _update_album_art_to_full_uri(self, item):
-        """Update an item's Album Art URI to be an absolute URI
+        """
+        Update an item's Album Art URI to be an absolute URI.
 
         :param item: The item to update the URI for
         """
@@ -1755,13 +1800,13 @@ class SoCo(_SocoSingletonBase):
                 item.album_art_uri)
 
     def create_sonos_playlist(self, title):
-        """ Create a new empty Sonos playlist.
+        """
+        Create a new empty Sonos playlist.
 
         :params title: Name of the playlist
 
         :returns: An instance of
             :py:class:`~.soco.data_structures.DidlPlaylistContainer`
-
         """
         response = self.avTransport.CreateSavedQueue([
             ('InstanceID', 0),
@@ -1781,13 +1826,13 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     # pylint: disable=invalid-name
     def create_sonos_playlist_from_queue(self, title):
-        """ Create a new Sonos playlist from the current queue.
+        """
+        Create a new Sonos playlist from the current queue.
 
-            :params title: Name of the playlist
+        :params title: Name of the playlist
 
-            :returns: An instance of
-                :py:class:`~.soco.data_structures.DidlPlaylistContainer`
-
+        :returns: An instance of
+            :py:class:`~.soco.data_structures.DidlPlaylistContainer`
         """
         # Note: probably same as Queue service method SaveAsSonosPlaylist
         # but this has not been tested.  This method is what the
@@ -1805,12 +1850,12 @@ class SoCo(_SocoSingletonBase):
             resources=res, title=title, parent_id='SQ:', item_id=item_id)
 
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
-        """ Adds a queueable item to a Sonos' playlist
+        """
+        Adds a queueable item to a Sonos' playlist.
 
-            :param queueable_item: the item to add to the Sonos' playlist
-            :param sonos_playlist: the Sonos' playlist to which the item should
-                be added
-
+        :param queueable_item: the item to add to the Sonos' playlist
+        :param sonos_playlist: the Sonos' playlist to which the item should
+            be added
         """
         # Get the update_id for the playlist
         response, _ = self._music_lib_search(sonos_playlist.item_id, 0, 1)
@@ -1834,7 +1879,7 @@ class SoCo(_SocoSingletonBase):
         ])
 
     def get_item_album_art_uri(self, item):
-        """ Get an item's Album Art absolute URI. """
+        """Get an item's Album Art absolute URI."""
 
         if getattr(item, 'album_art_uri', False):
             return self._build_album_art_full_uri(item.album_art_uri)
@@ -1844,7 +1889,8 @@ class SoCo(_SocoSingletonBase):
     # pylint: disable=too-many-locals
     def search_track(self, artist, album=None, track=None,
                      full_album_art_uri=False):
-        """Search for an artist, artist's albums, or specific track.
+        """
+        Search for an artist, artist's albums, or specific track.
 
         :param artist: Artist name
         :type artist: str
@@ -1857,7 +1903,6 @@ class SoCo(_SocoSingletonBase):
         :type full_album_art_uri: bool
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
         :rtype: :py:class:`~.soco.data_structures.SearchResult`
-
         """
         subcategories = [artist]
         subcategories.append(album or '')
@@ -1871,7 +1916,8 @@ class SoCo(_SocoSingletonBase):
         return result
 
     def get_albums_for_artist(self, artist, full_album_art_uri=False):
-        """Get albums for an artist.
+        """
+        Get albums for an artist.
 
         :param artist: Artist name
         :type artist: str
@@ -1880,7 +1926,6 @@ class SoCo(_SocoSingletonBase):
         :type full_album_art_uri: bool
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
         :rtype: :py:class:`~.soco.data_structures.SearchResult`
-
         """
         subcategories = [artist]
         result = self.get_album_artists(
@@ -1901,7 +1946,8 @@ class SoCo(_SocoSingletonBase):
         return result
 
     def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
-        """Get tracks for an artist's album.
+        """
+        Get tracks for an artist's album.
 
         :param artist: Artist name
         :type artist: str
@@ -1912,7 +1958,6 @@ class SoCo(_SocoSingletonBase):
         :type full_album_art_uri: bool
         :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
         :rtype: :py:class:`~.soco.data_structures.SearchResult`
-
         """
         subcategories = [artist, album]
         result = self.get_album_artists(
@@ -1924,7 +1969,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def library_updating(self):
-        """True if the music library is in the process of being updated
+        """
+        True if the music library is in the process of being updated.
 
         :returns: True if the music library is in the process of being updated
         :rtype: bool
@@ -1933,10 +1979,12 @@ class SoCo(_SocoSingletonBase):
         return result['IsIndexing'] != '0'
 
     def start_library_update(self, album_artist_display_option=''):
-        """Start an update of the music library.
+        """
+        Start an update of the music library.
 
         If specified, album_artist_display_option changes the album
-        artist compilation setting (see also album_artist_display_option).
+        artist compilation setting (see also
+        album_artist_display_option).
         """
         return self.contentDirectory.RefreshShareIndex([
             ('AlbumArtistDisplayOption', album_artist_display_option),

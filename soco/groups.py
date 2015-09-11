@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-few-public-methods
-"""
-Classes and functionality relating to Sonos Groups
 
-"""
+"""Classes and functionality relating to Sonos Groups."""
 
 from __future__ import unicode_literals
 
@@ -85,13 +83,13 @@ class ZoneGroup(object):
 
     @property
     def label(self):
-        """ A description of the group """
+        """A description of the group."""
         group_names = sorted([m.player_name for m in self.members])
         return ", ".join(group_names)
 
     @property
     def short_label(self):
-        """ A short description of the group """
+        """A short description of the group."""
         group_names = sorted([m.player_name for m in self.members])
         group_label = group_names[0]
         if len(group_names) > 1:

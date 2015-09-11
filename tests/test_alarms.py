@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Tests for the alarms module """
+"""Tests for the alarms module."""
 
 from __future__ import unicode_literals
 
 from soco.alarms import is_valid_recurrence
+
 
 def test_recurrence():
     for recur in ('DAILY', 'WEEKDAYS', 'WEEKENDS', 'ONCE'):
@@ -15,5 +16,3 @@ def test_recurrence():
     assert not is_valid_recurrence('ON_123456789')
     assert not is_valid_recurrence('ON_')
     assert not is_valid_recurrence(' ON_1')
-
-

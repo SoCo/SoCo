@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 # pylint: disable-msg=R0904
 
-""" This file contains the classes used to perform unit tests on the methods
-in the SoCo class.
+"""
+This file contains the classes used to perform unit tests on the methods in the
+SoCo class.
 
 PLEASE TAKE NOTE: All of these unit tests are designed to run on a sonos
 system without interfering with normal service. This means that they will not
 raise the volume or leave the player in another state than it started in. They
-have been made this way, since sonos is developed by volounteers, that in all
-likelyhood does not have a dedicated test system, so the tests must be able to
+have been made this way, since sonos is developed by volunteers, that in all
+likelihood does not have a dedicated test system, so the tests must be able to
 run on an ordinary system without annoying the neighboors and it should return
 to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
@@ -16,23 +17,27 @@ PLEASE RESPECT THIS.
 """
 from __future__ import unicode_literals
 
-import unittest
 import time
+import unittest
+
 import pytest
+
 import soco
 
 SOCO = None
 pytestmark = pytest.mark.integration
 
+
 class SoCoUnitTestInitError(Exception):
-    """ Exception for incomplete unit test initialization """
+    """Exception for incomplete unit test initialization."""
+
     def __init__(self, message):
         Exception.__init__(self, message)
 
 
 def init(**kwargs):
-    """ Initialize variables for the unittests that are only known at run time
-    """
+    """Initialize variables for the unittests that are only known at run
+    time."""
     global SOCO  # pylint: disable-msg=W0603
     SOCO = soco.SoCo(kwargs['ip'])
 
@@ -47,17 +52,18 @@ def init(**kwargs):
 
 
 def get_state():
-    """ Utility function to get the entire playing state before the unit tests
-    starts to change it
-    """
+    """Utility function to get the entire playing state before the unit tests
+    starts to change it."""
     state = {'queue': SOCO.get_queue(0, 1000),
              'current_track_info': SOCO.get_current_track_info()}
     return state
 
 
 def set_state(state):
-    """ Utility function to set the entire state. Used to reset the unit after
-    the unit tests have changed it
+    """
+    Utility function to set the entire state.
+
+    Used to reset the unit after the unit tests have changed it
     """
     SOCO.stop()
     SOCO.clear_queue()
@@ -70,7 +76,7 @@ def set_state(state):
 
 
 def wait(interval=0.1):
-    """ Convinience function to adjust sleep interval for all tests """
+    """Convinience function to adjust sleep interval for all tests."""
     time.sleep(interval)
 
 
@@ -90,20 +96,20 @@ def setup_module(module):
     state = get_state()
     module.state = state
 
+
 def teardown_module(module):
     state = module.state
     set_state(state)
 
 
-
 class Volume(unittest.TestCase):
-    """ Unit tests for the volume method """
+    """Unit tests for the volume method."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         self.valid_values = range(101)
 
     def test_get_and_set(self):
-        """ Tests if the set functionlity works when given valid arguments """
+        """Tests if the set functionlity works when given valid arguments."""
         old = SOCO.volume
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         if old == self.valid_values[0]:
@@ -117,9 +123,8 @@ class Volume(unittest.TestCase):
         wait()
 
     def test_invalid_arguments(self):
-        """ Tests if the set functionality coerces into range when given
-        integers outside of allowed range
-        """
+        """Tests if the set functionality coerces into range when given
+        integers outside of allowed range."""
         old = SOCO.volume
         # NOTE We don't test coerce from too large values, since that would
         # put the unit at full volume
@@ -142,15 +147,17 @@ class Volume(unittest.TestCase):
 
 
 class Bass(unittest.TestCase):
-    """ Unit tests for the bass method. This class implements a full boundary
-    value test.
+    """
+    Unit tests for the bass method.
+
+    This class implements a full boundary value test.
     """
 
     def setUp(self):  # pylint: disable-msg=C0103
         self.valid_values = range(-10, 11)
 
     def test_get_and_set(self):
-        """ Tests if the set functionlity works when given valid arguments """
+        """Tests if the set functionlity works when given valid arguments."""
         old = SOCO.bass
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         # Values on the boundaries of the valid equivalence partition
@@ -162,9 +169,8 @@ class Bass(unittest.TestCase):
         wait()
 
     def test_invalid_arguments(self):
-        """ Tests if the set functionality produces the expected "coerce in
-        range" functionality when given a value outside of its range
-        """
+        """Tests if the set functionality produces the expected "coerce in
+        range" functionality when given a value outside of its range."""
         old = SOCO.bass
         # Values on the boundaries of the two invalid equivalence partitions
         SOCO.bass = self.valid_values[0] - 1
@@ -178,15 +184,14 @@ class Bass(unittest.TestCase):
 
 
 class Treble(unittest.TestCase):
-    """ Unit tests for the treble method This class implements a full boundary
-    value test.
-    """
+    """Unit tests for the treble method This class implements a full boundary
+    value test."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         self.valid_values = range(-10, 11)
 
     def test_get_and_set(self):
-        """ Tests if the set functionlity works when given valid arguments """
+        """Tests if the set functionlity works when given valid arguments."""
         old = SOCO.treble
         self.assertIn(old, self.valid_values, NOT_IN_RANGE)
         # Values on the boundaries of the valid equivalence partition
@@ -198,9 +203,8 @@ class Treble(unittest.TestCase):
         wait()
 
     def test_invalid_arguments(self):
-        """ Tests if the set functionality produces the expected "coerce in
-        range" functionality when given a value outside its range
-        """
+        """Tests if the set functionality produces the expected "coerce in
+        range" functionality when given a value outside its range."""
         old = SOCO.treble
         # Values on the boundaries of the two invalid equivalence partitions
         SOCO.treble = self.valid_values[0] - 1
@@ -214,7 +218,7 @@ class Treble(unittest.TestCase):
 
 
 class GetCurrentTrackInfo(unittest.TestCase):
-    """ Unit test for the get_current_track_info method """
+    """Unit test for the get_current_track_info method."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         # The value in this list must be kept up to date with the values in
@@ -235,13 +239,12 @@ class GetCurrentTrackInfo(unittest.TestCase):
 
 
 class AddToQueue(unittest.TestCase):
-    """ Unit test for the add_to_queue method """
+    """Unit test for the add_to_queue method."""
 
     def test(self):
-        """ Gets the current queue, adds the last item of the current queue
-        and then compares the length of the old queue with the new and
-        checks that the last two elements are identical
-        """
+        """Gets the current queue, adds the last item of the current queue and
+        then compares the length of the old queue with the new and checks that
+        the last two elements are identical."""
         state = get_state()
         SOCO.pause()
         old_queue = SOCO.get_queue(0, 1000)
@@ -258,7 +261,7 @@ class AddToQueue(unittest.TestCase):
 
 
 class GetQueue(unittest.TestCase):
-    """ Unit test for the get_queue method """
+    """Unit test for the get_queue method."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
@@ -283,7 +286,7 @@ class GetQueue(unittest.TestCase):
 
 
 class GetCurrentTransportInfo(unittest.TestCase):
-    """ Unit test for the get_current_transport_info method """
+    """Unit test for the get_current_transport_info method."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
@@ -311,7 +314,7 @@ class GetCurrentTransportInfo(unittest.TestCase):
 
 
 class GetSpeakerInfo(unittest.TestCase):
-    """ Unit test for the get_speaker_info method """
+    """Unit test for the get_speaker_info method."""
 
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
@@ -339,20 +342,20 @@ class GetSpeakerInfo(unittest.TestCase):
                                  'it'.format(key))
 
 
-#class GetSpeakersIp(unittest.TestCase):
+# class GetSpeakersIp(unittest.TestCase):
     #""" Unit tests for the get_speakers_ip method """
 
-    ## TODO: Awaits https://github.com/rahims/SoCo/issues/26
+    # TODO: Awaits https://github.com/rahims/SoCo/issues/26
 
-    #def test(self):
-        #print SOCO.get_speakers_ip()
+    # def test(self):
+        # print SOCO.get_speakers_ip()
 
 
 class Pause(unittest.TestCase):
-    """ Unittest for the pause method """
+    """Unittest for the pause method."""
 
     def test(self):
-        """ Tests if the pause method works """
+        """Tests if the pause method works."""
         SOCO.pause()
         wait(1)
         new = SOCO.get_current_transport_info()['current_transport_state']
@@ -363,10 +366,10 @@ class Pause(unittest.TestCase):
 
 
 class Stop(unittest.TestCase):
-    """ Unittest for the stop method """
+    """Unittest for the stop method."""
 
     def test(self):
-        """ Tests if the stop method works """
+        """Tests if the stop method works."""
         state = get_state()
         SOCO.stop()
         wait(1)
@@ -377,10 +380,10 @@ class Stop(unittest.TestCase):
 
 
 class Play(unittest.TestCase):
-    """ Unit test for the play method """
+    """Unit test for the play method."""
 
     def test(self):
-        """ Tests if the play method works """
+        """Tests if the play method works."""
         SOCO.pause()
         wait(1)
         on_pause = SOCO.get_current_transport_info()['current_transport_state']
@@ -394,26 +397,26 @@ class Play(unittest.TestCase):
 
 
 class Mute(unittest.TestCase):
-    """ Unit test for the mute method """
+    """Unit test for the mute method."""
 
     def test(self):
-        """ Tests of the mute method works """
+        """Tests of the mute method works."""
         old = SOCO.mute
         self.assertEqual(old, 0, 'The unit should not be muted when running '
                          'the unit tests')
         SOCO.mute = True
         wait()
         new = SOCO.mute
-        self.assertEqual(new, 1, 'The unit did not succesfully mute')
+        self.assertEqual(new, 1, 'The unit did not successfully mute')
         SOCO.mute = False
         wait()
 
 
 class RemoveFromQueue(unittest.TestCase):
-    """ Unit test for the remove_from_queue method """
+    """Unit test for the remove_from_queue method."""
 
     def test(self):
-        """ Tests if the remove_from_queue method works """
+        """Tests if the remove_from_queue method works."""
         old_queue = SOCO.get_queue()
         track_to_remove = old_queue[-1]
         SOCO.remove_from_queue(len(old_queue))
@@ -422,7 +425,7 @@ class RemoveFromQueue(unittest.TestCase):
         self.assertNotEqual(old_queue, new_queue, 'No difference between '
                             'queues before and after removing the last item')
         self.assertEqual(len(new_queue), len(old_queue) - 1, 'The length of '
-                         'queue after removing a track is not lenght before - '
+                         'queue after removing a track is not length before - '
                          '1')
         # Clean up
         SOCO.add_to_queue(track_to_remove['uri'])
@@ -431,10 +434,10 @@ class RemoveFromQueue(unittest.TestCase):
 
 
 class Seek(unittest.TestCase):
-    """ Unit test for the seek method """
+    """Unit test for the seek method."""
 
     def test_valid(self):
-        """ Tests if the seek method works with valid input """
+        """Tests if the seek method works with valid input."""
         original_position = SOCO.get_current_track_info()['position']
         # Format 1
         SOCO.seek('0:00:00')
@@ -452,7 +455,7 @@ class Seek(unittest.TestCase):
         wait()
 
     def test_invald(self):
-        """ Tests if the seek method properly fails with invalid input """
+        """Tests if the seek method properly fails with invalid input."""
         for string in ['invalid_time_string', '5:12', '6', 'aa:aa:aa']:
             with self.assertRaises(ValueError):
                 SOCO.seek(string)

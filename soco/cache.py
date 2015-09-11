@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
-""" Caching """
+
+"""Caching."""
 
 from __future__ import unicode_literals
 
 import threading
 from time import time
 
+from . import config
 from .compat import dumps
-from soco import config
 
 
 class _BaseCache(object):
 
-    """A base class for the cache.
+    """
+    A base class for the cache.
 
-    Does nothing by itself."""
+    Does nothing by itself.
+    """
     # pylint: disable=no-self-use, unused-argument
 
     def __init__(self, default_timeout=0):
@@ -28,34 +31,33 @@ class _BaseCache(object):
     def get(self, *args, **kwargs):
         """
         Get an item from the cache for this combination of args and kwargs.
+
         Returns None, indicating that no item has been found.
         """
         return None
 
     def put(self, *args, **kwargs):
-        """
-        Put an item into the cache, for this combination of args and
-        kwargs.
-        """
+        """Put an item into the cache, for this combination of args and
+        kwargs."""
         pass
 
     def delete(self, *args, **kwargs):
-        """
-        Delete an item from the cache for this combination of args and
-        kwargs.
-        """
+        """Delete an item from the cache for this combination of args and
+        kwargs."""
         pass
 
     def clear(self):
-        """
-        Empty the whole cache.
-        """
+        """Empty the whole cache."""
         pass
 
 
 class NullCache(_BaseCache):
 
-    """A cache which does nothing. Useful for debugging."""
+    """
+    A cache which does nothing.
+
+    Useful for debugging.
+    """
     pass
 
 
@@ -78,11 +80,11 @@ class TimedCache(_BaseCache):
         self._cache_lock = threading.Lock()
 
     def get(self, *args, **kwargs):
-        """Get an item from the cache for this combination of args and kwargs.
+        """
+        Get an item from the cache for this combination of args and kwargs.
 
-        Return None if no unexpired item is found. This means that there is no
-        point storing an item in the cache if it is None.
-
+        Return None if no unexpired item is found. This means that there
+        is no point storing an item in the cache if it is None.
         """
         if not self.enabled:
             return None
@@ -103,14 +105,16 @@ class TimedCache(_BaseCache):
         return None
 
     def put(self, item, *args, **kwargs):
-        """ Put an item into the cache, for this combination of args and
-        kwargs.
+        """
+        Put an item into the cache, for this combination of args and kwargs.
 
-        If `timeout` is specified as one of the keyword arguments, the item
-        will remain available for retrieval for `timeout` seconds. If `timeout`
-        is None or not specified, the default cache timeout for this cache will
-        be used. Specify a `timeout` of 0 (or ensure that the default timeout
-        for this cache is 0) if this item is not to be cached."""
+        If `timeout` is specified as one of the keyword arguments, the
+        item will remain available for retrieval for `timeout` seconds.
+        If `timeout` is None or not specified, the default cache timeout
+        for this cache will be used. Specify a `timeout` of 0 (or ensure
+        that the default timeout for this cache is 0) if this item is
+        not to be cached.
+        """
 
         if not self.enabled:
             return
@@ -125,7 +129,7 @@ class TimedCache(_BaseCache):
 
     def delete(self, *args, **kwargs):
         """Delete an item from the cache for this combination of args and
-        kwargs"""
+        kwargs."""
         cache_key = self.make_key(args, kwargs)
         with self._cache_lock:
             try:
@@ -134,16 +138,14 @@ class TimedCache(_BaseCache):
                 pass
 
     def clear(self):
-        """Empty the whole cache"""
+        """Empty the whole cache."""
         with self._cache_lock:
             self._cache.clear()
 
     @staticmethod
     def make_key(*args, **kwargs):
-        """
-        Generate a unique, hashable, representation of the args and kwargs
-
-        """
+        """Generate a unique, hashable, representation of the args and
+        kwargs."""
         # This is not entirely straightforward, since args and kwargs may
         # contain mutable items and unicode. Possibilities include using
         # __repr__, frozensets, and code from Py3's LRU cache. But pickle
@@ -155,9 +157,11 @@ class TimedCache(_BaseCache):
 
 class Cache(_BaseCache):
 
-    """A factory class which returns an instance of a cache subclass.
+    """
+    A factory class which returns an instance of a cache subclass.
 
-    If config.CACHE_ENABLED is False, the dummy inactive cache will be returned
+    If config.CACHE_ENABLED is False, the dummy inactive cache will be
+    returned
     """
 
     def __new__(cls, *args, **kwargs):

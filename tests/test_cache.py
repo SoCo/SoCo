@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
-""" Tests for the cache module """
+"""Tests for the cache module."""
 
 from __future__ import unicode_literals
-from soco.cache import Cache, NullCache, TimedCache
+
+from soco.cache import (
+    Cache, NullCache, TimedCache
+)
+
 
 def test_instance_creation():
     assert isinstance(Cache(), TimedCache)
@@ -13,7 +17,7 @@ def test_instance_creation():
 
 
 def test_cache_put_get():
-    "Test putting items into, and getting them from, the cache"
+    """Test putting items into, and getting them from, the cache."""
     from time import sleep
     cache = Cache()
     cache.put("item", 'some', kw='args', timeout=3)
@@ -24,14 +28,14 @@ def test_cache_put_get():
     sleep(2)
     assert not cache.get('some', kw='args') == "item"
 
-
     cache.put("item", 'some', 'args', and_a='keyword', timeout=3)
     assert cache.get('some', 'args', and_a='keyword') == "item"
     assert not cache.get(
         'some', 'otherargs', and_a='keyword') == "item"
 
+
 def test_cache_clear_del():
-    "Test removal of items and clearing the cache"
+    """Test removal of items and clearing the cache."""
     cache = Cache()
     cache.put("item", "some", kw="args", timeout=2)
     # Check it's there
@@ -44,28 +48,28 @@ def test_cache_clear_del():
     cache.clear()
     assert not cache.get('some', kw='args') == "item"
 
+
 def test_with_typical_args():
     cache = Cache()
-    cache.put ("result", 'SetAVTransportURI', [
-            ('InstanceID', 1),
-            ('CurrentURI', 'URI2'),
-            ('CurrentURIMetaData', 'abcd'),
-            ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ], timeout=3)
+    cache.put("result", 'SetAVTransportURI', [
+        ('InstanceID', 1),
+        ('CurrentURI', 'URI2'),
+        ('CurrentURIMetaData', 'abcd'),
+        ('Unicode', 'μИⅠℂ☺ΔЄ💋')
+    ], timeout=3)
     assert cache.get('SetAVTransportURI', [
-            ('InstanceID', 1),
-            ('CurrentURI', 'URI2'),
-            ('CurrentURIMetaData', 'abcd'),
-            ('Unicode', 'μИⅠℂ☺ΔЄ💋')
-            ]) == "result"
+        ('InstanceID', 1),
+        ('CurrentURI', 'URI2'),
+        ('CurrentURIMetaData', 'abcd'),
+        ('Unicode', 'μИⅠℂ☺ΔЄ💋')
+    ]) == "result"
+
 
 def test_cache_disable():
     cache = Cache()
-    assert cache.enabled == True
+    assert cache.enabled is True
     cache.enabled = False
     cache.put("item", 'args', timeout=3)
     assert cache.get('args') == None
     # Check it's there
-    assert cache.get('some', kw='args') == None
-
-
+    assert cache.get('some', kw='args') is None

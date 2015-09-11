@@ -3,12 +3,13 @@
 
 """ Spotify Plugin """
 
+from __future__ import unicode_literals
+
 import requests
 
-from ..xml import XML
-from ..compat import quote_plus
 from . import SoCoPlugin
-
+from ..compat import quote_plus
+from ..xml import XML
 
 __all__ = ['Spotify']
 

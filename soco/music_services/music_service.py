@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=fixme
 
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
 
 """
-# pylint: disable=fixme
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import, unicode_literals
 
 import logging
-log = logging.getLogger(__name__)  # pylint: disable=C0103
 
-from xmltodict import parse
 import requests
 
-from soco.xml import XML
-from soco.exceptions import MusicServiceException
-from soco.soap import SoapMessage, SoapFault
+from xmltodict import parse
 
-from soco.compat import urlparse, parse_qs
-from soco.music_services.accounts import Account
-from soco import discovery
+from .. import discovery
+from ..compat import parse_qs, urlparse
+from ..exceptions import MusicServiceException
+from ..music_services.accounts import Account
+from ..soap import SoapFault, SoapMessage
+from ..xml import XML
+
+log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes, protected-access

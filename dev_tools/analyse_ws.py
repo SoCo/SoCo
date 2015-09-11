@@ -490,7 +490,7 @@ def __build_option_parser():
 
 
 def getch():
-    """ Read a single character non-echoed and return it. Recipy from:
+    """ Read a single character non-echoed and return it. Recipe from:
     http://code.activestate.com/recipes/
     134892-getch-like-unbuffered-character-reading-from-stdin/
     """
