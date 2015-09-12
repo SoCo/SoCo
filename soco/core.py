@@ -16,7 +16,7 @@ import requests
 from . import config
 from .data_structures import (
     DidlObject, DidlPlaylistContainer, DidlResource,
-    Queue, from_didl_string, to_didl_string
+    Queue, from_didl_string, to_didl_string, SearchResult,
 )
 from .exceptions import SoCoSlaveException
 from .groups import ZoneGroup
@@ -494,7 +494,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_stream(self, stream_object, start=True):
-        """Play a DIDL object as a stream
+        """Play a DIDL object as a stream.
 
         To play as a stream means that this single will be played without
         affecting the queue
@@ -502,7 +502,6 @@ class SoCo(_SocoSingletonBase):
         Args:
             stream_object (DidlObject): A Didl Object that represents a stream
             start (bool): Whether to start play back after adding the stream
-
         """
         # E.g. radio favorites are returned without an desc element. This hack
         # may turn out to be insufficient if we want to try and play radio
@@ -1336,15 +1335,19 @@ class SoCo(_SocoSingletonBase):
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """Get favorite radio shows from Sonos' Radio app.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio shows,
-        represented as a dictionary with `title` and `uri` keys.
+        .. note:: These objects returned by this method, cannot yet be browsed
+            to get to the actual playable shows. This functionality will be
+            added later. For now, the object are only for information.
 
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        Args:
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
+
+        ``start`` and ``max_items`` are used for paging of the results.
+
+        Returns:
+            :class:`~.SearchResult`: A :class:`~.SearchResult` object,
+                containing both the search results and search metdata
         """
 
         return self.__get_radio_favorites('radio_shows', start, max_items)
@@ -1352,26 +1355,27 @@ class SoCo(_SocoSingletonBase):
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio stations,
-        represented as a dictionary with `title` and `uri` keys.
+        Args:
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
 
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        ``start`` and ``max_items`` are used for paging of the results.
+
+        Returns:
+            :class:`~.SearchResult`: A :class:`~.SearchResult` object,
+                containing both the search results and search metdata
         """
         return self.__get_radio_favorites('radio_stations', start, max_items)
 
     def __get_radio_favorites(self, favorite_type, start=0, max_items=100):
         """ Helper method for `get_favorite_radio_*` methods.
 
-        Arguments:
-        favorite_type -- Specify either `radio_stations` or `radio_shows`.
-        start -- Which number to start the retrieval from. Used for paging.
-        max_items -- The total number of results to return.
+        Args:
+            favorite_type (str): Either `radio_stations` or `radio_shows`.
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
 
+        ``start`` and ``max_items`` are used for paging of the results.
         """
         try:
             browse_type = favorite_type
