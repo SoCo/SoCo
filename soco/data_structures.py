@@ -472,9 +472,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     @classmethod
     def from_dict(cls, content):
-        """Create an instance from a dict.
+        r"""Create an instance from a dict.
 
-        An alternative constructor. Equivalent to DidlObject(**content).
+        An alternative constructor. Equivalent to DidlObject(\*\*content).
 
         Arg:
             content (dict): Dict containing metadata information.Required and
