@@ -37,8 +37,8 @@ def main():
     if args.device:
         device = soco.SoCo(args.device)
     else:
-        device = soco.SoCo.any_soco()
-    print ("Querying %s" % device.player_name)
+        device = soco.discovery.any_soco()
+    print("Querying %s" % device.player_name)
     # loop over each of the available services
     # pylint: disable=no-member
     services = (srv(device) for srv in soco.services.Service.__subclasses__())
@@ -54,18 +54,18 @@ def print_details(srv):
     """
     name = srv.service_type
     box = "=" * 79
-    print ("{0}\n|{1:^77}|\n{0}\n".format(box, name))
+    print("{0}\n|{1:^77}|\n{0}\n".format(box, name))
     for action in srv.iter_actions():
-        print (action.name)
-        print ("~" * len(action.name))
-        print ("\n  Input")
+        print(action.name)
+        print("~" * len(action.name))
+        print("\n  Input")
         for arg in action.in_args:
-            print ("    ", arg)
-        print ("\n  Output")
+            print("    ", arg)
+        print("\n  Output")
         for arg in action.out_args:
-            print ("    ", arg)
+            print("    ", arg)
 
-        print ("\n\n")
+        print("\n\n")
 
 
 if __name__ == '__main__':
