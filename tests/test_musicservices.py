@@ -200,7 +200,7 @@ def test_initialise_account():
     assert accounts['0'].service_type == '65031'  # TuneIn
     assert accounts['1'].username == '12345678'
     assert accounts['1'].service_type == '2311'
-    assert accounts['1'].deleted == False
+    assert accounts['1'].deleted is False
     assert accounts['1'].nickname == 'mysonos'
     assert accounts.get('4') is None
 
@@ -227,8 +227,8 @@ def test_initialise_services():
     assert deezer['Version'] == '1.1'
     assert deezer['ContainerType'] == 'MService'
     assert deezer['Id'] == '2'
-    assert deezer[
-        'PresentationMapUri'] == 'http://sonos-pmap.ws.sonos.com/deezer_pmap.4.xml'
+    assert deezer['PresentationMapUri'] == \
+        'http://sonos-pmap.ws.sonos.com/deezer_pmap.4.xml'
     assert deezer['ServiceType'] == '519'
 
 
@@ -287,6 +287,29 @@ def test_search():
     assert "support the 'badcategory' search category" in str(excinfo.value)
 
 
+def test_sonos_uri_from_id():
+    spotify = MusicService('Spotify')
+    track = 'spotify:track:2qs5ZcLByNTctJKbhAZ9JE'
+    assert spotify.sonos_uri_from_id(track) == \
+        'soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=2311&sn=1'
+    # Check for escaping with a few difficult characters
+    track = 'spotify: track\2qc%ünicøde?'
+    assert spotify.sonos_uri_from_id(track) == \
+        'soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=2311&sn=1'
+    # and a different service
+    spreaker = MusicService('Spreaker')
+    track = 'spreaker12345678'
+    assert spreaker.sonos_uri_from_id(track) == \
+        'soco://spreaker12345678?sid=41735&sn=3'
+
+
+def test_desc():
+    spotify = MusicService('Spotify')
+    assert spotify.desc == 'SA_RINCON2311_12345678'
+    spreaker = MusicService('Spreaker')
+    assert spreaker.desc == 'SA_RINCON41735_'
+
+
 def test_desc_from_uri():
     URI = 'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=1'
     assert desc_from_uri(URI) == 'SA_RINCON2311_12345678'
@@ -294,8 +317,8 @@ def test_desc_from_uri():
     assert desc_from_uri(SID_ONLY) == 'SA_RINCON2311_12345678'
     TUNEIN_URI = 'x-sonosapi-stream:s49815?sid=254&amp;flags=8224&amp;sn=0'
     assert desc_from_uri(TUNEIN_URI) == 'SA_RINCON65031_'
-    UNKNOWN_AC_AND_SID = 'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=400'
-    UNKNOWN_AC_WITH_SID = 'x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32&amp;sn=400'
+    UNKNOWN_AC_WITH_SID = \
+        'x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32&amp;sn=400'
     assert desc_from_uri(UNKNOWN_AC_WITH_SID) == 'SA_RINCON2311_12345678'
     NO_DATA = 'x-sonos-http:track%3a3402413.mp3?flags=32'
     assert desc_from_uri(NO_DATA) == 'RINCON_AssociatedZPUDN'
