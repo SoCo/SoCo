@@ -383,41 +383,42 @@ class TestRemoveFromQueue(object):
 
 
 class TestSonosPlaylist(object):
-    """ Integration tests for Sonos Playlist Management. """
+    """Integration tests for Sonos Playlist Management."""
 
     existing_playlists = None
-    pl_name = 'zSocoTestPlayList42'
+    playlist_name = 'zSocoTestPlayList42'
 
     @pytest.yield_fixture(autouse=True)
     def restore_sonos_playlists(self, soco):
-        """ A fixture which cleans up after each sonos playlist test."""
+        """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
             self.existing_playlists = soco.get_sonos_playlists()
-            if self.pl_name in [x.title for x in self.existing_playlists]:
-                msg = '%s is an existing playlist.' % self.pl_name
+            if self.playlist_name in [x.title for x in self.existing_playlists]:
+                msg = '%s is an existing playlist.' % self.playlist_name
                 pytest.fail(msg)
 
         yield
-        for spl in soco.get_sonos_playlists():
-            if spl.title == self.pl_name:
-                soco.remove_sonos_playlist(object_id=spl)
+        for sonos_playlist in soco.get_sonos_playlists():
+            if sonos_playlist.title == self.playlist_name:
+                soco.remove_sonos_playlist(sonos_playlist=sonos_playlist)
 
     def test_create(self, soco):
-        """ Test creating a new empty Sonos playlist """
-        existing_pl = set([x.item_id for x in soco.get_sonos_playlists()])
-        created_pl = soco.create_sonos_playlist(title=self.pl_name)
-        assert type(created_pl) is DidlPlaylistContainer
+        """Test creating a new empty Sonos playlist."""
+        existing_playlists = set([x.item_id
+                                  for x in soco.get_sonos_playlists()])
+        new_playlist = soco.create_sonos_playlist(title=self.playlist_name)
+        assert type(new_playlist) is DidlPlaylistContainer
 
         new_pl = set([x.item_id for x in soco.get_sonos_playlists()])
-        assert new_pl != existing_pl
-        assert new_pl - existing_pl == set([created_pl.item_id])
+        assert new_pl != existing_playlists
+        assert new_pl - existing_playlists == set([new_playlist.item_id])
 
     def test_create_from_queue(self, soco):
-        """ Test creating a Sonos playlist from the current queue. """
-        created_pl = soco.create_sonos_playlist_from_queue(title=self.pl_name)
-        assert type(created_pl) is DidlPlaylistContainer
+        """Test creating a Sonos playlist from the current queue."""
+        new_playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
+        assert type(new_playlist) is DidlPlaylistContainer
 
-        prslt = soco.browse(ml_item=created_pl)
+        prslt = soco.browse(ml_item=new_playlist)
         qrslt = soco.get_queue()
         assert len(prslt) == len(qrslt)
         assert prslt.total_matches == qrslt.total_matches
@@ -427,13 +428,25 @@ class TestSonosPlaylist(object):
             assert p_item.resources[0].uri == q_item.resources[0].uri
 
     def test_remove_playlist(self, soco):
-        """ Test removing a Sonos playlist. """
+        """Test removing a Sonos playlist."""
         # a place holder, remove_sonos_playlist is exercised in the
         # 'restore_sonos_playlists'
         pass
 
+    def test_remove_playlist_itemid(self, soco):
+        """Test removing a Sonos playlist by item_id."""
+        new_playlist = soco.create_sonos_playlist(title=self.playlist_name)
+        assert type(new_playlist) is DidlPlaylistContainer
+        assert soco.remove_sonos_playlist(new_playlist.item_id)
+        found = False
+        for sonos_playlist in soco.get_sonos_playlists():
+            if sonos_playlist.title == self.playlist_name:
+                found = True
+                break
+        assert found == False, "new_playlist was not removed by item_id"
+
     def test_remove_playlist_bad_id(self, soco):
-        """ Test attempting to remove a Sonos playlist using a bad id. """
+        """Test attempting to remove a Sonos playlist using a bad id."""
         # junky bad
         with pytest.raises(SoCoUPnPException):
             _ = soco.remove_sonos_playlist('SQ:-7')
