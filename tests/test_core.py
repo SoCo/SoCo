@@ -778,6 +778,15 @@ class TestContentDirectory:
             ('AlbumArtistDisplayOption', ''),
         ])
 
+    def test_remove_sonos_playlist_success(self, moco):
+        moco.contentDirectory.reset_mock()
+        moco.contentDirectory.return_value = True
+        result = moco.remove_sonos_playlist('SQ:10')
+        moco.contentDirectory.DestroyObject.assert_called_once_with(
+            [('ObjectID', 'SQ:10')]
+        )
+        assert result
+
 
 class TestRenderingControl:
 
