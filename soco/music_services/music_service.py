@@ -15,7 +15,7 @@ import requests
 from xmltodict import parse
 
 from .. import discovery
-from ..compat import parse_qs, urlparse
+from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
 from ..soap import SoapFault, SoapMessage
@@ -551,8 +551,55 @@ class MusicService(object):
     def sonos_uri_from_id(self, item_id):
         """Return a uri which can be sent for playing.
 
-        URIs are of the form: track%3a3402413.mp3?sid=2&amp;sn=4
+        Arg:
+            item_id (str): The unique id of a playable item for this music
+                service, such as that returned in the metadata from
+                `get_metadata`, eg `spotify:track:2qs5ZcLByNTctJKbhAZ9JE`
+
+        Returns:
+            (str): A URI of the form: `soco://spotify%3Atrack
+                %3A2qs5ZcLByNTctJKbhAZ9JE?sid=2311&sn=1` which encodes the
+                item_id, and relevant data from the account for the music
+                service. This URI can be sent to a Sonos device for playing,
+                and the device itself will retrieve all the necessary metadata
+                such as title, album etc.
         """
+        # Real Sonos URIs look like this:
+        # x-sonos-http:tr%3a92352286.mp3?sid=2&flags=8224&sn=4 The
+        # extension (.mp3) presumably comes from the mime-type returned in a
+        # MusicService.get_metadata() result (though for Spotify the mime-type
+        # is audio/x-spotify, and there is no extension. See
+        # http://musicpartners.sonos.com/node/464 for supported mime-types and
+        # related extensions). The scheme ( x-sonos-http) presumably
+        # indicates how the player is to obtain the stream for playing. It
+        # is not clear what the flags param is used for (perhaps bitrate,
+        # or certain metadata such as canSkip?). Fortunately, none of these
+        # seems to be necessary. We can leave them out, (or in teh case of
+        # the scheme, use 'soco' as dummy text, and the players still seem
+        # to do the right thing.
+
+        # quote_url will break if given unicode on Py2.6, and early 2.7. So
+        # we need to encode.
+        item_id = quote_url(item_id.encode('utf-8'))
+        # Add the account info to the end as query params
+        account = self.account
+        result = "soco://{0}?sid={1}&sn={2}".format(
+            item_id, account.service_type,
+            account.serial_number
+        )
+        return result
+
+    @property
+    def desc(self):
+        """str: The Sonos descriptor to use for this service.
+
+        The Sonos descriptor is used as the content of the <desc> tag in
+        DIDL metadata, to indicate the relevant music service id and username
+        """
+        desc = "SA_RINCON{0}_{1}".format(
+            self.account.service_type, self.account.username
+        )
+        return desc
 
     ########################################################################
     #                                                                      #
