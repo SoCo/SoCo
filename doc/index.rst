@@ -6,10 +6,9 @@
 Welcome to soco's documentation!
 ================================
 
-Contents:
-
 .. toctree::
    :maxdepth: 4
+   :caption: User Documentation
 
    tutorial
    plugins
@@ -18,23 +17,18 @@ Contents:
 
    release-howto
 
-API documentation
-=================
-
 .. toctree::
    :maxdepth: 3
+   :caption: API documentation
 
-   soco
+   api/soco
 
-Release Notes
--------------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Release Notes
 
    releases/index
-
-
 
 Indices and tables
 ==================
