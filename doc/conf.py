@@ -41,7 +41,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'alabaster',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -117,7 +116,8 @@ keep_warnings = True
 todo_include_todos = True
 
 # Allow auto links into the Python docs
-intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
     'requests': ('http://www.python-requests.org/en/latest/', None)
 }
 
