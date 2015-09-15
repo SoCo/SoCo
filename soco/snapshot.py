@@ -1,45 +1,41 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-many-instance-attributes
 
-"""
-Class to support snap-shotting the current Sonos State, and then
-restoring it later
+"""Functionality to support saving and restoring the current Sonos state.
 
 This is useful for scenarios such as when you want to switch to radio
-and then back again to what was playing previously
+and then back again to what was playing previously.
 """
 
 
 class Snapshot(object):
+    """A snapshot of the current state.
 
-    """
-    Class to support snap-shotting the current Sonos State, and then
-    restoring it later
+    Note:
+        This does not change anything to do with the configuration
+        such as which group the speaker is in, just settings that impact
+        what is playing, or how it is played.
 
-    Note: This does not change anything to do with the configuration
-    such as which group the speaker is in, just settings that impact
-    what is playing, or how it is played.
+        List of sources that may be playing using root of media_uri:
 
-    List of sources that may be playing using root of media_uri:
-    'x-rincon-queue': playing from Queue
-    'x-sonosapi-stream': playing a stream (eg radio)
-    'x-file-cifs': playing file
-    'x-rincon': slave zone (only change volume etc. rest from coordinator)
+        | ``x-rincon-queue``: playing from Queue
+        | ``x-sonosapi-stream``: playing a stream (eg radio)
+        | ``x-file-cifs``: playing file
+        | ``x-rincon``: slave zone (only change volume etc. rest from
+          coordinator)
     """
 
     def __init__(self, device, snapshot_queue=False):
-        """Construct the Snapshot object.
+        """
+        Args:
+            device (SoCo): The device to snapshot
+            snapshot_queue (bool): Whether the queue should be snapshotted.
+                Defaults to `False`.
 
-        :params device: Device to snapshot
-        :params snapshot_queue: If the queue is to be snapshotted
-
-        :return is_coordinator (Boolean)- tells users if to play alert
-                playing an alert on a slave will un group it!
-
-        Note: It is strongly advised that you do not snapshot the
-        queue unless you really need to as it takes a very long
-        time to restore large queues as it is done one track at
-        a time
+        Warning:
+            It is strongly advised that you do not snapshot the queue unless
+            you really need to as it takes a very long time to restore large
+            queues as it is done one track at a time.
         """
         # The device that will be snapshotted
         self.device = device
@@ -74,7 +70,13 @@ class Snapshot(object):
             self.queue = []
 
     def snapshot(self):
-        """Record and store the current state of a device."""
+        """Record and store the current state of a device.
+
+        Returns:
+            bool: `True` if the device is a coordinator, `False` otherwise.
+                Useful for determining whether playing an alert on a device
+                will ungroup it.
+        """
         # Get information about the currently playing media
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
@@ -125,11 +127,14 @@ class Snapshot(object):
 
     # pylint: disable=too-many-branches
     def restore(self, fade=False):
-        """Restores the state of a device that was previously saved.
+        """Restore the state of a device to that which was previously saved.
 
-        For coordinator devices restore everything For slave devices
-        only restore volume etc. not transport info (transport info
-        comes from the slaves coordinator).
+        For coordinator devices restore everything. For slave devices
+        only restore volume etc., not transport info (transport info
+        comes from the slave's coordinator).
+
+        Args:
+            fade (bool): Whether volume should be faded up on restore.
         """
 
         if self.is_coordinator:
@@ -215,7 +220,7 @@ class Snapshot(object):
                 self.device.stop()
 
     def _save_queue(self):
-        """Saves the current state of the queue."""
+        """Save the current state of the queue."""
         if self.queue is not None:
             # Maximum batch is 486, anything larger will still only
             # return 486
@@ -236,12 +241,13 @@ class Snapshot(object):
                 total = total + num_return
 
     def _restore_queue(self):
-        """Restores the previous state of the queue.
+        """Restore the previous state of the queue.
 
-        Note: The restore currently adds the items back into the queue
-        using the URI, for items the Sonos system already knows about
-        this is OK, but for other items, they may be missing some of
-        their metadata as it will not be automatically picked up
+        Note:
+            The restore currently adds the items back into the queue
+            using the URI, for items the Sonos system already knows about
+            this is OK, but for other items, they may be missing some of
+            their metadata as it will not be automatically picked up.
         """
         if self.queue is not None:
             # Clear the queue so that it can be reset
