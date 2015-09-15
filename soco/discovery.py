@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-"""Discovery of Sonos devices on the network."""
+"""This module contains methods for discovering Sonos devices on the
+network."""
 
 from __future__ import unicode_literals
 
@@ -20,30 +21,33 @@ _LOG = logging.getLogger(__name__)
 def discover(timeout=1, include_invisible=False, interface_addr=None):
     """Discover Sonos zones on the local network.
 
-    Return an set of SoCo instances for each zone found.
+    Return an set containing a `SoCo` instance for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
-    `include_invisible` is True. Will block for up to `timeout` seconds, after
-    which return `None` if no zones found.
+    `include_invisible` is `True`. Will block for up to `timeout` seconds,
+    after which return `None` if no zones found.
 
     Args:
-        timeout (int): block for this many seconds, at most. Default 1
-        include_invisible (bool): include invisible zones in the return set.
-            Default False
-        interface_addr (str): Discovery operates by sending UDP multicast
-            datagrams. interface_addr is a string (dotted quad) representation
-            of the network interface address to use as the source of the
-            datagrams (i.e. it is a value for IP_MULTICAST_IF). If None or not
-            specified, the system default interface for UDP multicast messages
-            will be used. This is probably what you want to happen.
+        timeout (int, optional): block for this many seconds, at most.
+            Defaults to 1.
+        include_invisible (bool, optional): include invisible zones in the
+            return set. Defaults to `False`.
+        interface_addr (str or None): Discovery operates by sending UDP
+            multicast datagrams. ``interface_addr`` is a string (dotted quad)
+            representation of the network interface address to use as the
+            source of the datagrams (i.e. it is a value for
+            `IP_MULTICAST_IF`). If `None` or not specified, the system default
+            interface for UDP multicast messages will be used. This is
+            probably what you want to happen. Defaults to `None`.
 
     Returns:
-        (set): a set of SoCo instances, one for each zone found, or else None.
+        set: a set of `SoCo` instances, one for each zone found, or else
+            `None`.
 
     Note:
         There is no easy cross-platform way to find out the addresses of the
         local machine's network interfaces. You might try the
         `netifaces module <https://pypi.python.org/pypi/netifaces>`_ and some
-        code like this::
+        code like this:
 
             >>> from netifaces import interfaces, AF_INET, ifaddresses
             >>> data = [ifaddresses(i) for i in interfaces()]
@@ -143,13 +147,13 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 def any_soco():
     """Return any soco device, for when it doesn't matter which.
 
-    Try to obtain an existing instance, or use discover if necessary.
+    Try to obtain an existing instance, or use `discover` if necessary.
     Note that this assumes that the existing instance has not left
     the network.
 
     Returns:
-        (SoCo): A SoCo instance (or subclass if config.SOCO_CLASS is set,
-        or None if no instances are found
+        SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set,
+            or `None` if no instances are found
     """
 
     cls = config.SOCO_CLASS
