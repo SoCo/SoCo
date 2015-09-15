@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=fixme
 
-"""Classes for handling SoCo's basis SOAP requirements.
+"""Classes for handling SoCo's basic SOAP requirements.
 
-This module does not handle anything like the full SOAP specification, but is
-enough for SoCo's needs.
-
-Sonos uses SOAP for UPnP communications, and for communication with third party
-music services.
+This module does not handle anything like the full `SOAP Specification
+<http://www.w3.org/TR/soap/>`_ , but is enough for SoCo's needs. Sonos uses
+SOAP for UPnP communications, and for communication with third party music
+services.
 """
 
 # The state of Python's SOAP libraries is poor. In any event, the two main
@@ -46,12 +45,13 @@ class SoapFault(SoCoException):
     """An exception encapsulating a SOAP Fault."""
 
     def __init__(self, faultcode, faultstring, detail=None):
-        """ Args:
-                faultcode (str): The SOAP faultcode
-                faultstring (str): The SOAP faultstring
-                detail (Element): The SOAP fault detail, as an ElementTree
-                     Element. Default, None
-
+        """
+        Args:
+            faultcode (str): The SOAP faultcode.
+            faultstring (str): The SOAP faultstring.
+            detail (:class:`~xml.etree.ElementTree.Element`): The SOAP fault
+                detail, as an ElementTree
+                :class:`~xml.etree.ElementTree.Element`. Defaults to `None`.
         """
         self.faultcode = faultcode
         self.faultstring = faultstring
@@ -103,31 +103,33 @@ class SoapMessage(object):
 
     """A SOAP Message representing a remote procedure call.
 
-    Uses the Requests library for communication with a SOAP server.
+    Uses the `Requests <http://www.python-requests.org/en/latest/>`_ library
+    for communication with a SOAP server.
     """
 
     def __init__(self, endpoint, method, parameters=None, http_headers=None,
                  soap_action=None, soap_header=None, namespace=None,
                  **request_args):
-        """ Args:
-                endpoint (str): The SOAP endpoint URL for this client
-                method (str): The name of the method to call
-                parameters (list): A list of (name, value) tuples containing
-                    the parameters to pass to the method. Default None
-                http_headers (dict): A dict in the form {'Header': 'Value,..}
-                    containing http headers to use for the http request.
-                    Content-type and SOAPACTION headers will be created
-                    automatically, so do not include them here. Use this, for
-                    example, to set a user-agent.
-                soap_action (str): The value of the SOAPACTION header.
-                    Default NONE
-                soap_header (str): A string representation of the XML to be
-                    used for the SOAP Header. Default None
-                namespace (str): The namespace URI to use for the method and
-                    parameters. None, by default.
-                **request_args: Other keyword parameters will be passed to the
-                    Requests request which is used to handle the http
-                    communication. For example, a timeout value can be set.
+        """
+        Args:
+            endpoint (str): The SOAP endpoint URL for this client.
+            method (str): The name of the method to call.
+            parameters (list): A list of (name, value) tuples containing
+                the parameters to pass to the method. Default `None`.
+            http_headers (dict): A dict in the form {'Header': 'Value,..}
+                containing http headers to use for the http request.
+                Content-type and SOAPACTION headers will be created
+                automatically, so do not include them here. Use this, for
+                example, to set a user-agent.
+            soap_action (str): The value of the SOAPACTION header.
+                Default 'None`.
+            soap_header (str): A string representation of the XML to be
+                used for the SOAP Header. Default `None`.
+            namespace (str): The namespace URI to use for the method and
+                parameters. `None`, by default.
+            **request_args: Other keyword parameters will be passed to the
+                Requests request which is used to handle the http
+                communication. For example, a timeout value can be set.
         """
         self.endpoint = endpoint
         self.method = method
@@ -140,7 +142,18 @@ class SoapMessage(object):
 
     # pylint:disable=no-self-use
     def prepare_headers(self, http_headers, soap_action):
-        """Prepare the http headers for sending."""
+        """Prepare the http headers for sending.
+
+        Add the SOAPACTION header to the others.
+
+        Args:
+            http_headers (dict): A dict in the form {'Header': 'Value,..}
+                containing http headers to use for the http request.
+            soap_action (str): The value of the SOAPACTION header.
+
+        Returns:
+            dict: headers including the SOAPACTION header.
+        """
 
         headers = {'Content-Type': 'text/xml; charset="utf-8"'}
         if soap_action is not None:
@@ -150,7 +163,17 @@ class SoapMessage(object):
         return headers
 
     def prepare_soap_header(self, soap_header):
-        """Prepare the SOAP header for sending."""
+        """Prepare the SOAP header for sending.
+
+        Wraps the soap header in appropriate tags.
+
+        Args:
+            soap_header (str): A string representation of the XML to be
+                used for the SOAP Header
+
+        Returns:
+            str: The soap header wrapped in appropriate tags.
+        """
 
         if soap_header is not None:
             return '<s:Header>{0}</s:Header>'.format(soap_header)
@@ -158,7 +181,17 @@ class SoapMessage(object):
             return ''
 
     def prepare_soap_body(self, method, parameters, namespace):
-        """Prepare the SOAP message body for sending."""
+        """Prepare the SOAP message body for sending.
+
+        Args:
+            method (str): The name of the method to call.
+            parameters (list): A list of (name, value) tuples containing
+                the parameters to pass to the method.
+            namespace (str): tThe XML namespace to use for the method.
+
+        Returns:
+            str: A properly formatted SOAP Body.
+        """
 
         tags = []
         for name, value in parameters:
@@ -189,7 +222,17 @@ class SoapMessage(object):
         return soap_body
 
     def prepare_soap_envelope(self, prepared_soap_header, prepared_soap_body):
-        """Prepare the SOAP Envelope for sending."""
+        """Prepare the SOAP Envelope for sending.
+
+        Args:
+            prepared_soap_header (str): A SOAP Header prepared by
+                `prepare_soap_header`
+            prepared_soap_body (str): A SOAP Body prepared by
+                `prepare_soap_body`
+
+        Returns:
+            str: A prepared SOAP Envelope
+        """
 
         # pylint: disable=bad-continuation
         soap_env_template = (
@@ -217,7 +260,18 @@ class SoapMessage(object):
         return (headers, data)
 
     def call(self):
-        """Call the SOAP method on the server."""
+        """Call the SOAP method on the server.
+
+        Returns:
+            str: the decapusulated SOAP response from the server,
+                still encoded as utf-8.
+
+        Raises:
+            SoapFault: if a SOAP error occurs.
+            :class:`~requests.exceptions.HTTPError`: if an http error
+                occurs.
+
+        """
 
         headers, data = self.prepare()
 
