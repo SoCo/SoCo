@@ -570,11 +570,11 @@ class MusicService(object):
         # MusicService.get_metadata() result (though for Spotify the mime-type
         # is audio/x-spotify, and there is no extension. See
         # http://musicpartners.sonos.com/node/464 for supported mime-types and
-        # related extensions). The scheme ( x-sonos-http) presumably
+        # related extensions). The scheme (x-sonos-http) presumably
         # indicates how the player is to obtain the stream for playing. It
         # is not clear what the flags param is used for (perhaps bitrate,
         # or certain metadata such as canSkip?). Fortunately, none of these
-        # seems to be necessary. We can leave them out, (or in teh case of
+        # seems to be necessary. We can leave them out, (or in the case of
         # the scheme, use 'soco' as dummy text, and the players still seem
         # to do the right thing.
 
