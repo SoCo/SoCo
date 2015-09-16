@@ -3,11 +3,12 @@
 
 """Classes representing Sonos UPnP services.
 
->>> s = SoCo('192.168.1.102')
->>> print s.RenderingControl.GetMute([('InstanceID', 0),
-...     ('Channel', 'Master')])
-
->>> r = s.ContentDirectory.Browse([
+>>> import soco
+>>> device = soco.SoCo('192.168.1.102')
+>>> print(RenderingControl(device).GetMute([('InstanceID', 0),
+...     ('Channel', 'Master')]))
+{'CurrentMute': '0'}
+>>> r = ContentDirectory(device).Browse([
 ...    ('ObjectID', 'Q:0'),
 ...    ('BrowseFlag', 'BrowseDirectChildren'),
 ...    ('Filter', '*'),
@@ -15,11 +16,15 @@
 ...    ('RequestedCount', '100'),
 ...    ('SortCriteria', '')
 ...    ])
-
->>> print prettify(r['Result'])
-
->>> for action, in_args, out_args in s.QPlay.iter_actions():
-...    print action, in_args, out_args
+>>> print(r['Result'])
+<?xml version="1.0" ?><DIDL-Lite xmlns="urn:schemas-upnp-org:metadata ...
+>>> for action, in_args, out_args in AlarmClock(device).iter_actions():
+...    print(action, in_args, out_args)
+...
+SetFormat [Argument(name='DesiredTimeFormat', vartype='string'), Argument(
+name='DesiredDateFormat', vartype='string')] []
+GetFormat [] [Argument(name='CurrentTimeFormat', vartype='string'),
+Argument(name='CurrentDateFormat', vartype='string')] ...
 """
 
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
@@ -58,7 +63,9 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
 # log.setLevel(logging.INFO)
 
+#: A UPnP Action and its arguments.
 Action = namedtuple('Action', 'name, in_args, out_args')
+#: A UPnP Argument and its type.
 Argument = namedtuple('Argument', 'name, vartype')
 
 # A shared cache for ZoneGroupState. Each zone has the same info, so when a
@@ -71,12 +78,12 @@ zone_group_state_shared_cache = Cache()
 # pylint: disable=too-many-instance-attributes
 class Service(object):
 
-    """An class representing a UPnP service. The base class for all Sonos
-    Service classes.
+    """A class representing a UPnP service.
 
-    This class has a dynamic method dispatcher. Calls to methods which
-    are not explicitly defined here are dispatched automatically to the
-    service action with the same name.
+    This is the base class for all Sonos Service classes. This class has a
+    dynamic method dispatcher. Calls to methods which are not explicitly
+    defined here are dispatched automatically to the service action with the
+    same name.
     """
     # pylint: disable=bad-continuation
     soap_body_template = (
@@ -92,24 +99,36 @@ class Service(object):
         '</s:Envelope>')  # noqa PEP8
 
     def __init__(self, soco):
+        """
+        Args:
+            soco (SoCo): A `SoCo` instance to which the UPnP Actions will be
+                sent
+        """
+
+        #: `SoCo`: The `SoCo` instance to which UPnP Actions are sent
         self.soco = soco
         # Some defaults. Some or all these will need to be overridden
         # specifically in a sub-class. There is other information we could
         # record, but this will do for the moment. Info about a Sonos device is
         # available at <IP_address>/xml/device_description.xml in the
         # <service> tags
+
+        #: str: The UPnP service type.
         self.service_type = self.__class__.__name__
+        #: str: The UPnP service version.
         self.version = 1
         self.service_id = self.service_type
+        #: str: The base URL for sending UPnP Actions.
         self.base_url = 'http://{0}:1400'.format(self.soco.ip_address)
+        #: str: The UPnP Control URL.
         self.control_url = '/{0}/Control'.format(self.service_type)
-        # Service control protocol description
+        #: str: The service control protocol description URL.
         self.scpd_url = '/xml/{0}{1}.xml'.format(
             self.service_type, self.version)
-        # Eventing subscription
+        #: str: The service eventing subscription URL.
         self.event_subscription_url = '/{0}/Event'.format(self.service_type)
         #: A cache for storing the result of network calls. By default, this is
-        #: TimedCache(default_timeout=0). See :class:`TimedCache`
+        #: a `TimedCache` with a default timeout=0.
         self.cache = Cache(default_timeout=0)
 
         # From table 3.3 in
@@ -144,11 +163,15 @@ class Service(object):
         }
 
     def __getattr__(self, action):
-        """A Python magic method which is called whenever an undefined method
-        is invoked on the instance.
+        """Called when a method on the instance cannot be found.
 
-        The name of the unknown method called is passed as a parameter,
-        and the return value is the callable to be invoked.
+        Causes an action to be sent to UPnP server. See also
+        `object.__getattr__`.
+
+        Args:
+            action (str): The name of the unknown method.
+        Returns:
+            callable: The callable to be invoked. .
         """
 
         # Define a function to be invoked as the method, which calls
@@ -178,17 +201,21 @@ class Service(object):
     def wrap_arguments(args=None):
         """Wrap a list of tuples in xml ready to pass into a SOAP request.
 
-        args is a list of (name, value) tuples specifying the name of each
-        argument and its value, eg [('InstanceID', 0), ('Speed', 1)]. The value
-        can be a string or something with a string representation. The
-        arguments are escaped and wrapped in <name> and <value> tags.
+        Args:
+            args (list):  a list of (name, value) tuples specifying the
+                name of each argument and its value, eg
+                ``[('InstanceID', 0), ('Speed', 1)]``. The value
+                can be a string or something with a string representation. The
+                arguments are escaped and wrapped in <name> and <value> tags.
 
-        >>> from soco import SoCo
-        >>> device = SoCo('192.168.1.101')
-        >>> s = Service(device)
-        >>> s.wrap_arguments([('InstanceID', 0), ('Speed', 1)])
-        <InstanceID>0</InstanceID><Speed>1</Speed>'
-        """
+        Example:
+
+            >>> from soco import SoCo
+            >>> device = SoCo('192.168.1.101')
+            >>> s = Service(device)
+            >>> print(s.wrap_arguments([('InstanceID', 0), ('Speed', 1)]))
+            <InstanceID>0</InstanceID><Speed>1</Speed>'
+            """
         if args is None:
             args = []
 
@@ -207,8 +234,11 @@ class Service(object):
     def unwrap_arguments(xml_response):
         """Extract arguments and their values from a SOAP response.
 
-        Given an soap/xml response, return a dict of {argument_name,
-        value)} items
+        Args:
+            xml_response (str):  SOAP/xml response text (unicode,
+                not utf-8).
+        Returns:
+             dict: a dict of ``{argument_name, value)}`` items.
         """
 
         # A UPnP SOAP response (including headers) looks like this:
@@ -249,11 +279,17 @@ class Service(object):
     def build_command(self, action, args=None):
         """Build a SOAP request.
 
-        Given the name of an action (a string as specified in the service
-        description XML file) to be sent, and the relevant arguments as a list
-        of (name, value) tuples, return a tuple containing the POST headers (as
-        a dict) and a string containing the relevant SOAP body. Does not set
-        content-length, or host headers, which are completed upon sending.
+        Args:
+            action (str): the name of an action (a string as specified in the
+                service description XML file) to be sent.
+            args (list, optional): Relevant arguments as a list of (name,
+                value) tuples.
+
+        Returns:
+            tuple: a tuple containing the POST headers (as a dict) and a
+                string containing the relevant SOAP body. Does not set
+                content-length, or host headers, which are completed upon
+                sending.
         """
 
         # A complete request should look something like this:
@@ -296,24 +332,32 @@ class Service(object):
     def send_command(self, action, args=None, cache=None, cache_timeout=None):
         """Send a command to a Sonos device.
 
-        Given the name of an action (a string as specified in the service
-        description XML file) to be sent, and the relevant arguments as a list
-        of (name, value) tuples, send the command to the Sonos device. args
-        can be empty.
+        Args:
+            action (str): the name of an action (a string as specified in the
+                service description XML file) to be sent.
+            args (list, optional): Relevant arguments as a list of (name,
+                value) tuples.
+            cache (Cache): A cache is operated so that the result will be
+                stored for up to `cache_timeout` seconds, and a subsequent
+                call with the same arguments within that period will be
+                returned from the cache, saving a further network call. The
+                cache may be invalidated or even primed from another thread
+                (for example if a UPnP event is received to indicate that
+                the state of the Sonos device has changed). If
+                `cache_timeout` is missing or `None`, the cache will use a
+                default value (which may be 0 - see `cache`). By default,
+                the cache identified by the service's `cache` attribute will
+                be used, but a different cache object may be specified in
+                the `cache` parameter.
 
-        A cache is operated so that the result will be stored for up to
-        `cache_timeout` seconds, and a subsequent call with the same arguments
-        within that period will be returned from the cache, saving a further
-        network call. The cache may be invalidated or even primed from another
-        thread (for example if a UPnP event is received to indicate that the
-        state of the Sonos device has changed). If `cache_timeout` is missing
-        or `None`, the cache will use a default value (which may be 0 - see
-        :attribute:`cache`). By default, the cache identified by the service's
-        :attribute:`cache` attribute will be used, but a different cache object
-        may be specified in the `cache` parameter.
+        Returns:
+             dict: a dict of ``{argument_name, value)}`` items.
 
-        Return a dict of {argument_name, value)} items or True on success.
-        Raise an exception on failure.
+        Raises:
+            `SoCoUPnPException`: if a SOAP error occurs.
+            `UnknownSoCoException`: if an unknonwn UPnP error occurs.
+            :class:`~requests.exceptions.HTTPError`: if an http error
+
         """
         if cache is None:
             cache = self.cache
@@ -362,9 +406,10 @@ class Service(object):
     def handle_upnp_error(self, xml_error):
         """Disect a UPnP error, and raise an appropriate exception.
 
-        xml_error is a unicode string containing the body of the
-        UPnP/SOAP Fault response. Raises an exception containing the
-        error code
+        Args:
+            xml_error (str):  a unicode string containing the body of the
+                UPnP/SOAP Fault response. Raises an exception containing the
+                error code.
         """
 
         # An error code looks something like this:
@@ -421,16 +466,23 @@ class Service(object):
             self, requested_timeout=None, auto_renew=False, event_queue=None):
         """Subscribe to the service's events.
 
-        If requested_timeout is provided, a subscription valid for that number
-        of seconds will be requested, but not guaranteed. Check
-        :attrib:`Subscription.timeout` on return to find out what period of
-        validity is actually allocated. If auto_renew is True, the subscription
-        will be automatically renewed just before it expires, if possible
+        Args:
+            requested_timeout (int, optional): If requested_timeout is
+                provided, a subscription valid for that
+                number of seconds will be requested, but not guaranteed. Check
+                `Subscription.timeout` on return to find out what period of
+                validity is actually allocated.
+            auto_renew (bool): If auto_renew is `True`, the subscription will
+                automatically be renewed just before it expires, if possible.
+                Default is `False`.
 
-        event_queue is a thread-safe queue object onto which events will be
-        put. If None, a Queue object will be created and used.
+            event_queue (:class:`~queue.Queue`): a thread-safe queue object on
+                which received events will be put. If not specified,
+                a (:class:`~queue.Queue`) will be created and used.
 
-        Returns a Subscription object, representing the new subscription
+        Returns:
+            `Subscription`: an insance of `Subscription`, representing
+                the new subscription.
 
         To unsubscribe, call the `unsubscribe` method on the returned object.
         """
@@ -459,17 +511,22 @@ class Service(object):
         pass
 
     def iter_actions(self):
-        """Yield the service's actions with their in_arguments (ie parameters
-        to pass to the action) and out_arguments (ie returned values).
+        """Yield the service's actions with their arguments.
 
-        Each action is an Action namedtuple, consisting of action_name (a
-        string), in_args (a list of Argument namedtuples consisting of name and
-        argtype), and out_args (ditto), eg:
+        Yields:
+            `Action`: the next action.
 
-        Action(name='SetFormat',
-            in_args=[Argument(name='DesiredTimeFormat', vartype='string'),
-                     Argument(name='DesiredDateFormat', vartype='string')],
-            out_args=[])
+        Each action is an Action `namedtuple`, consisting of action_name
+        (a string), in_args (a list of Argument namedtuples consisting of name
+        and argtype), and out_args (ditto), eg::
+
+            Action(
+                name='SetFormat',
+                in_args=[
+                    Argument(name='DesiredTimeFormat', vartype='string'),
+                    Argument(name='DesiredDateFormat', vartype='string')],
+                out_args=[]
+            )
         """
 
         # pylint: disable=too-many-locals
@@ -513,9 +570,10 @@ class Service(object):
                     yield Action(action_name, in_args, out_args)
 
     def iter_event_vars(self):
-        """Yield an iterator over the services eventable variables.
+        """Yield the services eventable variables.
 
-        Yields a tuple of (variable name, data type)
+        Yields:
+            `tuple`: a tuple of (variable name, data type).
         """
 
         # pylint: disable=invalid-name
