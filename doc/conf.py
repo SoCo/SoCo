@@ -34,6 +34,9 @@ needs_sphinx = '1.3'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.extlinks',
+    'sphinx.ext.inheritance_diagram',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
@@ -115,8 +118,18 @@ todo_include_todos = True
 
 # Allow auto links into the Python docs
 intersphinx_mapping = {'python': ('https://docs.python.org/3', None)}
+    'requests': ('http://www.python-requests.org/en/latest/', None)
+}
 
-# Document members by default
+# Shortcuts to Github Issues etc. Use them like this:
+# :issue:`123` (which will generate a link to issue 123)
+extlinks = {
+    'issue': ('https://github.com/SoCo/SoCo/issues/%s', '#'),
+    'PR': ('https://github.com/SoCo/SoCo/pull/%s', '#')
+}
+
+# Document members by default, and in source order. This allows the stub files
+# in the api directory to be much shorter.
 autodoc_default_flags = ['members']
 
 # Concatenate the class and __init__ docstrings
