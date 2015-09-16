@@ -25,6 +25,7 @@ black lines are the lines of inheritance, going from the top down.
 
 .. _figure-inheritance:
 .. inheritance-diagram:: soco.data_structures
+   :parts: 1
 
 All data structures are subclasses of the abstract :py:class:`Didl Object item <soco.data_structures.DidlObject>` class. You should never need to instantiate this directly. The subclasses are divided into :py:class:`Containers <soco.data_structures.DidlContainer>` and :py:class:`Items <soco.data_structures.DidlItem>`. In general, :py:class:`Containers <soco.data_structures.DidlContainer>` are things, like playlists, which are intended to contain other items.
 

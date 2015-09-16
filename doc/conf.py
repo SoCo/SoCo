@@ -107,7 +107,7 @@ default_role = 'any'
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-# modindex_common_prefix = []
+modindex_common_prefix = ['soco.', 'soco.music_services.']
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 keep_warnings = True
@@ -115,7 +115,7 @@ keep_warnings = True
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
-# Allow auto links into the Python docs
+# Allow auto links into the Python and Requests docs
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
     'requests': ('http://www.python-requests.org/en/latest/', None)
@@ -131,9 +131,20 @@ extlinks = {
 # Document members by default, and in source order. This allows the stub files
 # in the api directory to be much shorter.
 autodoc_default_flags = ['members']
+autodoc_member_order = 'bysource'
 
 # Concatenate the class and __init__ docstrings
 autoclass_content = 'both'
+
+# Nicer inheritance graphs for RTD theme.  NB the image map does not rescale
+# properly, so we have had to add some javascript to handle it.  See
+# _templates and _static
+inheritance_node_attrs = dict(
+    fontsize=14, height=0.75, color='dodgerblue', style='rounded',
+)
+inheritance_graph_attrs = dict(
+    rankdir="LR", size='""',
+)
 
 # -- Options for HTML output ----------------------------------------------
 

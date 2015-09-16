@@ -21,6 +21,7 @@ import sys
 import textwrap
 import warnings
 
+from .compat import with_metaclass
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
 from .xml import (
@@ -62,7 +63,7 @@ def to_didl_string(*args):
 def from_didl_string(string):
     """Convert a unicode xml string to a list of DIDLObjects.
 
-    Arg:
+    Args:
         string (str): A unicode string containing an xml representation of one
             or more DIDL-Lite items (in the form  <DIDL-Lite ...>
             ...</DIDL-Lite> )
@@ -153,7 +154,7 @@ class DidlResource(object):
     def from_element(cls, element):
         """Set the resource properties from a <res> element.
 
-        Arg:
+        Args:
             element (Element): An ElementTree Element
         """
         def _int_helper(name):
@@ -265,7 +266,7 @@ class DidlResource(object):
 
         An alternative constructor. Equivalent to DidlResource(**content).
 
-        Arg:
+        Args:
             content (dict): Dict containing metadata information. Required and
             valid arguments are the same as for the ``__init__`` method.
         """
@@ -310,10 +311,8 @@ class DidlMetaClass(type):
             _DIDL_CLASS_TO_CLASS[item_class] = new_cls
         return new_cls
 
-
 # Py2/3 compatible way of declaring the metaclass
-class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
-
+class DidlObject(with_metaclass(DidlMetaClass, object)):
     """Abstract base class for all DIDL-Lite items.
 
     You should not need to instantiate this.
@@ -325,7 +324,6 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
             attribute names and XML tags/namespaces. It also serves to define
             the allowed tags/attributes for this instance. Overridden and
             extended by subclasses.
-
     """
 
     item_class = 'object'
@@ -400,7 +398,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
         An alternative constructor. The element must be a DIDL-Lite <item> or
         <container> element, and must be properly namespaced.
 
-        Arg:
+        Args:
             xml (Element): An :py:class:`xml.etree.ElementTree.Element` object.
         """
         # We used to check here that we have the right sort of element,
@@ -476,7 +474,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
         An alternative constructor. Equivalent to DidlObject(**content).
 
-        Arg:
+        Args:
             content (dict): Dict containing metadata information.Required and
             valid arguments are the same as for the ``__init__`` method.
         """
@@ -566,7 +564,7 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
     def to_element(self, include_namespaces=False):
         """Return an ElementTree Element representing this instance.
 
-        Arg:
+        Args:
             include_namespaces (bool, optional): If True, include xml
                 namespace attributes on the root element
 
