@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=R0913,W0142
 
 """Spotify Plugin."""
 

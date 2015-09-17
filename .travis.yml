@@ -2,9 +2,9 @@ language: python
 python:
   - "2.6"
   - "2.7"
-  - "3.2"
   - "3.3"
   - "3.4"
+  - "3.5"
   - "pypy"
 
 install:
@@ -13,10 +13,12 @@ install:
   - pip install -e .
 
 script:
-  - make lint
+  - flake8 soco
+  # Pylint no longer supports Python 2.6, so only run it if not 2.6
+  - if [[ $TRAVIS_PYTHON_VERSION != '2.6' ]]; then pylint soco; fi
   - py.test --cov-config .coveragerc --cov soco .
 
 after_script:
   - coveralls
-  
+
 sudo: false

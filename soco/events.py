@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-many-public-methods
 
 """Classes to handle Sonos UPnP Events and Subscriptions."""
 
@@ -191,7 +190,6 @@ class Event(object):
 
         This is not completely foolproof. It just acts as a warning!
         """
-        # pylint: disable=unused-argument, no-self-use
         raise TypeError('Event object does not support attribute assignment')
 
 
@@ -385,7 +383,6 @@ class Subscription(object):
             a thread."""
 
             def __init__(self, interval, stop_flag, sub, *args, **kwargs):
-                # pylint: disable=bad-super-call
                 super(AutoRenewThread, self).__init__(*args, **kwargs)
                 self.interval = interval
                 self.sub = sub

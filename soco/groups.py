@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=too-few-public-methods
 
 """Classes and functionality relating to Sonos Groups."""
 

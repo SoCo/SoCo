@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-import, invalid-name, no-member
+# pylint: disable=invalid-name
 
 """Module that contains XML related utility functions."""
 

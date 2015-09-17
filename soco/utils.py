@@ -19,7 +19,7 @@ from .xml import XML
 def really_unicode(in_string):
     """Ensures s is returned as a unicode string and not just a string through
     a series of progressively relaxed decodings."""
-    if type(in_string) is StringType:
+    if isinstance(in_string, StringType):
         for args in (('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
                 # pylint: disable=star-args
@@ -27,7 +27,7 @@ def really_unicode(in_string):
                 break
             except UnicodeDecodeError:
                 continue
-    if type(in_string) is not UnicodeType:
+    if not isinstance(in_string, UnicodeType):
         raise ValueError('%s is not a string at all.' % in_string)
     return in_string
 
@@ -101,7 +101,7 @@ class deprecated(object):
     """
     # pylint really doesn't like decorators!
     # pylint: disable=invalid-name, too-few-public-methods
-    # pylint: disable=no-member, missing-docstring
+    # pylint: disable=missing-docstring
 
     def __init__(self, since, alternative=None, will_be_removed_in=None):
         self.since_version = since

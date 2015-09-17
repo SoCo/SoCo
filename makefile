@@ -1,6 +1,6 @@
 
 lint: soco
-	flake8 --ignore=E402 soco
+	flake8 soco
 	pylint soco
 
 test:

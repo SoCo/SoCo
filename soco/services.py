@@ -194,7 +194,6 @@ class Service(object):
 
         tags = []
         for name, value in args:
-            # pylint: disable=bad-format-string
             tag = "<{name}>{value}</{name}>".format(
                 name=name, value=escape("%s" % value, {'"': "&quot;"}))
             # % converts to unicode because we are using unicode literals.
@@ -279,7 +278,6 @@ class Service(object):
         # </s:Envelope>
 
         arguments = self.wrap_arguments(args)
-        # pylint: disable=bad-format-string
         body = self.soap_body_template.format(
             arguments=arguments, action=action, service_type=self.service_type,
             version=self.version)

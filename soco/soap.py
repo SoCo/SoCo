@@ -97,7 +97,6 @@ class SoapFault(SoCoException):
 # </s:Envelope>
 
 # pylint: disable=too-many-instance-attributes, too-many-arguments
-# pylint: disable=no-self-use, fixme
 
 
 class SoapMessage(object):
@@ -139,6 +138,7 @@ class SoapMessage(object):
         self.namespace = namespace
         self.request_args = request_args
 
+    # pylint:disable=no-self-use
     def prepare_headers(self, http_headers, soap_action):
         """Prepare the http headers for sending."""
 
@@ -162,7 +162,6 @@ class SoapMessage(object):
 
         tags = []
         for name, value in parameters:
-            # pylint: disable=bad-format-string
             tag = "<{name}>{value}</{name}>".format(
                 name=name, value=escape("%s" % value, {'"': "&quot;"}))
             # % converts to unicode because we are using unicode literals.

@@ -131,8 +131,6 @@ class Account(object):
         # ...
         #   <Accounts />
 
-        # pylint: disable=protected-access
-
         xml_accounts = root.findall('.//Account')
         result = {}
         for xml_account in xml_accounts:
