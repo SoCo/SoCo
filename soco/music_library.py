@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 
-"""Music Library access."""
+"""Access to the Music Library.
+
+The Music Library is the collection of music stored on your local network.
+For access to third party music streaming services, see the
+`music_service` module."""
 
 from __future__ import unicode_literals
 
@@ -19,11 +23,9 @@ from .utils import url_escape_path, really_unicode, camel_to_underscore
 
 _LOG = logging.getLogger(__name__)
 
-# pylint: disable=protected-access
-
 
 class MusicLibrary(object):
-    """The Music Library """
+    """The Music Library."""
 
     # Key words used when performing searches
     SEARCH_TRANSLATION = {'artists': 'A:ARTIST',
@@ -37,12 +39,13 @@ class MusicLibrary(object):
                           'sonos_playlists': 'SQ:',
                           'categories': 'A:'}
 
-    # pylint: disable=invalid-name
+    # pylint: disable=invalid-name, protected-access
     def __init__(self, soco=None):
         """
          Args:
-             soco (SoCo), optional: A SoCo instance to query for music library
-             information. If None, or not supplied, a random SoCo will be used.
+             soco (`SoCo`, optional): A `SoCo` instance to query for music
+                 library information. If `None`, or not supplied, a random
+                 `SoCo` instance will be used.
         """
         self.soco = soco if soco is not None else discovery.any_soco()
         self.contentDirectory = soco.contentDirectory
@@ -50,9 +53,12 @@ class MusicLibrary(object):
     def _build_album_art_full_uri(self, url):
         """Ensure an Album Art URI is an absolute URI.
 
-        :param url: The album art URI
-        """
+        Args:
+             url (str): the album art URI.
 
+        Returns:
+            str: An absolute URI.
+        """
         # Add on the full album art link, as the URI version
         # does not include the ipaddress
         if not url.startswith(('http:', 'https:')):
@@ -60,66 +66,74 @@ class MusicLibrary(object):
         return url
 
     def get_artists(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='artists'`. For details on remaining arguments refer
-        to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='artists'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['artists'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_album_artists(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='album_artists'`. For details on remaining arguments
-        refer to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='album_artists'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['album_artists'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_albums(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='albums'`. For details on remaining arguments refer
-        to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='albums'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['albums'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_genres(self, *args, **kwargs):
-        """ onvenience method for :py:meth:`get_music_library_information`
-        with `search_type='genres'`. For details on remaining arguments refer
-        to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='genres'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['genres'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_composers(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='composers'`. For details on remaining arguments
-        refer to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='composers'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['composers'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_tracks(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='tracks'`. For details on remaining arguments refer
-        to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='tracks'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
         args = tuple(['tracks'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_playlists(self, *args, **kwargs):
-        """Convenience method for :py:meth:`get_music_library_information`
-        with `search_type='playlists'`. For details on remaining arguments
-        refer to the docstring for that method.
+        """Convenience method for `get_music_library_information`
+        with ``search_type='playlists'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
-        NOTE: The playlists that are referred to here are the playlist (files)
-        imported from the music library, they are not the Sonos playlists.
+        Note:
+            The playlists that are referred to here are the playlists imported
+            from the music library, they are not the Sonos playlists.
 
         """
         args = tuple(['playlists'] + list(args))
@@ -138,24 +152,24 @@ class MusicLibrary(object):
         e.g. tracks, albums etc., from the music library with. It can be used
         in a few different ways:
 
-        The **search_term** argument performs a fuzzy search on that string in
+        The ``search_term`` argument performs a fuzzy search on that string in
         the results, so e.g calling::
 
-          get_music_library_items('artist', search_term='Metallica')
+            get_music_library_items('artist', search_term='Metallica')
 
         will perform a fuzzy search for the term 'Metallica' among all the
         artists.
 
-        Using the **subcategories** argument, will jump directly into that
+        Using the ``subcategories`` argument, will jump directly into that
         subcategory of the search and return results from there. So. e.g
         knowing that among the artist is one called 'Metallica', calling::
 
-          get_music_library_items('artist', subcategories=['Metallica'])
+            get_music_library_items('artist', subcategories=['Metallica'])
 
         will jump directly into the 'Metallica' sub category and return the
         albums associated with Metallica and::
 
-          get_music_library_items('artist', subcategories=['Metallica',
+            get_music_library_items('artist', subcategories=['Metallica',
                                                            'Black'])
 
         will return the tracks of the album 'Black' by the artist 'Metallica'.
@@ -163,11 +177,11 @@ class MusicLibrary(object):
         It is also possible to combine the two, to perform a fuzzy search in a
         sub category.
 
-        The **start**, **max_items** and **complete_result** arguments all
-        has to do with paging of the results. Per default, the searches are
+        The ``start``, ``max_items`` and ``complete_result`` arguments all
+        have to do with paging of the results. By default the searches are
         always paged, because there is a limit to how many items we can get at
-        a time. This paging is exposed to the user with the start and max_items
-        arguments. So calling::
+        a time. This paging is exposed to the user with the ``start`` and
+        ``max_items`` arguments. So calling::
 
           get_music_library_items('artists', start=0, max_items=100)
           get_music_library_items('artists', start=100, max_items=100)
@@ -175,44 +189,56 @@ class MusicLibrary(object):
         will get the first and next 100 items, respectively. It is also
         possible to ask for all the elements at once::
 
-          get_music_library_items('artists', complete_result=True)
+            get_music_library_items('artists', complete_result=True)
 
         This will perform the paging internally and simply return all the
         items.
 
-        :param search_type: The kind of information to retrieve. Can be one of:
-            'artists', 'album_artists', 'albums', 'genres', 'composers',
-            'tracks', 'share', 'sonos_playlists', and 'playlists', where
-            playlists are the imported file based playlists from the
-            music library
-        :param start: Starting number of returned matches (zero based).
-        :param max_items: Maximum number of returned matches. NOTE: The maximum
-            may be restricted by the unit, presumably due to transfer
-            size consideration, so check the returned number against the
-            requested.
-        :param full_album_art_uri: If the album art URI should include the
-            IP address
-        :param search_term: A string that will be used to perform a fuzzy
-            search among the search results. If used in combination with
-            subcategories, the fuzzy search will be performed in the
-            subcategory
-        :param subcategories: A list of strings that indicate one or more
-            subcategories to dive into
-        :param complete_result: Will disable paging (ignore start and
-            max_items) and return all results for the search. WARNING! Getting
-            e.g. all the tracks in a large collection might take some time.
-        :returns: A :py:class:`~.soco.data_structures.SearchResult` object
-        :raises: :py:class:`SoCoException` upon errors
+        Args:
 
-        NOTE: The playlists that are returned with the 'playlists' search, are
-        the playlists imported from (files in) the music library, they are not
-        the Sonos playlists.
+            search_type (str):
+                The kind of information to retrieve. Can be one of:
+                ``'artists'``, ``'album_artists'``, ``'albums'``,
+                ``'genres'``, ``'composers'``, ``'tracks'``, ``'share'``,
+                ``'sonos_playlists'``, or ``'playlists'``, where playlists
+                are the imported playlists from the music library.
+            start: (int, optional): starting number of returned matches
+                (zero based). Default 0.
+            max_items (int, optional): Maximum number of returned matches.
+                Default 100.
+            full_album_art_uri (bool):
+                whether the album art URI should be absolute (i.e. including
+                the IP address). Default `False`.
+            search_term (str, optional):
+                a string that will be used to perform a fuzzy search among the
+                search results. If used in combination with subcategories,
+                the fuzzy search will be performed in the subcategory.
+            subcategories (str, optional):
+                A list of strings that indicate one or more subcategories to
+                dive into.
+            complete_result (bool): if `True`, will disable
+                paging (ignore ``start`` and ``max_items``) and return all
+                results for the search.
 
-        The information about the which searches can be performed and the form
-        of the query has been gathered from the Janos project:
-        http://sourceforge.net/projects/janos/ Props to the authors of that
-        project.
+        Warning:
+            Getting e.g. all the tracks in a large collection might
+            take some time.
 
+
+        Returns:
+             `SearchResult`: an instance of `SearchResult`.
+
+        Note:
+            * The maximum numer of results may be restricted by the unit,
+              presumably due to transfer size consideration, so check the
+              returned number against that requested.
+
+            * The playlists that are returned with the ``'playlists'`` search,
+              are the playlists imported from the music library, they
+              are not the Sonos playlists.
+
+        Raises:
+             `SoCoException` upon errors.
         """
         search = self.SEARCH_TRANSLATION[search_type]
 
@@ -265,32 +291,31 @@ class MusicLibrary(object):
 
     def browse(self, ml_item=None, start=0, max_items=100,
                full_album_art_uri=False, search_term=None, subcategories=None):
-        """Browse (get sub-elements) a music library item.
+        """Browse (get sub-elements from) a music library item.
 
-        :param ml_item: The MusicLibraryItem to browse, if left out or passed
-            None, the items at the base level will be returned
-        :type ml_item: MusicLibraryItem
-        :param start: The starting index of the results
-        :type start: int
-        :param max_items: The maximum number of items to return
-        :type max_items: int
-        :param full_album_art_uri: If the album art URI should include the IP
-            address
-        :type full_album_art_uri: bool
-        :param search_term: A string that will be used to perform a fuzzy
-            search among the search results. If used in combination with
-            subcategories, the fuzzy search will be performed on the
-            subcategory. NOTE: Searching will not work if ml_item is None.
-        :type search_term: str
-        :param subcategories: A list of strings that indicate one or more
-            subcategories to dive into. NOTE: Providing sub categories will
-            not work if ml_item is None.
-        :type subcategories: list
-        :returns: A :py:class:`~.soco.data_structures.SearchResult` object
-        :rtype: :py:class:`~.soco.data_structures.SearchResult`
-        :raises: AttributeError: If ``ml_item`` has no ``item_id`` attribute
-            SoCoUPnPException: With ``error_code='701'`` if the item cannot be
-            browsed
+        Args:
+            ml_item (`DidlItem`): the item to browse, if left out or
+                `None`, items at the root level will be searched.
+            start (int): the starting index of the results.
+            max_items (int): the maximum number of items to return.
+            full_album_art_uri (bool): whether the album art URI should be
+                fully qualified with the relevant IP address.
+            search_term (str): A string that will be used to perform a fuzzy
+                search among the search results. If used in combination with
+                subcategories, the fuzzy search will be performed on the
+                subcategory. Note: Searching will not work if ``ml_item`` is
+                `None`.
+            subcategories (list): A list of strings that indicate one or more
+                subcategories to descend into. Note: Providing sub categories
+                will not work if ``ml_item`` is `None`.
+
+        Returns:
+            A `SearchResult` instance.
+
+        Raises:
+            AttributeError: if ``ml_item`` has no ``item_id`` attribute.
+            SoCoUPnPException: with ``error_code='701'`` if the item cannot be
+                browsed.
         """
         if ml_item is None:
             search = 'A:'
@@ -328,28 +353,31 @@ class MusicLibrary(object):
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
-        # pylint: disable=too-many-arguments
-
     def browse_by_idstring(self, search_type, idstring, start=0,
                            max_items=100, full_album_art_uri=False):
-        """Browse (get sub-elements) a given type.
+        """Browse (get sub-elements from) a given music library item,
+        specified by a string.
 
-        :param search_type: The kind of information to retrieve. Can be one of:
-            'artists', 'album_artists', 'albums', 'genres', 'composers',
-            'tracks', 'share', 'sonos_playlists', and 'playlists', where
-            playlists are the imported file based playlists from the
-            music library
-        :param idstring: String ID to search for
-        :param start: Starting number of returned matches
-        :param max_items: Maximum number of returned matches. NOTE: The maximum
-            may be restricted by the unit, presumably due to transfer
-            size consideration, so check the returned number against the
-            requested.
-        :param full_album_art_uri: If the album art URI should include the
-                IP address
-        :returns: A dictionary with metadata for the search, with the
-            keys 'number_returned', 'update_id', 'total_matches' and an
-            'item_list' list with the search results.
+        Args:
+            search_type (str): The kind of information to retrieve. Can be
+                one of: ``'artists'``, ``'album_artists'``, ``'albums'``,
+                ``'genres'``, ``'composers'``, ``'tracks'``, ``'share'``,
+                ``'sonos_playlists'``, and ``'playlists'``, where
+                playlists are the imported file based playlists from the
+                music library.
+            idstring (str): a term to search for.
+            start (int): starting number of returned matches. Default 0.
+            max_items (int): Maximum number of returned matches. Default 100.
+            full_album_art_uri (bool): whether the album art URI should be
+                absolute (i.e. including the IP address). Default `False`.
+
+        Returns:
+            `SearchResult`: a `SearchResult` instance.
+
+        Note:
+            The maximum numer of results may be restricted by the unit,
+            presumably due to transfer size consideration, so check the
+            returned number against that requested.
         """
         search = self.SEARCH_TRANSLATION[search_type]
 
@@ -389,9 +417,9 @@ class MusicLibrary(object):
          ])
 
         Args:
-            search (str): The ID to search
-            start: The index of the forst item to return
-            max_items: The maximum number of items to return
+            search (str): The ID to search.
+            start (int): The index of the forst item to return.
+            max_items (int): The maximum number of items to return.
 
         Returns:
             tuple: (response, metadata) where response is the returned metadata
@@ -415,10 +443,7 @@ class MusicLibrary(object):
 
     @property
     def library_updating(self):
-        """True if the music library is in the process of being updated.
-
-        :returns: True if the music library is in the process of being updated
-        :rtype: bool
+        """bool: whether the music library is in the process of being updated.
         """
         result = self.contentDirectory.GetShareIndexInProgress()
         return result['IsIndexing'] != '0'
@@ -426,8 +451,9 @@ class MusicLibrary(object):
     def start_library_update(self, album_artist_display_option=''):
         """Start an update of the music library.
 
-        If specified, album_artist_display_option changes the album
-        artist compilation setting (see also album_artist_display_option).
+        Args:
+            album_artist_display_option (str): a value for the album
+            artist compilation setting (see `album_artist_display_option`).
         """
         return self.contentDirectory.RefreshShareIndex([
             ('AlbumArtistDisplayOption', album_artist_display_option),
@@ -435,20 +461,17 @@ class MusicLibrary(object):
 
     def search_track(self, artist, album=None, track=None,
                      full_album_art_uri=False):
-        """Search for an artist, artist's albums, or specific track.
+        """Search for an artist, an artist's albums, or specific track.
 
-        :param artist: Artist name
-        :type artist: str
-        :param album: Album name
-        :type album: str
-        :param track: Track name
-        :type track: str
-        :param full_album_art_uri: If the album art URI should include the
-            IP address
-        :type full_album_art_uri: bool
-        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
-        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        Args:
+            artist (str): an artist's name.
+            album (str, optional): an album name. Default `None`.
+            track (str, optional): a track name. Default `None`.
+            full_album_art_uri (bool): whether the album art URI should be
+                absolute (i.e. including the IP address). Default `False`.
 
+        Returns:
+            A `SearchResult` instance.
         """
         subcategories = [artist]
         subcategories.append(album or '')
@@ -462,16 +485,15 @@ class MusicLibrary(object):
         return result
 
     def get_albums_for_artist(self, artist, full_album_art_uri=False):
-        """Get albums for an artist.
+        """Get an artist's albums.
 
-        :param artist: Artist name
-        :type artist: str
-        :param full_album_art_uri: If the album art URI should include the
-            IP address
-        :type full_album_art_uri: bool
-        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
-        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        Args:
+            artist (str): an artist's name.
+            full_album_art_uri: whether the album art URI should be
+                absolute (i.e. including the IP address). Default `False`.
 
+        Returns:
+            A `SearchResult` instance.
         """
         subcategories = [artist]
         result = self.get_album_artists(
@@ -492,18 +514,16 @@ class MusicLibrary(object):
         return result
 
     def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
-        """Get tracks for an artist's album.
+        """Get the tracks of an artist's album.
 
-        :param artist: Artist name
-        :type artist: str
-        :param album: Album name
-        :type album: str
-        :param full_album_art_uri: If the album art URI should include the
-            IP address
-        :type full_album_art_uri: bool
-        :returns: A :py:class:`~.soco.data_structures.SearchResult` object.
-        :rtype: :py:class:`~.soco.data_structures.SearchResult`
+        Args:
+            artist (str): an artist's name.
+            album: (str): an album name.
+            full_album_art_uri: whether the album art URI should be
+                absolute (i.e. including the IP address). Default `False`.
 
+        Returns:
+            A `SearchResult` instance.
         """
         subcategories = [artist, album]
         result = self.get_album_artists(
@@ -515,16 +535,18 @@ class MusicLibrary(object):
 
     @property
     def album_artist_display_option(self):
-        """Return the current value of the album artist compilation
-        setting (see
-        http://www.sonos.com/support/help/3.4/en/sonos_user_guide/
-        Chap07_new/Compilation_albums.htm)
+        """str: The current value of the album artist compilation setting.
 
-        This is a string. Possible values:
+        Possible values are:
 
-        * "WMP" - Use Album Artists
-        * "ITUNES" - Use iTunes® Compilations
-        * "NONE" - Do not group compilations
+        * ``'WMP'`` - use Album Artists
+        * ``'ITUNES'`` - use iTunes® Compilations
+        * ``'NONE'`` - do not group compilations
+
+        See Also:
+            The Sonos `FAQ <https://sonos.custhelp.com
+            /app/answers/detail/a_id/3056/kw/artist%20compilation>`_ on
+            compilation albums.
 
         To change the current setting, call `start_library_update` and
         pass the new setting.
