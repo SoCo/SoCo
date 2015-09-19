@@ -35,14 +35,13 @@ class MusicServiceSoapClient(object):
     """
 
     def __init__(self, endpoint, timeout, music_service):
-        """Initialise the instance.
-
+        """
         Args:
              endpoint (str): The SOAP endpoint. A url.
              timeout (int): Timeout the connection after this number of
-                 seconds
+                 seconds.
              music_service (MusicService): The MusicService object to which
-                 this client belongs
+                 this client belongs.
         """
 
         self.endpoint = endpoint
@@ -77,8 +76,8 @@ class MusicServiceSoapClient(object):
         This header contains all the necessary authentication details.
 
         Returns:
-            (str): A string representation of the XML content of the SOAP
-                header
+            str: A string representation of the XML content of the SOAP
+                header.
         """
 
         # According to the SONOS SMAPI, this header must be sent with all
@@ -125,14 +124,16 @@ class MusicServiceSoapClient(object):
 
         Args:
             method (str): The name of the method to call.
-             args (list): A list of (parameter, value) pairs representing
-                 the parameters of the method. Default None.
+            args (List[Tuple[str, str]] or None): A list of (parameter,
+                value) pairs representing the parameters of the method.
+                Defaults to `None`.
 
         Returns:
-            (OrderedDict): An OrderedDict representing the response
+            ~collections.OrderedDict: An OrderedDict representing the response.
 
         Raises:
-            MusicServiceException
+            `MusicServiceException`: containing details of the error
+                returned by the music service.
         """
         message = SoapMessage(
             endpoint=self.endpoint,
@@ -196,7 +197,7 @@ class MusicService(object):
 
     Example:
 
-        Print all the services Sonos knows about
+        List all the services Sonos knows about:
 
         >>> from soco.music_services import MusicService
         >>> print(MusicService.get_all_music_services_names())
@@ -205,19 +206,19 @@ class MusicService(object):
          ...
          ]
 
-        Or just those to which you are subscribed
+        Or just those to which you are subscribed:
 
         >>> print(MusicService.get_subscribed_services_names())
         ['Spotify', 'radioPup', 'Spreaker']
 
-        Interact with TuneIn
+        Interact with TuneIn:
 
         >>> tunein = MusicService('TuneIn')
         >>> print (tunein)
         <MusicService 'TuneIn' at 0x10ad84e10>
 
-        Browse an item. By default, the root item is used. An OrderedDict is
-        returned.
+        Browse an item. By default, the root item is used. An
+        :class:`~collections.OrderedDict` is returned:
 
         >>> from json import dumps # Used for pretty printing ordereddicts
         >>> print(dumps(tunein.get_metadata(), indent=4)
@@ -255,16 +256,15 @@ class MusicService(object):
                     .png"
                 },
          ...
-
             ]
         }
 
 
-        Interact with Spotify (assuming you are subscribed)
+        Interact with Spotify (assuming you are subscribed):
 
         >>> spotify = MusicService('Spotify')
 
-        Get some metadata about a specific track
+        Get some metadata about a specific track:
 
         >>> response =  spotify.get_media_metadata(
         ... item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
@@ -288,15 +288,14 @@ class MusicService(object):
                     "canAddToFavorites": "true"
                 }
             }
-}
-        or even a playlist
+        }
+        or even a playlist:
 
         >>> response =  spotify.get_metadata(
         ...    item_id='spotify:user:spotify:playlist:0FQk6BADgIIYd3yTLCThjg')
 
-        Find the available search categories, and use them
+        Find the available search categories, and use them:
 
-        # and a search
         >>> print(spotify.available_search_categories)
         ['albums', 'tracks', 'artists']
         >>> result =  spotify.search(category='artists', term='miles')
@@ -311,17 +310,16 @@ class MusicService(object):
     _music_services_data = None
 
     def __init__(self, service_name, account=None):
-        """Initialise the instance.
-
+        """
         Args:
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
             account (Account): The account to use to access this service.
                 If none is specified, one will be chosen automatically if
-                possible.
+                possible. Defaults to `None`.
 
         Raises:
-            MusicServiceException
+            `MusicServiceException`
         """
 
         self.service_name = service_name
@@ -370,10 +368,10 @@ class MusicService(object):
 
         Args:
             soco (SoCo): a SoCo instance to query. If none is specified, a
-            random device will be used.
+            random device will be used. Defaults to `None`.
 
         Returns:
-            (str): a string containing the music services data xml
+            str: a string containing the music services data xml
         """
         device = soco or discovery.any_soco()
         log.debug("Fetching music services data from %s", device)
@@ -388,8 +386,8 @@ class MusicService(object):
         """Parse raw account data xml into a useful python datastructure.
 
         Returns:
-            (dict): A dict. Each key is a service_type, and each value is a
-                dict containing relevant data
+            dict: Each key is a service_type, and each value is a
+            `dict` containing relevant data.
         """
         # Return from cache if we have it.
         if cls._music_services_data is not None:
@@ -455,7 +453,7 @@ class MusicService(object):
         These services have not necessarily been subscribed to.
 
         Returns:
-            (list): A list of strings
+            list: A list of strings.
         """
         return [
             service['Name'] for service in
@@ -467,7 +465,7 @@ class MusicService(object):
         """Get a list of the names of all subscribed music services.
 
         Returns:
-            (list): A list of strings
+            list: A list of strings.
         """
         # This is very inefficient - loops within loops within loops, and
         # many network requests
@@ -483,7 +481,18 @@ class MusicService(object):
 
     @classmethod
     def get_data_for_name(cls, service_name):
-        """Get the data relating to a named music service."""
+        """Get the data relating to a named music service.
+
+        Args:
+            service_name (str): The name of the music service for which data
+                is required.
+
+        Returns:
+            dict: Data relating to the music service.
+
+        Raises:
+            `MusicServiceException`: if the music service cannot be found.
+        """
         for service in cls._get_music_services_data().values():
             if service_name == service["Name"]:
                 return service
@@ -540,29 +549,41 @@ class MusicService(object):
 
     @property
     def available_search_categories(self):
-        """The list of search categories supported by this service.
+        """list:  The list of search categories (each a string) supported.
 
-        May include 'artists', 'albums', 'tracks', 'playlists',
-        'genres', 'stations', 'tags', or others depending on the service
+        May include ``'artists'``, ``'albums'``, ``'tracks'``, ``'playlists'``,
+        ``'genres'``, ``'stations'``, ``'tags'``, or others depending on the
+        service. Some services, such as Spotify, support ``'all'``, but do not
+        advertise it.
+
+        Any of the categories in this list may be used as a value for
+        `category` in :meth:`search`.
+
+        Example:
+
+            >>> print(spotify.available_search_categories)
+            ['albums', 'tracks', 'artists']
+            >>> result =  spotify.search(category='artists', term='miles')
+
+
         """
-        # Some services, eg Spotify, support "all", but do not advertise it
         return self._get_search_prefix_map().keys()
 
     def sonos_uri_from_id(self, item_id):
-        """Return a uri which can be sent for playing.
+        """Get a uri which can be sent for playing.
 
-        Arg:
+        Args:
             item_id (str): The unique id of a playable item for this music
                 service, such as that returned in the metadata from
-                `get_metadata`, eg `spotify:track:2qs5ZcLByNTctJKbhAZ9JE`
+                `get_metadata`, eg ``spotify:track:2qs5ZcLByNTctJKbhAZ9JE``
 
         Returns:
-            (str): A URI of the form: `soco://spotify%3Atrack
-                %3A2qs5ZcLByNTctJKbhAZ9JE?sid=2311&sn=1` which encodes the
-                item_id, and relevant data from the account for the music
-                service. This URI can be sent to a Sonos device for playing,
-                and the device itself will retrieve all the necessary metadata
-                such as title, album etc.
+            str: A URI of the form: ``soco://spotify%3Atrack
+            %3A2qs5ZcLByNTctJKbhAZ9JE?sid=2311&sn=1`` which encodes the
+            ``item_id``, and relevant data from the account for the music
+            service. This URI can be sent to a Sonos device for playing,
+            and the device itself will retrieve all the necessary metadata
+            such as title, album etc.
         """
         # Real Sonos URIs look like this:
         # x-sonos-http:tr%3a92352286.mp3?sid=2&flags=8224&sn=4 The
@@ -570,11 +591,11 @@ class MusicService(object):
         # MusicService.get_metadata() result (though for Spotify the mime-type
         # is audio/x-spotify, and there is no extension. See
         # http://musicpartners.sonos.com/node/464 for supported mime-types and
-        # related extensions). The scheme ( x-sonos-http) presumably
+        # related extensions). The scheme (x-sonos-http) presumably
         # indicates how the player is to obtain the stream for playing. It
         # is not clear what the flags param is used for (perhaps bitrate,
         # or certain metadata such as canSkip?). Fortunately, none of these
-        # seems to be necessary. We can leave them out, (or in teh case of
+        # seems to be necessary. We can leave them out, (or in the case of
         # the scheme, use 'soco' as dummy text, and the players still seem
         # to do the right thing.
 
@@ -594,7 +615,7 @@ class MusicService(object):
         """str: The Sonos descriptor to use for this service.
 
         The Sonos descriptor is used as the content of the <desc> tag in
-        DIDL metadata, to indicate the relevant music service id and username
+        DIDL metadata, to indicate the relevant music service id and username.
         """
         desc = "SA_RINCON{0}_{1}".format(
             self.account.service_type, self.account.username
@@ -638,14 +659,20 @@ class MusicService(object):
 
         Args:
             item_id (str): The container or item to browse. Defaults to the
-                root item
-            index (int): The starting index. Default 0
-            count (int): The maximum number of items to return. Default 100
+                root item.
+            index (int): The starting index. Default 0.
+            count (int): The maximum number of items to return. Default 100.
             recursive (bool): Whether the browse should recurse into sub-items
-                (Does not always work). Defaults to False
+                (Does not always work). Defaults to `False`.
+
         Returns:
-            (OrderedDict): The item or container's metadata, or None.
-                See http://musicpartners.sonos.com/node/83
+            ~collections.OrderedDict: The item or container's metadata,
+            or `None`.
+
+        See also:
+            The Sonos `getMetadata API
+            <http://musicpartners.sonos.com/node/83>`_.
+
         """
         response = self.soap_client.call(
             'getMetadata', [
@@ -664,13 +691,15 @@ class MusicService(object):
                 'genres', 'stations', 'tags'. Not all are available for each
                 music service. Call available_search_categories for a list for
                 this service.
-            term (str): The term to search for
-            index (int): The starting index. Default 0
-            count (int): The maximum number of items to return. Default 100
+            term (str): The term to search for.
+            index (int): The starting index. Default 0.
+            count (int): The maximum number of items to return. Default 100.
 
         Returns:
-            (OrderedDict): The search results, or None
-                See http://musicpartners.sonos.com/node/86
+            ~collections.OrderedDict: The search results, or `None`.
+
+        See also:
+            The Sonos `search API <http://musicpartners.sonos.com/node/86>`_
         """
         search_category = self._get_search_prefix_map().get(category, None)
         if search_category is None:
@@ -689,12 +718,15 @@ class MusicService(object):
         """Get metadata for a media item.
 
         Args:
-            item_id (str): The item for which metadata is required
-        Returns:
-            (OrderedDict): The item's metadata, or None
-                See http://musicpartners.sonos.com/node/83
-        """
+            item_id (str): The item for which metadata is required.
 
+        Returns:
+            ~collections.OrderedDict: The item's metadata, or `None`
+
+        See also:
+            The Sonos `getMediaMetadata API
+            <http://musicpartners.sonos.com/node/83>`_
+        """
         response = self.soap_client.call(
             'getMediaMetadata',
             [('id', item_id)])
@@ -703,19 +735,20 @@ class MusicService(object):
     def get_media_uri(self, item_id):
         """Get a streaming URI for an item.
 
-        You should not need to use this directly. It is used by the Sonos
-        players (not the controllers) to obtain the uri of the media stream.
-        If you want to have a player play a media item, you should add add it
-        to the queue using its id and let the player work out where to get
-        the stream from (see `On
-        Demand Playback <http://http://musicpartners.sonos.com/node/421>`_
-        and `Programmed
-        Radio <http://http://musicpartners.sonos.com/node/422>`_)
+        Note:
+           You should not need to use this directly. It is used by the Sonos
+           players (not the controllers) to obtain the uri of the media
+           stream. If you want to have a player play a media item,
+           you should add add it to the queue using its id and let the
+           player work out where to get the stream from (see `On Demand
+           Playback <http://musicpartners.sonos.com/node/421>`_ and
+           `Programmed Radio <http://musicpartners.sonos.com/node/422>`_)
 
         Args:
             item_id (str): The item for which the URI is required
+
         Returns:
-            (str): The item's URI
+            str: The item's streaming URI.
         """
         response = self.soap_client.call(
             'getMediaURI',
@@ -726,10 +759,10 @@ class MusicService(object):
         """Get last_update details for this music service.
 
         Returns:
-            (OrderedDict): A dictionary with keys 'catalog', and 'favorites'.
-                The value of each is a string which changes each time
-                the catalog or favorites change. You can use this to
-                detect when any caches need to be updated.
+            ~collections.OrderedDict: A dict with keys 'catalog',
+            and 'favorites'. The value of each is a string which changes
+            each time the catalog or favorites change. You can use this to
+            detect when any caches need to be updated.
         """
         # TODO: Maybe create a favorites/catalog cache which is invalidated
         # TODO: when these values change?
@@ -740,12 +773,15 @@ class MusicService(object):
         """Get extended metadata for a media item, such as related items.
 
         Args:
-            item_id (str): The item for which metadata is required
-        Returns:
-            (OrderedDict): The item's extended metadata or None
-                http://musicpartners.sonos.com/node/128
-        """
+            item_id (str): The item for which metadata is required.
 
+        Returns:
+            ~collections.OrderedDict: The item's extended metadata or None.
+
+        See also:
+            The Sonos `getExtendedMetadata API
+            <http://musicpartners.sonos.com/node/128>`_
+        """
         response = self.soap_client.call(
             'getExtendedMetadata',
             [('id', item_id)])
@@ -756,15 +792,18 @@ class MusicService(object):
 
         Args:
             item_id (str): The item for which metadata is required
-            metadata_type (str): The type of text to return, eg ARTIST_BIO, or
-                ALBUM_NOTES. A `get_extended_metadata` for the item will show
-                which extended metadata_types are available (under
-                relatedBrowse and relatedText)
-        Returns:
-            (str): The item's extended metadata text or None
-                http://musicpartners.sonos.com/node/127
-        """
+            metadata_type (str): The type of text to return, eg
+            ``'ARTIST_BIO'``, or ``'ALBUM_NOTES'``. Calling
+            `get_extended_metadata` for the item will show which extended
+            metadata_types are available (under relatedBrowse and relatedText).
 
+        Returns:
+            str: The item's extended metadata text or None
+
+        See also:
+            The Sonos `getExtendedMetadataText API
+            <http://musicpartners.sonos.com/node/127>`_
+        """
         response = self.soap_client.call(
             'getExtendedMetadataText',
             [('id', item_id), ('type', metadata_type)])
@@ -776,11 +815,11 @@ def desc_from_uri(uri):
 
     Args:
         uri (str): A uri, eg:
-            x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4
+            ``'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4'``
 
     Returns:
-        (str): The content of a desc element for that uri, eg
-            SA_RINCON519_email@example.com
+        str: The content of a desc element for that uri, eg
+            ``'SA_RINCON519_email@example.com'``
     """
     #
     # If there is an sn parameter (which is the serial number of an account),
