@@ -4,8 +4,19 @@
 """
 This module contains classes for handling DIDL-Lite metadata.
 
-This is the XML schema used by Sonos for carrying metadata representing many
-items such as tracks, playlists, composers, albums etc.
+`DIDL`_ is the Digital Item Declaration Language , an XML schema which is
+part of MPEG21. `DIDL-Lite`_ is a cut-down version of the schema which is part
+of the UPnP ContentDirectory specification. It is the XML schema used by Sonos
+for carrying metadata representing many items such as tracks, playlists,
+composers, albums etc. Although Sonos uses
+ContentDirectory v1, the `document for v2 [pdf]`_ is more
+helpful.
+
+.. _DIDL: http://xml.coverpages.org/mpeg21-didl.html
+.. _DIDL-Lite: http://www.upnp.org/schemas/av/didl-lite-v2.xsd
+.. _document for v2 [pdf]: _http://upnp.org/specs/av/UPnP
+     -av-ContentDirectory-v2-Service
+
 """
 
 # It tries to follow the class hierarchy provided by the DIDL-Lite schema
@@ -28,8 +39,6 @@ from .xml import (
     XML, ns_tag
 )
 
-warnings.simplefilter('always', DeprecationWarning)
-
 
 ###############################################################################
 # MISC HELPER FUNCTIONS                                                       #
@@ -39,11 +48,11 @@ def to_didl_string(*args):
     """Convert any number of DIDLObjects to a unicode xml string.
 
     Args:
-        *args (DidlObject): One or more DidlObject (or subclass) instances
+        *args (DidlObject): One or more `DidlObject` (or subclass) instances.
 
     Returns:
-        str: A unicode string of the form <DIDL-Lite ...>...</DIDL-Lite>
-            representing the instances
+        str: A unicode string representation of DIDL-Lite XML in the form
+        ``'<DIDL-Lite ...>...</DIDL-Lite>'``.
     """
     didl = XML.Element(
         'DIDL-Lite',
@@ -64,12 +73,12 @@ def from_didl_string(string):
     """Convert a unicode xml string to a list of DIDLObjects.
 
     Args:
-        string (str): A unicode string containing an xml representation of one
-            or more DIDL-Lite items (in the form  <DIDL-Lite ...>
-            ...</DIDL-Lite> )
+        string (str): A unicode string containing an XML representation of one
+            or more DIDL-Lite items (in the form  ``'<DIDL-Lite ...>
+            ...</DIDL-Lite>'``)
 
     Returns:
-        list: A list of one or more instances of DIDLObject or a subclass
+        list: A list of one or more instances of `DIDLObject` or a subclass
     """
     items = []
     root = XML.fromstring(string.encode('utf-8'))
@@ -100,7 +109,8 @@ class DidlResource(object):
     """Identifies a resource, typically some type of a binary asset, such as a
     song.
 
-    A 'res' element contains a uri that identifies the resource.
+    It is represented in XML by a ``<res>`` element, which contains a uri that
+    identifies the resource.
     """
 
     # Adapted from a class taken from the Python Brisa project - MIT licence.
@@ -110,37 +120,46 @@ class DidlResource(object):
                  duration=None, bitrate=None, sample_frequency=None,
                  bits_per_sample=None, nr_audio_channels=None, resolution=None,
                  color_depth=None, protection=None):
-        """Constructor for the Resource class.
-
+        """
         Args:
-            uri (str): value of the res tag, typically a URI. It MUST be
-                properly escaped URIs as described in RFC 239
-            protocol_info (str):  A string in the form a:b:c:d that
+            uri (str): value of the ``<res>`` tag, typically a URI. It
+                **must** be properly escaped (percent encoded) as
+                described in :rfc:`3986`
+            protocol_info (str):  a string in the form a:b:c:d that
                 identifies the streaming or transport protocol for
                 transmitting the resource. A value is required. For more
-                information see section 2.5.2 at
-                http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-Service.pdf
-            import_uri (str, optional): uri locator for resource update
-            size (int, optional): size in bytes
+                information see section 2.5.2 of the `UPnP specification [
+                pdf]
+                <http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-
+                Service.pdf>`_
+            import_uri (str, optional): uri locator for resource update.
+            size (int, optional): size in bytes.
             duration (str, optional): duration of the playback of the res
-                at normal speed (H*:MM:SS:F* or H*:MM:SS:F0/F1)
-            bitrate (int, optional): bitrate in bytes/second
-            sample_frequency (int, optional): sample frequency in Hz
-            bits_per_sample (int, optional): bits per sample
-            nr_audio_channels (int, optional): number of audio channels
-            resolution (str, optional): resolution of the resource (X*Y)
-            color_depth (int, optional): color depth in bits
-            protection (str, optional): statement of protection type
+                at normal speed (``H*:MM:SS:F*`` or ``H*:MM:SS:F0/F1``)
+            bitrate (int, optional): bitrate in bytes/second.
+            sample_frequency (int, optional): sample frequency in Hz.
+            bits_per_sample (int, optional): bits per sample.
+            nr_audio_channels (int, optional): number of audio channels.
+            resolution (str, optional): resolution of the resource (X*Y).
+            color_depth (int, optional): color depth in bits.
+            protection (str, optional): statement of protection type.
+
+        Note:
+            Not all of the parameters are used by Sonos. In general, only
+            ``uri``, ``protocol_info`` and ``duration`` seem to be important.
         """
         # Of these attributes, only uri, protocol_info and duration have been
         # spotted 'in the wild'
+        #: (str): a percent encoded URI
         self.uri = uri
         # Protocol info is in the form a:b:c:d - see
         # sec 2.5.2 at
         # http://upnp.org/specs/av/UPnP-av-ConnectionManager-v1-Service.pdf
+        #: (str): protocol information.
         self.protocol_info = protocol_info
         self.import_uri = import_uri
         self.size = size
+        #: str: playback duration
         self.duration = duration
         self.bitrate = bitrate
         self.sample_frequency = sample_frequency
@@ -152,10 +171,12 @@ class DidlResource(object):
 
     @classmethod
     def from_element(cls, element):
-        """Set the resource properties from a <res> element.
+        """Set the resource properties from a ``<res>`` element.
 
         Args:
-            element (Element): An ElementTree Element
+            element (:class:`~xml.etree.ElementTree.Element`): The ``<res>``
+                element
+
         """
         def _int_helper(name):
             """Try to convert the name attribute to an int, or None."""
@@ -198,7 +219,11 @@ class DidlResource(object):
         return self.__repr__()
 
     def to_element(self):
-        """Return an ElementTree Element based on this resource."""
+        """Return an ElementTree Element based on this resource.
+
+        Returns:
+            :class:`~xml.etree.ElementTree.Element`: an Element.
+        """
         if not self.protocol_info:
             raise Exception('Could not create Element for this resource: '
                             'protocolInfo not set (required).')
@@ -232,11 +257,14 @@ class DidlResource(object):
         return root
 
     def to_dict(self, remove_nones=False):
-        """Return a dictionary representation of the DidlResource.
+        """Return a dict representation of the `DidlResource`.
 
         Args:
-            remove_nones (bool): Optionally remove dictionary elements when
-            their value is None.
+            remove_nones (bool, optional): Optionally remove dictionary
+                elements when their value is `None`.
+
+        Returns:
+            dict: a dict representing the `DidlResource`
         """
         content = {
             'uri': self.uri,
@@ -264,19 +292,19 @@ class DidlResource(object):
     def from_dict(cls, content):
         """Create an instance from a dict.
 
-        An alternative constructor. Equivalent to DidlResource(**content).
+        An alternative constructor. Equivalent to ``DidlResource(**content)``.
 
         Args:
-            content (dict): Dict containing metadata information. Required and
-            valid arguments are the same as for the ``__init__`` method.
+            content (dict): a dict containing metadata information. Required.
+                Valid keys are the same as the parameters for `__init__`.
         """
         return cls(**content)
 
     def __eq__(self, resource):
-        """Compare with another ``resource``.
+        """Compare with another ``DidlResource``.
 
         Returns:
-            (bool): True if items are equal, else False
+            (bool): `True` if all items are equal, else `False`.
         """
         if not isinstance(resource, DidlResource):
             return False
@@ -300,9 +328,9 @@ class DidlMetaClass(type):
         """Create a new instance.
 
         Args:
-            name: Name of the class
-            bases: Base classes (tuple)
-            attrs: Attributes defined for the class
+            name (str): Name of the class.
+            bases (tuple): Base classes.
+            attrs (dict): attributes defined for the class.
         """
         new_cls = super(DidlMetaClass, mcs).__new__(mcs, name, bases, attrs)
         # Register all subclasses with the global _DIDL_CLASS_TO_CLASS mapping
@@ -311,21 +339,40 @@ class DidlMetaClass(type):
             _DIDL_CLASS_TO_CLASS[item_class] = new_cls
         return new_cls
 
+
 # Py2/3 compatible way of declaring the metaclass
 class DidlObject(with_metaclass(DidlMetaClass, object)):
     """Abstract base class for all DIDL-Lite items.
 
-    You should not need to instantiate this.
+    You should not need to instantiate this. Its XML representation looks
+    like this:
+
+        ..  code-block:: xml
+
+            <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+             xmlns:dc="http://purl.org/dc/elements/1.1/"
+             xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+             xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+              <item id="...self.item_id..." parentID="...cls.parent_id..."
+                restricted="true">
+                <dc:title>...self.title...</dc:title>
+                <upnp:class>...self.item_class...</upnp:class>
+                <desc id="cdudn"
+                  nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+                  RINCON_AssociatedZPUDN
+                </desc>
+              </item>
+            </DIDL-Lite>
 
     Attributes:
-        item_class (str): The DIDL Lite class for this object
-        tag (str): The XML element tag name used for this instance
+        tag (str): The XML element tag name used for this instance.
         _translation (dict): A dict used to translate between instance
             attribute names and XML tags/namespaces. It also serves to define
             the allowed tags/attributes for this instance. Overridden and
             extended by subclasses.
     """
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object'
     tag = 'item'
     # key: attribute_name: (ns, tag)
@@ -336,21 +383,22 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
     def __init__(self, title, parent_id, item_id, restricted=True,
                  resources=None, desc='RINCON_AssociatedZPUDN', **kwargs):
-        r"""Construct and initialize a DidlObject.
-
+        """
         Args:
-            title (str): The title for the item
-            parent_id (str): The parent ID for the item
-            item_id (str): The ID for the item
-            restricted (bool): Whether the item can be modified
-            resources (list): A list of resources for this object
-            desc (str): A didl descriptor, default RINCON_AssociatedZPUDN. This
-                is not the same as "description"! It is used for identifying
-                the relevant music service
+            title (str): the title for the item.
+            parent_id (str): the parent ID for the item.
+            item_id (str): the ID for the item.
+            restricted (bool): whether the item can be modified. Default `True`
+            resources (list, optional): a list of resources for this object.
+            Default
+                `None
+            desc (str): A DIDL descriptor, default
+                ``'RINCON_AssociatedZPUDN'``. This is not the same as
+                "description". It is used for identifying the relevant
+                third party music service.
             **kwargs: Extra metadata. What is allowed depends on the
-                _translation class attribute, which in turn depends on the DIDL
-                class
-
+                ``_translation`` class attribute, which in turn depends on the
+                DIDL class.
         """
         # All didl objects *must* have a title, a parent_id and an item_id
         # so we specify these as required args in the constructor signature
@@ -472,11 +520,12 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
     def from_dict(cls, content):
         """Create an instance from a dict.
 
-        An alternative constructor. Equivalent to DidlObject(**content).
+        An alternative constructor. Equivalent to ``DidlObject(**content)``.
 
         Args:
-            content (dict): Dict containing metadata information.Required and
-            valid arguments are the same as for the ``__init__`` method.
+            content (dict): a dict containing metadata information. Required.
+                Valid keys are the same as the parameters for `__init__`.
+
         """
         # Do we really need this constructor? Could use DidlObject(**content)
         # instead.  -- We do now
@@ -489,7 +538,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         """Compare with another ``playable_item``.
 
         Returns:
-            (bool): True if items are equal, else False
+            (bool): `True` if all items are equal, else `False`.
         """
         if not isinstance(playable_item, DidlObject):
             return False
@@ -499,22 +548,21 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         """Compare with another ``playable_item``.
 
         Returns:
-            (bool): True if items are unequal, else False
+            (bool): `True` if any items is unequal, else `False`.
         """
         if not isinstance(playable_item, DidlObject):
             return True
         return self.to_dict() != playable_item.to_dict()
 
     def __repr__(self):
-        """Return the repr value for the item.
+        """Get the repr value for the item.
 
-        The repr is of the form::
-
-          <class_name 'middle_part[0:40]' at id_in_hex>
-
-        where middle_part is either the title item in content, if it is set,
-        or ``str(content)``. The output is also cleared of non-ascii
-        characters.
+        Returns:
+            str: A string representation of the instance in the form
+            ``<class_name 'middle_part[0:40]' at id_in_hex>`` where
+            middle_part is either the title item in content, if it is set, or
+            ``str(content)``. The output is also cleared of non-ascii
+            characters.
         """
         # 40 originates from terminal width (78) - (15) for address part and
         # (19) for the longest class name and a little left for buffer
@@ -527,21 +575,26 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                                              hex(id(self)))
 
     def __str__(self):
-        """Return the str value for the item::
+        """Get the str value for the item.
 
-         <class_name 'middle_part[0:40]' at id_in_hex>
-
-        where middle_part is either the title item in content, if it is set, or
-        ``str(content)``. The output is also cleared of non-ascii characters.
-
+        Returns:
+            str: a string representation in the form
+            ``<class_name 'middle_part[0:40]' at id_in_hex>`` where
+            middle_part is either the title item in content, if it is set, or
+            ``str(content)``. The output is also cleared of non-ascii
+            characters.
         """
         return self.__repr__()
 
     def to_dict(self, remove_nones=False):
         """Return the dict representation of the instance.
 
-        Args:
-            remove_nones (bool): remove dictionary elements when value is None
+       Args:
+            remove_nones (bool, optional): Optionally remove dictionary
+                elements when their value is `None`.
+
+        Returns:
+            dict: a dict representation of the `DidlObject`.
         """
         content = {}
         # Get the value of each attribute listed in _translation, and add it
@@ -569,21 +622,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                 namespace attributes on the root element
 
         Return:
-            An ElementTree Element
-
-        .. code :: xml
-
-         <DIDL-Lite ..NS_INFO..>
-           <item id="...self.item_id..."
-             parentID="...cls.parent_id..." restricted="true">
-             <dc:title>...self.title...</dc:title>
-             <upnp:class>...self.item_class...</upnp:class>
-             <desc id="cdudn"
-               nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-               RINCON_AssociatedZPUDN
-             </desc>
-           </item>
-         </DIDL-Lite>
+            :class:`~xml.etree.ElementTree.Element`: an Element.
         """
         elt_attrib = {}
         if include_namespaces:
@@ -637,6 +676,7 @@ class DidlItem(DidlObject):
 
     # The spec allows for an option 'refID' attribute, but we do not handle it
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.item'
     # _translation = DidlObject._translation.update({ ...})
     # does not work, but doing it in two steps does
@@ -654,6 +694,7 @@ class DidlAudioItem(DidlItem):
 
     """An audio item."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.item.audioItem'
     _translation = DidlItem._translation.copy()
     _translation.update(
@@ -714,6 +755,7 @@ class DidlMusicTrack(DidlAudioItem):
 
     """Class that represents a music library track."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.musicTrack'
     # name: (ns, tag)
     _translation = DidlAudioItem._translation.copy()
@@ -733,6 +775,7 @@ class DidlAudioBroadcast(DidlAudioItem):
 
     """Class that represents an audio broadcast."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBroadcast'
     _translation = DidlAudioItem._translation.copy()
     _translation.update(
@@ -748,12 +791,13 @@ class DidlAudioBroadcast(DidlAudioItem):
 
 class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
-    """Class that represents an audio broadcast sonos favorite."""
+    """Class that represents an audio broadcast Sonos favorite."""
 
     # Note: The sonos-favorite part of the class spec obviously isn't part of
     # the DIDL spec, so just assume that it has the same definition as the
     # regular object.item.audioItem.audioBroadcast
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBroadcast.sonos-favorite'
 
 
@@ -765,6 +809,7 @@ class DidlContainer(DidlObject):
 
     """Class that represents a music library container."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container'
     tag = 'container'
     # We do not implement createClass or searchClass. Not used by Sonos??
@@ -775,6 +820,7 @@ class DidlAlbum(DidlContainer):
 
     """A content directory album."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.album'
     # name: (ns, tag)
     _translation = DidlContainer._translation.copy()
@@ -795,6 +841,7 @@ class DidlMusicAlbum(DidlAlbum):
 
     """Class that represents a music library album."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum'
     # According to the spec, all musicAlbums should be represented in
     # XML by a <container> tag. Sonos sometimes uses <container> and
@@ -803,6 +850,7 @@ class DidlMusicAlbum(DidlAlbum):
     tag = ''
     # name: (ns, tag)
     # pylint: disable=protected-access
+    #:
     _translation = DidlAudioItem._translation.copy()
     _translation.update(
         {
@@ -822,6 +870,7 @@ class DidlMusicAlbumFavorite(DidlAlbum):
     This class is not part of the DIDL spec and is Sonos specific.
     """
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum.sonos-favorite'
     # Despite the fact that the item derives from object.container, it's
     # XML does not include a <container> tag, but an <item> tag. This seems
@@ -838,6 +887,7 @@ class DidlMusicAlbumCompilation(DidlAlbum):
     # These classes appear when browsing the library and Sonos has been set
     # to group albums using compilations.
     # See https://github.com/SoCo/SoCo/issues/280
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum.compilation'
     tag = 'container'
 
@@ -846,8 +896,10 @@ class DidlPerson(DidlContainer):
 
     """A content directory class representing a person."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.person'
     tag = 'item'
+    #: dfdf
     _translation = DidlContainer._translation.copy()
     _translation.update(
         {
@@ -862,6 +914,7 @@ class DidlComposer(DidlPerson):
 
     # Not in the DIDL-Lite spec. Sonos specific??
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.person.composer'
 
 
@@ -869,6 +922,7 @@ class DidlMusicArtist(DidlPerson):
 
     """Class that represents a music library artist."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.person.musicArtist'
     # name: (ns, tag)
     _translation = DidlPerson._translation.copy()
@@ -886,6 +940,7 @@ class DidlAlbumList(DidlContainer):
 
     # This does not appear (that I can find) in the DIDL-Lite specs.
     # Presumably Sonos specific
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.albumlist'
 
 
@@ -893,6 +948,7 @@ class DidlPlaylistContainer(DidlContainer):
 
     """Class that represents a music library play list."""
 
+    #:
     item_class = 'object.container.playlistContainer'
     # Yes, really. Sonos uses the item tag, not the container tag. But
     # sometimes it uses the container tag, eg:
@@ -925,6 +981,7 @@ class DidlSameArtist(DidlPlaylistContainer):
     """
 
     # Not in the DIDL-Lite spec. Sonos specific?
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.playlistContainer.sameArtist'
 
 
@@ -932,8 +989,11 @@ class DidlGenre(DidlContainer):
 
     """A content directory class representing a general genre."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.genre'
     # name: (ns, tag)
+
+    #:
     _translation = DidlContainer._translation.copy()
     _translation.update(
         {
@@ -948,6 +1008,7 @@ class DidlMusicGenre(DidlGenre):
 
     """Class that represents a music genre."""
 
+    #: str: the DIDL Lite class for this object.
     item_class = 'object.container.genre.musicGenre'
     tag = 'item'
 
@@ -972,9 +1033,11 @@ class ListOfMusicInfoItems(list):
     def __getitem__(self, key):
         """Legacy get metadata by string key or list item(s) by index.
 
-        DEPRECATION: This overriding form of __getitem__ will be removed in
-        the 3rd release after 0.8. The metadata can be fetched via the named
-        attributes
+        .. deprecated:: 0.8
+
+            This overriding form of __getitem__ will be removed in the 3rd
+            release after 0.8. The metadata can be fetched via the named
+            attributes.
         """
         if key in self._metadata:
             if key == 'item_list':
@@ -991,24 +1054,24 @@ class ListOfMusicInfoItems(list):
                 metadata will be removed from the third release after
                 0.8""".format(key, self.__class__.__name__)
             message = textwrap.dedent(message).replace('\n', ' ').lstrip()
-            warnings.warn(message, DeprecationWarning, stacklevel=2)
+            warnings.warn(message, stacklevel=2)
             return self._metadata[key]
         else:
             return super(ListOfMusicInfoItems, self).__getitem__(key)
 
     @property
     def number_returned(self):
-        """The number of returned matches."""
+        """str: the number of returned matches."""
         return self._metadata['number_returned']
 
     @property
     def total_matches(self):
-        """The number of total matches."""
+        """str: the number of total matches."""
         return self._metadata['total_matches']
 
     @property
     def update_id(self):
-        """The update ID."""
+        """str: the update ID."""
         return self._metadata['update_id']
 
 
@@ -1016,7 +1079,7 @@ class SearchResult(ListOfMusicInfoItems):
 
     """Container class that represents a search or browse result.
 
-    (browse is just a special case of search)
+    Browse is just a special case of search.
     """
 
     def __init__(self, items, search_type, number_returned,
@@ -1034,7 +1097,7 @@ class SearchResult(ListOfMusicInfoItems):
 
     @property
     def search_type(self):
-        """The search type."""
+        """str: the search type."""
         return self._metadata['search_type']
 
 
