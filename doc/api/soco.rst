@@ -31,8 +31,3 @@ Submodules
    soco.soap
    soco.utils
    soco.xml
-
-Module contents
----------------
-
-.. automodule:: soco

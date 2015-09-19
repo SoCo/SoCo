@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=fixme, protected-access
-""" The core module contains the SoCo class that implements
+"""The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
 
@@ -113,79 +113,66 @@ class SoCo(_SocoSingletonBase):
     SoCo instances created with the same ip address are in fact the *same* SoCo
     instance, reflecting the real world position.
 
-    Public functions::
+    ..  rubric:: Methods
+    ..  autosummary::
 
-        play -- Plays the current item.
-        play_uri -- Plays a track or a music stream by URI.
-        play_from_queue -- Plays an item in the queue.
-        pause -- Pause the currently playing track.
-        stop -- Stop the currently playing track.
-        seek -- Move the currently playing track a given elapsed time.
-        next -- Go to the next track.
-        previous -- Go back to the previous track.
-        switch_to_line_in -- Switch the speaker's input to line-in.
-        switch_to_tv -- Switch the playbar speaker's input to TV.
-        get_current_track_info -- Get information about the currently playing
-                                  track.
-        get_speaker_info -- Get information about the Sonos speaker.
-        partymode -- Put all the speakers in the network in the same group.
-        join -- Join this speaker to another "master" speaker.
-        unjoin -- Remove this speaker from a group.
-        get_queue -- Get information about the queue.
-        get_artists -- Get artists from the music library
-        get_album_artists -- Get album artists from the music library
-        get_albums -- Get albums from the music library
-        get_genres -- Get genres from the music library
-        get_composers -- Get composers from the music library
-        get_tracks -- Get tracks from the music library
-        get_playlists -- Get playlists from the music library
-        get_music_library_information -- Get information from the music library
-        get_current_transport_info -- get speakers playing state
-        browse_by_idstring -- Browse (get sub-elements) a given type
-        add_uri_to_queue -- Adds an URI to the queue
-        add_to_queue -- Add a track to the end of the queue
-        remove_from_queue -- Remove a track from the queue
-        clear_queue -- Remove all tracks from queue
-        get_favorite_radio_shows -- Get favorite radio shows from Sonos'
-                                    Radio app.
-        get_favorite_radio_stations -- Get favorite radio stations.
-        create_sonos_playlist -- Create a new empty Sonos playlist
-        create_sonos_playlist_from_queue -- Create a new Sonos playlist
-                                            from the current queue.
-        remove_sonos_playlist -- Remove a Sonos playlist.
-        add_item_to_sonos_playlist -- Adds a queueable item to a Sonos'
-                                       playlist
-        get_item_album_art_uri -- Get an item's Album Art absolute URI.
-        search_track -- Search for an artist, artist's albums, or track.
-        get_albums_for_artist -- Get albums for an artist.
-        get_tracks_for_album -- Get tracks for an artist's album.
-        start_library_update -- Trigger an update of the music library.
+        play
+        play_uri
+        play_from_queue
+        pause
+        stop
+        seek
+        next
+        previous
+        switch_to_line_in
+        switch_to_tv
+        get_current_track_info
+        get_speaker_info
+        partymode
+        join
+        unjoin
+        get_queue
+        get_current_transport_info
+        add_uri_to_queue
+        add_to_queue
+        remove_from_queue
+        clear_queue
+        get_favorite_radio_shows
+        get_favorite_radio_stations
+        create_sonos_playlist
+        create_sonos_playlist_from_queue
+        remove_sonos_playlist
+        add_item_to_sonos_playlist
+        get_item_album_art_uri
 
-    Properties::
-
-        uid -- The speaker's unique identifier
-        household_id -- The speaker's household id
-        mute -- The speaker's mute status.
-        volume -- The speaker's volume.
-        bass -- The speaker's bass EQ.
-        treble -- The speaker's treble EQ.
-        loudness -- The status of the speaker's loudness compensation.
-        cross_fade -- The status of the speaker's crossfade.
-        status_light -- The state of the Sonos status light.
-        player_name  -- The speaker's name.
-        play_mode -- The queue's repeat/shuffle settings.
-        queue_size -- Get size of queue.
-        library_updating -- Whether music library update is in progress.
-        album_artist_display_option -- album artist display option
-        is_playing_tv -- Is the playbar speaker input from TV?
-        is_playing_radio -- Is the speaker input from radio?
-        is_playing_line_in -- Is the speaker input from line-in?
-
+    ..  rubric:: Properties
     .. warning::
 
-        These properties are not cached and will obtain information over the
-        network, so may take longer than expected to set or return a value. It
-        may be a good idea for you to cache the value in your own code.
+        These properties are not generally cached and may obtain information
+        over the network, so may take longer than expected to set or return
+        a value. It may be a good idea for you to cache the value in your
+        own code.
+
+    ..  autosummary::
+
+        uid
+        household_id
+        mute
+        volume
+        bass
+        treble
+        loudness
+        cross_fade
+        status_light
+        player_name
+        play_mode
+        queue_size
+
+        is_playing_tv
+        is_playing_radio
+        is_playing_line_in
+
+
     """
 
     _class_group = 'SoCo'
@@ -265,7 +252,7 @@ class SoCo(_SocoSingletonBase):
     def uid(self):
         """A unique identifier.
 
-        Looks like: RINCON_000XXXXXXXXXX1400
+        Looks like: ``'RINCON_000XXXXXXXXXX1400'``
         """
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, there is no need to go further
@@ -292,7 +279,7 @@ class SoCo(_SocoSingletonBase):
     def household_id(self):
         """A unique identifier for all players in a household.
 
-        Looks like: Sonos_asahHKgjgJGjgjGjggjJgjJG34
+        Looks like: ``'Sonos_asahHKgjgJGjgjGjggjJgjJG34'``
         """
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, return the cached version
@@ -342,12 +329,16 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def play_mode(self):
-        """ The queue's play mode. Case-insensitive options are:
+        """str: The queue's play mode.
 
-        NORMAL -- Turns off shuffle and repeat.
-        REPEAT_ALL -- Turns on repeat and turns off shuffle.
-        SHUFFLE -- Turns on shuffle *and* repeat. (It's strange, I know.)
-        SHUFFLE_NOREPEAT -- Turns on shuffle and turns off repeat.
+        Case-insensitive options are:
+
+        *   ``'NORMAL'`` -- Turns off shuffle and repeat.
+        *   ``'REPEAT_ALL'`` -- Turns on repeat and turns off shuffle.
+        *   ``'SHUFFLE'`` -- Turns on shuffle *and* repeat. (It's
+            strange, I know.)
+        *   ``'SHUFFLE_NOREPEAT'`` -- Turns on shuffle and turns off
+            repeat.
 
         """
         result = self.avTransport.GetTransportSettings([
@@ -1504,8 +1495,8 @@ class SoCo(_SocoSingletonBase):
     def get_album_artists(self, *args, **kwargs):
         return self.music_library.get_album_artists(*args, **kwargs)
 
-    @deprecated('0.12', "soco.music_library.get_music_library_information"
-                        '0.14')
+    @deprecated('0.12', "soco.music_library.get_music_library_information",
+                '0.14')
     def get_albums(self, *args, **kwargs):
         return self.music_library.get_music_library_information(*args,
                                                                 **kwargs)
@@ -1525,7 +1516,7 @@ class SoCo(_SocoSingletonBase):
     def get_tracks(self, *args, **kwargs):
         return self.music_library.get_tracks(*args, **kwargs)
 
-    @deprecated('0.12', "soco.music_library.get_get_playlists", '0.14')
+    @deprecated('0.12', "soco.music_library.get_playlists", '0.14')
     def get_playlists(self, *args, **kwargs):
         return self.music_library.get_music_library_information(*args,
                                                                 **kwargs)
@@ -1564,6 +1555,7 @@ class SoCo(_SocoSingletonBase):
     @property
     @deprecated('0.12', "soco.music_library.library_updating", '0.14')
     def library_updating(self):
+        """.."""
         return self.music_library.library_updating
 
     @deprecated('0.12', "soco.music_library.start_library_update", '0.14')
@@ -1593,6 +1585,7 @@ class SoCo(_SocoSingletonBase):
     @property
     @deprecated('0.12', "soco.music_library.album_artist_display", '0.14')
     def album_artist_display_option(self):
+        """.."""
         return self.music_library.album_artist_display_option
 
     def _build_album_art_full_uri(self, url):
