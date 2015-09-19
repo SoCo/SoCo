@@ -338,13 +338,13 @@ class Service(object):
             args (list, optional): Relevant arguments as a list of (name,
                 value) tuples.
             cache (Cache): A cache is operated so that the result will be
-                stored for up to `cache_timeout` seconds, and a subsequent
+                stored for up to ``cache_timeout`` seconds, and a subsequent
                 call with the same arguments within that period will be
                 returned from the cache, saving a further network call. The
                 cache may be invalidated or even primed from another thread
                 (for example if a UPnP event is received to indicate that
                 the state of the Sonos device has changed). If
-                `cache_timeout` is missing or `None`, the cache will use a
+                ``cache_timeout`` is missing or `None`, the cache will use a
                 default value (which may be 0 - see `cache`). By default,
                 the cache identified by the service's `cache` attribute will
                 be used, but a different cache object may be specified in
@@ -516,7 +516,7 @@ class Service(object):
         Yields:
             `Action`: the next action.
 
-        Each action is an Action `namedtuple`, consisting of action_name
+        Each action is an Action namedtuple, consisting of action_name
         (a string), in_args (a list of Argument namedtuples consisting of name
         and argtype), and out_args (ditto), eg::
 

@@ -557,7 +557,7 @@ class MusicService(object):
         advertise it.
 
         Any of the categories in this list may be used as a value for
-        `category` in :meth:`search`.
+        ``category`` in :meth:`search`.
 
         Example:
 

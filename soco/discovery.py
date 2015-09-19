@@ -23,7 +23,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
     Return an set containing a `SoCo` instance for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
-    `include_invisible` is `True`. Will block for up to `timeout` seconds,
+    ``include_invisible`` is `True`. Will block for up to `timeout` seconds,
     after which return `None` if no zones found.
 
     Args:
@@ -32,12 +32,13 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
         include_invisible (bool, optional): include invisible zones in the
             return set. Defaults to `False`.
         interface_addr (str or None): Discovery operates by sending UDP
-            multicast datagrams. ``interface_addr`` is a string (dotted quad)
-            representation of the network interface address to use as the
-            source of the datagrams (i.e. it is a value for
-            `IP_MULTICAST_IF`). If `None` or not specified, the system default
-            interface for UDP multicast messages will be used. This is
-            probably what you want to happen. Defaults to `None`.
+            multicast datagrams. ``interface_addr`` is a string (dotted
+            quad) representation of the network interface address to use as
+            the source of the datagrams (i.e. it is a value for
+            `socket.IP_MULTICAST_IF <socket>`). If `None` or not specified,
+            the system default interface for UDP multicast messages will be
+            used. This is probably what you want to happen. Defaults to
+            `None`.
 
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else

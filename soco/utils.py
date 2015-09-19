@@ -19,7 +19,7 @@ from .xml import XML
 def really_unicode(in_string):
     """Make a string unicode. Really.
 
-    Ensure `in_string` is returned as unicode through a series of
+    Ensure ``in_string`` is returned as unicode through a series of
     progressively relaxed decodings.
 
     Args:
@@ -47,7 +47,7 @@ def really_unicode(in_string):
 def really_utf8(in_string):
     """Encode a string with utf-8. Really.
 
-    First decode `in_string` via `really_unicode` to ensure it can
+    First decode ``in_string`` via `really_unicode` to ensure it can
     successfully be encoded as utf-8. This is required since just calling
     encode on a string will often cause Python 2 to perform a coerced strict
     auto-decode as ascii first and will result in a `UnicodeDecodeError` being

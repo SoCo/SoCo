@@ -78,7 +78,7 @@ def from_didl_string(string):
             ...</DIDL-Lite>'``)
 
     Returns:
-        list: A list of one or more instances of `DIDLObject` or a subclass
+        list: A list of one or more instances of `DidlObject` or a subclass
     """
     items = []
     root = XML.fromstring(string.encode('utf-8'))
@@ -347,22 +347,22 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
     You should not need to instantiate this. Its XML representation looks
     like this:
 
-        ..  code-block:: xml
+    ..  code-block:: xml
 
-            <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-             xmlns:dc="http://purl.org/dc/elements/1.1/"
-             xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-             xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
-              <item id="...self.item_id..." parentID="...cls.parent_id..."
-                restricted="true">
-                <dc:title>...self.title...</dc:title>
-                <upnp:class>...self.item_class...</upnp:class>
-                <desc id="cdudn"
-                  nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
-                  RINCON_AssociatedZPUDN
-                </desc>
-              </item>
-            </DIDL-Lite>
+        <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
+         xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
+          <item id="...self.item_id..." parentID="...cls.parent_id..."
+            restricted="true">
+            <dc:title>...self.title...</dc:title>
+            <upnp:class>...self.item_class...</upnp:class>
+            <desc id="cdudn"
+              nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">
+              RINCON_AssociatedZPUDN
+            </desc>
+          </item>
+        </DIDL-Lite>
 
     Attributes:
         tag (str): The XML element tag name used for this instance.
