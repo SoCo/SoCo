@@ -143,7 +143,7 @@ def parse_event_xml(xml_event):
 class Event(object):
     """A read-only object representing a received event.
 
-    The values of the evented variables can be accessed via the `variables`
+    The values of the evented variables can be accessed via the ``variables``
     dict, or as attributes on the instance itself. You should treat all
     attributes as read-only.
 
@@ -392,7 +392,7 @@ class Subscription(object):
 
         Args:
             requested_timeout(int, optional): The timeout to be requested.
-            auto_renew:(bool, optional): If `True`, renew the subscription
+            auto_renew (bool, optional): If `True`, renew the subscription
                 automatically shortly before timeout. Default `False`.
         """
 

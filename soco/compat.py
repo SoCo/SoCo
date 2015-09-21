@@ -51,7 +51,9 @@ except ImportError:
 def with_metaclass(meta, *bases):
     """A Python 2/3 compatible way of declaring a metaclass.
 
-    Taken  from jinja2/_compat.py via python-future.License: BSD.
+    Taken from `Jinja 2 <https://github.com/mitsuhiko/jinja2/blob/master/jinja2
+    /_compat.py>`_ via `python-future <http://python-future.org>`_. License:
+    BSD.
     Use it like this::
 
         class MyClass(with_metaclass(MyMetaClass, BaseClass)):

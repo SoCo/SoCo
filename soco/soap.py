@@ -49,9 +49,9 @@ class SoapFault(SoCoException):
         Args:
             faultcode (str): The SOAP faultcode.
             faultstring (str): The SOAP faultstring.
-            detail (:class:`~xml.etree.ElementTree.Element`): The SOAP fault
+            detail (:obj:`~xml.etree.ElementTree.Element`): The SOAP fault
                 detail, as an ElementTree
-                :class:`~xml.etree.ElementTree.Element`. Defaults to `None`.
+                :obj:`~xml.etree.ElementTree.Element`. Defaults to `None`.
         """
         self.faultcode = faultcode
         self.faultstring = faultstring
@@ -267,9 +267,8 @@ class SoapMessage(object):
                 still encoded as utf-8.
 
         Raises:
-            SoapFault: if a SOAP error occurs.
-            :class:`~requests.exceptions.HTTPError`: if an http error
-                occurs.
+             SoapFault: if a SOAP error occurs.
+             ~requests.exceptions.HTTPError: if an http error occurs.
 
         """
 

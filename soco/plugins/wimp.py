@@ -100,23 +100,28 @@ class Wimp(SoCoPlugin):
 
     """Class that implements a Wimp plugin.
 
-    .. note:: There is an (apparent) in-consistency in the use of one data
-    type from the Wimp service. When searching for playlists, the XML returned
-    by the Wimp server indicates, that the type is an 'album list', and it
-    thus suggest, that this type is used for a list of tracks (as expected for
-    a playlist), and this data type is reported to be playable. However, when
-    browsing the music tree, the Wimp server will return items of 'album list'
-    type, but in this case it is used for a list of albums and it is not
-    playable. This plugin maintains this (apparent) in-consistency to stick
-    as close to the reported data as possible, so search for playlists returns
-    MSAlbumList that are playable and while browsing the content tree the
-    MSAlbumList items returned to you are not playable.
+    Note:
+        There is an (apparent) in-consistency in the use of one data
+        type from the Wimp service. When searching for playlists, the XML
+        returned by the Wimp server indicates, that the type is an 'album
+        list', and it thus suggest, that this type is used for a list of
+        tracks (as expected for a playlist), and this data type is reported
+        to be playable. However, when browsing the music tree, the Wimp
+        server will return items of 'album list' type, but in this case it
+        is used for a list of albums and it is not playable. This plugin
+        maintains this (apparent) in-consistency to stick as close to the
+        reported data as possible, so search for playlists returns
+        MSAlbumList that are playable and while browsing the content tree
+        the MSAlbumList items returned to you are not playable.
 
-    .. note:: Wimp in some cases lists tracks that are not available. In these
-    cases, while it will correctly report these tracks as not being playable,
-    the containing data structure like e.g. the album they are on may report
-    that they are playable. Trying to add one of these to the queue will
-    return a SoCoUPnPException with error code '802'.
+
+    Note:
+       Wimp in some cases lists tracks that are not available. In these
+       cases, while it will correctly report these tracks as not being
+       playable, the containing data structure like e.g. the album they are
+       on may report that they are playable. Trying to add one of these to
+       the queue will return a SoCoUPnPException with error code '802'.
+
     """
 
     def __init__(self, soco, username, retries=3, timeout=3.0):
@@ -135,14 +140,16 @@ class Wimp(SoCoPlugin):
             shorter than 3 seconds.
         :type timeout: float
 
-        .. note:: If you are using a phone number as the username and are
-        experiencing problems connecting, then try to prepend the area code
-        (no + or 00). I.e. if your phone number is 12345678 and you are from
-        denmark, then use 4512345678. This must be set up the same way in the
-        Sonos device.  For details see:
-        https://wimp.zendesk.com/entries/23198372-Hvorfor-kan-jeg-ikke-logge-
-        p%C3%A5-WiMP-med-min-Sonos-n%C3%A5r-jeg-har-et-gyldigt-abonnement- (In
-        Danish)
+        Note:
+
+            If you are using a phone number as the username and are
+            experiencing problems connecting, then try to prepend the area
+            code (no + or 00). I.e. if your phone number is 12345678 and you
+            are from denmark, then use 4512345678. This must be set up the
+            same way in the Sonos device.  For details see `here
+            <https://wimp.zendesk.com/hc/da/articles/204311810-Hvorfor-kan
+            -jeg-ikke-logge-p%C3%A5-WiMP-med-min-Sonos-n%C3%A5r-jeg-har-et
+            -gyldigt-abonnement->`_ (In Danish)
         """
         super(Wimp, self).__init__(soco)
 
@@ -179,7 +186,7 @@ class Wimp(SoCoPlugin):
     @property
     def description(self):
         """Return the music service description for the DIDL metadata on the
-        form SA_RINCON5127_...self.username..."""
+        form ``'SA_RINCON5127_...self.username...'``"""
         return 'SA_RINCON5127_{0}'.format(self._username)
 
     def get_tracks(self, search, start=0, max_items=100):
@@ -211,8 +218,10 @@ class Wimp(SoCoPlugin):
 
         See get_music_service_information for details on the arguments.
 
-        .. note:: Un-intuitively this method returns MSAlbumList items. See
-        note in class doc string for details.
+        Note:
+
+            Un-intuitively this method returns MSAlbumList items. See
+            note in class doc string for details.
         """
         return self.get_music_service_information('playlists', search, start,
                                                   max_items)
@@ -231,8 +240,9 @@ class Wimp(SoCoPlugin):
         :param max_items: The maximum number of returned items
         :type max_items: int
 
-        .. note:: Un-intuitively the playlist search returns MSAlbumList
-        items. See note in class doc string for details.
+        Note:
+            Un-intuitively the playlist search returns MSAlbumList
+            items. See note in class doc string for details.
         """
         # Check input
         if search_type not in ['artists', 'albums', 'tracks', 'playlists']:
@@ -270,14 +280,17 @@ class Wimp(SoCoPlugin):
         """Return the sub-elements of item or of the root if item is None
 
         :param item: Instance of sub-class of
-        :py:class:`soco.data_structures.MusicServiceItem`. This object must
-        have item_id, service_id and extended_id properties
+            :py:class:`soco.data_structures.MusicServiceItem`. This object must
+            have item_id, service_id and extended_id properties
 
-        .. note:: Browsing a MSTrack item will return itself.
+        Note:
+            Browsing a MSTrack item will return itself.
 
-        .. note:: This plugin cannot yet set the parent ID of the results
-        correctly when browsing :py:class:`soco.data_structures.MSFavorites`
-        and :py:class:`soco.data_structures.MSCollection` elements.
+        Note:
+            This plugin cannot yet set the parent ID of the results
+            correctly when browsing
+            :py:class:`soco.data_structures.MSFavorites` and
+            :py:class:`soco.data_structures.MSCollection` elements.
 
         """
         # Check for correct service
@@ -350,7 +363,7 @@ class Wimp(SoCoPlugin):
         :type item_content: dict
         :param item_class: The class of the item
         :type item_class: Sub-class of
-        :py:class:`soco.data_structures.MusicServiceItem`
+            :py:class:`soco.data_structures.MusicServiceItem`
         """
         extension = None
         if 'mime_type' in item_content:

@@ -14,15 +14,14 @@ Welcome to soco's documentation!
    plugins
    unittests
    data-structures-mod
-
    release-howto
+   authors
 
 .. toctree::
    :maxdepth: 3
    :caption: API documentation
 
    api/soco
-
 
 .. toctree::
    :maxdepth: 2

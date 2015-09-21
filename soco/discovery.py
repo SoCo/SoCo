@@ -23,7 +23,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
     Return an set containing a `SoCo` instance for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
-    ``include_invisible`` is `True`. Will block for up to `timeout` seconds,
+    ``include_invisible`` is `True`. Will block for up to ``timeout`` seconds,
     after which return `None` if no zones found.
 
     Args:

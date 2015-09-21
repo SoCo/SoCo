@@ -202,7 +202,7 @@ class MusicLibrary(object):
                 ``'genres'``, ``'composers'``, ``'tracks'``, ``'share'``,
                 ``'sonos_playlists'``, or ``'playlists'``, where playlists
                 are the imported playlists from the music library.
-            start: (int, optional): starting number of returned matches
+            start (int, optional): starting number of returned matches
                 (zero based). Default 0.
             max_items (int, optional): Maximum number of returned matches.
                 Default 100.
@@ -452,8 +452,8 @@ class MusicLibrary(object):
         """Start an update of the music library.
 
         Args:
-            album_artist_display_option (str): a value for the album
-            artist compilation setting (see `album_artist_display_option`).
+            album_artist_display_option (str): a value for the album artist
+                compilation setting (see `album_artist_display_option`).
         """
         return self.contentDirectory.RefreshShareIndex([
             ('AlbumArtistDisplayOption', album_artist_display_option),
@@ -518,7 +518,7 @@ class MusicLibrary(object):
 
         Args:
             artist (str): an artist's name.
-            album: (str): an album name.
+            album (str): an album name.
             full_album_art_uri: whether the album art URI should be
                 absolute (i.e. including the IP address). Default `False`.
 

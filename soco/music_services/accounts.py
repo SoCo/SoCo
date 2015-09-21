@@ -191,7 +191,7 @@ class Account(object):
             service_type (str): The service_type to use.
 
         Returns:
-            list: A list of `MusicAccount` instances.
+            list: A list of `Account` instances.
         """
         return [
             a for a in cls.get_accounts().values()

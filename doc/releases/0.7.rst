@@ -56,7 +56,7 @@ Data Structures
 The move to using **data structure classes** for music item information instead
 of dictionaries introduces some **backwards incompatible changes** in the
 library (see `#83 <https://github.com/SoCo/SoCo/pull/83>`_). The `get_queue`
-and `get_library_information` functions (and all methods derived from the
+and ``get_library_information`` functions (and all methods derived from the
 latter) are affected. In the data structure classes, information like
 e.g. the title is now available as named attributes.  This means that by the
 update to 0.7 it will also be necessary to update your code like e.g:

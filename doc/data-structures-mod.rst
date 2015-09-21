@@ -45,6 +45,9 @@ is implemented in :py:class:`.DidlObject`. It uses the URI, the UPnP
 class and the title that the items are instantiated with, along with the two
 class variables ``parent_id`` and ``_translation``.
 
+
+.. py:currentmodule:: soco.data_structures
+
 Functions
 =========
 

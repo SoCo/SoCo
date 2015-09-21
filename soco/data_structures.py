@@ -45,7 +45,8 @@ from .xml import (
 ###############################################################################
 
 def to_didl_string(*args):
-    """Convert any number of DIDLObjects to a unicode xml string.
+    """Convert any number of `DidlObjects <DidlObject>` to a unicode xml
+    string.
 
     Args:
         *args (DidlObject): One or more `DidlObject` (or subclass) instances.
@@ -70,7 +71,7 @@ def to_didl_string(*args):
 
 
 def from_didl_string(string):
-    """Convert a unicode xml string to a list of DIDLObjects.
+    """Convert a unicode xml string to a list of `DIDLObjects <DidlObject>`.
 
     Args:
         string (str): A unicode string containing an XML representation of one
@@ -174,7 +175,7 @@ class DidlResource(object):
         """Set the resource properties from a ``<res>`` element.
 
         Args:
-            element (:class:`~xml.etree.ElementTree.Element`): The ``<res>``
+            element (~xml.etree.ElementTree.Element): The ``<res>``
                 element
 
         """
@@ -222,7 +223,7 @@ class DidlResource(object):
         """Return an ElementTree Element based on this resource.
 
         Returns:
-            :class:`~xml.etree.ElementTree.Element`: an Element.
+            ~xml.etree.ElementTree.Element: an Element.
         """
         if not self.protocol_info:
             raise Exception('Could not create Element for this resource: '
@@ -296,7 +297,8 @@ class DidlResource(object):
 
         Args:
             content (dict): a dict containing metadata information. Required.
-                Valid keys are the same as the parameters for `__init__`.
+                Valid keys are the same as the parameters for
+                `DidlResource`.
         """
         return cls(**content)
 
@@ -363,16 +365,9 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             </desc>
           </item>
         </DIDL-Lite>
-
-    Attributes:
-        tag (str): The XML element tag name used for this instance.
-        _translation (dict): A dict used to translate between instance
-            attribute names and XML tags/namespaces. It also serves to define
-            the allowed tags/attributes for this instance. Overridden and
-            extended by subclasses.
     """
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object'
     tag = 'item'
     # key: attribute_name: (ns, tag)
@@ -390,8 +385,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             item_id (str): the ID for the item.
             restricted (bool): whether the item can be modified. Default `True`
             resources (list, optional): a list of resources for this object.
-            Default
-                `None
+            Default `None`.
             desc (str): A DIDL descriptor, default
                 ``'RINCON_AssociatedZPUDN'``. This is not the same as
                 "description". It is used for identifying the relevant
@@ -399,6 +393,24 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             **kwargs: Extra metadata. What is allowed depends on the
                 ``_translation`` class attribute, which in turn depends on the
                 DIDL class.
+
+
+
+        ..  autoattribute:: item_class
+
+            str - the DIDL Lite class for this object.
+
+        ..  autoattribute:: tag
+
+            str - the XML element tag name used for this instance.
+
+        ..  autoattribute:: _translation
+
+            dict - A dict used to translate between instance attribute
+            names and XML tags/namespaces. It also serves to define the
+            allowed tags/attributes for this instance. Each key an attribute
+            name and each key is a ``(namespace, tag)`` tuple.
+
         """
         # All didl objects *must* have a title, a parent_id and an item_id
         # so we specify these as required args in the constructor signature
@@ -447,7 +459,8 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         <container> element, and must be properly namespaced.
 
         Args:
-            xml (Element): An :py:class:`xml.etree.ElementTree.Element` object.
+            xml (~xml.etree.ElementTree.Element): An
+                :class:`~xml.etree.ElementTree.Element` object.
         """
         # We used to check here that we have the right sort of element,
         # ie a container or an item. But Sonos seems to use both
@@ -524,7 +537,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
         Args:
             content (dict): a dict containing metadata information. Required.
-                Valid keys are the same as the parameters for `__init__`.
+                Valid keys are the same as the parameters for `DidlObject`.
 
         """
         # Do we really need this constructor? Could use DidlObject(**content)
@@ -622,7 +635,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                 namespace attributes on the root element
 
         Return:
-            :class:`~xml.etree.ElementTree.Element`: an Element.
+            ~xml.etree.ElementTree.Element: an Element.
         """
         elt_attrib = {}
         if include_namespaces:
@@ -676,7 +689,7 @@ class DidlItem(DidlObject):
 
     # The spec allows for an option 'refID' attribute, but we do not handle it
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.item'
     # _translation = DidlObject._translation.update({ ...})
     # does not work, but doing it in two steps does
@@ -694,7 +707,7 @@ class DidlAudioItem(DidlItem):
 
     """An audio item."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem'
     _translation = DidlItem._translation.copy()
     _translation.update(
@@ -755,7 +768,7 @@ class DidlMusicTrack(DidlAudioItem):
 
     """Class that represents a music library track."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.musicTrack'
     # name: (ns, tag)
     _translation = DidlAudioItem._translation.copy()
@@ -775,7 +788,7 @@ class DidlAudioBroadcast(DidlAudioItem):
 
     """Class that represents an audio broadcast."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBroadcast'
     _translation = DidlAudioItem._translation.copy()
     _translation.update(
@@ -797,7 +810,7 @@ class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
     # the DIDL spec, so just assume that it has the same definition as the
     # regular object.item.audioItem.audioBroadcast
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBroadcast.sonos-favorite'
 
 
@@ -809,7 +822,7 @@ class DidlContainer(DidlObject):
 
     """Class that represents a music library container."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container'
     tag = 'container'
     # We do not implement createClass or searchClass. Not used by Sonos??
@@ -820,7 +833,7 @@ class DidlAlbum(DidlContainer):
 
     """A content directory album."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.album'
     # name: (ns, tag)
     _translation = DidlContainer._translation.copy()
@@ -841,7 +854,7 @@ class DidlMusicAlbum(DidlAlbum):
 
     """Class that represents a music library album."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum'
     # According to the spec, all musicAlbums should be represented in
     # XML by a <container> tag. Sonos sometimes uses <container> and
@@ -870,7 +883,7 @@ class DidlMusicAlbumFavorite(DidlAlbum):
     This class is not part of the DIDL spec and is Sonos specific.
     """
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum.sonos-favorite'
     # Despite the fact that the item derives from object.container, it's
     # XML does not include a <container> tag, but an <item> tag. This seems
@@ -887,7 +900,7 @@ class DidlMusicAlbumCompilation(DidlAlbum):
     # These classes appear when browsing the library and Sonos has been set
     # to group albums using compilations.
     # See https://github.com/SoCo/SoCo/issues/280
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.album.musicAlbum.compilation'
     tag = 'container'
 
@@ -896,7 +909,7 @@ class DidlPerson(DidlContainer):
 
     """A content directory class representing a person."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.person'
     tag = 'item'
     #: dfdf
@@ -914,7 +927,7 @@ class DidlComposer(DidlPerson):
 
     # Not in the DIDL-Lite spec. Sonos specific??
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.person.composer'
 
 
@@ -922,7 +935,7 @@ class DidlMusicArtist(DidlPerson):
 
     """Class that represents a music library artist."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.person.musicArtist'
     # name: (ns, tag)
     _translation = DidlPerson._translation.copy()
@@ -940,7 +953,7 @@ class DidlAlbumList(DidlContainer):
 
     # This does not appear (that I can find) in the DIDL-Lite specs.
     # Presumably Sonos specific
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.albumlist'
 
 
@@ -981,7 +994,7 @@ class DidlSameArtist(DidlPlaylistContainer):
     """
 
     # Not in the DIDL-Lite spec. Sonos specific?
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.playlistContainer.sameArtist'
 
 
@@ -989,7 +1002,7 @@ class DidlGenre(DidlContainer):
 
     """A content directory class representing a general genre."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.genre'
     # name: (ns, tag)
 
@@ -1008,7 +1021,7 @@ class DidlMusicGenre(DidlGenre):
 
     """Class that represents a music genre."""
 
-    #: str: the DIDL Lite class for this object.
+    # the DIDL Lite class for this object.
     item_class = 'object.container.genre.musicGenre'
     tag = 'item'
 

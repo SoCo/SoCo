@@ -356,7 +356,7 @@ class Service(object):
         Raises:
             `SoCoUPnPException`: if a SOAP error occurs.
             `UnknownSoCoException`: if an unknonwn UPnP error occurs.
-            :class:`~requests.exceptions.HTTPError`: if an http error
+            `requests.exceptions.HTTPError`: if an http error.
 
         """
         if cache is None:

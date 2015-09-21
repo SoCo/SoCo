@@ -17,7 +17,7 @@ TIME_FORMAT = "%H:%M:%S"
 
 
 def is_valid_recurrence(text):
-    """Check that `text` is a valid recurrence string.
+    """Check that ``text`` is a valid recurrence string.
 
     A valid recurrence string is  ``DAILY``, ``ONCE``, ``WEEKDAYS``,
     ``WEEKENDS`` or of the form ``ON_DDDDDD`` where ``D`` is a number from 0-7
@@ -25,7 +25,7 @@ def is_valid_recurrence(text):
     Sunday, Wednesday and Thursday
 
     Args:
-        text(str): the recurrence string to check.
+        text (str): the recurrence string to check.
 
     Returns:
         bool: `True` if the recurrence string is valid, else `False`.
@@ -101,7 +101,7 @@ class Alarm(object):
                 duration. Defaults to `None`.
             recurrence (str, optional): A string representing how
                 often the alarm should be triggered. Can be ``DAILY``,
-                `ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
+                ``ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
                 ``ON_DDDDDD`` where ``D`` is a number from 0-7 representing a
                 day of the week (Sunday is 0), e.g. ``ON_034`` meaning Sunday,
                 Wednesday and Thursday. Defaults to ``DAILY``.
@@ -124,21 +124,21 @@ class Alarm(object):
         self.zone = zone
         if start_time is None:
             start_time = datetime.now().time()
-        #: datetime.time: The alarm's start time.
+        #: `datetime.time`: The alarm's start time.
         self.start_time = start_time
-        #: datetime.time: The alarm's duration.
+        #: `datetime.time`: The alarm's duration.
         self.duration = duration
         self._recurrence = recurrence
-        #: bool: `True` if the alarm is enabled, else `False`.
+        #: `bool`: `True` if the alarm is enabled, else `False`.
         self.enabled = enabled
         #:
         self.program_uri = program_uri
-        #: str: The uri to play.
+        #: `str`: The uri to play.
         self.program_metadata = program_metadata
         self._play_mode = play_mode
         self._volume = volume
-        #: bool: `True` if the alarm should be played on the other speakers in
-        #  the same group, `False` otherwise.
+        #: `bool`: `True` if the alarm should be played on the other speakers
+        #: in the same group, `False` otherwise.
         self.include_linked_zones = include_linked_zones
         self._alarm_id = None
 
@@ -150,7 +150,7 @@ class Alarm(object):
     @property
     def play_mode(self):
         """
-        str: The play mode for the alarm.
+        `str`: The play mode for the alarm.
 
             Can be one of ``NORMAL``, ``SHUFFLE_NOREPEAT``, ``SHUFFLE``,
             ``REPEAT_ALL``.
@@ -167,7 +167,7 @@ class Alarm(object):
 
     @property
     def volume(self):
-        """int: The alarm's volume (0-100)."""
+        """`int`: The alarm's volume (0-100)."""
         return self._volume
 
     @volume.setter
@@ -179,7 +179,7 @@ class Alarm(object):
 
     @property
     def recurrence(self):
-        """str: How often the alarm should be triggered.
+        """`str`: How often the alarm should be triggered.
 
         Can be ``DAILY``, ``ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
         ``ON_DDDDDDD`` where ``D`` is a number from 0-7 representing a day of
@@ -200,7 +200,8 @@ class Alarm(object):
         """Save the alarm to the Sonos system.
 
         Raises:
-            `SoCoUPnPException`: if the alarm cannot be created because there
+            ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
+                because there
                 is already an alarm for this room at the specified time.
         """
         # pylint: disable=bad-continuation
