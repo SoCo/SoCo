@@ -181,10 +181,10 @@ class MusicServiceSoapClient(object):
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
-        result = parse(
+        result = list(parse(
             XML.tostring(result_elt), process_namespaces=True,
             namespaces={'http://www.sonos.com/Services/1.1': None}
-        ).values()[0]
+        ).values())[0]
 
         return result if result is not None else {}
 
