@@ -59,13 +59,14 @@ def with_metaclass(meta, *bases):
         class MyClass(with_metaclass(MyMetaClass, BaseClass)):
                 pass
     """
-    class metaclass(meta):
+    class _Metaclass(meta):
+        """Inner class"""
         __call__ = type.__call__
         __init__ = type.__init__
 
-        def __new__(cls, name, this_bases, d):
+        def __new__(cls, name, this_bases, attrs):
             if this_bases is None:
-                return type.__new__(cls, name, (), d)
-            return meta(name, bases, d)
+                return type.__new__(cls, name, (), attrs)
+            return meta(name, bases, attrs)
 
-    return metaclass(str('temporary_class'), None, {})
+    return _Metaclass(str('temporary_class'), None, {})
