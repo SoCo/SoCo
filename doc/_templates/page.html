@@ -1,0 +1,23 @@
+{#
+The purpose of this is to ensure that the image map accompanying the
+inheritance diagram included with the data_structures documentation is
+resized along with the image. The ReadTheDocs theme resizes images
+responsively, but does not reize maps, so the two get out of sync, and
+clicking on the inheritance diagram does not work properly. The javascript
+from https://github.com/davidjbradshaw/image-map-resizer fixes it.
+
+There is also a longstanding problem with the RTD theme (here:
+https://github.com/rtfd/readthedocs.org/issues/152) which means that it is
+necessary to inherit from page.html, instead of layout.html
+#}
+
+{% extends '!page.html' %}
+{% set script_files = script_files + ["_static/imageMapResizer.min.js"] %}
+
+{# Allow Sphinx's choice of pygment style to take effect: see
+https://github.com/snide/sphinx_rtd_theme/issues/166 #}
+{% set css_files = css_files + ['_static/pygments.css'] %}
+
+{% block footer %}
+<script>$('map').imageMapResize();</script>
+{% endblock %}

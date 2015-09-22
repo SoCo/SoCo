@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Provides general utility functions to be used across modules."""
+"""This class contains utility functions used internally by SoCo."""
 
 from __future__ import (
     absolute_import, print_function, unicode_literals
@@ -17,8 +17,20 @@ from .xml import XML
 
 
 def really_unicode(in_string):
-    """Ensures s is returned as a unicode string and not just a string through
-    a series of progressively relaxed decodings."""
+    """Make a string unicode. Really.
+
+    Ensure ``in_string`` is returned as unicode through a series of
+    progressively relaxed decodings.
+
+    Args:
+        in_string (str): The string to convert.
+
+    Returns:
+        str: Unicode.
+
+    Raises:
+        ValueError
+        """
     if isinstance(in_string, StringType):
         for args in (('utf-8',), ('latin-1',), ('ascii', 'replace')):
             try:
@@ -33,13 +45,20 @@ def really_unicode(in_string):
 
 
 def really_utf8(in_string):
-    """ First decodes s via really_unicode to ensure it can successfully be
-    encoded as utf-8 This is required since just calling encode on a string
-    will often cause python to perform a coerced strict auto-decode as ascii
-    first and will result in a UnicodeDecodeError being raised After
-    really_unicode returns a safe unicode string, encode as 'utf-8' and return
-    the utf-8 encoded string.
+    """Encode a string with utf-8. Really.
 
+    First decode ``in_string`` via `really_unicode` to ensure it can
+    successfully be encoded as utf-8. This is required since just calling
+    encode on a string will often cause Python 2 to perform a coerced strict
+    auto-decode as ascii first and will result in a `UnicodeDecodeError` being
+    raised. After `really_unicode` returns a safe unicode string, encode as
+    utf-8 and return the utf-8 encoded string.
+
+   Args:
+        in_string (str): The string to convert.
+
+    Returns:
+        str: utf-encoded data.
     """
     return really_unicode(in_string).encode('utf-8')
 
@@ -49,16 +68,31 @@ ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
 
 def camel_to_underscore(string):
-    """ Convert camelcase to lowercase and underscore
+    """Convert camelcase to lowercase and underscore.
+
     Recipe from http://stackoverflow.com/a/1176023
+
+    Args:
+        string (str): The string to convert.
+
+    Returns:
+        str: The converted string.
     """
     string = FIRST_CAP_RE.sub(r'\1_\2', string)
     return ALL_CAP_RE.sub(r'\1_\2', string).lower()
 
 
 def prettify(unicode_text):
-    """Return a pretty-printed version of a unicode XML string. Useful for
-    debugging.
+    """Return a pretty-printed version of a unicode XML string.
+
+    Useful for debugging.
+
+    Args:
+        unicode_text (str): A text representation of XML (unicode,
+            *not* utf-8).
+
+    Returns:
+        str: A pretty-printed version of the input.
 
     """
     import xml.dom.minidom
@@ -67,14 +101,15 @@ def prettify(unicode_text):
 
 
 def show_xml(xml):
-    """Pretty print an ElementTree XML object.
+    """Pretty print an :class:`~xml.etree.ElementTree.ElementTree` XML object.
 
     Args:
-        xml (ElementTree): The :py:class:`xml.etree.ElementTree` to pretty
-            print
+        xml (:class:`~xml.etree.ElementTree.ElementTree`): The
+            :class:`~xml.etree.ElementTree.ElementTree` to pretty print
 
-    NOTE: This function is a convenience function used during development, it
-    is not used anywhere in the main code base
+    Note:
+        This is used a convenience function used during development. It
+        is not used anywhere in the main code base.
     """
     string = XML.tostring(xml)
     print(prettify(string))
@@ -82,18 +117,19 @@ def show_xml(xml):
 
 class deprecated(object):
 
-    """A decorator to mark deprecated objects.
+    """A decorator for marking deprecated objects.
 
-    Causes a warning to be issued when the object is used, and marks the object
-    as deprecated in the Sphinx docs.
+    Used internally by SoCo to cause a warning to be issued when the object
+    is used, and marks the object as deprecated in the Sphinx documentation.
 
-    args:
-        since (str): The version in which the object is deprecated
+    Args:
+        since (str): The version in which the object is deprecated.
         alternative (str, optional): The name of an alternative object to use
+        will_be_removed_in (str, optional): The version in which the object is
+            likely to be removed.
 
     Example:
-
-        ::
+        ..  code-block:: python
 
             @deprecated(since="0.7", alternative="new_function")
             def old_function(args):
@@ -129,7 +165,7 @@ class deprecated(object):
             docs += "\n     Will be removed in version {0}.".format(
                 self.will_be_removed_in)
         if self.alternative is not None:
-            docs += "\n     Use {0} instead.".format(self.alternative)
+            docs += "\n     Use `{0}` instead.".format(self.alternative)
         if decorated.__doc__ is None:
             decorated.__doc__ = ''
         decorated.__doc__ += docs
@@ -138,6 +174,12 @@ class deprecated(object):
 
 def url_escape_path(path):
     """Escape a string value for a URL request path.
+
+    Args:
+        str: The path to escape
+
+    Returns:
+        str: The escaped path
 
     >>> url_escape_path("Foo, bar & baz / the hackers")
     u'Foo%2C%20bar%20%26%20baz%20%2F%20the%20hackers'

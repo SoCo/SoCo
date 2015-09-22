@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Accounts for Third Party music services."""
+"""This module contains classes relating to Third Party music services."""
 
 from __future__ import (
     absolute_import, unicode_literals
@@ -22,36 +22,30 @@ class Account(object):
 
     """An account for a Music Service.
 
-    Each service may have more than one account: see
-    http://www.sonos.com/en-gb/software/release/5-2
+    Each service may have more than one account: see the `Sonos release notes
+    for version 5-2 <http://www.sonos.com/en-gb/software/release/5-2>`_
     """
 
     _all_accounts = weakref.WeakValueDictionary()
 
     def __init__(self):
-        """Constructor.
-
-        Args:
-            service_type (str): A unique identifier for the music service to
-                which this account relates, eg '2311' for Spotify.
-            serial_number: (str): A unique identifier for this account
-            nickname (str): The account's nickname
-            deleted (bool): True if this account has been deleted
-            username (str): The username used for logging into the music
-                service
-            metadata (str): Metadata for the account
-            oa_device_id (str): Used for OpenAuth id for some services
-            key (str): Used for OpenAuthid for some services
-        """
-
         super(Account, self).__init__()
+        #: str: A unique identifier for the music service to which this
+        #: account relates, eg ``'2311'`` for Spotify.
         self.service_type = ''
+        #: str: A unique identifier for this account
         self.serial_number = ''
+        #: str: The account's nickname
         self.nickname = ''
+        #: bool: `True` if this account has been deleted
         self.deleted = False
+        #: str: The username used for logging into the music service
         self.username = ''
+        #: str: Metadata for the account
         self.metadata = ''
+        #: str: Used for OpenAuth id for some services
         self.oa_device_id = ''
+        #: str: Used for OpenAuthid for some services
         self.key = ''
 
     def __repr__(self):
@@ -71,11 +65,11 @@ class Account(object):
         """Fetch the account data from a Sonos device.
 
         Args:
-            soco (SoCo): a SoCo instance to query. If soco is none, a
+            soco (SoCo): a SoCo instance to query. If soco is `None`, a
                 random device will be used.
 
         Returns:
-            (str): a byte string containing the account data xml
+            str: a byte string containing the account data xml
         """
         # It is likely that the same information is available over UPnP as well
         # via a call to
@@ -91,11 +85,11 @@ class Account(object):
 
     @classmethod
     def get_accounts(cls, soco=None):
-        """Get a dict containing all accounts known to the Sonos system.
+        """Get all accounts known to the Sonos system.
 
         Args:
-            soco (SoCo, optional): a SoCo instance to query. If None, a random
-            instance is used. Defaults to None
+            soco (`SoCo`, optional): a `SoCo` instance to query. If `None`, a
+                random instance is used. Defaults to `None`.
 
         Returns:
             dict: A dict containing account instances. Each key is the
@@ -194,10 +188,10 @@ class Account(object):
         """Get a list of accounts for a given music service.
 
         Args:
-            service_type (str): The service_type to use
+            service_type (str): The service_type to use.
 
         Returns:
-            (list): A list of MusicAccount instances
+            list: A list of `Account` instances.
         """
         return [
             a for a in cls.get_accounts().values()

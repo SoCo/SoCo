@@ -7,24 +7,34 @@ from __future__ import unicode_literals
 
 class SoCoException(Exception):
 
-    """base exception raised by SoCo, containing the UPnP error code."""
+    """Base class for all SoCo exceptions."""
 
 
 class UnknownSoCoException(SoCoException):
 
-    """raised if reason of the error can not be extracted.
+    """An unknown UPnP error.
 
     The exception object will contain the raw response sent back from
-    the speaker
+    the speaker as the first of its args.
     """
 
 
 class SoCoUPnPException(SoCoException):
 
-    """encapsulates UPnP Fault Codes raised in response to actions sent over
-    the network."""
+    """A UPnP Fault Code, raised in response to actions sent over the
+    network.
+
+    """
 
     def __init__(self, message, error_code, error_xml, error_description=""):
+        """
+        Args:
+            message (str): The message from the server.
+            error_code (str): The UPnP Error Code as a string.
+            error_xml (str): The xml containing the error, as a utf-8
+                encoded string.
+            error_description (str): A description of the error. Default is ""
+        """
         super(SoCoUPnPException, self).__init__()
         self.message = message
         self.error_code = error_code
@@ -37,9 +47,9 @@ class SoCoUPnPException(SoCoException):
 
 class CannotCreateDIDLMetadata(SoCoException):
 
-    """ Deprecated in v.0.11 and will be removed in a future version.
-
-    Use DIDLMetadataError instead.
+    """
+    ..  deprecated:: 0.11
+        Use `DIDLMetadataError` instead.
     """
 
 
@@ -49,8 +59,8 @@ class DIDLMetadataError(CannotCreateDIDLMetadata):
     missing information.
 
     For backward compatibility, this is currently a subclass of
-    CannotCreateDIDLMetadata. In a future version, it will likely become
-    a direct subclass of SoCoException.
+    `CannotCreateDIDLMetadata`. In a future version, it will likely become
+    a direct subclass of `SoCoException`.
     """
 
 
@@ -61,7 +71,7 @@ class MusicServiceException(SoCoException):
 
 class UnknownXMLStructure(SoCoException):
 
-    """Raised if XML with and unknown or unexpected structure is returned."""
+    """Raised if XML with an unknown or unexpected structure is returned."""
 
 
 class SoCoSlaveException(SoCoException):

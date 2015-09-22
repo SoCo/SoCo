@@ -17,7 +17,7 @@ testing tool installed. You will also need a copy of `Mock <http://www.voidspace
 Mock comes with Python >=3.3, but has been backported for Python 2.7
 
 You can install them and other development dependencies using the
-`requirements-dev.txt` file like this:
+:file:`requirements-dev.txt` file like this:
 
 .. code-block:: sh
 
@@ -31,7 +31,7 @@ There are different ways of running the unit tests. The easiest is to use ``py.t
 .. code-block:: sh
 
 	py.test
-	
+
 For others, see the `py.test documentation <http://pytest.org/latest/usage.html>`_
 
 .. note:: To run the unittests in this way, the soco package must be
@@ -166,13 +166,13 @@ etc. should be restored after the testing is complete.
 Add a new unit test module (for a new class under test)
 =======================================================
 
-To add unit tests for the methods in a new class follow the steps below: 
+To add unit tests for the methods in a new class follow the steps below:
 
 1. Make a new file in the unit test folder named as mentioned in
    section :ref:`section_one_module_per_class`.
-2. (Optional) Define an `init` function in the unit test module. Do
+2. (Optional) Define an ``init`` function in the unit test module. Do
    this only if it is necessary to pass information to the tests at
-   run time. Read more about the `init` function in the section
+   run time. Read more about the ``init`` function in the section
    :ref:`section_init_function`.
 3. Add test case classes to this module. See :ref:`section_add_unit_test`.
 
@@ -196,7 +196,7 @@ the file ``execute_unittests.py``.:
    where both the new imaginary ``foo_bar`` entry and the existing
    ``soco`` entry are shown for clarity. The arguments dict is what will be
    passed on to the ``init`` method, see section
-   :ref:`section_init_function`. 
+   :ref:`section_init_function`.
 3. Lastly, add the new module to the help text for the ``modules``
    command line argument, defined in the ``__build_option_parser``
    function::
@@ -210,8 +210,8 @@ the file ``execute_unittests.py``.:
 
 .. _section_init_function:
 
-The `init` function
--------------------
+The ``init`` function
+---------------------
 
 Normally unit tests should be self-contained and therefore they should
 have all the data they will need built in. However, that does not

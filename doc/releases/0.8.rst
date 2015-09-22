@@ -71,11 +71,11 @@ New Features
 * Network requests can be cached for better performance (`#131
   <https://github.com/SoCo/SoCo/pull/131>`_).
 
-* It is now possible to subscribe to events of a service using its `subscribe`
-  method, which returns a `Subscription` object. To unsubscribe, call the
-  `unsubscribe` method on the returned object. (`#121
-  <https://github.com/SoCo/SoCo/pull/121>`_, `#130
-  <https://github.com/SoCo/SoCo/pull/130>`_)
+* It is now possible to subscribe to events of a service using its
+  :meth:`~soco.services.Service.subscribe` method, which returns a
+  `Subscription` object. To unsubscribe, call the `unsubscribe` method on the
+  returned object. (`#121 <https://github.com/SoCo/SoCo/pull/121>`_,
+  `#130 <https://github.com/SoCo/SoCo/pull/130>`_)
 
 * Support for reading and setting crossfade (`#165
   <https://github.com/SoCo/SoCo/pull/165>`_)
@@ -90,7 +90,7 @@ Improvements
 * Various improvements to the Wimp plugin (`#140
   <https://github.com/SoCo/SoCo/pull/140>`_).
 
-* Test coverage tracking using `coveralls.io <http://coveralls.io/>`_ (`#163
+* Test coverage tracking using `coveralls.io <https://coveralls.io/>`_ (`#163
   <https://github.com/SoCo/SoCo/pull/163>`_)
 
 

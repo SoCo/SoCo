@@ -55,3 +55,4 @@ The ``SoCoPlugin`` class
 
 .. autoclass:: soco.plugins.SoCoPlugin
    :members:
+   :noindex:
