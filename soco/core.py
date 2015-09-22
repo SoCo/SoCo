@@ -18,7 +18,7 @@ from . import config
 from .compat import UnicodeType
 from .data_structures import (
     DidlObject, DidlPlaylistContainer, DidlResource,
-    Queue, from_didl_string, to_didl_string
+    Queue, from_didl_string, to_didl_string, SearchResult,
 )
 from .exceptions import SoCoSlaveException
 from .groups import ZoneGroup
@@ -189,6 +189,11 @@ class SoCo(_SocoSingletonBase):
     """
 
     _class_group = 'SoCo'
+
+    radio_translation = {
+        'radio_stations': 0,
+        'radio_shows': 1,
+    }
 
     # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
@@ -491,6 +496,30 @@ class SoCo(_SocoSingletonBase):
         return False
 
     @only_on_master
+    def play_stream(self, stream_object, start=True):
+        """Play a DIDL object as a stream.
+
+        To play as a stream means that this single will be played without
+        affecting the queue
+
+        Args:
+            stream_object (DidlObject): A Didl Object that represents a stream
+            start (bool): Whether to start play back after adding the stream
+        """
+        # E.g. radio favorites are returned without an desc element. This hack
+        # may turn out to be insufficient if we want to try and play radio
+        # stations from music services in the future
+        if stream_object.desc is None:
+            stream_object.desc = 'SA_RINCON65031_'
+        meta = to_didl_string(stream_object)
+        self.avTransport.SetAVTransportURI([
+            ('InstanceID', 0),
+            ('CurrentURI', stream_object.resources[0].uri),
+            ('CurrentURIMetaData', meta)
+        ])
+        if start:
+            self.play()
+
     def pause(self):
         """Pause the currently playing track.
 
@@ -1310,76 +1339,65 @@ class SoCo(_SocoSingletonBase):
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """Get favorite radio shows from Sonos' Radio app.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio shows,
-        represented as a dictionary with `title` and `uri` keys.
+        .. note:: These objects returned by this method, cannot yet be browsed
+            to get to the actual playable shows. This functionality will be
+            added later. For now, the object are only for information.
 
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        Args:
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
+
+        ``start`` and ``max_items`` are used for paging of the results.
+
+        Returns:
+            :class:`~.SearchResult`: A :class:`~.SearchResult` object,
+                containing both the search results and search metdata
         """
 
-        return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
+        return self.__get_radio_favorites('radio_shows', start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio stations,
-        represented as a dictionary with `title` and `uri` keys.
+        Args:
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
 
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        ``start`` and ``max_items`` are used for paging of the results.
+
+        Returns:
+            :class:`~.SearchResult`: A :class:`~.SearchResult` object,
+                containing both the search results and search metdata
         """
-        return self.__get_radio_favorites(RADIO_STATIONS, start, max_items)
+        return self.__get_radio_favorites('radio_stations', start, max_items)
 
     def __get_radio_favorites(self, favorite_type, start=0, max_items=100):
         """ Helper method for `get_favorite_radio_*` methods.
 
-        Arguments:
-        favorite_type -- Specify either `RADIO_STATIONS` or `RADIO_SHOWS`.
-        start -- Which number to start the retrieval from. Used for paging.
-        max_items -- The total number of results to return.
+        Args:
+            favorite_type (str): Either `radio_stations` or `radio_shows`.
+            start (int): The number to start the retrieval from.
+            max_items (int): The total number of results to return.
 
+        ``start`` and ``max_items`` are used for paging of the results.
         """
-        if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
-            favorite_type = RADIO_STATIONS
+        try:
+            browse_type = favorite_type
+            favorite_type = self.radio_translation[favorite_type]
+        except KeyError:
+            favorite_type = self.radio_translation['radio_stations']
+            browse_type = 'radio_stations'
 
-        response = self.contentDirectory.Browse([
-            ('ObjectID', 'R:0/{0}'.format(favorite_type)),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', start),
-            ('RequestedCount', max_items),
-            ('SortCriteria', '')
-        ])
-        result = {}
-        favorites = []
-        results_xml = response['Result']
+        response, metadata = self._music_lib_search(
+            'R:0/{0}'.format(favorite_type), start, max_items
+        )
+        metadata['search_type'] = 'browse_favorite_' + browse_type
 
-        if results_xml != '':
-            # Favorites are returned in DIDL-Lite format
-            metadata = XML.fromstring(really_utf8(results_xml))
+        # Parse the results
+        containers = from_didl_string(response['Result'])
 
-            for item in metadata.findall(
-                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
-                favorite = {}
-                favorite['title'] = item.findtext(
-                    '{http://purl.org/dc/elements/1.1/}title')
-                favorite['uri'] = item.findtext(
-                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
-                favorites.append(favorite)
-
-        result['total'] = response['TotalMatches']
-        result['returned'] = len(favorites)
-        result['favorites'] = favorites
-
-        return result
+        # pylint: disable=star-args
+        return SearchResult(containers, **metadata)
 
     def _update_album_art_to_full_uri(self, item):
         """Update an item's Album Art URI to be an absolute URI.

@@ -472,9 +472,9 @@ class DidlObject(DidlMetaClass(str('DidlMetaClass'), (object,), {})):
 
     @classmethod
     def from_dict(cls, content):
-        """Create an instance from a dict.
+        r"""Create an instance from a dict.
 
-        An alternative constructor. Equivalent to DidlObject(**content).
+        An alternative constructor. Equivalent to DidlObject(\*\*content).
 
         Arg:
             content (dict): Dict containing metadata information.Required and
@@ -952,6 +952,13 @@ class DidlMusicGenre(DidlGenre):
 
     item_class = 'object.container.genre.musicGenre'
     tag = 'item'
+
+
+class DidlRadioShow(DidlContainer):
+
+    """Class that represents a music genre."""
+
+    item_class = 'object.container.radioShow'
 
 
 ###############################################################################
