@@ -7,11 +7,15 @@ Installation
 ------------
 
 To install the latest released version of **SoCo**, use `pip
-<https://pypi.python.org/pypi/pip>`_.
+<http://pip.readthedocs.org/en/stable/>`_.
 
 Make sure you have up-to-date versions of ``pip`` and ``setuptools``::
 
     $ pip install -U pip setuptools
+
+or, if you are using Windows::
+
+    C:\> python -m pip install -U pip setuptools
 
 then install like this::
 
