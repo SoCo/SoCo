@@ -9,6 +9,8 @@ people`_ at its `GitHub repository`_
 For more background on the project, please see Rahim's `blog post
 <http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/>`_.
 
+Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
+
 .. image:: https://travis-ci.org/SoCo/SoCo.svg?branch=master
    :target: https://travis-ci.org/SoCo/SoCo
    :alt: Build Status
@@ -212,3 +214,4 @@ SoCo is released under the `MIT license`_.
 .. _GitHub repository: https://github.com/SoCo/SoCo
 .. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
 .. _Google Groups: https://groups.google.com/forum/#!forum/python-soco
+.. _SoCo documentation: https://soco.readthedocs.org/en/latest/
