@@ -1358,8 +1358,9 @@ class SoCo(_SocoSingletonBase):
             favorite_type = SONOS_FAVORITES
 
         response = self.contentDirectory.Browse([
-            ('ObjectID', 'FV:2' if favorite_type is SONOS_FAVORITES
-                         else 'R:0/{0}'.format(favorite_type)),
+            ('ObjectID',
+             'FV:2' if favorite_type is SONOS_FAVORITES
+             else 'R:0/{0}'.format(favorite_type)),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', start),
