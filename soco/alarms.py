@@ -113,7 +113,8 @@ class Alarm(object):
                 `program_uri`. Defaults to ''.
             play_mode(str, optional): The play mode for the alarm. Can be one
                 of ``NORMAL``, ``SHUFFLE_NOREPEAT``, ``SHUFFLE``,
-                ``REPEAT_ALL``. Defaults to ``NORMAL``.
+                ``REPEAT_ALL``, ``REPEAT_ONE``, ``SHUFFLE_REPEAT_ONE``.
+                Defaults to ``NORMAL``.
             volume (int, optional): The alarm's volume (0-100). Defaults to 20.
             include_linked_zones (bool, optional): `True` if the alarm should
                 be played on the other speakers in the same group, `False`
@@ -153,7 +154,7 @@ class Alarm(object):
         `str`: The play mode for the alarm.
 
             Can be one of ``NORMAL``, ``SHUFFLE_NOREPEAT``, ``SHUFFLE``,
-            ``REPEAT_ALL``.
+            ``REPEAT_ALL``, ``REPEAT_ONE``, ``SHUFFLE_REPEAT_ONE``.
         """
         return self._play_mode
 
