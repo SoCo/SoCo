@@ -1014,6 +1014,11 @@ class SoCo(_SocoSingletonBase):
         values. For example, a track may not have complete metadata and be
         missing an album name. In this case track['album'] will be an empty
         string.
+
+        .. note:: Calling this method on a slave in a group will not
+            return the track the group is playing, but the last track
+            this speaker was playing.
+
         """
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
