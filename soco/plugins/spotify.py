@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable = redefined-variable-type
 
 """Spotify Plugin."""
 

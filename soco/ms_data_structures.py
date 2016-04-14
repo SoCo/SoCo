@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable = star-args, too-many-arguments
+# pylint: disable = star-args, too-many-arguments, unsupported-membership-test
+# pylint: disable = not-an-iterable
 
 """This module contains all the data structures for music service plugins."""
 

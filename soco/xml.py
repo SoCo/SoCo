@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name,wrong-import-position
 
 """This class contains XML related utility functions."""
 
