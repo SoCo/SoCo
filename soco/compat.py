@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unused-import,import-error,no-name-in-module
+# pylint: disable=unused-import,import-error,no-name-in-module,
+# pylint: disable=ungrouped-imports
 
 """This module contains various compatibility definitions and imports.
 
