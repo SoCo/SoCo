@@ -305,7 +305,7 @@ class TestSoco:
 class TestAVTransport:
 
     @pytest.mark.parametrize('playmode', [
-        "NORMAL", "REPEAT_ALL", "SHUFFLE", "SHUFFLE_NOREPEAT"
+        "NORMAL", "SHUFFLE_NOREPEAT", "SHUFFLE", "REPEAT_ALL", "SHUFFLE_REPEAT_ONE", "REPEAT_ONE"
     ])
     def test_soco_play_mode_values(self, moco, playmode):
         moco.avTransport.GetTransportSettings.return_value = {

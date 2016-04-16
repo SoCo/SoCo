@@ -1850,7 +1850,8 @@ NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
       '': '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}'}
 # Valid play modes
-PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL')
+PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL',
+              'SHUFFLE_REPEAT_ONE', 'REPEAT_ONE')
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
