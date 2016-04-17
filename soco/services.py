@@ -45,7 +45,7 @@ from .exceptions import (
     SoCoUPnPException, UnknownSoCoException
 )
 from .utils import prettify
-from .xml import XML
+from .xml import XML, illegal_xml_re
 
 # UNICODE NOTE
 # UPnP requires all XML to be transmitted/received with utf-8 encoding. All
@@ -266,7 +266,14 @@ class Service(object):
         # Get all tags in order. Elementree (in python 2.x) seems to prefer to
         # be fed bytes, rather than unicode
         xml_response = xml_response.encode('utf-8')
-        tree = XML.fromstring(xml_response)
+        try:
+            tree = XML.fromstring(xml_response)
+        except XML.ParseError:
+            # Try to filter illegal xml chars (as unicode), in case that is
+            # the reason for the parse error
+            filtered = illegal_xml_re.sub('', xml_response.decode('utf-8'))\
+                                     .encode('utf-8')
+            tree = XML.fromstring(filtered)
 
         # Get the first child of the <Body> tag which will be
         # <{actionNameResponse}> (depends on what actionName is). Turn the
