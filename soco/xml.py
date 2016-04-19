@@ -19,7 +19,7 @@ except ImportError:
 # Create regular expression for filtering invalid characters, from:
 # http://stackoverflow.com/questions/1707890/
 # fast-way-to-filter-illegal-xml-unicode-chars-in-python
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     unichr = chr
 
 illegal_unichrs = [
