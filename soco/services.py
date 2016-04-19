@@ -45,7 +45,7 @@ from .exceptions import (
     SoCoUPnPException, UnknownSoCoException
 )
 from .utils import prettify
-from .xml import XML, illegal_xml_re
+from .xml import XML, illegal_xml_re, PARSEERROR
 
 # UNICODE NOTE
 # UPnP requires all XML to be transmitted/received with utf-8 encoding. All
@@ -268,9 +268,13 @@ class Service(object):
         xml_response = xml_response.encode('utf-8')
         try:
             tree = XML.fromstring(xml_response)
-        except XML.ParseError:
+        except PARSEERROR:
             # Try to filter illegal xml chars (as unicode), in case that is
             # the reason for the parse error
+            # NOTE: The PARSERROR used here is a Python 2.6 compat trick in
+            # our xml module. If we ever drop support for Python 2.6 it should
+            # be replaced with a simple XML.ParseError and the hack in .xml
+            # removed
             filtered = illegal_xml_re.sub('', xml_response.decode('utf-8'))\
                                      .encode('utf-8')
             tree = XML.fromstring(filtered)

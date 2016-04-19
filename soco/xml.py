@@ -15,6 +15,17 @@ try:
 except ImportError:
     import xml.etree.ElementTree as XML
 
+# This is a Python 2.6 compatbility hack. Pre 2.7 ElementTree raised
+# SyntaxError !!! if it encountered invalid chars in the XML, which is what
+# this exception is used for. It is only used one place in services. If we ever
+# drop support for Python 2.6 this should be removed
+try:
+    PARSEERROR = XML.ParseError
+except AttributeError:
+    # .ParseError did not exist pre 2.7;
+    # https://github.com/s3tools/s3cmd/issues/424
+    PARSEERROR = SyntaxError
+
 
 # Create regular expression for filtering invalid characters, from:
 # http://stackoverflow.com/questions/1707890/
