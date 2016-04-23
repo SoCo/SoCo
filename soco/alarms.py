@@ -9,6 +9,7 @@ import re
 import weakref
 from datetime import datetime
 
+from . import discovery
 from .core import PLAY_MODES
 from .xml import XML
 
@@ -60,7 +61,7 @@ class Alarm(object):
 
     Example:
 
-        >>> device = soco.discovery.any_soco()
+        >>> device = discovery.any_soco()
         >>> # create an alarm with default properties
         >>> alarm = Alarm(device)
         >>> print alarm.volume
@@ -262,7 +263,7 @@ def get_alarms(soco=None):
     """
     # Get a soco instance to query. It doesn't matter which.
     if soco is None:
-        soco = soco.discovery.any_soco()
+        soco = discovery.any_soco()
     response = soco.alarmClock.ListAlarms()
     alarm_list = response['CurrentAlarmList']
     tree = XML.fromstring(alarm_list.encode('utf-8'))
