@@ -137,6 +137,16 @@ def test_unwrap(service):
         "Unicode": "μИⅠℂ☺ΔЄ💋"}
 
 
+def test_unwrap_invalid_char(service):
+    """Test unwrapping args from XML with invalid char"""
+    responce_with_invalid_char = DUMMY_VALID_RESPONSE.replace(
+        'μИⅠℂ☺ΔЄ💋', 'AB'
+    )
+    # Note, the invalid ^D (code point 0x04) should be filtered out
+    assert service.unwrap_arguments(responce_with_invalid_char) == {
+        "CurrentLEDState": "On",
+        "Unicode": "AB"}
+
 def test_build_command(service):
     """Test creation of SOAP body and headers from a command."""
     headers, body = service.build_command('SetAVTransportURI', [
