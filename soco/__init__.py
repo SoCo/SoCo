@@ -12,7 +12,7 @@ import logging
 
 from .compat import NullHandler
 from .core import SoCo
-from .discovery import discover
+from .discovery import discover, discovering
 from .exceptions import SoCoException, UnknownSoCoException
 
 # Will be parsed by setup.py to determine package metadata
@@ -25,6 +25,7 @@ __license__ = 'MIT License'
 # but if you do, here is what you get:
 __all__ = [
     'discover',
+    'discovering',
     'SoCo',
     'SoCoException',
     'UnknownSoCoException',
