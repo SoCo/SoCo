@@ -29,7 +29,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
 
     Args:
         timeout (int, optional): block for this many seconds, at most.
-            Defaults to 1.
+            Defaults to 5.
         include_invisible (bool, optional): include invisible zones in the
             return set. Defaults to `False`.
         interface_addr (str or None): Discovery operates by sending UDP
@@ -113,17 +113,16 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         for address in addresses:
             _sockets.append(create_socket(address))
         # Add a socket using the system default address
-        _sockets.append(create_socket(None))
+        _sockets.append(create_socket())
 
     _LOG.info(
         "Sending discovery packets on default interface and %s",
         list(addresses)
     )
-    for _sock in _sockets:
-        # Send a few times. UDP is unreliable
-        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+    for _ in range(0, 3):
+        # Send a few times to each socket. UDP is unreliable
+        for _sock in _sockets:
+            _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
     t0 = time.time()
     while True:
@@ -144,7 +143,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
 
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
-        # on the network to disrupt the discovery process, we check that
+        # on the network disrupting the discovery process, we check that
         # the response contains the "Sonos" string; otherwise we keep
         # waiting for a correct response.
         #
