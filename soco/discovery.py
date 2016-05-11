@@ -1,30 +1,31 @@
 # -*- coding: utf-8 -*-
-
 """This module contains methods for discovering Sonos devices on the
 network."""
 
 from __future__ import unicode_literals
 
 import logging
-import select
 import socket
-import struct
-import time
+import select
 from textwrap import dedent
+import time
+import struct
 
-from . import config
+from soco import config
 from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
+# pylint: disable=too-many-locals, too-many-branches
 
-def discover(timeout=1, include_invisible=False, interface_addr=None):
-    """Discover Sonos zones on the local network.
 
-    Return an set containing a `SoCo` instance for each zone found.
+def discover(timeout=5, include_invisible=False, interface_addr=None):
+    """ Discover Sonos zones on the local network.
+
+    Return a set of `SoCo` instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
     ``include_invisible`` is `True`. Will block for up to ``timeout`` seconds,
-    after which return `None` if no zones found.
+     after which return `None` if no zones found.
 
     Args:
         timeout (int, optional): block for this many seconds, at most.
@@ -39,7 +40,6 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
             the system default interface for UDP multicast messages will be
             used. This is probably what you want to happen. Defaults to
             `None`.
-
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
             `None`.
@@ -57,7 +57,25 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
 
             This should provide you with a list of values to try for
             interface_addr if you are having trouble finding your Sonos devices
+
     """
+
+    def create_socket(interface_addr=None):
+        """ A helper function for creating a socket for discover purposes.
+
+        Create and return a socket with appropriate options set for multicast.
+        """
+
+        _sock = socket.socket(
+            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        # UPnP v1.0 requires a TTL of 4
+        _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
+                         struct.pack("B", 4))
+        if interface_addr is not None:
+            _sock.setsockopt(
+                socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
+                socket.inet_aton(interface_addr))
+        return _sock
 
     # pylint: disable=invalid-name
     PLAYER_SEARCH = dedent("""\
@@ -70,11 +88,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
-    _sock = socket.socket(
-        socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-    # UPnP v1.0 requires a TTL of 4
-    _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                     struct.pack("B", 4))
+    _sockets = []
     # Use the specified interface, if any
     if interface_addr is not None:
         try:
@@ -82,14 +96,34 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
         except socket.error:
             raise ValueError("{0} is not a valid IP address string".format(
                 interface_addr))
-        _sock.setsockopt(
-            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, address)
+        _sockets[0] = create_socket(interface_addr)
+    else:
+        # Find the local network address using a couple of different methods.
+        # Create a socket for each unique address found, and one for the
+        # default multicast address
+        addresses = set()
+        try:
+            addresses.add(socket.gethostbyname(socket.gethostname()))
+        except socket.error:
+            pass
+        try:
+            addresses.add(socket.gethostbyname(socket.getfqdn()))
+        except socket.error:
+            pass
+        for address in addresses:
+            _sockets.append(create_socket(address))
+        # Add a socket using the system default address
+        _sockets.append(create_socket(None))
 
-    # Send a few times. UDP is unreliable
-    _LOG.info("Sending discovery packets")
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
-    _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+    _LOG.info(
+        "Sending discovery packets on default interface and %s",
+        list(addresses)
+    )
+    for _sock in _sockets:
+        # Send a few times. UDP is unreliable
+        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+        _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
 
     t0 = time.time()
     while True:
@@ -106,7 +140,7 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
         # The timeout of the select call is set to be no greater than
         # 100ms, so as not to exceed (too much) the required timeout
         # in case the loop is executed more than once.
-        response, _, _ = select.select([_sock], [], [], min(timeout, 0.1))
+        response, _, _ = select.select(_sockets, [], [], min(timeout, 0.1))
 
         # Only Zone Players should respond, given the value of ST in the
         # PLAYER_SEARCH message. However, to prevent misbehaved devices
@@ -128,21 +162,22 @@ def discover(timeout=1, include_invisible=False, interface_addr=None):
         # X-RINCON-HOUSEHOLD: Sonos_7O********************R7eU
 
         if response:
-            data, addr = _sock.recvfrom(1024)
-            _LOG.debug('Received discovery response from %s: "%s"', addr, data)
-            if b"Sonos" not in data:
-                continue
-
-            # Now we have an IP, we can build a SoCo instance and query that
-            # player for the topology to find the other players. It is much
-            # more efficient to rely upon the Zone Player's ability to find
-            # the others, than to wait for query responses from them
-            # ourselves.
-            zone = config.SOCO_CLASS(addr[0])
-            if include_invisible:
-                return zone.all_zones
-            else:
-                return zone.visible_zones
+            for _sock in response:
+                data, addr = _sock.recvfrom(1024)
+                _LOG.debug(
+                    'Received discovery response from %s: "%s"', addr, data
+                )
+                if b"Sonos" in data:
+                    # Now we have an IP, we can build a SoCo instance and query
+                    # that player for the topology to find the other players.
+                    # It is much more efficient to rely upon the Zone
+                    # Player's ability to find the others, than to wait for
+                    # query responses from them ourselves.
+                    zone = config.SOCO_CLASS(addr[0])
+                    if include_invisible:
+                        return zone.all_zones
+                    else:
+                        return zone.visible_zones
 
 
 def any_soco():
