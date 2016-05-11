@@ -1,5 +1,4 @@
-sphinx
-sphinxcontrib-napoleon # can be removed once sphinx 1.3 comes out
+sphinx >=1.3
 pytest >= 2.5
 mock >= 1.0.1
 graphviz
