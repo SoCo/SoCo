@@ -29,6 +29,7 @@ from .xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
+# pylint: disable=too-many-branches
 def parse_event_xml(xml_event):
     """Parse the body of a UPnP event.
 
@@ -102,14 +103,19 @@ def parse_event_xml(xml_event):
                     variable.text.encode('utf-8'))
                 # We assume there is only one InstanceID tag. This is true for
                 # Sonos, as far as we know.
-                # InstanceID can be in one of two namespaces, depending on
-                # whether we are looking at an avTransport event or a
-                # renderingControl event, so we need to look for both
+                # InstanceID can be in one of three namespaces, depending on
+                # whether we are looking at an avTransport event, a
+                # renderingControl event or a Queue event (there it is named
+                # QueueID)
                 instance = last_change_tree.find(
                     "{urn:schemas-upnp-org:metadata-1-0/AVT/}InstanceID")
                 if instance is None:
                     instance = last_change_tree.find(
                         "{urn:schemas-upnp-org:metadata-1-0/RCS/}InstanceID")
+                if instance is None:
+                    instance = last_change_tree.find(
+                        "{urn:schemas-sonos-com:metadata-1-0/Queue/}QueueID")
+
                 # Look at each variable within the LastChange event
                 for last_change_var in instance:
                     tag = last_change_var.tag
