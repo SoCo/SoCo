@@ -1,30 +1,8 @@
+:orphan:
+
+.. _tutorial_old_location:
+
 Tutorial
 ========
 
-*SoCo* allows you to control your Sonos sound system from a Python program. For
-a quick start have a look at the `example applications
-<https://github.com/SoCo/SoCo/tree/master/examples>`_ that come with the
-library.
-
-
-Discovery
----------
-
-For discovering the Sonos devices in your network, use the ``soco.discover()``
-method.
-
-.. code-block:: python
-
-    zones = list(soco.discover())
-
-
-Music
------
-
-Once one of the available devices is selected, the ``SoCo`` class can be used
-to control it. Have a look at the :ref:`soco-mod` for all available commands.
-
-.. code-block:: python
-
-    sonos = SoCo(ip)
-    sonos.partymode()
+The tutorial has been moved to :ref:`this location <getting_started>`.
