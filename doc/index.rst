@@ -24,12 +24,14 @@ SoCo (Sonos Controller) is a high level Python 2/3 library to control your
     device.volume += 10
     device.play()
 
-To get up and running quickly with *SoCo*, start by reading the :ref:`getting
-started <getting_started>` page, with :ref:`installation instructions
-<installation>` and a small :ref:`tutorial <tutorial>`. Then optionally follow
-up with any of the advanced topics that peak your interest:
-:ref:`speaker_topologies`, :ref:`events` and :ref:`upnp_services`. Finally dive
-into the :ref:`the full module reference documentation <module_reference>`.
+To get up and running quickly with *SoCo*, start by reading the
+:ref:`getting started <getting_started>` page, with :ref:`installation
+instructions <installation>` and a small :ref:`tutorial <tutorial>`
+and then wet your appetite with the :ref:`micro examples
+<examples>`. Then optionally follow up with any of the advanced topics
+that peak your interest: :ref:`speaker_topologies`, :ref:`events` and
+:ref:`upnp_services`. Finally dive into the :ref:`the full module
+reference documentation <module_reference>`.
 
 For support post a question in the `SoCo Google group
 <https://groups.google.com/forum/#!forum/python-soco>`_ or `file an issue on
@@ -49,6 +51,7 @@ Contents
    :caption: User Documentation
 
    getting_started
+   examples
    plugins
    authors
 
