@@ -30,7 +30,7 @@ Visit the `SoCo documentation`_ for a more detailed overview of all the function
 Installation
 ------------
 
-SoCo requires Python 2.7, or 3.2 or newer.
+SoCo requires Python 2.7, or 3.3 or newer.
 
 Use pip:
 
@@ -92,7 +92,7 @@ Of course, you can also play music!
         sonos = SoCo('192.168.1.102') # Pass in the IP of your Sonos speaker
         # You could use the discover function instead, if you don't know the IP
 
-        # Pass in a URI to a media file to have it streamed through the Sonos 
+        # Pass in a URI to a media file to have it streamed through the Sonos
         # speaker
         sonos.play_uri(
             'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
