@@ -96,7 +96,8 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         except socket.error:
             raise ValueError("{0} is not a valid IP address string".format(
                 interface_addr))
-        _sockets[0] = create_socket(interface_addr)
+        _sockets.append(create_socket(interface_addr))
+        _LOG.info("Sending discovery packets on default interface")
     else:
         # Find the local network address using a couple of different methods.
         # Create a socket for each unique address found, and one for the
@@ -115,10 +116,10 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         # Add a socket using the system default address
         _sockets.append(create_socket())
 
-    _LOG.info(
-        "Sending discovery packets on default interface and %s",
-        list(addresses)
-    )
+        _LOG.info(
+            "Sending discovery packets on default interface and %s",
+            list(addresses)
+        )
     for _ in range(0, 3):
         # Send a few times to each socket. UDP is unreliable
         for _sock in _sockets:
