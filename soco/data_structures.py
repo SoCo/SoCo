@@ -858,9 +858,8 @@ class DidlMusicAlbum(DidlAlbum):
     item_class = 'object.container.album.musicAlbum'
     # According to the spec, all musicAlbums should be represented in
     # XML by a <container> tag. Sonos sometimes uses <container> and
-    # sometimes uses <item>. Set the tag type to '' to indicate that
-    # either is allowed.
-    tag = ''
+    # sometimes uses <item>. <container> seems to work here for the moment.
+    tag = 'container'
     # name: (ns, tag)
     # pylint: disable=protected-access
     #:
