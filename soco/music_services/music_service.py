@@ -116,7 +116,8 @@ class MusicServiceSoapClient(object):
             credentials_header.append(session_elt)
 
         # Anonymous auth. No need for anything further.
-        self._cached_soap_header = XML.tostring(credentials_header,
+        self._cached_soap_header = XML.tostring(
+            credentials_header,
             encoding='utf-8').decode(encoding='utf-8')
         return self._cached_soap_header
 
