@@ -52,19 +52,18 @@ class MusicServiceSoapClient(object):
         self._cached_soap_header = None
 
         # Spotify uses gzip. Others may do so as well. Unzipping is handled
-        # for us by the requests library. We set the user agent to a genuine
-        # Sonos value since in some tests Google Play music seems to want
-        # this. The firmware release number (after 'Sonos/') is obviously
-        # fake, and higher than current values, in case Google only offers
-        # certain services to certain firmware releases. ") Although we have
-        # access to a real SONOS user agent string (one is returned, eg,
-        # in the SERVER header of discovery packets and looks like this:
-        # Linux UPnP/1.0 Sonos/29.5-91030 (ZPS3)) it is a bit too much
-        # trouble here to access it, when this seems to work
+        # for us by the requests library. Google Play seems to be very fussy
+        #  about the user-agent string. The firmware release number (after
+        # 'Sonos/') has to be '26' for some reason to get Google Play to
+        # work. Although we have access to a real SONOS user agent
+        # string (one is returned, eg, in the SERVER header of discovery
+        # packets and looks like this: Linux UPnP/1.0 Sonos/29.5-91030 (
+        # ZPS3)) it is a bit too much trouble here to access it, and Google
+        # Play does not like it anyway.
 
         self.http_headers = {
             'Accept-Encoding': 'gzip, deflate',
-            'User-agent': '"Linux UPnP/1.0 Sonos/99 (ZPS3)"'
+            'User-Agent': 'Linux UPnP/1.0 Sonos/26.99-12345'
         }
         self._device = discovery.any_soco()
         self._device_id = self._device.systemProperties.GetString(
