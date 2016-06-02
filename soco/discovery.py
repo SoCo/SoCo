@@ -181,7 +181,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
 
 
 def any_soco():
-    """Return any soco device, for when it doesn't matter which.
+    """Return any visible soco device, for when it doesn't matter which.
 
     Try to obtain an existing instance, or use `discover` if necessary.
     Note that this assumes that the existing instance has not left
@@ -195,8 +195,13 @@ def any_soco():
     cls = config.SOCO_CLASS
     # pylint: disable=no-member, protected-access
     try:
-        device = list(cls._instances[cls._class_group].values())[0]
-    except KeyError:
+        # Try to get the first pre-existing soco instance we know about,
+        # as long as it is visible (i.e. not a bridge etc). Otherwise,
+        # perform discovery (again, excluding invisibles) and return one of
+        # those
+        device = next(d for d in cls._instances[cls._class_group].values()
+                      if d.is_visible)
+    except (KeyError, StopIteration):
         devices = discover()
         return None if devices is None else devices.pop()
 
