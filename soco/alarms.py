@@ -9,6 +9,7 @@ import re
 import weakref
 from datetime import datetime
 
+from . import discovery
 from .core import PLAY_MODES
 from .xml import XML
 
@@ -60,7 +61,7 @@ class Alarm(object):
 
     Example:
 
-        >>> device = soco.discovery.any_soco()
+        >>> device = discovery.any_soco()
         >>> # create an alarm with default properties
         >>> alarm = Alarm(device)
         >>> print alarm.volume
@@ -246,11 +247,11 @@ class Alarm(object):
         self._alarm_id = None
 
 
-def get_alarms(soco=None):
+def get_alarms(zone=None):
     """Get a set of all alarms known to the Sonos system.
 
     Args:
-        soco (`SoCo`, optional): a SoCo instance to query. If None, a random
+        zone (`SoCo`, optional): a SoCo instance to query. If None, a random
             instance is used. Defaults to `None`.
 
     Returns:
@@ -261,9 +262,9 @@ def get_alarms(soco=None):
         currently stored on the Sonos system.
     """
     # Get a soco instance to query. It doesn't matter which.
-    if soco is None:
-        soco = soco.discovery.any_soco()
-    response = soco.alarmClock.ListAlarms()
+    if zone is None:
+        zone = discovery.any_soco()
+    response = zone.alarmClock.ListAlarms()
     alarm_list = response['CurrentAlarmList']
     tree = XML.fromstring(alarm_list.encode('utf-8'))
 
@@ -305,8 +306,8 @@ def get_alarms(soco=None):
             datetime.strptime(values['Duration'], "%H:%M:%S").time()
         instance.recurrence = values['Recurrence']
         instance.enabled = values['Enabled'] == '1'
-        instance.zone = [zone for zone in soco.all_zones
-                         if zone.uid == values['RoomUUID']][0]
+        instance.zone = [z for z in zone.all_zones
+                         if z.uid == values['RoomUUID']][0]
         instance.program_uri = None if values['ProgramURI'] ==\
             "x-rincon-buzzer:0" else values['ProgramURI']
         instance.program_metadata = values['ProgramMetaData']
