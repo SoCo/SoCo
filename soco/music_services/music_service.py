@@ -606,7 +606,7 @@ class MusicService(object):
         # Add the account info to the end as query params
         account = self.account
         result = "soco://{0}?sid={1}&sn={2}".format(
-            item_id, account.service_type,
+            item_id, self.service_id,
             account.serial_number
         )
         return result
