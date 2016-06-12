@@ -291,16 +291,16 @@ def test_sonos_uri_from_id():
     spotify = MusicService('Spotify')
     track = 'spotify:track:2qs5ZcLByNTctJKbhAZ9JE'
     assert spotify.sonos_uri_from_id(track) == \
-        'soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=2311&sn=1'
+        'soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=9&sn=1'
     # Check for escaping with a few difficult characters
     track = 'spotify: track\2qc%ünicøde?'
     assert spotify.sonos_uri_from_id(track) == \
-        'soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=2311&sn=1'
+        'soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=9&sn=1'
     # and a different service
     spreaker = MusicService('Spreaker')
     track = 'spreaker12345678'
     assert spreaker.sonos_uri_from_id(track) == \
-        'soco://spreaker12345678?sid=41735&sn=3'
+        'soco://spreaker12345678?sid=163&sn=3'
 
 
 def test_desc():
