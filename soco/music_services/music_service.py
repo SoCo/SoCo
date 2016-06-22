@@ -18,6 +18,7 @@ from .. import discovery
 from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
+from ..music_services.data_structures import parse_response
 from ..soap import SoapFault, SoapMessage
 from ..xml import XML
 
@@ -713,6 +714,7 @@ class MusicService(object):
             [
                 ('id', search_category), ('term', term), ('index', index),
                 ('count', count)])
+        parse_response(response)
         return response.get('searchResult', None)
 
     def get_media_metadata(self, item_id):
