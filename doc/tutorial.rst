@@ -3,7 +3,7 @@ Tutorial
 
 *SoCo* allows you to control your Sonos sound system from a Python program. For
 a quick start have a look at the `example applications
-<https://github.com/rahims/SoCo/tree/master/examples>`_ that come with the
+<https://github.com/SoCo/SoCo/tree/master/examples>`_ that come with the
 library.
 
 

@@ -1,7 +1,7 @@
 # SoCo Web App
 This example demonstrates a basic web-based Sonos controller built with SoCo.
 
-![Screenshot of web app](https://github.com/rahims/SoCo/raw/master/examples/webapp/screenshot.png)
+![Screenshot of web app](https://github.com/SoCo/SoCo/raw/master/examples/webapp/screenshot.png)
 
 ## Set up
 This example depends on several external libraries. The easiest way to install everything is by running the following command:
