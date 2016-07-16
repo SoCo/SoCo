@@ -144,6 +144,8 @@ class SoCo(_SocoSingletonBase):
         remove_sonos_playlist
         add_item_to_sonos_playlist
         get_item_album_art_uri
+        set_sleep_timer
+        get_sleep_timer
 
     ..  rubric:: Properties
     .. warning::
@@ -1489,6 +1491,46 @@ class SoCo(_SocoSingletonBase):
             return self._build_album_art_full_uri(item.album_art_uri)
         else:
             return None
+
+    @only_on_master
+    def set_sleep_timer(self, sleep_time):
+        """Sets the sleep timer.
+
+        Args:
+            sleep_time (`str`): How long to wait before turning off speaker.
+                Specify hours, minutes and seconds as HH:MM:SS or the zero
+                length string to cancel the timer.
+
+        Returns:
+            bool: True if succesful, False otherwise
+
+        Raises SoCoException (or a subclass) upon errors, ValueError for
+            incorrect syntax.
+
+        """
+        if sleep_time and \
+           not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', sleep_time):
+            raise ValueError('invalid timestamp, use HH:MM:SS format')
+
+        return self.avTransport.ConfigureSleepTimer([
+            ('InstanceID', 0),
+            ('NewSleepTimerDuration', sleep_time),
+        ])
+
+    @only_on_master
+    def get_sleep_timer(self):
+        """Retrieves remaining sleep time, if any
+
+        Returns:
+            dict: Which contains 2 elements: RemainingSleepTimerDuration
+                (`str`) as HH:MM:SS and CurrentSleepTimerGeneration (`str`)
+
+        Raises SoCoException (or a subclass) upon errors.
+
+        """
+        return self.avTransport.GetRemainingSleepTimerDuration([
+            ('InstanceID', 0),
+        ])
 
     # Deprecated methods - moved to music_library.py
     # pylint: disable=missing-docstring, too-many-arguments
