@@ -38,6 +38,7 @@ from .utils import really_unicode
 from .xml import (
     XML, ns_tag
 )
+from .music_services import data_structures as ms_data_structures
 
 
 ###############################################################################
@@ -96,7 +97,9 @@ def from_didl_string(string):
                 cls = _DIDL_CLASS_TO_CLASS[item_class]
             except KeyError:
                 raise DIDLMetadataError("Unknown UPnP class: %s" % item_class)
-            items.append(cls.from_element(elt))
+            item = cls.from_element(elt)
+            item = ms_data_structures.attempt_datastructure_upgrade(item)
+            items.append(item)
         else:
             # <desc> elements are allowed as an immediate child of <DIDL-Lite>
             # according to the spec, but I have not seen one there in Sonos, so
