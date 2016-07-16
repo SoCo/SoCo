@@ -35,9 +35,9 @@ NOTE: "Other" is allowed under both.
 
 Class overview:
 
-+----------+   +----------------+   +---------------+
-|KwargsBase+-->+MusicServiceItem+-->+MediaCollection|
-+-----+-----   +--------------+-+   +---------------+
++----------------+   +----------------+   +---------------+
+|MetadataDictBase+-->+MusicServiceItem+-->+MediaCollection|
++-----+----------+   +--------+-------+   +---------------+
       |                       |
       |                       |     +------------------+
       |                       +---->+  MediaMetadata   |
@@ -57,11 +57,14 @@ Class overview:
 
 from __future__ import print_function, absolute_import
 from collections import OrderedDict
-from ..data_structures import DidlResource, DidlItem, SearchResult
+#from ..data_structures import DidlResource, DidlItem, SearchResult
+from ..  import data_structures
 from ..utils import camel_to_underscore
 from ..compat import quote_url
 from ..xml import XML
 from ..discovery import discover
+from ..compat import urlparse
+from . import music_service
 from pprint import pprint
 
 
@@ -109,8 +112,58 @@ def parse_response(service, response, search_type):
         for raw_item in raw_items:
             class_key = result_type_proper + raw_item['itemType'].title()
             cls = get_class(class_key)
-            items.append(cls.from_dict(service, raw_item))
-    return SearchResult(items, **search_metadata)
+            items.append(cls.from_music_service(service, raw_item))
+    return data_structures.SearchResult(items, **search_metadata)
+
+
+# FIXME, Obviously imcomplete 
+DIDL_NAME_TO_QUALIFIED_MS_NAME = {
+    'DidlMusicTrack': 'MediaMetadataTrack'
+}
+def attempt_datastructure_upgrade(didl_item):
+    """Attempt to upgrade a didl_item to a music services data structure
+    if it originates from a music services
+
+    """
+    resource = didl_item.resources[0]
+    # FIXME are we guarantied that there are resources and that they have a uri????
+    if resource.uri.startswith('x-sonos-http'):
+        # Get data
+        uri = resource.uri
+        # Now we need to create a DIDL item id. It seems to be based on the uri
+        path = urlparse(uri).path
+        # Strip any extensions, eg .mp3, from the end of the path
+        path = path.rsplit('.', 1)[0]
+        # The ID has an 8 (hex) digit prefix. But it doesn't seem to matter what it is!
+        item_id = '11111111{0}'.format(path)
+        
+        # FIXME Ignore other metadata for now, in future ask ms data
+        # structure to upgrade metadata from the service
+        metadata = {}
+        try:
+            metadata['title'] = didl_item.title
+        except AttributeError:
+            pass
+
+        # Get class and instantiate
+        cls = get_class(DIDL_NAME_TO_QUALIFIED_MS_NAME[didl_item.__class__.__name__])
+        return cls(
+            item_id=item_id,
+            desc=music_service.desc_from_uri(resource.uri),
+            resources=didl_item.resources,
+            uri=uri,
+            metadata_dict=metadata,
+        )
+    return didl_item
+
+
+def form_uri(item_id, service, is_track):
+    """Form and return uri from item_id, service and is_track info"""
+    if is_track:
+        uri = service.sonos_uri_from_id(item_id)
+    else:
+        uri = 'x-rincon-cpcontainer:' + item_id
+    return uri
 
 
 ### Type Helper
@@ -123,7 +176,7 @@ def bool_str(string):
 
 
 ### Music Service item base classes
-class KwargsBase(object):
+class MetadataDictBase(object):
     """Class used to parse metadata from kwargs"""
 
     # The following two fields should be overwritten in subclasses
@@ -135,10 +188,10 @@ class KwargsBase(object):
     # convertion callables
     _types = {}
     
-    def __init__(self, **kwargs):
+    def __init__(self, metadata_dict):
         """Initialize local variables"""
         # Check for invalid fields
-        for key in kwargs:
+        for key in metadata_dict:
             if key not in self._valid_fields:
                 message = ('Field: "{0}" with value "{1}" is not valid for '
                            'class "{2}"')
@@ -152,12 +205,12 @@ class KwargsBase(object):
                 # also start to collect a list of invalid fields.
                 #
                 # For new we just print the warning message
-                print(message.format(key, kwargs[key], self.__class__))
-                #raise ValueError(message.format(key, kwargs[key], self.__class__))
+                print(message.format(key, metadata_dict[key], self.__class__))
+                #raise ValueError(message.format(key, metadata_dict[key], self.__class__))
 
         # Convert names and create metadata dict
         self.metadata = {}
-        for key, value in kwargs.items():
+        for key, value in metadata_dict.items():
             if key in self._types:
                 convertion_callable = self._types[key] 
                 value = convertion_callable(value)
@@ -166,7 +219,7 @@ class KwargsBase(object):
     @classmethod
     def from_dict(cls, content_dict):
         """Init cls from a dict (alternative initializer)"""
-        return cls(**content_dict)
+        return cls(content_dict)
 
     def __getattr__(self, key):
         """Return item from metadata in case of unknown attribute"""
@@ -177,7 +230,7 @@ class KwargsBase(object):
             raise AttributeError(message.format(self.__class__.__name__, key))
 
 
-class MusicServiceItem(KwargsBase):
+class MusicServiceItem(MetadataDictBase):
     """A base class for all music service items
 
     Attributes:
@@ -185,49 +238,45 @@ class MusicServiceItem(KwargsBase):
             item originates from
         resources (list): List of DidlResource
         desc (str): A DIDL descriptor, default ``'RINCON_AssociatedZPUDN'
+
     """
 
-    # See comment in KwargsBase for these two attributes
+    # See comment in MetadataDictBase for these two attributes
     _valid_fields = {}
     _types = {}
 
-    def __init__(self, service, **kwargs):
-        """Init music service item"""
-        super(MusicServiceItem, self).__init__(**kwargs)
-        self.service = service
-        self.resources = [DidlResource(uri=self.uri, protocol_info="DUMMY")]
-        self.desc = self.service.desc
-
-    @classmethod
-    def from_dict(cls, service, content_dict):
-        """Return an element instantiated from a dict and the service
-        (alternative constructor)
+    def __init__(self, item_id, desc, resources, uri, metadata_dict,
+                 music_service = None):
+        """Init music service item
 
         Args:
-            service (soco.music_service.MusicService): The music service that
-                this element originates from
-            content_dict (dict): Content to create the instance from. For
-                information about valid elements and types see _valid_fields
-                and _types
+            item_id (str): This is the Didl compatible id NOT the music item id
+            FIXME REST
         """
-        return cls(service, **content_dict)
+        super(MusicServiceItem, self).__init__(metadata_dict)
+        self.item_id = item_id
+        self.desc = desc
+        self.resources = resources
+        self.uri = uri
+        self.music_service = music_service
 
-    @property
-    def item_id(self):
-        """Return the DIDL Lite compatible item_id"""
-        quoted_id = quote_url(self.metadata['id'].encode('utf-8'))
-        return '0fffffff{0}'.format(quoted_id)
-    
-    @property
-    def uri(self):
-        """Return the uri"""
-        # For an album
-        if not isinstance(self, get_class('MediaMetadataTrack')):
-            uri = 'x-rincon-cpcontainer:' + self.item_id
-        # For a track
-        else:
-            uri = self.service.sonos_uri_from_id(self.item_id)
-        return uri
+    @classmethod
+    def from_music_service(cls, music_service, content_dict):
+        """Return an element instantiated from the information that a music
+        service has
+
+        """
+        # Form the item_id
+        quoted_id = quote_url(content_dict['id'].encode('utf-8'))
+        item_id = '0fffffff{0}'.format(quoted_id)
+        # Form the uri
+        is_track = cls == get_class('MediaMetadataTrack')
+        uri = form_uri(item_id, music_service, is_track)
+        # Form resources and get desc
+        resources = [data_structures.DidlResource(uri=uri, protocol_info="DUMMY")]
+        desc = music_service.desc
+        return cls(item_id, desc, resources, uri, content_dict,
+                   music_service=music_service)
 
     def __str__(self):
         """Return custom string representation"""
@@ -246,7 +295,7 @@ class MusicServiceItem(KwargsBase):
             ~xml.etree.ElementTree.Element: an Element.
         """
         # We piggy back on the implementation in DidlItem
-        didl_item = DidlItem(
+        didl_item = data_structures.DidlItem(
             title="DUMMY",
             # This is ignored. Sonos gets the title from the item_id
             parent_id="DUMMY",  # Ditto
@@ -254,10 +303,12 @@ class MusicServiceItem(KwargsBase):
             desc=self.desc,
             resources=self.resources
         )
+        # FIXME think about separating to_element code out into function
+        # in soco.data_structures
         return didl_item.to_element(include_namespaces=include_namespaces)
 
 
-class TrackMetadata(KwargsBase):
+class TrackMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
@@ -294,7 +345,7 @@ class TrackMetadata(KwargsBase):
     }
 
 
-class StreamMetadata(KwargsBase):
+class StreamMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
