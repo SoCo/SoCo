@@ -79,7 +79,7 @@ def get_class(class_key):
             and the class name
 
     Returns:
-        MusicServiceItem
+        class: Subclass of MusicServiceItem
     """
     if class_key not in CLASSES:
         for basecls in (MediaMetadata, MediaCollection):
@@ -231,15 +231,7 @@ class MetadataDictBase(object):
 
 
 class MusicServiceItem(MetadataDictBase):
-    """A base class for all music service items
-
-    Attributes:
-        service (soco.music_service.MusicService): The music service that this
-            item originates from
-        resources (list): List of DidlResource
-        desc (str): A DIDL descriptor, default ``'RINCON_AssociatedZPUDN'
-
-    """
+    """A base class for all music service items"""
 
     # See comment in MetadataDictBase for these two attributes
     _valid_fields = {}
@@ -251,7 +243,11 @@ class MusicServiceItem(MetadataDictBase):
 
         Args:
             item_id (str): This is the Didl compatible id NOT the music item id
-            FIXME REST
+            desc (str): A DIDL descriptor, default ``'RINCON_AssociatedZPUDN'
+            resources (list): List of DidlResource
+            uri (str): The uri for the location of the item
+            metdata_dict (dict): Mapping of metadata
+            music_service (MusicService): The MusicService instance the item originates from
         """
         super(MusicServiceItem, self).__init__(metadata_dict)
         self.item_id = item_id
