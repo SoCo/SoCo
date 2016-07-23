@@ -471,10 +471,10 @@ class TestTimer(object):
 
     def test_get_set_timer(self, soco):
         """Test setting the timer"""
-        assert soco.set_sleep_timer('02:00:00')
+        assert soco.set_sleep_timer(7200)
         result = soco.get_sleep_timer()
-        if not any(result['RemainingSleepTimerDuration'] in s for s in [ '02:00:00', '01:59:59', '01:59:58' ]):
-            pytest.fail("Set timer to 02:00:00, but sonos reports back time as %s" % result['RemainingSleepTimerDuration'])
+        if not any(result['RemainingSleepTimerDuration'] == s for s in [ 7200, 7199, 7198 ]):
+            pytest.fail("Set timer to 7200, but sonos reports back time as %s" % result['RemainingSleepTimerDuration'])
 
 class TestReorderSonosPlaylist(object):
     """Integration tests for Sonos Playlist Management."""

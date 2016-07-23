@@ -6,6 +6,7 @@ the main entry to the SoCo functionality
 
 from __future__ import unicode_literals
 
+import datetime
 import logging
 import re
 import socket
@@ -1493,13 +1494,12 @@ class SoCo(_SocoSingletonBase):
             return None
 
     @only_on_master
-    def set_sleep_timer(self, sleep_time):
+    def set_sleep_timer(self, sleep_time_seconds):
         """Sets the sleep timer.
 
         Args:
-            sleep_time (`str`): How long to wait before turning off speaker.
-                Specify hours, minutes and seconds as HH:MM:SS or the zero
-                length string to cancel the timer.
+            sleep_time_seconds (`int`): How long to wait before turning off
+                speaker in seconds. Maximum value of 86399
 
         Returns:
             bool: True if succesful, False otherwise
@@ -1508,9 +1508,18 @@ class SoCo(_SocoSingletonBase):
             incorrect syntax.
 
         """
-        if sleep_time and \
-           not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', sleep_time):
-            raise ValueError('invalid timestamp, use HH:MM:SS format')
+        if sleep_time_seconds and \
+           sleep_time_seconds != int(sleep_time_seconds):
+            raise ValueError('invalid sleep_time_seconds, must be integer \
+                value between 0 and 86399 inclusive')
+        if sleep_time_seconds:
+            # pylint: disable = redefined-variable-type
+            sleep_times = datetime.timedelta(seconds=int(sleep_time_seconds))
+            sleep_times = str(sleep_times).split(':')
+            sleep_times = tuple([int(i) for i in sleep_times])
+            sleep_time = "%02d:%02d:%02d" % sleep_times
+        else:
+            sleep_time = ''
 
         return self.avTransport.ConfigureSleepTimer([
             ('InstanceID', 0),
@@ -1523,14 +1532,20 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             dict: Which contains 2 elements: RemainingSleepTimerDuration
-                (`str`) as HH:MM:SS and CurrentSleepTimerGeneration (`str`)
+                (`int`) as seconds left and CurrentSleepTimerGeneration (`str`)
 
         Raises SoCoException (or a subclass) upon errors.
 
         """
-        return self.avTransport.GetRemainingSleepTimerDuration([
+        resp = self.avTransport.GetRemainingSleepTimerDuration([
             ('InstanceID', 0),
         ])
+        if resp['RemainingSleepTimerDuration']:
+            times = resp['RemainingSleepTimerDuration'].split(':')
+            resp['RemainingSleepTimerDuration'] = (int(times[0]) * 3600 +
+                                                   int(times[1]) * 60 +
+                                                   int(times[2]))
+        return resp
 
     # Deprecated methods - moved to music_library.py
     # pylint: disable=missing-docstring, too-many-arguments
