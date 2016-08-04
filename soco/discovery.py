@@ -11,7 +11,7 @@ from textwrap import dedent
 import time
 import struct
 
-from soco import config
+from . import config
 from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
