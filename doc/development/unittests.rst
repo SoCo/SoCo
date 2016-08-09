@@ -4,7 +4,7 @@ Unit and integration tests
 There are two sorts of tests written for the ``SoCo`` package. Unit tests
 implement elementary checks of whether the individual methods produce the
 expected results. Integration tests check that the package as a whole is able to
-interface propertly with the Sonos hardware. Such tests are especially useful
+interface properly with the Sonos hardware. Such tests are especially useful
 during re-factoring and to check that already implemented functionality
 continues to work past updates to the Sonos units' internal software.
 
