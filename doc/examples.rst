@@ -7,22 +7,22 @@ This page contains collection of small examples to show of the features of
 *SoCo* and hopefully get you well started with the library.
 
 All examples are shown as if entered in the Python interpreter (as apposed to
-executed from a file) because that makes it easy to incoorporate output in the
+executed from a file) because that makes it easy to incorporate output in the
 code listings.
 
 All the examples from :ref:`examples_playback_control` and forward
 assume that you have followed one of the examples in
-:ref:`examples_gettings_to_your_devices` and therefore already have a
+:ref:`examples_getting_your_devices` and therefore already have a
 variable named ``device`` that points to a :class:`soco.SoCo`
 instance.
 
-.. _examples_gettings_to_your_devices:
+.. _examples_getting_your_devices:
 
-Getting to your devices
------------------------
+Getting your devices
+--------------------
 
-Getting all you devices
-^^^^^^^^^^^^^^^^^^^^^^^
+Getting all your devices
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 To get all your devices use the :func:`soco.discover` function::
 

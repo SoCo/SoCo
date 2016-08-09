@@ -46,7 +46,7 @@ the content and move into the extracted folder. As an example, for *SoCo*
    cd soco-0.11.1/
 
 Have a look inside the ``requirements.txt`` file. You will need to install the
-dependencies listes in that file yourself. See the documentation for the
+dependencies listed in that file yourself. See the documentation for the
 individual dependencies for installation instructions.
 
 After the requirements are in place, the package can be install with the
