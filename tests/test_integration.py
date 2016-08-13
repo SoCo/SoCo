@@ -464,7 +464,7 @@ class TestTimer(object):
     @pytest.yield_fixture(autouse=True)
     def restore_timer(self, soco):
         """A fixture which cleans up after each timer test."""
-        existing_timer = soco.get_sleep_timer()['RemainingSleepTimerDuration']
+        existing_timer = soco.get_sleep_timer()
 
         yield
         soco.set_sleep_timer(existing_timer)
@@ -473,7 +473,7 @@ class TestTimer(object):
         """Test setting the timer"""
         assert soco.set_sleep_timer(7200)
         result = soco.get_sleep_timer()
-        if not any(result['RemainingSleepTimerDuration'] == s for s in [ 7200, 7199, 7198 ]):
+        if not any(result == s for s in [ 7200, 7199, 7198 ]):
             pytest.fail("Set timer to 7200, but sonos reports back time as %s" % result['RemainingSleepTimerDuration'])
 
 class TestReorderSonosPlaylist(object):

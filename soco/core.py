@@ -1531,8 +1531,7 @@ class SoCo(_SocoSingletonBase):
         """Retrieves remaining sleep time, if any
 
         Returns:
-            dict: Which contains 2 elements: RemainingSleepTimerDuration
-                (`int`) as seconds left and CurrentSleepTimerGeneration (`str`)
+            int: Number of seconds left in timer
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -1545,7 +1544,7 @@ class SoCo(_SocoSingletonBase):
             resp['RemainingSleepTimerDuration'] = (int(times[0]) * 3600 +
                                                    int(times[1]) * 60 +
                                                    int(times[2]))
-        return resp
+        return resp['RemainingSleepTimerDuration']
 
     # Deprecated methods - moved to music_library.py
     # pylint: disable=missing-docstring, too-many-arguments
