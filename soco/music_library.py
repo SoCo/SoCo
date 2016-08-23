@@ -13,11 +13,11 @@ import logging
 from . import discovery
 from .data_structures import (
     SearchResult,
-    from_didl_string,
     DidlResource,
     DidlObject,
     DidlMusicAlbum
 )
+from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
 

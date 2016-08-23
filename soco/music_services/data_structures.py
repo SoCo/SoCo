@@ -57,14 +57,12 @@ Class overview:
 
 from __future__ import print_function, absolute_import
 from collections import OrderedDict
-#from ..data_structures import DidlResource, DidlItem, SearchResult
-from ..  import data_structures
+from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
 from ..compat import quote_url
 from ..xml import XML
 from ..discovery import discover
 from ..compat import urlparse
-from . import music_service
 from pprint import pprint
 
 
@@ -113,48 +111,7 @@ def parse_response(service, response, search_type):
             class_key = result_type_proper + raw_item['itemType'].title()
             cls = get_class(class_key)
             items.append(cls.from_music_service(service, raw_item))
-    return data_structures.SearchResult(items, **search_metadata)
-
-
-# FIXME, Obviously imcomplete 
-DIDL_NAME_TO_QUALIFIED_MS_NAME = {
-    'DidlMusicTrack': 'MediaMetadataTrack'
-}
-def attempt_datastructure_upgrade(didl_item):
-    """Attempt to upgrade a didl_item to a music services data structure
-    if it originates from a music services
-
-    """
-    resource = didl_item.resources[0]
-    # FIXME are we guarantied that there are resources and that they have a uri????
-    if resource.uri.startswith('x-sonos-http'):
-        # Get data
-        uri = resource.uri
-        # Now we need to create a DIDL item id. It seems to be based on the uri
-        path = urlparse(uri).path
-        # Strip any extensions, eg .mp3, from the end of the path
-        path = path.rsplit('.', 1)[0]
-        # The ID has an 8 (hex) digit prefix. But it doesn't seem to matter what it is!
-        item_id = '11111111{0}'.format(path)
-        
-        # FIXME Ignore other metadata for now, in future ask ms data
-        # structure to upgrade metadata from the service
-        metadata = {}
-        try:
-            metadata['title'] = didl_item.title
-        except AttributeError:
-            pass
-
-        # Get class and instantiate
-        cls = get_class(DIDL_NAME_TO_QUALIFIED_MS_NAME[didl_item.__class__.__name__])
-        return cls(
-            item_id=item_id,
-            desc=music_service.desc_from_uri(resource.uri),
-            resources=didl_item.resources,
-            uri=uri,
-            metadata_dict=metadata,
-        )
-    return didl_item
+    return SearchResult(items, **search_metadata)
 
 
 def form_uri(item_id, service, is_track):
@@ -269,7 +226,7 @@ class MusicServiceItem(MetadataDictBase):
         is_track = cls == get_class('MediaMetadataTrack')
         uri = form_uri(item_id, music_service, is_track)
         # Form resources and get desc
-        resources = [data_structures.DidlResource(uri=uri, protocol_info="DUMMY")]
+        resources = [DidlResource(uri=uri, protocol_info="DUMMY")]
         desc = music_service.desc
         return cls(item_id, desc, resources, uri, content_dict,
                    music_service=music_service)
@@ -291,7 +248,7 @@ class MusicServiceItem(MetadataDictBase):
             ~xml.etree.ElementTree.Element: an Element.
         """
         # We piggy back on the implementation in DidlItem
-        didl_item = data_structures.DidlItem(
+        didl_item = DidlItem(
             title="DUMMY",
             # This is ignored. Sonos gets the title from the item_id
             parent_id="DUMMY",  # Ditto

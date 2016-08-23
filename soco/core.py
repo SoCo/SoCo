@@ -21,8 +21,9 @@ from . import config
 from .compat import UnicodeType
 from .data_structures import (
     DidlObject, DidlPlaylistContainer, DidlResource,
-    Queue, from_didl_string, to_didl_string
+    Queue, to_didl_string
 )
+from .data_structures_entry import from_didl_string
 from .exceptions import SoCoSlaveException
 from .groups import ZoneGroup
 from .music_library import MusicLibrary

@@ -17,7 +17,7 @@ from . import config
 from .compat import (
     Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
 )
-from .data_structures import from_didl_string
+from .data_structures_entry import from_didl_string
 from .exceptions import SoCoException
 from .utils import camel_to_underscore
 from .xml import XML

@@ -38,7 +38,6 @@ from .utils import really_unicode
 from .xml import (
     XML, ns_tag
 )
-from .music_services import data_structures as ms_data_structures
 
 
 ###############################################################################
@@ -71,44 +70,11 @@ def to_didl_string(*args):
         return XML.tostring(didl, encoding='unicode')
 
 
-def from_didl_string(string):
-    """Convert a unicode xml string to a list of `DIDLObjects <DidlObject>`.
-
-    Args:
-        string (str): A unicode string containing an XML representation of one
-            or more DIDL-Lite items (in the form  ``'<DIDL-Lite ...>
-            ...</DIDL-Lite>'``)
-
-    Returns:
-        list: A list of one or more instances of `DidlObject` or a subclass
-    """
-    items = []
-    root = XML.fromstring(string.encode('utf-8'))
-    for elt in root:
-        if elt.tag.endswith('item') or elt.tag.endswith('container'):
-            item_class = elt.findtext(ns_tag('upnp', 'class'))
 
             # In case this class has an # specified unofficial
             # subclass, ignore it by stripping it from item_class
             if '.#' in item_class:
                 item_class = item_class[:item_class.find('.#')]
-
-            try:
-                cls = _DIDL_CLASS_TO_CLASS[item_class]
-            except KeyError:
-                raise DIDLMetadataError("Unknown UPnP class: %s" % item_class)
-            item = cls.from_element(elt)
-            item = ms_data_structures.attempt_datastructure_upgrade(item)
-            items.append(item)
-        else:
-            # <desc> elements are allowed as an immediate child of <DIDL-Lite>
-            # according to the spec, but I have not seen one there in Sonos, so
-            # we treat them as illegal. May need to fix this if this
-            # causes problems.
-            raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
-                                    % elt.tag)
-    return items
-
 
 ###############################################################################
 # DIDL RESOURCE                                                               #
