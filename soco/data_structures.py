@@ -86,6 +86,12 @@ def from_didl_string(string):
     for elt in root:
         if elt.tag.endswith('item') or elt.tag.endswith('container'):
             item_class = elt.findtext(ns_tag('upnp', 'class'))
+
+            # In case this class has an # specified unofficial
+            # subclass, ignore it by stripping it from item_class
+            if '.#' in item_class:
+                item_class = item_class[:item_class.find('.#')]
+
             try:
                 cls = _DIDL_CLASS_TO_CLASS[item_class]
             except KeyError:
@@ -474,6 +480,12 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                     tag, cls.item_class))
         # and that the upnp matches what we are expecting
         item_class = element.find(ns_tag('upnp', 'class')).text
+
+        # In case this class has an # specified unofficial
+        # subclass, ignore it by stripping it from item_class
+        if '.#' in item_class:
+            item_class = item_class[:item_class.find('.#')]
+
         if item_class != cls.item_class:
             raise DIDLMetadataError(
                 "UPnP class is incorrect. Expected '{0}',"
