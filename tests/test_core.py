@@ -226,7 +226,9 @@ class TestSoco:
         # restore original value
         moco_zgs.speaker_info = old
         mocr.get.assert_called_once_with(
-            'http://' + IP_ADDR + ':1400/xml/device_description.xml')
+            'http://' + IP_ADDR + ':1400/xml/device_description.xml',
+            timeout=None,
+        )
         should = {
             'zone_name': "Room",
             'player_icon': "/img/icon-S3.png",
@@ -284,7 +286,9 @@ class TestSoco:
         # restore original value
         moco_zgs.speaker_info = old
         mocr.get.assert_called_once_with(
-            'http://' + IP_ADDR + ':1400/xml/device_description.xml')
+            'http://' + IP_ADDR + ':1400/xml/device_description.xml',
+            timeout=None,
+        )
         # get_speaker_info only updates internal speaker_info and does not
         # replace it
         should.update({
