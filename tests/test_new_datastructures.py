@@ -112,6 +112,19 @@ class TestResource():
 class TestDidlObject():
     """Testing the DidlObject base class."""
 
+    didl_xml = """
+    <item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+      id="iid" parentID="pid" restricted="true">
+        <dc:title>the_title</dc:title>
+        <upnp:class>object</upnp:class>
+        <dc:creator>a_creator</dc:creator>
+        <desc id="cdudn"
+          nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">DUMMY</desc>
+    </item>
+    """
+
     def test_create_didl_object_with_no_params(self):
         with pytest.raises(TypeError):
             didl_object = data_structures.DidlObject()
@@ -146,25 +159,26 @@ class TestDidlObject():
         "got <res> for class object" in str(excinfo.value)
 
     def test_didl_object_from_element(self):
-        elt = XML.fromstring(
-            """<item xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-              xmlns:dc="http://purl.org/dc/elements/1.1/"
-              xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-              id="iid" parentID="pid" restricted="true">
-                 <dc:title>the_title</dc:title>
-                 <upnp:class>object</upnp:class>
-                 <dc:creator>a_creator</dc:creator>
-                 <desc id="cdudn"
-                   nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">DUMMY</desc>
-               </item>
-        """)
-
+        elt = XML.fromstring(self.didl_xml)
         didl_object = data_structures.DidlObject.from_element(elt)
         assert didl_object.title == 'the_title'
         assert didl_object.parent_id == 'pid'
         assert didl_object.item_id == 'iid'
         assert didl_object.creator == 'a_creator'
         assert didl_object.desc == 'DUMMY'
+        assert didl_object.item_class == 'object'
+
+    def test_didl_object_from_element_unoff_subelement(self):
+        """Test that for a DidlObject created from an element with an
+        unofficial .# specified sub class, that the sub class is
+        completely ignored
+
+        """
+        elt = XML.fromstring(
+            self.didl_xml.replace('object', 'object.#SubClass')
+        )
+        didl_object = data_structures.DidlObject.from_element(elt)
+        assert didl_object.item_class == 'object'
 
     def test_didl_object_from_wrong_class(self):
         # mismatched upnp class
