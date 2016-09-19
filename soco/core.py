@@ -11,6 +11,7 @@ import logging
 import re
 import socket
 from functools import wraps
+from soco.exceptions import SoCoUPnPException
 
 
 import requests
@@ -1498,40 +1499,50 @@ class SoCo(_SocoSingletonBase):
         """Sets the sleep timer.
 
         Args:
-            sleep_time_seconds (`int`): How long to wait before turning off
-                speaker in seconds. Maximum value of 86399
+            sleep_time_seconds (`int/NoneType`): How long to wait before
+                turning off speaker in seconds, None to cancel a sleep timer.
+                Maximum value of 86399
 
-        Returns:
-            bool: True if succesful, False otherwise
-
-        Raises SoCoException (or a subclass) upon errors, ValueError for
-            incorrect syntax.
+        Raises:
+            SoCoException: Upon errors interacting with Sonos controller
+            ValueError: Argument/Syntax errors
 
         """
-        if sleep_time_seconds and \
-           sleep_time_seconds != int(sleep_time_seconds):
+        # Note: A value of None for sleep_time_seconds is valid, and needs to
+        # be preserved distinctly separate from 0. 0 means go to sleep now,
+        # which will immediately start the sound tappering, and could be a
+        # useful feature, while None means cancel the current timer
+        if sleep_time_seconds == 0:
+            sleep_time = '00:00:00'
+        elif not sleep_time_seconds:
+            sleep_time = ''
+        elif sleep_time_seconds != int(sleep_time_seconds):
             raise ValueError('invalid sleep_time_seconds, must be integer \
                 value between 0 and 86399 inclusive')
-        if sleep_time_seconds:
-            # pylint: disable = redefined-variable-type
-            sleep_times = datetime.timedelta(seconds=int(sleep_time_seconds))
-            sleep_times = str(sleep_times).split(':')
-            sleep_times = tuple([int(i) for i in sleep_times])
-            sleep_time = "%02d:%02d:%02d" % sleep_times
         else:
-            sleep_time = ''
+            sleep_time = str(
+                datetime.timedelta(seconds=int(sleep_time_seconds))
+            )
 
-        return self.avTransport.ConfigureSleepTimer([
-            ('InstanceID', 0),
-            ('NewSleepTimerDuration', sleep_time),
-        ])
+        try:
+            self.avTransport.ConfigureSleepTimer([
+                ('InstanceID', 0),
+                ('NewSleepTimerDuration', sleep_time),
+            ])
+        except SoCoUPnPException as err:
+            if re.match(r'Error 402 received', str(err)):
+                raise ValueError('invalid sleep_time_seconds, must be integer \
+                    value between 0 and 86399 inclusive')
+            else:
+                raise
 
     @only_on_master
     def get_sleep_timer(self):
         """Retrieves remaining sleep time, if any
 
         Returns:
-            int: Number of seconds left in timer
+            int or NoneType: Number of seconds left in timer. If there is no
+            sleep timer currently set it will return None.
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -1541,10 +1552,11 @@ class SoCo(_SocoSingletonBase):
         ])
         if resp['RemainingSleepTimerDuration']:
             times = resp['RemainingSleepTimerDuration'].split(':')
-            resp['RemainingSleepTimerDuration'] = (int(times[0]) * 3600 +
-                                                   int(times[1]) * 60 +
-                                                   int(times[2]))
-        return resp['RemainingSleepTimerDuration']
+            return (int(times[0]) * 3600 +
+                    int(times[1]) * 60 +
+                    int(times[2]))
+        else:
+            return None
 
     # Deprecated methods - moved to music_library.py
     # pylint: disable=missing-docstring, too-many-arguments
