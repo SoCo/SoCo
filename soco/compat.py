@@ -9,7 +9,7 @@ It is used internally by SoCo to ensure compatibility with Python 2."""
 from __future__ import unicode_literals
 
 try:  # python 3
-    from http.server import SimpleHTTPRequestHandler  # noqa
+    from http.server import BaseHTTPRequestHandler  # noqa
     from urllib.request import urlopen  # noqa
     from urllib.error import URLError  # noqa
     from urllib.parse import quote_plus  # noqa
@@ -21,7 +21,7 @@ try:  # python 3
     from urllib.parse import urlparse, parse_qs  # noqa
 
 except ImportError:  # python 2.7
-    from SimpleHTTPServer import SimpleHTTPRequestHandler  # noqa
+    from SimpleHTTPServer import BaseHTTPRequestHandler  # noqa
     from urllib2 import urlopen, URLError  # noqa
     from urllib import quote_plus  # noqa
     import SocketServer as socketserver  # noqa

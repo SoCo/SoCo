@@ -15,7 +15,7 @@ import requests
 
 from . import config
 from .compat import (
-    Queue, SimpleHTTPRequestHandler, URLError, socketserver, urlopen
+    Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
 )
 from .data_structures import from_didl_string
 from .exceptions import SoCoException
@@ -200,7 +200,7 @@ class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     allow_reuse_address = True
 
 
-class EventNotifyHandler(SimpleHTTPRequestHandler):
+class EventNotifyHandler(BaseHTTPRequestHandler):
     """Handles HTTP ``NOTIFY`` Verbs sent to the listener server."""
 
     def do_NOTIFY(self):  # pylint: disable=invalid-name
