@@ -21,7 +21,7 @@ try:  # python 3
     from urllib.parse import urlparse, parse_qs  # noqa
 
 except ImportError:  # python 2.7
-    from SimpleHTTPServer import BaseHTTPRequestHandler  # noqa
+    from BaseHTTPServer import BaseHTTPRequestHandler  # noqa
     from urllib2 import urlopen, URLError  # noqa
     from urllib import quote_plus  # noqa
     import SocketServer as socketserver  # noqa
