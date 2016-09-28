@@ -112,14 +112,16 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         except socket.error:
             pass
         for address in addresses:
-            _sockets.append(create_socket(address))
+            try:
+                _sockets.append(create_socket(address))
+            except socket.error as e:
+                _LOG.warning("Can't make a discovery socket for %s: %s: %s",
+                             address, e.__class__.__name__, e)
         # Add a socket using the system default address
         _sockets.append(create_socket())
+        _LOG.info("Sending discovery packets on %s",
+                  list(s.getsockname()[0] for s in _sockets))
 
-        _LOG.info(
-            "Sending discovery packets on default interface and %s",
-            list(addresses)
-        )
     for _ in range(0, 3):
         # Send a few times to each socket. UDP is unreliable
         for _sock in _sockets:
