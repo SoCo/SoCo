@@ -6,10 +6,12 @@ the main entry to the SoCo functionality
 
 from __future__ import unicode_literals
 
+import datetime
 import logging
 import re
 import socket
 from functools import wraps
+from soco.exceptions import SoCoUPnPException
 
 
 import requests
@@ -144,6 +146,8 @@ class SoCo(_SocoSingletonBase):
         remove_sonos_playlist
         add_item_to_sonos_playlist
         get_item_album_art_uri
+        set_sleep_timer
+        get_sleep_timer
 
     ..  rubric:: Properties
     .. warning::
@@ -1492,6 +1496,67 @@ class SoCo(_SocoSingletonBase):
 
         if getattr(item, 'album_art_uri', False):
             return self._build_album_art_full_uri(item.album_art_uri)
+        else:
+            return None
+
+    @only_on_master
+    def set_sleep_timer(self, sleep_time_seconds):
+        """Sets the sleep timer.
+
+        Args:
+            sleep_time_seconds (int or NoneType): How long to wait before
+                turning off speaker in seconds, None to cancel a sleep timer.
+                Maximum value of 86399
+
+        Raises:
+            SoCoException: Upon errors interacting with Sonos controller
+            ValueError: Argument/Syntax errors
+
+        """
+        # Note: A value of None for sleep_time_seconds is valid, and needs to
+        # be preserved distinctly separate from 0. 0 means go to sleep now,
+        # which will immediately start the sound tappering, and could be a
+        # useful feature, while None means cancel the current timer
+        try:
+            if sleep_time_seconds is None:
+                sleep_time = ''
+            else:
+                sleep_time = format(
+                    datetime.timedelta(seconds=int(sleep_time_seconds))
+                )
+            self.avTransport.ConfigureSleepTimer([
+                ('InstanceID', 0),
+                ('NewSleepTimerDuration', sleep_time),
+            ])
+        except SoCoUPnPException as err:
+            if 'Error 402 received' in str(err):
+                raise ValueError('invalid sleep_time_seconds, must be integer \
+                    value between 0 and 86399 inclusive or None')
+            else:
+                raise
+        except ValueError:
+            raise ValueError('invalid sleep_time_seconds, must be integer \
+                value between 0 and 86399 inclusive or None')
+
+    @only_on_master
+    def get_sleep_timer(self):
+        """Retrieves remaining sleep time, if any
+
+        Returns:
+            int or NoneType: Number of seconds left in timer. If there is no
+                sleep timer currently set it will return None.
+
+        Raises SoCoException (or a subclass) upon errors.
+
+        """
+        resp = self.avTransport.GetRemainingSleepTimerDuration([
+            ('InstanceID', 0),
+        ])
+        if resp['RemainingSleepTimerDuration']:
+            times = resp['RemainingSleepTimerDuration'].split(':')
+            return (int(times[0]) * 3600 +
+                    int(times[1]) * 60 +
+                    int(times[2]))
         else:
             return None
 

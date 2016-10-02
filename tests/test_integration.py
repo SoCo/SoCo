@@ -456,6 +456,26 @@ class TestSonosPlaylist(object):
             soco.remove_sonos_playlist('SQ:{0}'.format(hpl_i + 1))
 
 
+class TestTimer(object):
+    """Integration tests for timers on Sonos"""
+
+    existing_timer = None
+
+    @pytest.yield_fixture(autouse=True)
+    def restore_timer(self, soco):
+        """A fixture which cleans up after each timer test."""
+        existing_timer = soco.get_sleep_timer()
+
+        yield
+        soco.set_sleep_timer(existing_timer)
+
+    def test_get_set_timer(self, soco):
+        """Test setting the timer"""
+        assert soco.set_sleep_timer(7200) is None
+        result = soco.get_sleep_timer()
+        if not any(result == s for s in [ 7200, 7199, 7198 ]):
+            pytest.fail("Set timer to 7200, but sonos reports back time as %s" % result['RemainingSleepTimerDuration'])
+
 class TestReorderSonosPlaylist(object):
     """Integration tests for Sonos Playlist Management."""
     existing_playlists = None

@@ -763,6 +763,55 @@ class TestAVTransport:
             ('SortCriteria', '')
         ])
 
+    def test_set_sleep_timer(self, moco):
+        moco.avTransport.reset_mock()
+        moco.avTransport.ConfigureSleepTimer.return_value = None
+        result = moco.set_sleep_timer(None)
+        assert result is None
+        moco.avTransport.ConfigureSleepTimer.assert_called_once_with(
+            [('InstanceID', 0),
+             ('NewSleepTimerDuration', '')]
+        )
+
+        moco.avTransport.reset_mock()
+        moco.avTransport.ConfigureSleepTimer.return_value = None
+        result = moco.set_sleep_timer(7200)
+        assert result is None
+        moco.avTransport.ConfigureSleepTimer.assert_called_once_with(
+            [('InstanceID', 0),
+             ('NewSleepTimerDuration', '2:00:00')]
+        )
+
+        moco.avTransport.reset_mock()
+        moco.avTransport.ConfigureSleepTimer.return_value = None
+        result = moco.set_sleep_timer(0)
+        assert result is None
+        moco.avTransport.ConfigureSleepTimer.assert_called_once_with(
+            [('InstanceID', 0),
+             ('NewSleepTimerDuration', '0:00:00')]
+        )
+
+    @pytest.mark.parametrize('bad_sleep_time', ['BadTime', '00:43:23', '4200s',''])
+    def test_set_sleep_timer_bad_sleep_time(self, moco, bad_sleep_time):
+        with pytest.raises(ValueError):
+            result = moco.set_sleep_timer(bad_sleep_time)
+
+    def test_get_sleep_timer(self, moco):
+        moco.avTransport.reset_mock()
+        moco.avTransport.GetRemainingSleepTimerDuration.return_value = {
+            'RemainingSleepTimerDuration': '02:00:00',
+            'CurrentSleepTimerGeneration': '3',
+        }
+        result = moco.get_sleep_timer()
+        assert result == 7200
+
+        moco.avTransport.reset_mock()
+        moco.avTransport.GetRemainingSleepTimerDuration.return_value = {
+            'RemainingSleepTimerDuration': '',
+            'CurrentSleepTimerGeneration': '0',
+        }
+        result = moco.get_sleep_timer()
+        assert result == None
 
 class TestContentDirectory:
 
