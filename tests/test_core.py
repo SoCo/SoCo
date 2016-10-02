@@ -762,7 +762,7 @@ class TestAVTransport:
     def test_set_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
         moco.avTransport.ConfigureSleepTimer.return_value = None
-        result = moco.set_sleep_timer('')
+        result = moco.set_sleep_timer(None)
         assert result is None
         moco.avTransport.ConfigureSleepTimer.assert_called_once_with(
             [('InstanceID', 0),
@@ -778,7 +778,16 @@ class TestAVTransport:
              ('NewSleepTimerDuration', '2:00:00')]
         )
 
-    @pytest.mark.parametrize('bad_sleep_time', ['BadTime', '00:43:23', '4200s'])
+        moco.avTransport.reset_mock()
+        moco.avTransport.ConfigureSleepTimer.return_value = None
+        result = moco.set_sleep_timer(0)
+        assert result is None
+        moco.avTransport.ConfigureSleepTimer.assert_called_once_with(
+            [('InstanceID', 0),
+             ('NewSleepTimerDuration', '0:00:00')]
+        )
+
+    @pytest.mark.parametrize('bad_sleep_time', ['BadTime', '00:43:23', '4200s',''])
     def test_set_sleep_timer_bad_sleep_time(self, moco, bad_sleep_time):
         with pytest.raises(ValueError):
             result = moco.set_sleep_timer(bad_sleep_time)

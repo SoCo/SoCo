@@ -1499,7 +1499,7 @@ class SoCo(_SocoSingletonBase):
         """Sets the sleep timer.
 
         Args:
-            sleep_time_seconds (`int/NoneType`): How long to wait before
+            sleep_time_seconds (int or NoneType): How long to wait before
                 turning off speaker in seconds, None to cancel a sleep timer.
                 Maximum value of 86399
 
@@ -1512,29 +1512,26 @@ class SoCo(_SocoSingletonBase):
         # be preserved distinctly separate from 0. 0 means go to sleep now,
         # which will immediately start the sound tappering, and could be a
         # useful feature, while None means cancel the current timer
-        if sleep_time_seconds == 0:
-            sleep_time = '00:00:00'
-        elif not sleep_time_seconds:
-            sleep_time = ''
-        elif sleep_time_seconds != int(sleep_time_seconds):
-            raise ValueError('invalid sleep_time_seconds, must be integer \
-                value between 0 and 86399 inclusive')
-        else:
-            sleep_time = str(
-                datetime.timedelta(seconds=int(sleep_time_seconds))
-            )
-
         try:
+            if sleep_time_seconds is None:
+                sleep_time = ''
+            else:
+                sleep_time = format(
+                    datetime.timedelta(seconds=int(sleep_time_seconds))
+                )
             self.avTransport.ConfigureSleepTimer([
                 ('InstanceID', 0),
                 ('NewSleepTimerDuration', sleep_time),
             ])
         except SoCoUPnPException as err:
-            if re.match(r'Error 402 received', str(err)):
+            if 'Error 402 received' in str(err):
                 raise ValueError('invalid sleep_time_seconds, must be integer \
-                    value between 0 and 86399 inclusive')
+                    value between 0 and 86399 inclusive or None')
             else:
                 raise
+        except ValueError:
+            raise ValueError('invalid sleep_time_seconds, must be integer \
+                value between 0 and 86399 inclusive or None')
 
     @only_on_master
     def get_sleep_timer(self):
@@ -1542,7 +1539,7 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             int or NoneType: Number of seconds left in timer. If there is no
-            sleep timer currently set it will return None.
+                sleep timer currently set it will return None.
 
         Raises SoCoException (or a subclass) upon errors.
 
