@@ -11,6 +11,7 @@ import logging
 import re
 import socket
 from functools import wraps
+import warnings
 from soco.exceptions import SoCoUPnPException
 
 
@@ -1326,7 +1327,9 @@ class SoCo(_SocoSingletonBase):
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
         """
-
+        message = 'The output type of this method will probably change in the '\
+                  'future to use SoCo data structures'
+        warnings.warn(message, stacklevel=2)
         return self.__get_favorites(RADIO_SHOWS, start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
@@ -1342,6 +1345,9 @@ class SoCo(_SocoSingletonBase):
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
         """
+        message = 'The output type of this method will probably change in the '\
+                  'future to use SoCo data structures'
+        warnings.warn(message, stacklevel=2)
         return self.__get_favorites(RADIO_STATIONS, start, max_items)
 
     def get_sonos_favorites(self, start=0, max_items=100):
@@ -1357,6 +1363,9 @@ class SoCo(_SocoSingletonBase):
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
         """
+        message = 'The output type of this method will probably change in the '\
+                  'future to use SoCo data structures'
+        warnings.warn(message, stacklevel=2)
         return self.__get_favorites(SONOS_FAVORITES, start, max_items)
 
     def __get_favorites(self, favorite_type, start=0, max_items=100):
