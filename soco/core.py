@@ -141,6 +141,7 @@ class SoCo(_SocoSingletonBase):
         clear_queue
         get_favorite_radio_shows
         get_favorite_radio_stations
+        get_sonos_favorites
         create_sonos_playlist
         create_sonos_playlist_from_queue
         remove_sonos_playlist
@@ -1326,7 +1327,7 @@ class SoCo(_SocoSingletonBase):
         get the entire list of favorites.
         """
 
-        return self.__get_radio_favorites(RADIO_SHOWS, start, max_items)
+        return self.__get_favorites(RADIO_SHOWS, start, max_items)
 
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
@@ -1341,9 +1342,24 @@ class SoCo(_SocoSingletonBase):
         requested (`max_items`), if it is, use `start` to page through and
         get the entire list of favorites.
         """
-        return self.__get_radio_favorites(RADIO_STATIONS, start, max_items)
+        return self.__get_favorites(RADIO_STATIONS, start, max_items)
 
-    def __get_radio_favorites(self, favorite_type, start=0, max_items=100):
+    def get_sonos_favorites(self, start=0, max_items=100):
+        """Get Sonos favorites.
+
+        Returns:
+        A list containing the total number of favorites, the number of
+        favorites returned, and the actual list of favorite radio stations,
+        represented as a dictionary with `title`, `uri` and `meta` keys.
+
+        Depending on what you're building, you'll want to check to see if the
+        total number of favorites is greater than the amount you
+        requested (`max_items`), if it is, use `start` to page through and
+        get the entire list of favorites.
+        """
+        return self.__get_favorites(SONOS_FAVORITES, start, max_items)
+
+    def __get_favorites(self, favorite_type, start=0, max_items=100):
         """ Helper method for `get_favorite_radio_*` methods.
 
         Arguments:
@@ -1352,11 +1368,13 @@ class SoCo(_SocoSingletonBase):
         max_items -- The total number of results to return.
 
         """
-        if favorite_type != RADIO_SHOWS or RADIO_STATIONS:
-            favorite_type = RADIO_STATIONS
+        if favorite_type != RADIO_SHOWS and favorite_type != RADIO_STATIONS:
+            favorite_type = SONOS_FAVORITES
 
         response = self.contentDirectory.Browse([
-            ('ObjectID', 'R:0/{0}'.format(favorite_type)),
+            ('ObjectID',
+             'FV:2' if favorite_type is SONOS_FAVORITES
+             else 'R:0/{0}'.format(favorite_type)),
             ('BrowseFlag', 'BrowseDirectChildren'),
             ('Filter', '*'),
             ('StartingIndex', start),
@@ -1372,12 +1390,17 @@ class SoCo(_SocoSingletonBase):
             metadata = XML.fromstring(really_utf8(results_xml))
 
             for item in metadata.findall(
+                    '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}container'
+                    if favorite_type == RADIO_SHOWS else
                     '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item'):
                 favorite = {}
                 favorite['title'] = item.findtext(
                     '{http://purl.org/dc/elements/1.1/}title')
                 favorite['uri'] = item.findtext(
                     '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}res')
+                if favorite_type == SONOS_FAVORITES:
+                    favorite['meta'] = item.findtext(
+                        '{urn:schemas-rinconnetworks-com:metadata-1-0/}resMD')
                 favorites.append(favorite)
 
         result['total'] = response['TotalMatches']
@@ -1915,6 +1938,7 @@ class SoCo(_SocoSingletonBase):
 
 RADIO_STATIONS = 0
 RADIO_SHOWS = 1
+SONOS_FAVORITES = 2
 
 NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
       'upnp': '{urn:schemas-upnp-org:metadata-1-0/upnp/}',
