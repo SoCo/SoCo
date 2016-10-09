@@ -1,0 +1,146 @@
+SoCo 0.12 release notes
+***********************
+
+**SoCo 0.12** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* New ``MusicService`` class for access to all the music services known to
+  Sonos. Note that some of this code is still unstable, and in particular
+  the data structures returned by methods such as ``get_metadata`` may change
+  in future. (`#262 <https://github.com/SoCo/SoCo/pull/262>`_,
+  `#358 <https://github.com/SoCo/SoCo/pull/358>`_)
+
+* Add information to the docs about how to put SoCo in the Python path, for
+  test execution (`#327 <https://github.com/SoCo/SoCo/pull/327>`_,
+  `#319 <https://github.com/SoCo/SoCo/issues/319>`_)
+
+* added ``to_dict()`` / ``from_dict()`` to ``DidlResource``
+  (`#330 <https://github.com/SoCo/SoCo/pull/330>`_,
+  `#318 <https://github.com/SoCo/SoCo/issues/318>`_)
+
+* All tests have been moved from the ``unittests`` directory to the tests
+  directory (`#336 <https://github.com/SoCo/SoCo/pull/336>`_)
+
+* For developers, more ``make`` targets, and a better sdist build
+  (`#346 <https://github.com/SoCo/SoCo/pull/346>`_)
+
+* Added ``discovery.any_soco()``, for when you need a ``SoCo`` instance, but
+  you don't care which. This is slightly better than the traditional
+  ``device = soco.discover().pop()`` since it will return an existing instance
+  if one is available, without sending discovery packets
+  (`#262 <https://github.com/SoCo/SoCo/pull/262>`_)
+
+* Modified ``DidlObject.to_dict()`` so that any associated resources list will
+  be also returned as a list of dictionaries instead of returning a list of
+  ``DidlResource`` objects. (`#340 <https://github.com/SoCo/SoCo/pull/340>`_,
+  `#338 <https://github.com/SoCo/SoCo/issues/338>`_)
+
+* Added a ``sonosdump`` tool in ``dev_tools``, which can print out the various
+  UPnP methods which Sonos uses
+  (`#344 <https://github.com/SoCo/SoCo/pull/344>`_)
+
+* Added methods for sonos playlist management: ``reorder_sonos_playlist``,
+  ``clear_sonos_playlist``, ``move_in_sonos_playlist``,
+  ``remove_from_sonos_playlist``, ``get_sonos_playlist_by_attr``
+  (`#352 <https://github.com/SoCo/SoCo/pull/352>`_,
+  `#348 <https://github.com/SoCo/SoCo/issues/348>`_,
+  `#353 <https://github.com/SoCo/SoCo/pull/351>`_) and
+  ``remove_sonos_playlist`` (`#341 <https://github.com/SoCo/SoCo/issues/341>`_,
+  `#345 <https://github.com/SoCo/SoCo/pull/345>`_)
+
+* Support playmodes repeat-one (``REPEAT_ONE``) and shuffle-repeat-one
+  (``SHUFFLE_REPEAT_ONE``) introduced by Sonos 6.0
+  (`#387 <https://github.com/SoCo/SoCo/pull/387>`_)
+
+* Better discovery: SoCo tries harder to find devices on the local network,
+  particularly where there are multiple network interfaces. The default
+  discovery timeout is also increased to 5 seconds
+  (`#395 <https://github.com/SoCo/SoCo/pull/395>`_,
+  `#432 <https://github.com/SoCo/SoCo/pull/432>`_)
+
+* Large work package on the docs, which contains a new front page, more
+  sections, some advanced topics and an example page
+  (`#406 <https://github.com/SoCo/SoCo/pull/406>`_,
+  `#360 <https://github.com/SoCo/SoCo/issues/360>`_,
+  `#368 <https://github.com/SoCo/SoCo/pull/368>`_,
+  `#362 <https://github.com/SoCo/SoCo/pull/362>`_,
+  `#326 <https://github.com/SoCo/SoCo/issues/326>`_,
+  `#369 <https://github.com/SoCo/SoCo/issues/369>`_).
+
+* Added optional timeout argument to be passed onto requests when getting
+  speaker info (`#302 <https://github.com/SoCo/SoCo/pull/302>`_)
+
+* Ignore ``.#`` specified subclasses in Didl xml. Several music services seem
+  to use an out-of-spec way to make sub classes in Didl, by specifying the
+  subclass name or function after a #. This caused our implementation of Didl
+  to reject it. This has now been fixed by simple ignoring these un-official
+  subclasses (`#425 <https://github.com/SoCo/SoCo/pull/425>`_)
+
+* Added methods to manipulate sonos sleep functionality: ``set_sleep_timer``,
+  ``get_sleep_timer`` (`#413 <https://github.com/SoCo/SoCo/pull/413>`_)
+
+* Various cleanups (`#351 <https://github.com/SoCo/SoCo/pull/351>`_)
+
+* Extended ``get_speaker_info`` to return more information about the Sonos
+  speakers (`#335 <https://github.com/SoCo/SoCo/pull/335>`_,
+  `#320 <https://github.com/SoCo/SoCo/issues/320>`_)
+
+Bugfixes
+========
+
+* Clear zone group cache and reparse zone group information after join and
+  unjoin to prevent giving wrong topology information.
+  (`#323 <https://github.com/SoCo/SoCo/pull/323>`_,
+  `#321 <https://github.com/SoCo/SoCo/issues/321>`_)
+
+* Fix typo preventing SoCo from parsing the audio metadata object used when a
+  TV is playing. (`#331 <https://github.com/SoCo/SoCo/pull/331>`_)
+
+* Fix bug where SoCo would raise an exception if music services sent metadata
+  with invalid XML characters (`#392 <https://github.com/SoCo/SoCo/pull/392>`_,
+  `#386 <https://github.com/SoCo/SoCo/issues/386>`_)
+
+* Event lister was (incorrectly) responding to ``GET`` and ``HEAD`` requests,
+  which could result in local files being served
+  (`#430 <https://github.com/SoCo/SoCo/issues/430>`_)
+
+* Minor fix because ordereddict.values in py3 return ValuesView
+  (`#359 <https://github.com/SoCo/SoCo/pull/359>`_)
+
+* Fixed bugs with parsing events
+  (`#276 <https://github.com/SoCo/SoCo/issues/276>`_)
+
+* Fixed unit tests (`#343 <https://github.com/SoCo/SoCo/pull/343>`_,
+  `#342 <https://github.com/SoCo/SoCo/issues/342>`_)
+
+* Fix in MusicLibrary constructor
+  (`#370 <https://github.com/SoCo/SoCo/pull/370>`_)
+
+Backwards Compatability
+=======================
+
+* Dropped support for Python 3.2
+  (`#324 <https://github.com/SoCo/SoCo/issues/324>`_)
+
+* Methods relating to the music library (``get_artists``,
+  ``get_album_artists``, ``get_albums`` and others) have been moved to the
+  ``music_library`` module. Instead of ``device.get_album_artists()``, please
+  now use ``device.music_library.get_album_artists()`` etc. Old code will
+  continue to work for the moment, but will raise deprecation warnings
+  (`#350 <https://github.com/SoCo/SoCo/pull/350>`_)
+
+* Made a hard deprecation of the Spotify plugin since the API it relied on has
+  been deprecated and it therefore no longer worked
+  (`#401 <https://github.com/SoCo/SoCo/issues/401>`_,
+  `#423 <https://github.com/SoCo/SoCo/issues/401>`_)
+
+* Dropped pylint checks for Python 2.6
+  (`#363 <https://github.com/SoCo/SoCo/issues/363>`_)
+
