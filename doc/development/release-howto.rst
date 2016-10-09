@@ -27,7 +27,7 @@ Create and Publish
 * Verify that all tests pass.
 
 * Update the version number in ``__init__.py`` (see
-  [example](https://github.com/SoCo/SoCo/commit/d35171213eabbc4)).
+  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
 
 * Tag the current commit, eg
 
