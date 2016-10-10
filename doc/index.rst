@@ -29,7 +29,7 @@ To get up and running quickly with *SoCo*, start by reading the
 instructions <installation>` and a small :ref:`tutorial <tutorial>`
 and then wet your appetite with the :ref:`micro examples
 <examples>`. Then optionally follow up with any of the advanced topics
-that peak your interest: :ref:`speaker_topologies`, :ref:`events` and
+that pique your interest: :ref:`speaker_topologies`, :ref:`events` and
 :ref:`upnp_services`. Finally dive into the :ref:`the full module
 reference documentation <module_reference>`.
 
