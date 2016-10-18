@@ -155,7 +155,7 @@ class MusicLibrary(object):
         The ``search_term`` argument performs a fuzzy search on that string in
         the results, so e.g calling::
 
-            get_music_library_items('artist', search_term='Metallica')
+            get_music_library_information('artists', search_term='Metallica')
 
         will perform a fuzzy search for the term 'Metallica' among all the
         artists.
@@ -164,13 +164,14 @@ class MusicLibrary(object):
         subcategory of the search and return results from there. So. e.g
         knowing that among the artist is one called 'Metallica', calling::
 
-            get_music_library_items('artist', subcategories=['Metallica'])
+            get_music_library_information('artists',
+                                          subcategories=['Metallica'])
 
         will jump directly into the 'Metallica' sub category and return the
         albums associated with Metallica and::
 
-            get_music_library_items('artist', subcategories=['Metallica',
-                                                           'Black'])
+            get_music_library_information('artists',
+                                          subcategories=['Metallica', 'Black'])
 
         will return the tracks of the album 'Black' by the artist 'Metallica'.
         The order of sub category types is: Genres->Artists->Albums->Tracks.
@@ -183,13 +184,13 @@ class MusicLibrary(object):
         a time. This paging is exposed to the user with the ``start`` and
         ``max_items`` arguments. So calling::
 
-          get_music_library_items('artists', start=0, max_items=100)
-          get_music_library_items('artists', start=100, max_items=100)
+            get_music_library_information('artists', start=0, max_items=100)
+            get_music_library_information('artists', start=100, max_items=100)
 
         will get the first and next 100 items, respectively. It is also
         possible to ask for all the elements at once::
 
-            get_music_library_items('artists', complete_result=True)
+            get_music_library_information('artists', complete_result=True)
 
         This will perform the paging internally and simply return all the
         items.
