@@ -60,17 +60,15 @@ from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
 from ..compat import quote_url
-from ..xml import XML
-from ..discovery import discover
-from ..compat import urlparse
-from pprint import pprint
 
 
 # For now we generate classes dynamically. This is shorter, but
 # provides no custom documentation for all the different types.
 CLASSES = {}
+
+
 def get_class(class_key):
-    """Form a class from the class key
+    """Form a music service data structure class from the class key
 
     Args:
         class_key (str): A concatenation of the base class (e.g. MediaMetadata)
@@ -89,25 +87,44 @@ def get_class(class_key):
 
 
 def parse_response(service, response, search_type):
-    """Parse the query response"""
+    """Parse the response to a music service query and return a SearchResult
+
+    Args:
+        service (MusicService): The music service that produced the response
+        response (OrderedDict): The response from the soap client call
+        search_type (str): A string that indicates the search type that the
+            response is from
+
+    Returns:
+        SearchResult: A SearchResult object
+    """
     items = []
+    # The result to be parsed is in either searchResult or getMetadataResult
     if 'searchResult' in response:
         response = response['searchResult']
     elif 'getMetadataResult' in response:
         response = response['getMetadataResult']
+
+    # Form the search metadata
     search_metadata = {
         'number_returned': response['count'],
         'total_matches': None,
         'search_type': search_type,
         'update_id': None,
     }
+
     for result_type in ('mediaCollection', 'mediaMetadata'):
+        # Upper case the first letter (used for the class_key)
         result_type_proper = result_type[0].upper() + result_type[1:]
         raw_items = response.get(result_type, [])
         # If there is only 1 result, it is not put in an array
         if isinstance(raw_items, OrderedDict):
             raw_items = [raw_items]
+
         for raw_item in raw_items:
+            # Form the class_key, which is a unique string for this type,
+            # formed by concatenating the result type with the item type. Turns
+            # into e.g: MediaMetadataTrack
             class_key = result_type_proper + raw_item['itemType'].title()
             cls = get_class(class_key)
             items.append(cls.from_music_service(service, raw_item))
@@ -115,7 +132,16 @@ def parse_response(service, response, search_type):
 
 
 def form_uri(item_id, service, is_track):
-    """Form and return uri from item_id, service and is_track info"""
+    """Form and return a music service item uri
+
+    Args:
+        item_id (str): The item id
+        service (MusicService): The music service that the item originates from
+        is_track (bool): Whether the item_id is from a track or not
+
+    Returns:
+        str: The music service item uri
+    """
     if is_track:
         uri = service.sonos_uri_from_id(item_id)
     else:
@@ -123,16 +149,18 @@ def form_uri(item_id, service, is_track):
     return uri
 
 
-### Type Helper
+# Type Helper
 BOOL_STRS = {'true', 'false'}
+
+
 def bool_str(string):
     """Returns a boolean from a string imput of 'true' or 'false'"""
     if string not in BOOL_STRS:
         raise ValueError('Invalid boolean string: "{}"'.format(string))
-    return True if string == "true" else False
+    return True if string == 'true' else False
 
 
-### Music Service item base classes
+# Music Service item base classes
 class MetadataDictBase(object):
     """Class used to parse metadata from kwargs"""
 
@@ -141,14 +169,14 @@ class MetadataDictBase(object):
     # _valid_fields is a set of valid fields
     _valid_fields = {}
 
-    # _types is a dict of fields with non-string types and their
-    # convertion callables
+    # _types is a dict of fields with non-string types and their convertion
+    # callables
     _types = {}
-    
+
     def __init__(self, metadata_dict):
         """Initialize local variables"""
-        # Check for invalid fields
         for key in metadata_dict:
+            # Check for invalid fields
             if key not in self._valid_fields:
                 message = ('Field: "{0}" with value "{1}" is not valid for '
                            'class "{2}"')
@@ -161,22 +189,24 @@ class MetadataDictBase(object):
                 # correct type for valid fields. Alternative, we might
                 # also start to collect a list of invalid fields.
                 #
-                # For new we just print the warning message
+                # For now we just print the warning message
+                #
+                # FIXME
                 print(message.format(key, metadata_dict[key], self.__class__))
-                #raise ValueError(message.format(key, metadata_dict[key], self.__class__))
 
         # Convert names and create metadata dict
         self.metadata = {}
         for key, value in metadata_dict.items():
             if key in self._types:
-                convertion_callable = self._types[key] 
+                convertion_callable = self._types[key]
                 value = convertion_callable(value)
             self.metadata[camel_to_underscore(key)] = value
 
-    @classmethod
-    def from_dict(cls, content_dict):
-        """Init cls from a dict (alternative initializer)"""
-        return cls(content_dict)
+#    @classmethod
+#    def from_dict(cls, content_dict):
+#        """Init cls from a dict (alternative initializer)"""
+#        # FIXME this seems redundant, look into it
+#        return cls(content_dict)
 
     def __getattr__(self, key):
         """Return item from metadata in case of unknown attribute"""
@@ -190,12 +220,12 @@ class MetadataDictBase(object):
 class MusicServiceItem(MetadataDictBase):
     """A base class for all music service items"""
 
-    # See comment in MetadataDictBase for these two attributes
+    # See comment in MetadataDictBase for explanation of these two attributes
     _valid_fields = {}
     _types = {}
 
-    def __init__(self, item_id, desc, resources, uri, metadata_dict,
-                 music_service = None):
+    def __init__(self, item_id, desc,  # pylint: disable=too-many-arguments
+                 resources, uri, metadata_dict, music_service=None):
         """Init music service item
 
         Args:
@@ -204,7 +234,8 @@ class MusicServiceItem(MetadataDictBase):
             resources (list): List of DidlResource
             uri (str): The uri for the location of the item
             metdata_dict (dict): Mapping of metadata
-            music_service (MusicService): The MusicService instance the item originates from
+            music_service (MusicService): The MusicService instance the item
+                originates from
         """
         super(MusicServiceItem, self).__init__(metadata_dict)
         self.item_id = item_id
@@ -216,11 +247,20 @@ class MusicServiceItem(MetadataDictBase):
     @classmethod
     def from_music_service(cls, music_service, content_dict):
         """Return an element instantiated from the information that a music
-        service has
+        service has (alternative constructor)
 
+        Args:
+            music_service (MusicService): The music service that content_dict
+                originated from
+            content_dict (OrderedDict): The data to instantiate the music
+                service item from
+
+        Returns:
+            MusicServiceItem: A MusicServiceItem instance
         """
         # Form the item_id
         quoted_id = quote_url(content_dict['id'].encode('utf-8'))
+        # The hex prefix remains a mistery for now
         item_id = '0fffffff{0}'.format(quoted_id)
         # Form the uri
         is_track = cls == get_class('MediaMetadataTrack')
@@ -245,7 +285,8 @@ class MusicServiceItem(MetadataDictBase):
                 namespace attributes on the root element
 
         Return:
-            ~xml.etree.ElementTree.Element: an Element.
+            ~xml.etree.ElementTree.Element: The (XML) Element representation of
+                this object
         """
         # We piggy back on the implementation in DidlItem
         didl_item = DidlItem(
@@ -299,7 +340,7 @@ class TrackMetadata(MetadataDictBase):
 
 
 class StreamMetadata(MetadataDictBase):
-    """Track metadata class"""
+    """Stream metadata class"""
 
     # _valid_fields is a set of valid fields
     _valid_fields = {
@@ -343,11 +384,11 @@ class MediaMetadata(MusicServiceItem):
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'trackMetadata': TrackMetadata.from_dict,
-        'streamMetadata': StreamMetadata.from_dict,
+        'trackMetadata': TrackMetadata,  #.from_dict,
+        'streamMetadata': StreamMetadata,  #.from_dict,
         # FIXME Think about what to do about dynamic. Is it possible
         # to type convert, is it even helpful?
-        #'dynamic': ???, 
+        # 'dynamic': ???,
     }
 
 

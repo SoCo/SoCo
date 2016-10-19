@@ -59,6 +59,8 @@ def from_didl_string(string):
 DIDL_NAME_TO_QUALIFIED_MS_NAME = {
     'DidlMusicTrack': 'MediaMetadataTrack'
 }
+
+
 def attempt_datastructure_upgrade(didl_item):
     """Attempt to upgrade a didl_item to a music services data structure
     if it originates from a music services
