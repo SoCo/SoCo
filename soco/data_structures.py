@@ -70,12 +70,6 @@ def to_didl_string(*args):
         return XML.tostring(didl, encoding='unicode')
 
 
-
-            # In case this class has an # specified unofficial
-            # subclass, ignore it by stripping it from item_class
-            if '.#' in item_class:
-                item_class = item_class[:item_class.find('.#')]
-
 ###############################################################################
 # DIDL RESOURCE                                                               #
 ###############################################################################

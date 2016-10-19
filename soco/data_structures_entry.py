@@ -32,6 +32,12 @@ def from_didl_string(string):
     for elt in root:
         if elt.tag.endswith('item') or elt.tag.endswith('container'):
             item_class = elt.findtext(ns_tag('upnp', 'class'))
+
+            # In case this class has an # specified unofficial
+            # subclass, ignore it by stripping it from item_class
+            if '.#' in item_class:
+                item_class = item_class[:item_class.find('.#')]
+
             try:
                 cls = _DIDL_CLASS_TO_CLASS[item_class]
             except KeyError:
