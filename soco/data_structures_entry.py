@@ -58,7 +58,11 @@ def attempt_datastructure_upgrade(didl_item):
     if it originates from a music services
 
     """
-    resource = didl_item.resources[0]
+    try:
+        resource = didl_item.resources[0]
+    except IndexError:
+        return didl_item
+
     # FIXME are we guarantied that there are resources and that they
     # have a uri????
     if resource.uri.startswith('x-sonos-http'):
