@@ -678,7 +678,7 @@ class MusicService(object):
 
         """
         if isinstance(item, MusicServiceItem):
-            item_id = item.id
+            item_id = item.id  # pylint: disable=no-member
         else:
             item_id = item
         response = self.soap_client.call(

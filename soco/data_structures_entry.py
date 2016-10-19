@@ -6,6 +6,9 @@ objects from both music library and music service data structures
 
 from __future__ import absolute_import
 
+import sys
+import logging
+
 from .xml import (
     XML, ns_tag
 )
@@ -14,6 +17,12 @@ from .exceptions import DIDLMetadataError
 from .compat import urlparse
 from .music_services.data_structures import get_class
 from .music_services.music_service import desc_from_uri
+
+
+_LOG = logging.getLogger(__name__)
+if not (sys.version_info.major == 2 or sys.version_info.minor == 6):
+    _LOG.addHandler(logging.NullHandler())
+_LOG.debug('%s imported', __name__)
 
 
 def from_didl_string(string):
@@ -52,13 +61,20 @@ def from_didl_string(string):
             # causes problems.
             raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
                                     % elt.tag)
+    _LOG.error(
+        'Created data structures: %.20s (CUT) from Didl string "%.20s" (CUT)',
+        items, string,
+    )
     return items
 
 
-# FIXME, Obviously imcomplete
+# Obviously imcomplete, but missing entries will not result in error, but just
+# a logged warning and no upgrade of the data structure
 DIDL_NAME_TO_QUALIFIED_MS_NAME = {
     'DidlMusicTrack': 'MediaMetadataTrack'
 }
+
+
 def attempt_datastructure_upgrade(didl_item):
     """Attempt to upgrade a didl_item to a music services data structure
     if it originates from a music services
@@ -67,10 +83,9 @@ def attempt_datastructure_upgrade(didl_item):
     try:
         resource = didl_item.resources[0]
     except IndexError:
+        LOG.debug('Upgrade not possible, no resources')
         return didl_item
 
-    # FIXME are we guarantied that there are resources and that they
-    # have a uri????
     if resource.uri.startswith('x-sonos-http'):
         # Get data
         uri = resource.uri
@@ -90,15 +105,33 @@ def attempt_datastructure_upgrade(didl_item):
         except AttributeError:
             pass
 
-        # Get class and instantiate
-        cls = get_class(DIDL_NAME_TO_QUALIFIED_MS_NAME[
-            didl_item.__class__.__name__
-        ])
-        return cls(
+        # Get class
+        try:
+            cls = get_class(DIDL_NAME_TO_QUALIFIED_MS_NAME[
+                didl_item.__class__.__name__
+            ])
+        except KeyError:
+            # The data structure should be upgraded, but there is an entry
+            # missing from DIDL_NAME_TO_QUALIFIED_MS_NAME. Log this as a
+            # warning.
+            _LOG.warning(
+                'DATA STRUCTURE UPGRADE FAIL. Unable to upgrade music library '
+                'data structure to music service data structure because an '
+                'entry is missing for %s in DIDL_NAME_TO_QUALIFIED_MS_NAME. '
+                'This should be reported as a bug.',
+                didl_item.__class__.__name__,
+            )
+            return didl_item
+
+        upgraded_item = cls(
             item_id=item_id,
             desc=desc_from_uri(resource.uri),
             resources=didl_item.resources,
             uri=uri,
             metadata_dict=metadata,
         )
+        LOG.debug("Item %s upgraded to %s", didl_item, upgraded_item)
+        return upgraded_item
+
+    LOG.debug('Upgrade not necessary')
     return didl_item
