@@ -222,7 +222,7 @@ class MusicService(object):
         :class:`~collections.OrderedDict` is returned:
 
         >>> from json import dumps # Used for pretty printing ordereddicts
-        >>> print(dumps(tunein.get_metadata(), indent=4)
+        >>> print(dumps(tunein.get_metadata(), indent=4))
         {
             "index": "0",
             "count": "7",
@@ -269,7 +269,7 @@ class MusicService(object):
 
         >>> response =  spotify.get_media_metadata(
         ... item_id='spotify:track:6NmXV4o6bmp704aPGyTVVG')
-        >>> print(dumps(response, indent=4)
+        >>> print(dumps(response, indent=4))
         {
             "mediaMetadata": {
                 "id": "spotify:track:6NmXV4o6bmp704aPGyTVVG",
