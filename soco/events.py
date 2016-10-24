@@ -228,8 +228,10 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
             variables = parse_event_xml(content)
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)
-            # pass the event details on to the service so it can update its cache.
-            if service is not None:  # It might have been removed by another thread
+            # pass the event details on to the service so it can update its
+            # cache.
+            if service is not None:
+                # It might have been removed by another thread
                 # pylint: disable=protected-access
                 service._update_cache_on_event(event)
             # Find the right queue, and put the event on it
@@ -317,7 +319,8 @@ class EventListener(object):
         with self._start_lock:
             if not self.is_running:
                 temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                temp_sock.connect((any_zone.ip_address, config.EVENT_LISTENER_PORT))
+                temp_sock.connect((any_zone.ip_address,
+                                   config.EVENT_LISTENER_PORT))
                 ip_address = temp_sock.getsockname()[0]
                 temp_sock.close()
                 # Start the event listener server in a separate thread.
