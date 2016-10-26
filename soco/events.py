@@ -230,10 +230,9 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
             event = Event(sid, seq, service, timestamp, variables)
             # pass the event details on to the service so it can update its
             # cache.
-            if service is not None:
-                # It might have been removed by another thread
-                # pylint: disable=protected-access
-                service._update_cache_on_event(event)
+            # It might have been removed by another thread
+            # pylint: disable=protected-access
+            service._update_cache_on_event(event)
             # Find the right queue, and put the event on it
             with _sid_to_event_queue_lock:
                 try:
