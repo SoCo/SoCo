@@ -56,10 +56,17 @@ Class overview:
 """
 
 from __future__ import print_function, absolute_import
+import sys
+import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
 from ..compat import quote_url
+
+
+_LOG = logging.getLogger(__name__)
+if not (sys.version_info.major == 2 or sys.version_info.minor == 6):
+    _LOG.addHandler(logging.NullHandler())
 
 
 # For now we generate classes dynamically. This is shorter, but
@@ -83,6 +90,7 @@ def get_class(class_key):
                 # So MediaMetadataTrack turns into MSTrack
                 class_name = 'MS' + class_key.replace(basecls.__name__, '')
                 CLASSES[class_key] = type(class_name, (basecls,), {})
+                _LOG.info('Class %s created', CLASSES[class_key])
     return CLASSES[class_key]
 
 
@@ -98,6 +106,8 @@ def parse_response(service, response, search_type):
     Returns:
         SearchResult: A SearchResult object
     """
+    _LOG.debug('Parse response "%s" from service "%s" of type "%s"', response,
+               service, search_type)
     items = []
     # The result to be parsed is in either searchResult or getMetadataResult
     if 'searchResult' in response:
@@ -175,24 +185,16 @@ class MetadataDictBase(object):
 
     def __init__(self, metadata_dict):
         """Initialize local variables"""
+        _LOG.debug('MetadataDictBase.__init__ with: %s', metadata_dict)
         for key in metadata_dict:
             # Check for invalid fields
             if key not in self._valid_fields:
-                message = ('Field: "{0}" with value "{1}" is not valid for '
-                           'class "{2}"')
+                message = ('%s instantiated with invalid field "%s" and '
+                           'value: %s')
                 # Really wanted to raise exceptions here, but as it
                 # turns out I have already encountered invalid fields
-                # from music services. We should think about how to
-                # handle those. Raising warnings will only annoy the
-                # user. The easy thing is to just allow them in, and
-                # ignore type conversion, so we only guaranty the
-                # correct type for valid fields. Alternative, we might
-                # also start to collect a list of invalid fields.
-                #
-                # For now we just print the warning message
-                #
-                # FIXME
-                print(message.format(key, metadata_dict[key], self.__class__))
+                # from music services.
+                _LOG.debug(message, self.__class__, key, metadata_dict[key])
 
         # Convert names and create metadata dict
         self.metadata = {}
@@ -201,12 +203,6 @@ class MetadataDictBase(object):
                 convertion_callable = self._types[key]
                 value = convertion_callable(value)
             self.metadata[camel_to_underscore(key)] = value
-
-#    @classmethod
-#    def from_dict(cls, content_dict):
-#        """Init cls from a dict (alternative initializer)"""
-#        # FIXME this seems redundant, look into it
-#        return cls(content_dict)
 
     def __getattr__(self, key):
         """Return item from metadata in case of unknown attribute"""
@@ -237,6 +233,10 @@ class MusicServiceItem(MetadataDictBase):
             music_service (MusicService): The MusicService instance the item
                 originates from
         """
+        _LOG.debug('%s.__init__ with item_id=%s, desc=%s, resources=%s, '
+                   'uri=%s, metadata_dict=..., music_service=%s',
+                   self.__class__.__name__, item_id, desc, resources, uri,
+                   music_service)
         super(MusicServiceItem, self).__init__(metadata_dict)
         self.item_id = item_id
         self.desc = desc
@@ -297,8 +297,6 @@ class MusicServiceItem(MetadataDictBase):
             desc=self.desc,
             resources=self.resources
         )
-        # FIXME think about separating to_element code out into function
-        # in soco.data_structures
         return didl_item.to_element(include_namespaces=include_namespaces)
 
 
@@ -386,8 +384,7 @@ class MediaMetadata(MusicServiceItem):
     _types = {
         'trackMetadata': TrackMetadata,  #.from_dict,
         'streamMetadata': StreamMetadata,  #.from_dict,
-        # FIXME Think about what to do about dynamic. Is it possible
-        # to type convert, is it even helpful?
+        # We ignore types on the dynamic field
         # 'dynamic': ???,
     }
 
