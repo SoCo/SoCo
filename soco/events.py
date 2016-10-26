@@ -220,6 +220,7 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
         # find the relevant service from the sid
         with _sid_to_service_lock:
             service = _sid_to_service.get(sid)
+        # It might have been removed by another thread
         if service:
             log.info(
                 "Event %s received for %s service on thread %s at %s", seq,
@@ -230,7 +231,6 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
             event = Event(sid, seq, service, timestamp, variables)
             # pass the event details on to the service so it can update its
             # cache.
-            # It might have been removed by another thread
             # pylint: disable=protected-access
             service._update_cache_on_event(event)
             # Find the right queue, and put the event on it
