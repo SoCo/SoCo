@@ -1009,7 +1009,7 @@ class DidlSameArtist(DidlPlaylistContainer):
     item_class = 'object.container.playlistContainer.sameArtist'
 
 
-class DidlSonosFavorite(DidlPlaylistContainer):
+class DidlPlaylistContainerFavorite(DidlPlaylistContainer):
 
     """Class that represents a Sonos favorite play list."""
     item_class = 'object.container.playlistContainer.sonos-favorite'
