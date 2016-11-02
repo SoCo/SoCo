@@ -450,18 +450,21 @@ class SoCo(_SocoSingletonBase):
         created. This is often the case if you have a custom stream, it will
         need at least the title in the metadata in order to play.
 
-        Arguments:
-        uri -- URI of a stream to be played.
-        meta -- The track metadata to show in the player, DIDL format.
-        title -- The track title to show in the player
-        start -- If the URI that has been set should start playing
+        .. note:: A change in Sonos® (as of at least version 6.4.2) means that
+           the devices no longer accepts ordinary "http://" and "https://"
+           URIs. This method automatically replaces these prefixes with the
+           one that Sonos® expects: "x-rincon-mp3radio://".
 
-        Returns:
-        True if the Sonos speaker successfully started playing the track.
-        False if the track did not start (this may be because it was not
-        requested to start because "start=False")
+        Args:
+            uri (str): URI of the stream to be played.
+            meta (str): The track metadata to show in the player, DIDL format.
+            title (str): The track title to show in the player
+            start (bool): If the URI that has been set should start playing
+            convert_internet_uris (bool): FIXME
 
-        Raises SoCoException (or a subclass) upon errors.
+        Raises:
+            SoCoException: (or a subclass) upon errors.
+
         """
         if meta == '' and title != '':
             meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'\
@@ -476,6 +479,11 @@ class SoCo(_SocoSingletonBase):
             tunein_service = 'SA_RINCON65031_'
             # Radio stations need to have at least a title to play
             meta = meta_template.format(title=title, service=tunein_service)
+
+        for prefix in ('http://', 'https://'):
+            if uri.startswith(prefix):
+                # Replace only the first instance
+                uri = uri.replace(prefix, 'x-rincon-mp3radio://', 1)
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
