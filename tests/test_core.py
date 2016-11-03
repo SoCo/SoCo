@@ -350,14 +350,24 @@ class TestAVTransport:
             [('InstanceID', 0), ('Speed', 1)]
         )
 
-    def test_soco_play_uri(self, moco):
-        uri = 'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3'
-        moco.play_uri(uri)
+    # Test that in internet uris (that starts with http:// or https:// the
+    # prefic is replaced with x-rincon-mp3radion://
+    @pytest.mark.parametrize("uri_in, uri_passed", [
+        ('x-file-cifs://server/MyNiceRing.mp3',
+         'x-file-cifs://server/MyNiceRing.mp3'),
+        ('http://archive.org/download/TenD2005-07-16t_64kb.mp3',
+         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+        ('https://archive.org/download/TenD2005-07-16t_64kb.mp3',
+         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+    ])
+    def test_soco_play_uri(self, moco, uri_in, uri_passed):
+        moco.play_uri(uri_in)
         moco.avTransport.SetAVTransportURI.assert_called_once_with([
             ('InstanceID', 0),
-            ('CurrentURI', uri),
+            ('CurrentURI', uri_passed),
             ('CurrentURIMetaData', '')
         ])
+        moco.avTransport.reset_mock()
 
     def test_soco_play_uri_calls_play(self, moco):
         uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
