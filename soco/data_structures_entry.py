@@ -83,7 +83,7 @@ def attempt_datastructure_upgrade(didl_item):
     try:
         resource = didl_item.resources[0]
     except IndexError:
-        LOG.debug('Upgrade not possible, no resources')
+        _LOG.debug('Upgrade not possible, no resources')
         return didl_item
 
     if resource.uri.startswith('x-sonos-http'):
@@ -97,7 +97,7 @@ def attempt_datastructure_upgrade(didl_item):
         # matter what it is!
         item_id = '11111111{0}'.format(path)
 
-        # FIXME Ignore other metadata for now, in future ask ms data
+        # Ignore other metadata for now, in future ask ms data
         # structure to upgrade metadata from the service
         metadata = {}
         try:
@@ -130,8 +130,8 @@ def attempt_datastructure_upgrade(didl_item):
             uri=uri,
             metadata_dict=metadata,
         )
-        LOG.debug("Item %s upgraded to %s", didl_item, upgraded_item)
+        _LOG.debug("Item %s upgraded to %s", didl_item, upgraded_item)
         return upgraded_item
 
-    LOG.debug('Upgrade not necessary')
+    _LOG.debug('Upgrade not necessary')
     return didl_item

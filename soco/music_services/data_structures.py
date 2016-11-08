@@ -65,7 +65,7 @@ from ..compat import quote_url
 
 
 _LOG = logging.getLogger(__name__)
-if not (sys.version_info.major == 2 or sys.version_info.minor == 6):
+if not (sys.version_info.major == 2 and sys.version_info.minor == 6):
     _LOG.addHandler(logging.NullHandler())
 
 
@@ -114,6 +114,9 @@ def parse_response(service, response, search_type):
         response = response['searchResult']
     elif 'getMetadataResult' in response:
         response = response['getMetadataResult']
+    else:
+        raise ValueError('"response" should contain either the key '
+                         '"searchResult" or "getMetadataResult"')
 
     # Form the search metadata
     search_metadata = {
@@ -382,8 +385,8 @@ class MediaMetadata(MusicServiceItem):
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'trackMetadata': TrackMetadata,  #.from_dict,
-        'streamMetadata': StreamMetadata,  #.from_dict,
+        'trackMetadata': TrackMetadata,
+        'streamMetadata': StreamMetadata,
         # We ignore types on the dynamic field
         # 'dynamic': ???,
     }
