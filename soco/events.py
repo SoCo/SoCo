@@ -317,11 +317,18 @@ class EventListener(object):
         # Sonos net, see http://stackoverflow.com/q/166506
         with self._start_lock:
             if not self.is_running:
-                temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                temp_sock.connect((any_zone.ip_address,
-                                   config.EVENT_LISTENER_PORT))
-                ip_address = temp_sock.getsockname()[0]
-                temp_sock.close()
+                # Use configured IP address if there is one, else detect
+                # automatically.
+                if config.EVENT_LISTENER_IP:
+                    ip_address = config.EVENT_LISTENER_IP
+                else:
+                    temp_sock = socket.socket(socket.AF_INET,
+                                              socket.SOCK_DGRAM)
+                    temp_sock.connect((any_zone.ip_address,
+                                       config.EVENT_LISTENER_PORT))
+                    ip_address = temp_sock.getsockname()[0]
+                    temp_sock.close()
+
                 # Start the event listener server in a separate thread.
                 self.address = (ip_address, config.EVENT_LISTENER_PORT)
                 self._listener_thread = EventServerThread(self.address)
