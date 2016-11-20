@@ -451,6 +451,10 @@ class Subscription(object):
 
         # pylint: disable=unbalanced-tuple-unpacking
         ip_address, port = event_listener.address
+
+        if config.EVENT_ADVERTISE_IP:
+            ip_address = config.EVENT_ADVERTISE_IP
+
         headers = {
             'Callback': '<http://{0}:{1}>'.format(ip_address, port),
             'NT': 'upnp:event'
@@ -607,6 +611,7 @@ class Subscription(object):
         else:
             time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
+
 
 # pylint: disable=C0103
 event_listener = EventListener()
