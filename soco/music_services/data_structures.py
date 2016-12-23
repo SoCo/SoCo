@@ -58,7 +58,10 @@ Class overview:
 from __future__ import print_function, absolute_import
 import sys
 import logging
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
 from ..compat import quote_url
