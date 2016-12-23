@@ -97,7 +97,7 @@ def attempt_datastructure_upgrade(didl_item):
         # matter what it is!
         item_id = '11111111{0}'.format(path)
 
-        # FIXME Ignore other metadata for now, in future ask ms data
+        # Ignore other metadata for now, in future ask ms data
         # structure to upgrade metadata from the service
         metadata = {}
         try:
