@@ -4,7 +4,10 @@
 
 from __future__ import unicode_literals, print_function
 
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 import pytest
 from mock import PropertyMock, Mock, patch
 from soco.music_services import data_structures
