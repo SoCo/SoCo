@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """Test for music_services/data_structures"""
 
 from __future__ import unicode_literals, print_function
