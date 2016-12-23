@@ -68,7 +68,7 @@ from ..compat import quote_url
 
 
 _LOG = logging.getLogger(__name__)
-if not (sys.version_info.major == 2 and sys.version_info.minor == 6):
+if not (sys.version_info[0] == 2 and sys.version_info[1] == 6):
     _LOG.addHandler(logging.NullHandler())
 
 
