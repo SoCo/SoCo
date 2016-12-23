@@ -309,7 +309,7 @@ class TrackMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'artistId',
         'artist',
         'composerId',
@@ -328,7 +328,7 @@ class TrackMetadata(MetadataDictBase):
         'rating',
         'trackNumber',
         'isFavorite',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -346,7 +346,7 @@ class StreamMetadata(MetadataDictBase):
     """Stream metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'currentHost',
         'currentShowId',
         'currentShow',
@@ -357,7 +357,7 @@ class StreamMetadata(MetadataDictBase):
         'hasOutOfBandMetadata',
         'description',
         'isEphemeral',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -373,7 +373,7 @@ class MediaMetadata(MusicServiceItem):
     """Base class for all media metadata items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'id',
         'title',
         'mimeType',
@@ -383,7 +383,7 @@ class MediaMetadata(MusicServiceItem):
         'trackMetadata',
         'streamMetadata',
         'dynamic',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -398,7 +398,7 @@ class MediaCollection(MusicServiceItem):
     """Base class for all mediaCollection items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'id',
         'title',
         'itemType',
@@ -414,7 +414,7 @@ class MediaCollection(MusicServiceItem):
         'canScroll',
         'canSkip',
         'isFavorite',
-    }
+    ))
 
     # _types is a dict of fields with non-string types and their
     # convertion callables
