@@ -165,7 +165,7 @@ def form_uri(item_id, service, is_track):
 
 
 # Type Helper
-BOOL_STRS = {'true', 'false'}
+BOOL_STRS = set(('true', 'false'))
 
 
 def bool_str(string):
