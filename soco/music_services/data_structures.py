@@ -58,14 +58,17 @@ Class overview:
 from __future__ import print_function, absolute_import
 import sys
 import logging
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from ordereddict import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
 from ..compat import quote_url
 
 
 _LOG = logging.getLogger(__name__)
-if not (sys.version_info.major == 2 and sys.version_info.minor == 6):
+if not (sys.version_info[0] == 2 and sys.version_info[1] == 6):
     _LOG.addHandler(logging.NullHandler())
 
 
@@ -89,6 +92,8 @@ def get_class(class_key):
             if class_key.startswith(basecls.__name__):
                 # So MediaMetadataTrack turns into MSTrack
                 class_name = 'MS' + class_key.replace(basecls.__name__, '')
+                if sys.version_info[0] == 2:
+                    class_name = class_name.encode('ascii')
                 CLASSES[class_key] = type(class_name, (basecls,), {})
                 _LOG.info('Class %s created', CLASSES[class_key])
     return CLASSES[class_key]
@@ -163,7 +168,7 @@ def form_uri(item_id, service, is_track):
 
 
 # Type Helper
-BOOL_STRS = {'true', 'false'}
+BOOL_STRS = set(('true', 'false'))
 
 
 def bool_str(string):
@@ -307,7 +312,7 @@ class TrackMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'artistId',
         'artist',
         'composerId',
@@ -326,7 +331,7 @@ class TrackMetadata(MetadataDictBase):
         'rating',
         'trackNumber',
         'isFavorite',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -344,7 +349,7 @@ class StreamMetadata(MetadataDictBase):
     """Stream metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'currentHost',
         'currentShowId',
         'currentShow',
@@ -355,7 +360,7 @@ class StreamMetadata(MetadataDictBase):
         'hasOutOfBandMetadata',
         'description',
         'isEphemeral',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -371,7 +376,7 @@ class MediaMetadata(MusicServiceItem):
     """Base class for all media metadata items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'id',
         'title',
         'mimeType',
@@ -381,7 +386,7 @@ class MediaMetadata(MusicServiceItem):
         'trackMetadata',
         'streamMetadata',
         'dynamic',
-    }
+    ))
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -396,7 +401,7 @@ class MediaCollection(MusicServiceItem):
     """Base class for all mediaCollection items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = {
+    _valid_fields = set((
         'id',
         'title',
         'itemType',
@@ -412,7 +417,7 @@ class MediaCollection(MusicServiceItem):
         'canScroll',
         'canSkip',
         'isFavorite',
-    }
+    ))
 
     # _types is a dict of fields with non-string types and their
     # convertion callables
