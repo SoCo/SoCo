@@ -95,7 +95,7 @@ Of course, you can also play music!
         # Pass in a URI to a media file to have it streamed through the Sonos
         # speaker
         sonos.play_uri(
-            'http://archive.org/download/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy_64kb.mp3')
+            'http://ia801402.us.archive.org/20/items/TenD2005-07-16.flac16/TenD2005-07-16t10Wonderboy.mp3')
 
         track = sonos.get_current_track_info()
 
