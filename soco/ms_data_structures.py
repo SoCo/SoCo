@@ -542,7 +542,6 @@ class MSCollection(MusicServiceItem):
         content.update(kwargs)
         super(MSCollection, self).__init__(**content)
 
-
 MS_TYPE_TO_CLASS = {'artist': MSArtist, 'album': MSAlbum, 'track': MSTrack,
                     'albumList': MSAlbumList, 'favorites': MSFavorites,
                     'collection': MSCollection, 'playlist': MSPlaylist,
