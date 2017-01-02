@@ -38,7 +38,9 @@ class MusicLibrary(object):
                           'share': 'S:',
                           'sonos_playlists': 'SQ:',
                           'categories': 'A:',
-                          'sonos_favorites': 'FV:2'}
+                          'sonos_favorites': 'FV:2',
+                          'radio_stations': 'R:0/0',
+                          'radio_shows': 'R:0/1'}
 
     # pylint: disable=invalid-name, protected-access
     def __init__(self, soco=None):
