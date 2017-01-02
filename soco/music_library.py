@@ -142,6 +142,34 @@ class MusicLibrary(object):
         args = tuple(['playlists'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
+
+    def get_sonos_favorites(self, *args, **kwargs):
+        """Convenience method for `get_music_library_information`
+        with ``search_type='sonos_favorites'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
+        """
+        args = tuple(['sonos_favorites'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
+
+    def get_favorite_radio_stations(self, *args, **kwargs):
+        """Convenience method for `get_music_library_information`
+        with ``search_type='radio_stations'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
+        """
+        args = tuple(['radio_stations'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
+
+    def get_favorite_radio_shows(self, *args, **kwargs):
+        """Convenience method for `get_music_library_information`
+        with ``search_type='radio_stations'``. For details of other arguments,
+        see `that method
+        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
+        """
+        args = tuple(['radio_shows'] + list(args))
+        return self.get_music_library_information(*args, **kwargs)
+
         # pylint: disable=too-many-locals, too-many-arguments,
         # too-many-branches
 
