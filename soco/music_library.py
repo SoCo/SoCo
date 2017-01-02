@@ -37,7 +37,8 @@ class MusicLibrary(object):
                           'playlists': 'A:PLAYLISTS',
                           'share': 'S:',
                           'sonos_playlists': 'SQ:',
-                          'categories': 'A:'}
+                          'categories': 'A:',
+                          'sonos_favorites': 'FV:2'}
 
     # pylint: disable=invalid-name, protected-access
     def __init__(self, soco=None):
