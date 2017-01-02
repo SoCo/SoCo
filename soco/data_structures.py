@@ -491,14 +491,16 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                 "UPnP class is incorrect. Expected '{0}',"
                 " got '{1}'".format(cls.item_class, item_class))
 
-        # parent_id, item_id  and restricted are stored as attibutes on the
+        # parent_id, item_id  and restricted are stored as attributes on the
         # element
-        item_id = really_unicode(element.get('id', None))
+        item_id = element.get('id', None)
         if item_id is None:
             raise DIDLMetadataError("Missing id attribute")
-        parent_id = really_unicode(element.get('parentID', None))
+        item_id = really_unicode(item_id)
+        parent_id = element.get('parentID', None)
         if parent_id is None:
             raise DIDLMetadataError("Missing parentID attribute")
+        parent_id = really_unicode(parent_id)
         restricted = element.get('restricted', None)
         if restricted is None:
             raise DIDLMetadataError("Missing restricted attribute")
@@ -510,7 +512,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if title_elt is None:
             raise DIDLMetadataError(
                 "Missing title element")
-        title = really_unicode(title_elt.text)
+        title = really_unicode('' if title_elt.text is None else title_elt.text)
 
         # Deal with any resource elements
         resources = []
