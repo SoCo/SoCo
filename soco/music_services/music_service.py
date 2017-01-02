@@ -18,6 +18,7 @@ from .. import discovery
 from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
+from .data_structures import parse_response, MusicServiceItem
 from ..soap import SoapFault, SoapMessage
 from ..xml import XML
 
@@ -655,12 +656,13 @@ class MusicService(object):
     #    setPlayedSeconds(id id, xs:int seconds)
 
     def get_metadata(
-            self, item_id='root', index=0, count=100, recursive=False):
+            self, item='root', index=0, count=100, recursive=False):
         """Get metadata for a container or item.
 
         Args:
-            item_id (str): The container or item to browse. Defaults to the
-                root item.
+            item (str or MusicServiceItem): The container or item to browse
+                given either as a MusicServiceItem instance or as a str.
+                Defaults to the root item.
             index (int): The starting index. Default 0.
             count (int): The maximum number of items to return. Default 100.
             recursive (bool): Whether the browse should recurse into sub-items
@@ -675,13 +677,17 @@ class MusicService(object):
             <http://musicpartners.sonos.com/node/83>`_.
 
         """
+        if isinstance(item, MusicServiceItem):
+            item_id = item.id  # pylint: disable=no-member
+        else:
+            item_id = item
         response = self.soap_client.call(
             'getMetadata', [
                 ('id', item_id),
                 ('index', index), ('count', count),
                 ('recursive', 1 if recursive else 0)]
         )
-        return response.get('getMetadataResult', None)
+        return parse_response(self, response, 'browse')
 
     def search(self, category, term='', index=0, count=100):
         """Search for an item in a category.
@@ -713,7 +719,8 @@ class MusicService(object):
             [
                 ('id', search_category), ('term', term), ('index', index),
                 ('count', count)])
-        return response.get('searchResult', None)
+
+        return parse_response(self, response, category)
 
     def get_media_metadata(self, item_id):
         """Get metadata for a media item.
