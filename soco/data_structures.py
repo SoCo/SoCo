@@ -690,6 +690,10 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
         return elt
 
+    @property
+    def uri(self):
+        return self.resources[0].uri
+
 
 ###############################################################################
 # OBJECT.ITEM HIERARCHY                                                       #
