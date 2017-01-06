@@ -598,8 +598,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if self.title is not None:
             middle = self.title.encode('ascii', 'replace')[0:40]
         else:
-            middle = 'ikke'
-            #middle = str(self.to_dict).encode('ascii', 'replace')[0:40]
+            middle = str(self.to_dict).encode('ascii', 'replace')[0:40]
         return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
                                              middle,
                                              hex(id(self)))
