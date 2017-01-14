@@ -1261,28 +1261,36 @@ class SoCo(_SocoSingletonBase):
                                                                 **kwargs)
 
     @only_on_master
-    def add_uri_to_queue(self, uri):
+    def add_uri_to_queue(self, uri, position=0, as_next=False):
         """Adds the URI to the queue.
 
         :param uri: The URI to be added to the queue
         :type uri: str
+        :param position: The index (1-based) at which the URI should be added.
+            Default is 0 (add URI at the end of the queue).
+        :type position: int
+        :param as_next: Whether this URI should be played as the next track.
+            This can be used to set the next track even when
+            `play_mode=SHUFFLE`.
+        :type as_next: bool
         """
         # FIXME: The res.protocol_info should probably represent the mime type
         # etc of the uri. But this seems OK.
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         item = DidlObject(resources=res, title='', parent_id='', item_id='')
-        return self.add_to_queue(item)
+        return self.add_to_queue(item, position, as_next)
 
     @only_on_master
-    def add_to_queue(self, queueable_item):
-        """Adds a queueable item to the queue."""
+    def add_to_queue(self, queueable_item, position=0, as_next=False):
+        """Adds a queueable item to the queue.
+        For Arguments see `add_uri_to_queue`"""
         metadata = to_didl_string(queueable_item)
         response = self.avTransport.AddURIToQueue([
             ('InstanceID', 0),
             ('EnqueuedURI', queueable_item.resources[0].uri),
             ('EnqueuedURIMetaData', metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 1)
+            ('DesiredFirstTrackNumberEnqueued', position),
+            ('EnqueueAsNext', int(as_next))
         ])
         qnumber = response['FirstTrackNumberEnqueued']
         return int(qnumber)
