@@ -147,6 +147,7 @@ SoCo supports the following controls amongst others:
 -  Get or set the speaker’s bass EQ
 -  Get or set the speaker’s treble EQ
 -  Toggle the speaker’s loudness compensation
+-  Toggle the speaker's night mode
 -  Turn on (or off) the white status light on the unit
 -  Switch the speaker’s source to line-in or TV input (if the Zone Player
    supports it)
