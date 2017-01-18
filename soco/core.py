@@ -22,7 +22,7 @@ from .data_structures import (
     Queue, from_didl_string, to_didl_string
 )
 from .exceptions import (
-    SoCoSlaveException, SoCoUPnPException, NotSupportedException
+    SoCoSlaveException, SoCoUPnPException, NotSupportedException,
 )
 from .groups import ZoneGroup
 from .music_library import MusicLibrary
@@ -169,6 +169,7 @@ class SoCo(_SocoSingletonBase):
         treble
         loudness
         night_mode
+        dialog_mode
         cross_fade
         status_light
         player_name
@@ -742,6 +743,45 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('EQType', 'NightMode'),
             ('DesiredValue', int(night_mode))
+        ])
+
+    @property
+    def dialog_mode(self):
+        """Get the Sonos speaker's dialog mode. True if on, False if off,
+        None if not supported.
+
+        :returns bool or None
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+        if 'PLAYBAR' not in self.speaker_info['model_name']:
+            return None
+
+        response = self.renderingControl.GetEQ([
+            ('InstanceID', 0),
+            ('EQType', 'DialogLevel')
+        ])
+        return bool(int(response['CurrentValue']))
+
+    @dialog_mode.setter
+    def dialog_mode(self, dialog_mode):
+        """Switch on/off the speaker's dialog mode.
+
+        :param dialog_mode: Enable or disable dialog mode
+        :type dialog_mode: bool
+        :raises NotSupportedException: If the device does not support
+        dialog mode.
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+        if 'PLAYBAR' not in self.speaker_info['model_name']:
+            message = 'This device does not support dialog mode'
+            raise NotSupportedException(message)
+
+        self.renderingControl.SetEQ([
+            ('InstanceID', 0),
+            ('EQType', 'DialogLevel'),
+            ('DesiredValue', int(dialog_mode))
         ])
 
     def _parse_zone_group_state(self):
