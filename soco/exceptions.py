@@ -76,3 +76,7 @@ class UnknownXMLStructure(SoCoException):
 
 class SoCoSlaveException(SoCoException):
     """Raised when a master command is called on a slave."""
+
+
+class NotSupportedException(SoCoException):
+    """Raised when something is not supported by the device"""
