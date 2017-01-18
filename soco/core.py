@@ -12,8 +12,6 @@ import re
 import socket
 from functools import wraps
 import warnings
-from soco.exceptions import SoCoUPnPException
-
 
 import requests
 
@@ -23,7 +21,7 @@ from .data_structures import (
     DidlObject, DidlPlaylistContainer, DidlResource,
     Queue, from_didl_string, to_didl_string
 )
-from .exceptions import SoCoSlaveException
+from .exceptions import SoCoSlaveException, SoCoUPnPException
 from .groups import ZoneGroup
 from .music_library import MusicLibrary
 from .services import (
