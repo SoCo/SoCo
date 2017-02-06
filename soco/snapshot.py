@@ -81,6 +81,10 @@ class Snapshot(object):
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
 
+        # reset internal states
+        self.is_coordinator = False
+        self.is_playing_queue = False
+
         # extract source from media uri
         if self.media_uri.split(':')[0] != 'x-rincon':
             self.is_coordinator = True
