@@ -1,7 +1,7 @@
 SoCo
 ====
 
-SoCo (Sonos Controller) is a simple Python class that allows you to
+SoCo (Sonos Controller) is a Python project that allows you to
 programmatically control `Sonos speakers`_. It was originally created at `Music
 Hack Day Sydney`_ by `Rahim Sonawalla`_ and is now developed by a `team of
 people`_ at its `GitHub repository`_
@@ -106,6 +106,10 @@ Of course, you can also play music!
         # Play a stopped or paused track
         sonos.play()
 
+Support
+-------
+
+If you need support for SoCo, feel free to post your question either on our `Google Group`_ or on the #soco IRC channel on `freenode`_.
 
 Example Applications
 --------------------
@@ -195,7 +199,7 @@ and contribute to it here: https://github.com/labero/SoCo-Tk.
 Google Group
 ------------
 
-There is a Soco group over at `Google Groups`_.  Feel free to drop in.
+There is a Soco group over at `Google Groups`_.  Feel free to drop by for support, ideas or casual conversation related to SoCo.
 
 
 License
@@ -216,4 +220,6 @@ SoCo is released under the `MIT license`_.
 .. _GitHub repository: https://github.com/SoCo/SoCo
 .. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
 .. _Google Groups: https://groups.google.com/forum/#!forum/python-soco
+.. _Google Group: https://groups.google.com/forum/#!forum/python-soco
 .. _SoCo documentation: https://soco.readthedocs.org/en/latest/
+.. _freenode: https://freenode.net/
