@@ -692,7 +692,12 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
     @property
     def uri(self):
+        """The uri to use for playing this item. This is currently the uri of
+        the first resource."""
         return self.resources[0].uri
+        # According to the spec, a DidlObject can have multiple resources and
+        # consequently multiple uri's, but since we have never seen an object
+        # with more than one resource, we can just use the first one.
 
 
 ###############################################################################
