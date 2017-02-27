@@ -33,9 +33,10 @@ that pique your interest: :ref:`speaker_topologies`, :ref:`events` and
 :ref:`upnp_services`. Finally dive into the :ref:`the full module
 reference documentation <module_reference>`.
 
-For support post a question in the `SoCo Google group
-<https://groups.google.com/forum/#!forum/python-soco>`_ or `file an issue on
-Github <https://github.com/SoCo/SoCo/issues>`_.
+If you have a question, start by consulting the :ref:`FAQ <faq>`. If
+your question remains unanswered, post a question in the `SoCo Google
+group <https://groups.google.com/forum/#!forum/python-soco>`_ or in
+the #soco channel on `freenode`_.
 
 If you are interested in participating in the development, plase read :ref:`the
 development documentation <development_topics>` and `file a bug
@@ -87,3 +88,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+.. _freenode: https://freenode.net/
