@@ -53,6 +53,7 @@ Contents
 
    getting_started
    examples
+   faq
    plugins
    authors
 
