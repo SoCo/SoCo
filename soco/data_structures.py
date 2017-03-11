@@ -690,26 +690,26 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
         return elt
 
-    @property
-    def uri(self):
-        """The uri to use for playing this item. This is currently the uri of
-        the first resource."""
-        return self.resources[0].uri
-        # According to the spec, a DidlObject can have multiple resources and
-        # consequently multiple uri's, but since we have never seen an object
-        # with more than one resource, we can just use the first one.
-        # FIXME: Might cause problems with multiple resources.
+    def get_uri(self, resource_nr=0):
+        """The uri to use for playing this item.
+
+        Args:
+            resource_nr (int): The index of the resource. Note that there is no
+            known object with more than one resource, so you can probably keep
+            the default value (0).
+        """
+        return self.resources[resource_nr].uri
 
     def set_uri(self, uri, resource_nr=0, protocol_info=None):
-        """Set a resource uri for this instance. If no resource exists, create a
-        new one with the given protocol info.
+        """Set a resource uri for this instance. If no resource exists, create
+        a new one with the given protocol info.
 
         Args:
             uri (str): The resource uri.
             resource_nr (int): The index of the resource on which to set the
                 uri. If it does not exist, a new resource is added to the list.
-                Note that currently, only the uri of the first resource is used
-                for playing the item.
+                Note that by default, only the uri of the first resource is
+                used for playing the item.
             protocol_info (str): Protocol info for the resource. If none is
                 given and the resource does not exist yet, a default protocol
                 info is constructed as '[uri prefix]:*:*:*'.
