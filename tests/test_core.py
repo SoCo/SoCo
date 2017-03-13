@@ -499,6 +499,16 @@ class TestAVTransport:
                 ('CurrentURIMetaData', '')]
         )
 
+        moco_zgs.avTransport.reset_mock()
+        moco2 = mock.Mock()
+        moco2.uid = "RINCON_000YYY1400"
+        moco_zgs.switch_to_line_in(moco2)
+        moco_zgs.avTransport.SetAVTransportURI.assert_called_once_with(
+            [('InstanceID', 0),
+             ('CurrentURI', 'x-rincon-stream:RINCON_000YYY1400'),
+             ('CurrentURIMetaData', '')]
+        )
+
     def test_switch_to_tv(self, moco_zgs):
         moco_zgs.avTransport.reset_mock()
         moco_zgs.switch_to_tv()
