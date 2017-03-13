@@ -113,3 +113,67 @@ that the input for that method is a string on the form "HH:MM:SS" or
   >>> device.seek("0:00:30")
   >>> device.get_current_track_info()['position']
   '0:00:31'
+
+Seeing and manipulating the queue
+---------------------------------
+
+Getting the queue
+^^^^^^^^^^^^^^^^^
+
+Getting the queue is done with the :meth:`~soco.core.SoCo.get_queue` method::
+
+  >>> queue = device.get_queue()
+  >>> queue
+  Queue(items=[<DidlMusicTrack 'b'Blackened'' at 0x7f2237006dd8>, ..., <DidlMusicTrack 'b'Dyers Eve'' at 0x7f2237006828>])
+
+The returned :class:`~soco.data_structures.Queue` object is a sequence
+of items from the queue, meaning that it can be iterated over and its
+length aquired with :func:`len`::
+
+  >>> len(queue)
+  9
+  >>> for item in queue:
+  ...     print(item.title)
+  ...
+  Blackened
+  ...and Justice for All
+  Eye of the Beholder
+  One
+  The Shortest Straw
+  Harvester of Sorrow
+  The Frayed Ends of Sanity
+  To Live Is to Die
+  Dyers Eve
+  
+The :class:`~soco.data_structures.Queue` object also has a set of
+attributes that are common to all queries. The total length of the
+queue can be retrieved with the
+:attr:`~soco.data_structures.ListOfMusicInfoItems.total_matches`
+attribute and the number of queue elements actually returned from the
+:attr:`~soco.data_structures.ListOfMusicInfoItems.number_returned`
+attribute::
+
+  >>> queue.total_matches
+  9
+  >>> queue.number_returned
+  9
+
+If these two numbers are not identical, that is because there are more
+items in the queue that could be returned in a single query. In that
+case, it will be necessary to do paging with the ``start`` and
+``max_items`` arguments. See the :meth:`~soco.core.SoCo.get_queue`
+docstring for details.
+
+Clearing the queue
+^^^^^^^^^^^^^^^^^^
+
+Clearing the queue is done with the
+:meth:`~soco.core.SoCo.clear_queue` method as follows::
+
+  >>> queue = device.get_queue()
+  >>> len(queue)
+  9
+  >>> device.clear_queue()
+  >>> queue = device.get_queue()
+  >>> len(queue)
+  0
