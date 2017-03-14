@@ -691,12 +691,14 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         return elt
 
     def get_uri(self, resource_nr=0):
-        """The uri to use for playing this item.
+        """Return the uri to use for playing this item.
 
         Args:
             resource_nr (int): The index of the resource. Note that there is no
-            known object with more than one resource, so you can probably keep
-            the default value (0).
+                known object with more than one resource, so you can probably
+                keep the default value (0).
+        Returns:
+            str: The uri.
         """
         return self.resources[resource_nr].uri
 
