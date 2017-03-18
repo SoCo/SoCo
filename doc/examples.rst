@@ -145,23 +145,10 @@ length aquired with :func:`len`::
   To Live Is to Die
   Dyers Eve
   
-The :class:`~soco.data_structures.Queue` object also has a set of
-attributes that are common to all queries. The total length of the
-queue can be retrieved with the
-:attr:`~soco.data_structures.ListOfMusicInfoItems.total_matches`
-attribute and the number of queue elements actually returned from the
-:attr:`~soco.data_structures.ListOfMusicInfoItems.number_returned`
-attribute::
-
-  >>> queue.total_matches
-  9
-  >>> queue.number_returned
-  9
-
-If these two numbers are not identical, that is because there are more
-items in the queue that could be returned in a single query. In that
-case, it will be necessary to do paging with the ``start`` and
-``max_items`` arguments. See the :meth:`~soco.core.SoCo.get_queue`
+The queue object also has :attr:`~.ListOfMusicInfoItems.total_matches`
+and :attr:`~.ListOfMusicInfoItems.number_returned` attributes, which
+are used to figure out whether paging is required in order to get all
+elements of the queue. See the :class:`~.ListOfMusicInfoItems`
 docstring for details.
 
 Clearing the queue
