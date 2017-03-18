@@ -1000,23 +1000,27 @@ class SoCo(_SocoSingletonBase):
         zone_group_state_shared_cache.clear()
         self._parse_zone_group_state()
 
-    def switch_to_line_in(self):
+    def switch_to_line_in(self, source=None):
         """ Switch the speaker's input to line-in.
 
-        Returns:
-        True if the Sonos speaker successfully switched to line-in.
+        Args:
+            source (SoCo): The speaker whose line-in should be played.
+                Default is line-in from the speaker itself.
 
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
-
-        Raises SoCoException (or a subclass) upon errors.
+        Raises:
+             SoCoException: Upon errors, we'll attempt to parse the error and
+                return a UPnP error code. If that fails, the raw response sent
+                back from the Sonos speaker will be returned.
 
         """
+        if source:
+            uid = source.uid
+        else:
+            uid = self.uid
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
-            ('CurrentURI', 'x-rincon-stream:{0}'.format(self.uid)),
+            ('CurrentURI', 'x-rincon-stream:{0}'.format(uid)),
             ('CurrentURIMetaData', '')
         ])
 
