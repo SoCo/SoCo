@@ -3,7 +3,7 @@
 Frequently Asked Questions
 ==========================
 
-This page contains answer to a few commonly asked questions.
+This page contains answers to a few commonly asked questions.
 
 .. _faq_no_play_uri_from_music_service:
 
@@ -38,7 +38,7 @@ two options:
    then be searched, browsed and played with SoCo.
 2. You can cheat and make Python serve the files on the fly and play
    them as URIs. The `play local files
-   <https://github.com/SoCo/SoCo/blob/master/examples/play_local_files/play_local_files.py>`_ example, shows one way in which this can be accomplished.
+   <https://github.com/SoCo/SoCo/blob/master/examples/play_local_files/play_local_files.py>`_ example shows one way in which this can be accomplished.
 
  .. warning:: Note that this example is meant as a convenient way get
        started, but that no security precautions has been taken to
