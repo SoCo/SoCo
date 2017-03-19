@@ -211,3 +211,18 @@ def any_soco():
         return None if devices is None else devices.pop()
 
     return device
+
+
+def by_name(name):
+    """Return a device by name
+
+    Args:
+        name (str): The name of the device to return
+
+    Returns:
+        :class:`~.SoCo`: The first device encountered among all zone with the
+            given player name. If none is found `None` is returned.
+    """
+    for device in discover():
+        if device.player_name == name:
+            return device
