@@ -1048,7 +1048,19 @@ class DidlMusicGenre(DidlGenre):
 
 class ListOfMusicInfoItems(list):
 
-    """Abstract container class for a list of music information items."""
+    """Abstract container class for a list of music information items.
+
+    Instances of this class are returned from queries into the music library
+    or to music services. The attributes :attr:`~total_matches` and
+    :attr:`~number_returned` are used to ascertain whether paging is required
+    in order to retrive all elements of the query. :attr:`~total_matches` is
+    the total number of results to the query and :attr:`~number_returned` is
+    the number of results actually returned. If the two differ, paging is
+    required. Paging is typically performed with the ``start`` and
+    ``max_items`` arguments to the query method. See e.g. the
+    :meth:`~soco.music_library.MusicLibrary.get_music_library_information`
+    method for details.
+    """
 
     def __init__(self, items, number_returned, total_matches, update_id):
         super(ListOfMusicInfoItems, self).__init__(items)

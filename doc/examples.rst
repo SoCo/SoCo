@@ -113,3 +113,54 @@ that the input for that method is a string on the form "HH:MM:SS" or
   >>> device.seek("0:00:30")
   >>> device.get_current_track_info()['position']
   '0:00:31'
+
+Seeing and manipulating the queue
+---------------------------------
+
+Getting the queue
+^^^^^^^^^^^^^^^^^
+
+Getting the queue is done with the :meth:`~soco.core.SoCo.get_queue` method::
+
+  >>> queue = device.get_queue()
+  >>> queue
+  Queue(items=[<DidlMusicTrack 'b'Blackened'' at 0x7f2237006dd8>, ..., <DidlMusicTrack 'b'Dyers Eve'' at 0x7f2237006828>])
+
+The returned :class:`~soco.data_structures.Queue` object is a sequence
+of items from the queue, meaning that it can be iterated over and its
+length aquired with :func:`len`::
+
+  >>> len(queue)
+  9
+  >>> for item in queue:
+  ...     print(item.title)
+  ...
+  Blackened
+  ...and Justice for All
+  Eye of the Beholder
+  One
+  The Shortest Straw
+  Harvester of Sorrow
+  The Frayed Ends of Sanity
+  To Live Is to Die
+  Dyers Eve
+  
+The queue object also has :attr:`~.ListOfMusicInfoItems.total_matches`
+and :attr:`~.ListOfMusicInfoItems.number_returned` attributes, which
+are used to figure out whether paging is required in order to get all
+elements of the queue. See the :class:`~.ListOfMusicInfoItems`
+docstring for details.
+
+Clearing the queue
+^^^^^^^^^^^^^^^^^^
+
+Clearing the queue is done with the
+:meth:`~soco.core.SoCo.clear_queue` method as follows::
+
+  >>> queue = device.get_queue()
+  >>> len(queue)
+  9
+  >>> device.clear_queue()
+  >>> queue = device.get_queue()
+  >>> len(queue)
+  0
