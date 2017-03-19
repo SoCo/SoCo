@@ -1021,8 +1021,9 @@ class ListOfMusicInfoItems(list):
     the total number of results to the query and :attr:`~number_returned` is
     the number of results actually returned. If the two differ, paging is
     required. Paging is typically performed with the ``start`` and
-    ``max_items`` arguments to the query method.
-
+    ``max_items`` arguments to the query method. See e.g. the
+    :meth:`~soco.music_library.MusicLibrary.get_music_library_information`
+    method for details.
     """
 
     def __init__(self, items, number_returned, total_matches, update_id):
