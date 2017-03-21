@@ -1388,31 +1388,31 @@ class SoCo(_SocoSingletonBase):
             items (list): A sequence of items to the be added to the queue
             container (DidlObject, optional): A container object which
                 includes the items.
-
-        Returns:
-            int: The index at which the items were enqueued.
         """
-        uris = ' '.join([item.resources[0].uri for item in items])
-        uri_metadata = ' '.join([to_didl_string(item) for item in items])
         if container is not None:
             container_uri = container.resources[0].uri
             container_metadata = to_didl_string(container)
         else:
-            container_uri = ''
+            container_uri = ''  # Sonos seems to accept this as well
             container_metadata = ''  # pylint: disable=redefined-variable-type
-        response = self.avTransport.AddMultipleURIsToQueue([
-            ('InstanceID', 0),
-            ('UpdateID', 0),
-            ('NumberOfURIs', len(items)),
-            ('EnqueuedURIs', uris),
-            ('EnqueuedURIsMetaData', uri_metadata),
-            ('ContainerURI', container_uri),
-            ('ContainerMetaData', container_metadata),
-            ('DesiredFirstTrackNumberEnqueued', 0),
-            ('EnqueueAsNext', 0)
-        ])
-        qnumber = response['FirstTrackNumberEnqueued']
-        return int(qnumber)
+
+        chunk_size = 16  # With each request, we can only add 16 items
+        item_list = list(items)  # List for slicing
+        for index in range(0, len(item_list), chunk_size):
+            chunk = item_list[index:index + chunk_size]
+            uris = ' '.join([item.resources[0].uri for item in chunk])
+            uri_metadata = ' '.join([to_didl_string(item) for item in chunk])
+            self.avTransport.AddMultipleURIsToQueue([
+                ('InstanceID', 0),
+                ('UpdateID', 0),
+                ('NumberOfURIs', len(chunk)),
+                ('EnqueuedURIs', uris),
+                ('EnqueuedURIsMetaData', uri_metadata),
+                ('ContainerURI', container_uri),
+                ('ContainerMetaData', container_metadata),
+                ('DesiredFirstTrackNumberEnqueued', 0),
+                ('EnqueueAsNext', 0)
+            ])
 
     @only_on_master
     def remove_from_queue(self, index):
