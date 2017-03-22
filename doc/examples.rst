@@ -49,18 +49,14 @@ one e.g. to query for music library information::
 Getting a named device
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Getting a device by name is done by searching through the devices
-returned by :func:`soco.discover`::
+Getting a device by player name can be done with the
+:func:`soco.discovery.by_name` function::
 
-  >>> import soco
-  >>> for device in soco.discover():
-  ...     if device.player_name == 'Office':
-  ...         break
-  ... else:
-  ...     device = None
-  ... 
+  >>> from soco.discovery import by_name
+  >>> device = by_name("Living Room")
   >>> device
-  SoCo("192.168.1.8")
+  SoCo("192.168.1.18")
+
 
 .. _examples_playback_control:
 

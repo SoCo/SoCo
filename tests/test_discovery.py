@@ -4,11 +4,11 @@ from __future__ import unicode_literals
 import socket
 import select
 
-from mock import patch, MagicMock as Mock
+from mock import patch, MagicMock as Mock, PropertyMock, call
 
 from soco import discover
 from soco import config
-from soco.discovery import any_soco
+from soco.discovery import any_soco, by_name
 
 IP_ADDR = '192.168.1.101'
 TIMEOUT = 5
@@ -62,3 +62,27 @@ class TestDiscover:
         # Check no SoCo instance created
         config.SOCO_CLASS.assert_not_called
 
+
+def test_by_name():
+    """Test the by_name method"""
+    devices = set()
+    for name in ("fake", "non", "Kitchen"):
+        mymock = Mock(player_name=name)
+        devices.add(mymock)
+
+    # The mock we want to find is the last one
+    mock_to_be_found = mymock
+
+    # Patch out discover and test
+    with patch("soco.discovery.discover") as discover_:
+        discover_.return_value = devices
+
+        # Test not found
+        device = by_name("Living Room")
+        assert device is None
+        discover_.assert_called_once_with()
+
+        # Test found
+        device = by_name("Kitchen")
+        assert device is mock_to_be_found
+        discover_.assert_has_calls([call(), call()])
