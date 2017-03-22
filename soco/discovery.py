@@ -214,14 +214,14 @@ def any_soco():
 
 
 def by_name(name):
-    """Return a device by name
+    """Return a device by name.
 
     Args:
-        name (str): The name of the device to return
+        name (str): The name of the device to return.
 
     Returns:
         :class:`~.SoCo`: The first device encountered among all zone with the
-            given player name. If none is found `None` is returned.
+            given player name. If none are found `None` is returned.
     """
     for device in discover():
         if device.player_name == name:
