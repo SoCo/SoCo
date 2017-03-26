@@ -4,7 +4,12 @@
 """Functionality to support saving and restoring the current Sonos state.
 
 This is useful for scenarios such as when you want to switch to radio
-and then back again to what was playing previously.
+or an announcement and then back again to what was playing previously.
+
+Warning:
+    This class is designed to be created used and destroyed. It is not
+    designed to be reused or long lived. The init sets up defaults for
+    one use.
 """
 
 
@@ -55,7 +60,7 @@ class Snapshot(object):
         # For coordinator zone playing from Queue:
         self.play_mode = None
         self.cross_fade = None
-        self.playlist_position = None
+        self.playlist_position = 0
         self.track_position = None
 
         # For coordinator zone playing a Stream:
