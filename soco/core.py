@@ -448,23 +448,52 @@ class SoCo(_SocoSingletonBase):
         ])
 
     @only_on_master
-    def play_uri(self, uri='', meta='', title='', start=True):
+    def play_uri(self, uri='', meta='', title='', start=True,
+                 force_radio=False):
         """Play a given stream. Pauses the queue. If there is no metadata
         passed in and there is a title set then a metadata object will be
         created. This is often the case if you have a custom stream, it will
         need at least the title in the metadata in order to play.
+        
+        On the Sonos controller music is shown with one of the following display
+        formats and controls:
+        - Radio format: shows the name of the radio station plus other available
+                        data. No seek, next, previous, or voting capability. 
+                        Examples: TuneIn, radioPup
+        - Smart Radio:  shows track name, artist, and album. Limited seek, next
+                        and sometimes voting depending on Music Service. 
+                        Examples: Amazon Prime Stations, Pandora Radio Stations.
+        - Track format: shows track name, artist, and album the same as play 
+                        from queue. Full seek, next and previous capabilities. 
+                        Examples: Spotify, Napster, Rhapsody.
+
+        How it is displayed is determined by the URI prefix:
+        x-sonosapi-stream, x-sonosapi-radio, x-rincon-mp3radio, hls-radio
+        default to radio or smart radio format depending on the stream.
+        Others default to track format x-file-cifs, aac, http, https, 
+        x-sonos-spotify (used bySpotify), x-sonosapi-hls-static (Amazon Prime),
+        x-sonos-http (Google Play & Napster).
+
+        Some URIs that default to track format could be radio streams, 
+        typically http://, https:// or aac://. 
+        To force the display and controls to Radio format set force_radio=True.
+
+        .. note:: other URI prefixes exist but are less common. 
+           If you have information on these please add to these comments.
 
         .. note:: A change in Sonos® (as of at least version 6.4.2) means that
            the devices no longer accepts ordinary "http://" and "https://"
-           URIs. This method automatically replaces these prefixes with the
-           one that Sonos® expects: "x-rincon-mp3radio://".
+           URIs for radio stations. This method has the option to replaces these 
+           prefixes with the one that Sonos® expects: "x-rincon-mp3radio://" by
+           using the "force_radio=True" parameter.
+           A few streams may fail if not forced to to Radio format. 
 
         Args:
             uri (str): URI of the stream to be played.
             meta (str): The track metadata to show in the player, DIDL format.
             title (str): The track title to show in the player
             start (bool): If the URI that has been set should start playing
-            convert_internet_uris (bool): FIXME
+            force_radio: (bool): forces a uri to play as a radio stream
 
         Raises:
             SoCoException: (or a subclass) upon errors.
@@ -484,10 +513,11 @@ class SoCo(_SocoSingletonBase):
             # Radio stations need to have at least a title to play
             meta = meta_template.format(title=title, service=tunein_service)
 
-        for prefix in ('http://', 'https://'):
-            if uri.startswith(prefix):
-                # Replace only the first instance
-                uri = uri.replace(prefix, 'x-rincon-mp3radio://', 1)
+        # change uri prefix to force radio style display and commands
+        if force_radio:
+            colon = uri.find(':')
+            if colon > 0:
+                uri = 'x-rincon-mp3radio{}'.format(uri[colon:])
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
