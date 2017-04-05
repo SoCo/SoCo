@@ -44,3 +44,17 @@ two options:
        started, but that no security precautions has been taken to
        e.g. prevent serving other files out into the local
        network. Take appropriate actions if this is a concern.
+
+How can I save, then restore the previous playing Sonos state ?
+---------------------------------------------------------------
+
+This is useful for scenarios such as when you want to switch to radio,
+an announcement or doorbell sound and then back to what was playing previously.
+Documentation of the Snapshot module `~soco.snapshot.Snapshot`
+
+SoCo provides a snapshot module that captures the current state of a player and
+then when requested re-instates that state. Examples of it's use are:
+ - `basic snap example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/basic_snap.py>`_
+ - `multi zone example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/multi_zone_snap.py>`_
+
+
