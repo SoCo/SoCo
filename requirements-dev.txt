@@ -8,3 +8,4 @@ pylint >= 1.4
 coveralls
 pytest-cov
 wheel
+testrepository
