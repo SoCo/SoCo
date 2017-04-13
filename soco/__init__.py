@@ -15,14 +15,20 @@ from .compat import NullHandler
 from .core import SoCo
 from .discovery import discover
 from .exceptions import SoCoException, UnknownSoCoException
+from .utils import get_git_revision
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'The SoCo-Team <python-soco@googlegroups.com>'
-# Please add the suffix "+" to the version after release, to make it
-# possible infer whether in development code from the version string
-__version__ = '0.12+'
+__version__ = '0.12'
 __website__ = 'https://github.com/SoCo/SoCo'
 __license__ = 'MIT License'
+
+# Use this to indicate that a release is about to be built, should always be
+# False in development
+_RELEASE = False
+
+if not _RELEASE:
+    __version__ += '+ (git ' + get_git_revision() + ')'
 
 # You really should not `import *` - it is poor practice
 # but if you do, here is what you get:

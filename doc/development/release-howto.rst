@@ -27,7 +27,8 @@ Create and Publish
 * Verify that all tests pass.
 
 * Update the version number in ``__init__.py`` (see
-  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
+  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_)
+  and set _RELEASE to ``True``.
 
 * Tag the current commit, eg
 
@@ -57,6 +58,9 @@ Create and Publish
 
 Wrap-Up
 -------
+
+* In ``__init__.py`` set _RELEASE back to ``False`` and commit and
+  push the change to github.
 
 * Create the milestone for the next release (with the most likely version
   number) and close the milestone for the current release.
