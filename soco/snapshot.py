@@ -264,11 +264,10 @@ class Snapshot(object):
                 queue_items = self.device.get_queue(total, batch_size)
                 # Check how many entries were returned
                 num_return = len(queue_items)
-                # Make sure the queue is not empty
-                if num_return > 0:
-                    self.queue.append(queue_items)
                 # Update the total that have been processed
-                total = total + num_return
+                total += num_return
+                # Add items to the saved queue
+                self.queue += queue_items
 
     def _restore_queue(self):
         """Restore the previous state of the queue.
@@ -282,10 +281,8 @@ class Snapshot(object):
         if self.queue is not None:
             # Clear the queue so that it can be reset
             self.device.clear_queue()
-            # Now loop around all the queue entries adding them
-            for queue_group in self.queue:
-                for queue_item in queue_group:
-                    self.device.add_uri_to_queue(queue_item.uri)
+            # Add the saved queue entries
+            self.device.add_multiple_to_queue(self.queue)
 
     def __enter__(self):
         self.snapshot()
