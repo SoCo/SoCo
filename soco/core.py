@@ -452,10 +452,10 @@ class SoCo(_SocoSingletonBase):
                  force_radio=False):
         """Play a URI
 
-        Playing a URI will replace what was playing with the stream given by the
-        URI. For some streams at least a title will be required as metadata. 
-        This can be provided using the `meta` argument or the `title` argument. 
-        If the `title` argument is provided minimal metadata will be generated. 
+        Playing a URI will replace what was playing with the stream given by
+        the URI. For some streams at least a title is required as metadata.
+        This can be provided using the `meta` argument or the `title` argument.
+        If the `title` argument is provided minimal metadata will be generated.
         If `meta` argument is provided the `title` argument is ignored.
 
         Args:
@@ -470,37 +470,38 @@ class SoCo(_SocoSingletonBase):
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
-        
-        * Radio format: Shows the name of the radio station plus other available
-          data. No seek, next, previous, or voting capability. 
+
+        * Radio format: Shows the name of the radio station and other available
+          data. No seek, next, previous, or voting capability.
           Examples: TuneIn, radioPup
-        * Smart Radio:  Shows track name, artist, and album. Limited seek, next 
-          and sometimes voting capability depending on the Music Service. 
+        * Smart Radio:  Shows track name, artist, and album. Limited seek, next
+          and sometimes voting capability depending on the Music Service.
           Examples: Amazon Prime Stations, Pandora Radio Stations.
         * Track format: Shows track name, artist, and album the same as when
-          playing from a queue. Full seek, next and previous capabilities. 
+          playing from a queue. Full seek, next and previous capabilities.
           Examples: Spotify, Napster, Rhapsody.
 
         How it is displayed is determined by the URI prefix:
-        `x-sonosapi-stream:`, `x-sonosapi-radio:`, `x-rincon-mp3radio:`, 
+        `x-sonosapi-stream:`, `x-sonosapi-radio:`, `x-rincon-mp3radio:`,
         `hls-radio:` default to radio or smart radio format depending on the
-        stream. Others default to track format: `x-file-cifs:`, `aac:`, `http:`,
-        `https:`, `x-sonos-spotify:` (used by Spotify), `x-sonosapi-hls-static:`
-        (Amazon Prime), `x-sonos-http:` (Google Play & Napster).
+        stream. Others default to track format: `x-file-cifs:`, `aac:`,
+        `http:`, `https:`, `x-sonos-spotify:` (used by Spotify),
+        `x-sonosapi-hls-static:` (Amazon Prime),
+        `x-sonos-http:` (Google Play & Napster).
 
-        Some URIs that default to track format could be radio streams, 
-        typically `http:`, `https:` or `aac:`. 
-        To force the display and controls to Radio format set `force_radio=True`
-        
-        .. note:: Other URI prefixes exist but are less common. 
+        Some URIs that default to track format could be radio streams,
+        typically `http:`, `https:` or `aac:`.
+        To force display and controls to Radio format set `force_radio=True`
+
+        .. note:: Other URI prefixes exist but are less common.
            If you have information on these please add to this doc string.
 
         .. note:: A change in Sonos® (as of at least version 6.4.2) means that
-           the devices no longer accepts ordinary `http:` and `https:`
-           URIs for radio stations. This method has the option to replaces these 
+           the devices no longer accepts ordinary `http:` and `https:` URIs for
+           radio stations. This method has the option to replaces these
            prefixes with the one that Sonos® expects: `x-rincon-mp3radio:` by
            using the "force_radio=True" parameter.
-           A few streams may fail if not forced to to Radio format. 
+           A few streams may fail if not forced to to Radio format.
         """
         if meta == '' and title != '':
             meta_template = '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'\
