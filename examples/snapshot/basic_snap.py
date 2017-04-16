@@ -3,24 +3,26 @@
 This is useful for scenarios such as when you want to switch to radio,
 an announcement or doorbell sound and then back to what was playing previously.
 
-To use it just change the IP address to one of your Sonos players. 
+To use it just change the IP address to one of your Sonos players.
 
 This script will:
  - start playing a radio station
  - take a snapshot of the status of the sonos player (what playing, volume etc.)
  - play an alert mp3 for a few seconds (a poem!)
  - re-instate the sonos player to it's previous state (the radio station)
- 
-Note: the snap function is designed to be used once, Having taken a snap to 
-take another re-instantiate the class.
+
+Note: The Snapshot class is designed for single use. If a second snapshot is
+required create another instance of the class e.g. `snap2 = Snapshot(device)`.
 """
 
+from __future__ import print_function, unicode_literals
 import time
 import soco
 from soco.snapshot import Snapshot
 
 # something to play on a Sonos player to start (a radio station)
-start_uri = u'x-sonosapi-stream:s2846?sid=254&amp;flags=32'
+start_uri = 'x-sonosapi-stream:s2846?sid=254&amp;flags=32'
+
 # alert sound to interrupt the above (a poem) - use amy file Sonos can play
 alert_uri = 'https://ia800504.us.archive.org/21/items/PoemsInEnglish/tygerblake.mp3'
 

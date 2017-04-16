@@ -1,38 +1,39 @@
 """Sample script to demonstrate use of SoCo snapshot on multiple zones
 
 To use this script just run it - no configuration required.
-It shows it's capabilities better if you have something playing. 
+It shows it's capabilities better if you have something playing.
 
 This is useful for scenarios such as when you want to switch to radio,
 an announcement or doorbell sound and then back to what was playing previously.
 
 This script has a play_alert function that will:
- - take a snapshot of the current status of all sonos players (whats playing, 
+ - take a snapshot of the current status of all sonos players (whats playing,
    volume etc.)
  - play an alert_uri file on each group coordinator
  - re-instate the sonos players to it's previous state
- 
+
 This script does not group or un-group any Sonos players. Group management is
 a separate subject. For alerts grouping causes delays, so is avoided here.
 
-Note: the snap function is designed to be used once, Having taken a snap to 
-take another re-instantiate the class.
+Note: The Snapshot class is designed for single use. If a second snapshot is
+required create another instance of the class e.g. `snap2 = Snapshot(device)`.
 """
 
+from __future__ import print_function, unicode_literals
 import time
 import soco
 from soco.snapshot import Snapshot
 
-
-def play_alert(alert_uri, alert_volume=20, alert_duration=0, fade_back=False):
+def play_alert(zones, alert_uri, alert_volume=20, alert_duration=0, fade_back=False):
     """
-    Demo function using soco.snapshot accrss multiple Sonos players.
-    
-    :param alert_uri: file that Sonos can play as an alert
-    :param alert_volume: volume to play alert at 
-    :param alert_duration: length of alert (if zero then length of track)
-    :param fade_back: on reinstating the zones fade up the sound?
-    :return: 
+    Demo function using soco.snapshot across multiple Sonos players.
+
+    Args:
+        zones (set): a set of SoCo objects
+        alert_uri (str): uri that Sonos can play as an alert
+        alert_volume (int): volume level for playing alert (0 tp 100)
+        alert_duration (int): length of alert (if zero then length of track)
+        fade_back (bool): on reinstating the zones fade up the sound?
     """
 
     # Use soco.snapshot to capture current state of each zone to allow restore
@@ -60,7 +61,6 @@ def play_alert(alert_uri, alert_volume=20, alert_duration=0, fade_back=False):
     for zone in zones:
         if zone.is_coordinator:
             zone.play_uri(uri=alert_uri, title='Sonos Alert')
-            a_coordinator = zone  # remember last coordinator for use next
 
     # wait for alert_duration
     time.sleep(alert_duration)
@@ -72,11 +72,10 @@ def play_alert(alert_uri, alert_volume=20, alert_duration=0, fade_back=False):
 
 if __name__ == '__main__':
 
-    zones = soco.discover()
+    all_zones = soco.discover()
 
     # alert uri to send to sonos - this uri must be available to Sonos
     alert_sound = 'https://ia800503.us.archive.org/8/items/futuresoundfx-98/futuresoundfx-96.mp3'
 
-    play_alert(alert_sound, alert_volume=30, alert_duration=3, fade_back=False)
-
-
+    play_alert(all_zones, alert_sound, alert_volume=30, alert_duration=3,
+               fade_back=False)

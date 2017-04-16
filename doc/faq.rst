@@ -50,11 +50,10 @@ How can I save, then restore the previous playing Sonos state ?
 
 This is useful for scenarios such as when you want to switch to radio,
 an announcement or doorbell sound and then back to what was playing previously.
-Documentation of the Snapshot module `~soco.snapshot.Snapshot`
+Documentation of the Snapshot :mod:`~soco.snapshot` module.
 
 SoCo provides a snapshot module that captures the current state of a player and
 then when requested re-instates that state. Examples of it's use are:
- - `basic snap example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/basic_snap.py>`_
- - `multi zone example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/multi_zone_snap.py>`_
 
-
+ * `basic snap example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/basic_snap.py>`_
+ * `multi zone example  <https://github.com/SoCo/SoCo/blob/master/examples/snapshot/multi_zone_snap.py>`_
