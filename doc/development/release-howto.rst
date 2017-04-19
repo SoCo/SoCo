@@ -27,8 +27,7 @@ Create and Publish
 * Verify that all tests pass.
 
 * Update the version number in ``__init__.py`` (see
-  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_)
-  and set _RELEASE to ``True``.
+  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
 
 * Tag the current commit, eg
 
@@ -46,11 +45,20 @@ Create and Publish
   using the release notes from the documentation. The release notes can be
   abbreviated if a link to the documentation is provided.
 
+* In ``__init__.py`` set _RELEASE to ``True`` (but do not commit) and
+  re-run tests for (just in case)
+
 * Upload the release to PyPI.
 
 .. code-block:: bash
 
     python setup.py sdist bdist_wheel upload
+
+* Revert change in ``__init__.py``, so as to leave a clean git archive.
+
+.. code-block:: bash
+
+    git checkout __init__.py
 
 * Enable doc builds for the newly released version on `Read the Docs
   <https://readthedocs.org/dashboard/soco/versions/>`_.
