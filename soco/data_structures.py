@@ -1146,11 +1146,6 @@ class Queue(ListOfMusicInfoItems):
 
     """Container class that represents a queue."""
 
-    def __init__(self, items, number_returned, total_matches, update_id):
-        super(Queue, self).__init__(
-            items, number_returned, total_matches, update_id
-        )
-
     def __repr__(self):
         return '{0}(items={1})'.format(
             self.__class__.__name__,

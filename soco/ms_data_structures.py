@@ -33,7 +33,7 @@ def tags_with_text(xml, tags=None):
     for element in xml:
         if element.text is not None:
             tags.append(element)
-        elif len(element) > 0:
+        elif len(element) > 0:  # pylint: disable=len-as-condition
             tags_with_text(element, tags)
         else:
             message = 'Unknown XML structure: {0}'.format(element)

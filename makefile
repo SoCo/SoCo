@@ -1,7 +1,7 @@
 
 lint: soco
 	flake8 soco
-	pylint soco
+	pylint --disable=no-else-return soco
 
 test:
 	py.test

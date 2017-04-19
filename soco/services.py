@@ -619,17 +619,11 @@ class MusicServices(Service):
     """Sonos music services service, for functions related to 3rd party music
     services."""
 
-    def __init__(self, soco):
-        super(MusicServices, self).__init__(soco)
-
 
 class DeviceProperties(Service):
 
     """Sonos device properties service, for functions relating to zones, LED
     state, stereo pairs etc."""
-
-    def __init__(self, soco):
-        super(DeviceProperties, self).__init__(soco)
 
 
 class SystemProperties(Service):
@@ -637,17 +631,11 @@ class SystemProperties(Service):
     """Sonos system properties service, for functions relating to
     authentication etc."""
 
-    def __init__(self, soco):
-        super(SystemProperties, self).__init__(soco)
-
 
 class ZoneGroupTopology(Service):
 
     """Sonos zone group topology service, for functions relating to network
     topology, diagnostics and updates."""
-
-    def __init__(self, soco):
-        super(ZoneGroupTopology, self).__init__(soco)
 
     def GetZoneGroupState(self, *args, **kwargs):
         """Overrides default handling to use the global shared zone group state
@@ -660,16 +648,10 @@ class GroupManagement(Service):
 
     """Sonos group management service, for services relating to groups."""
 
-    def __init__(self, soco):
-        super(GroupManagement, self).__init__(soco)
-
 
 class QPlay(Service):
 
     """Sonos Tencent QPlay service (a Chinese music service)"""
-
-    def __init__(self, soco):
-        super(QPlay, self).__init__(soco)
 
 
 class ContentDirectory(Service):

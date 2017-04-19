@@ -863,7 +863,7 @@ def desc_from_uri(uri):
             if service_id == service["ServiceID"]:
                 service_type = service["ServiceType"]
                 account = Account.get_accounts_for_service(service_type)
-                if len(account) == 0:
+                if not account:
                     break
                 # Use the first account we find
                 account = account[0]
