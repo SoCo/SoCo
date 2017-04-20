@@ -9,6 +9,7 @@ Maintainers
 * Lawrence Akka
 * Stefan Kögl
 * Kenneth Nielsen
+* David Harding
 
 
 Contributors
@@ -21,7 +22,7 @@ Contributors
 * Joel Björkman
 * Aaron Daubman
 * Johan Elmerfjord
-* David H
+* David Harding
 * Jeff Hinrichs
 * Jeroen Idserda
 * Todd Neal
