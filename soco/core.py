@@ -1351,7 +1351,7 @@ class SoCo(_SocoSingletonBase):
     def add_uri_to_queue(self, uri, position=0, as_next=False):
         """Adds the URI to the queue.
 
-        For Arguments see `add_to_queue`.
+        For arguments and return value see `add_to_queue`.
         """
         # FIXME: The res.protocol_info should probably represent the mime type
         # etc of the uri. But this seems OK.
