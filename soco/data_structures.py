@@ -1091,6 +1091,7 @@ class ListOfMusicInfoItems(collections.Sequence):
     """
 
     def __init__(self, items, number_returned, total_matches, update_id):
+        # pylint: disable=super-init-not-called
         self._items = items
         self.number_returned = number_returned
         self.total_matches = total_matches
