@@ -392,6 +392,26 @@ class SoCo(_SocoSingletonBase):
             ('CrossfadeMode', crossfade_value)
         ])
 
+    def ramp_to_volume(self, volume):
+        """Smoothly change the volume to the desired value.
+        This method is non-blocking.
+
+        Args:
+            volume(int): The new volume.
+
+        Returns:
+            int: The transition time in seconds.
+        """
+        response = self.renderingControl.RampToVolume([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ('RampType', 'SLEEP_TIMER_RAMP_TYPE'),
+            ('DesiredVolume', volume),
+            ('ResetVolumeAfter', False),
+            ('ProgramURI', '')
+        ])
+        return response['RampTime']
+
     @only_on_master
     def play_from_queue(self, index, start=True):
         """ Play a track from the queue by index. The index number is
