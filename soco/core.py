@@ -393,8 +393,14 @@ class SoCo(_SocoSingletonBase):
         ])
 
     def ramp_to_volume(self, volume):
-        """Smoothly change the volume to the desired value.
-        This method is non-blocking.
+        """Smoothly change the volume.
+
+        The volume can be turned up or down from the current volume to the
+        desired value.
+        The ramp is linear at a rate of 1.25 steps per second. For example: to
+        change from volume 50 to volume 30 would take 16 seconds. This rate is
+        selected by Sonos and the resulting transition time returned.
+        This method is non blocking and has no network overhead once sent.
 
         Args:
             volume(int): The new volume.
