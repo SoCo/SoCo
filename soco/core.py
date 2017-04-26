@@ -521,7 +521,7 @@ class SoCo(_SocoSingletonBase):
         if force_radio:
             colon = uri.find(':')
             if colon > 0:
-                uri = 'x-rincon-mp3radio{}'.format(uri[colon:])
+                uri = 'x-rincon-mp3radio{0}'.format(uri[colon:])
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
