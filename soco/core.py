@@ -416,7 +416,7 @@ class SoCo(_SocoSingletonBase):
             ('ResetVolumeAfter', False),
             ('ProgramURI', '')
         ])
-        return response['RampTime']
+        return int(response['RampTime'])
 
     @only_on_master
     def play_from_queue(self, index, start=True):

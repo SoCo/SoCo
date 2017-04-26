@@ -911,6 +911,16 @@ class TestRenderingControl:
                 ('DesiredVolume', vol_called)]
         )
 
+    def test_soco_ramp_to_volume(self, moco):
+        moco.renderingControl.RampToVolume.return_value = {'RampTime': '12'}
+        ramp_time = moco.ramp_to_volume(15)
+        moco.renderingControl.RampToVolume.assert_called_once_with(
+            [('InstanceID', 0), ('Channel', 'Master'),
+             ('RampType', 'SLEEP_TIMER_RAMP_TYPE'), ('DesiredVolume', 15),
+             ('ResetVolumeAfter', False), ('ProgramURI', '')]
+        )
+        assert ramp_time == 12
+
     def test_soco_treble(self, moco):
         moco.renderingControl.GetTreble.return_value = {'CurrentTreble': '15'}
         assert moco.treble == 15
