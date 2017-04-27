@@ -448,6 +448,7 @@ class SoCo(_SocoSingletonBase):
         ])
 
     @only_on_master
+    # pylint: disable=too-many-arguments
     def play_uri(self, uri='', meta='', title='', start=True,
                  force_radio=False):
         """Play a URI
