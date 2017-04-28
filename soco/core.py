@@ -392,26 +392,39 @@ class SoCo(_SocoSingletonBase):
             ('CrossfadeMode', crossfade_value)
         ])
 
-    def ramp_to_volume(self, volume):
+    def ramp_to_volume(self, volume, ramp_type='SLEEP_TIMER_RAMP_TYPE'):
         """Smoothly change the volume.
 
-        The volume can be turned up or down from the current volume to the
-        desired value.
-        The ramp is linear at a rate of 1.25 steps per second. For example: to
-        change from volume 50 to volume 30 would take 16 seconds. This rate is
-        selected by Sonos and the resulting transition time returned.
+        There are three ramp types available:
+            * ``'SLEEP_TIMER_RAMP_TYPE'`` (default): Linear ramp from the
+              current volume up or down to the new volume. The ramp rate is
+              1.25 steps per second. For example: To change from volume 50 to
+              volume 30 would take 16 seconds.
+            * ``'ALARM_RAMP_TYPE'``: Resets the volume to zero, waits for about
+              30 seconds, and then ramps the volume up to the desired value at
+              a rate of 2.5 steps per second. For example: Volume 30 would take
+              12 seconds for the ramp up (not considering the wait time).
+            * `'AUTOPLAY_RAMP_TYPE'``: Resets the volume to zero and then
+              quickly ramps up at a rate of 50 steps per second. For example:
+              Volume 30 will take only 0.6 seconds.
+
+        The ramp rate is selected by Sonos based on the chosen ramp type and
+        the resulting transition time returned.
         This method is non blocking and has no network overhead once sent.
 
         Args:
-            volume(int): The new volume.
+            volume (int): The new volume.
+            ramp_type (str, optional): The desired ramp type, as described
+                above.
 
         Returns:
-            int: The transition time in seconds.
+            int: The ramp time in seconds, rounded down. Note that this does
+                not include the wait time.
         """
         response = self.renderingControl.RampToVolume([
             ('InstanceID', 0),
             ('Channel', 'Master'),
-            ('RampType', 'SLEEP_TIMER_RAMP_TYPE'),
+            ('RampType', ramp_type),
             ('DesiredVolume', volume),
             ('ResetVolumeAfter', False),
             ('ProgramURI', '')
