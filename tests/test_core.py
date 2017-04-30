@@ -350,18 +350,39 @@ class TestAVTransport:
             [('InstanceID', 0), ('Speed', 1)]
         )
 
-    # Test that in internet uris (that starts with http:// or https:// the
-    # prefic is replaced with x-rincon-mp3radion://
+    # Test that uris are forced to Radio style display and controls when
+    # force_radio is True prefix is replaced with "x-rincon-mp3radion://"
+    # first set of test with no forcing, second set with force_radio=True
+
+    # No forcing
     @pytest.mark.parametrize("uri_in, uri_passed", [
         ('x-file-cifs://server/MyNiceRing.mp3',
          'x-file-cifs://server/MyNiceRing.mp3'),
         ('http://archive.org/download/TenD2005-07-16t_64kb.mp3',
-         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
-        ('https://archive.org/download/TenD2005-07-16t_64kb.mp3',
-         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+         'http://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+        ('x-sonosapi-radio:station%3a%3aps.147077612?sid=203&flags=76&sn=2',
+         'x-sonosapi-radio:station%3a%3aps.147077612?sid=203&flags=76&sn=2'),
     ])
     def test_soco_play_uri(self, moco, uri_in, uri_passed):
         moco.play_uri(uri_in)
+        moco.avTransport.SetAVTransportURI.assert_called_once_with([
+            ('InstanceID', 0),
+            ('CurrentURI', uri_passed),
+            ('CurrentURIMetaData', '')
+        ])
+        moco.avTransport.reset_mock()
+
+    # with force_radio=True
+    @pytest.mark.parametrize("uri_in, uri_passed", [
+        ('http://archive.org/download/TenD2005-07-16t_64kb.mp3',
+         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+        ('https://archive.org/download/TenD2005-07-16t_64kb.mp3',
+         'x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3'),
+        ('aac://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?amsparams=playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:false',
+         'x-rincon-mp3radio://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?amsparams=playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:false')
+    ])
+    def test_soco_play_uri_force_radio(self, moco, uri_in, uri_passed):
+        moco.play_uri(uri_in, force_radio=True)
         moco.avTransport.SetAVTransportURI.assert_called_once_with([
             ('InstanceID', 0),
             ('CurrentURI', uri_passed),
