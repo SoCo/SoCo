@@ -207,11 +207,7 @@ class Snapshot(object):
                 # if fade requested in restore
                 # set volume to 0 then fade up to saved volume (non blocking)
                 self.device.volume = 0
-                self.device.renderingControl.RampToVolume(
-                    [('InstanceID', 0), ('Channel', 'Master'),
-                     ('RampType', 'SLEEP_TIMER_RAMP_TYPE'),
-                     ('DesiredVolume', self.volume),
-                     ('ResetVolumeAfter', False), ('ProgramURI', '')])
+                self.device.ramp_to_volume(self.volume)
             else:
                 # set volume
                 self.device.volume = self.volume
