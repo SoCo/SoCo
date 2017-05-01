@@ -142,7 +142,6 @@ class MusicLibrary(object):
         args = tuple(['playlists'] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
-
     def get_sonos_favorites(self, *args, **kwargs):
         """Convenience method for `get_music_library_information`
         with ``search_type='sonos_favorites'``. For details of other arguments,

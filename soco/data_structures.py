@@ -61,6 +61,7 @@ def to_didl_string(*args):
             'xmlns': "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
             'xmlns:dc': "http://purl.org/dc/elements/1.1/",
             'xmlns:upnp': "urn:schemas-upnp-org:metadata-1-0/upnp/",
+            'xmlns:r': "urn:schemas-rinconnetworks-com:metadata-1-0/"
         })
     for arg in args:
         didl.append(arg.to_element())
@@ -799,15 +800,22 @@ class DidlFavorite(DidlItem):
         }
     )
 
-    # The resMD tag contains the metadata of the Didl object referenced by this favorite.
-    # For user convenience, we will parse this metadata and make the object available via the 'reference' attribute.
-    # The resMD metadata lacks a <res> tag, so we use the resources from the favorite to make 'reference' playable.
-    def __init__(self, title, parent_id, item_id, restricted=True,
-                 resources=None, desc='RINCON_AssociatedZPUDN', **kwargs):
-        super(DidlFavorite, self).__init__(title, parent_id, item_id, restricted, resources, desc, **kwargs)
-        if hasattr(self, 'resource_meta_data'):
-            reference = from_didl_string(self.resource_meta_data)[0]
-            reference.resources = self.resources
+    # The resMD tag contains the metadata of the Didl object referenced by this
+    # favorite. For user convenience, we will parse this metadata and make the
+    # object available via the 'reference' property.
+    @property
+    def reference(self):
+        """The Didl object this favorite refers to."""
+        ref = from_didl_string(getattr(self, 'resource_meta_data'))[0]
+        # The resMD metadata lacks a <res> tag, so we use the resources from
+        # the favorite to make 'reference' playable.
+        ref.resources = self.resources
+        return ref
+
+    @reference.setter
+    def reference(self, value):
+        setattr(self, 'resource_meta_data', to_didl_string(value))
+        self.resources = value.resources
 
 
 ###############################################################################
@@ -1033,6 +1041,7 @@ class DidlRadioShow(DidlContainer):
     # the DIDL Lite class for this object.
     item_class = 'object.container.radioShow'
     # A radio show doesn't seem to have any special attributes
+
 
 ###############################################################################
 # SPECIAL LISTS                                                               #

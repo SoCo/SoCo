@@ -1466,7 +1466,8 @@ class SoCo(_SocoSingletonBase):
         warnings.warn(message, stacklevel=2)
         return self.__get_favorites(RADIO_SHOWS, start, max_items)
 
-    @deprecated('0.13', "soco.music_library.get_favorite_radio_stations", '0.15')
+    @deprecated('0.13', "soco.music_library.get_favorite_radio_stations",
+                '0.15')
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
 
