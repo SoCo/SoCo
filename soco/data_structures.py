@@ -464,16 +464,20 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             raise DIDLMetadataError("Missing parentID attribute")
         restricted = element.get('restricted', None)
         if restricted is None:
-            raise DIDLMetadataError("Missing restricted attribute")
-        restricted = True if restricted in [1, 'true', 'True'] else False
+            #raise DIDLMetadataError("Missing restricted attribute")
+            restricted = False
+        else:
+            restricted = True if restricted in [1, 'true', 'True'] else False
 
         # There must be a title. According to spec, it should be the first
         # child, but Sonos does not abide by this
         title_elt = element.find(ns_tag('dc', 'title'))
         if title_elt is None:
-            raise DIDLMetadataError(
-                "Missing title element")
-        title = really_unicode(title_elt.text)
+            title = None
+        #    raise DIDLMetadataError(
+        #        "Missing title element")
+        else:
+            title = really_unicode(title_elt.text)
 
         # Deal with any resource elements
         resources = []
