@@ -962,6 +962,10 @@ class SoCo(_SocoSingletonBase):
                 if zone._uid == coordinator_uid:
                     group_coordinator = zone
                     zone._is_coordinator = True
+                    # If this is the coordinator, and the same IP address
+                    # then set it as the default UID
+                    if ip_addr == self.ip_address:
+                        self._uid = zone._uid
                 else:
                     zone._is_coordinator = False
                 # is_bridge doesn't change, but it does no real harm to
