@@ -38,6 +38,7 @@ from .utils import really_unicode
 from .xml import (
     XML, ns_tag
 )
+from .data_structures_entry import from_didl_string
 
 
 ###############################################################################
