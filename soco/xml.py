@@ -10,10 +10,7 @@ from __future__ import (
 import sys
 import re
 
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
+import xml.etree.ElementTree as XML
 
 
 # Create regular expression for filtering invalid characters, from:
