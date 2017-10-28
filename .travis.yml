@@ -2,7 +2,6 @@ language: python
 python:
   - "pypy" # Run slowest first so as not to hold up the build
   - "2.7"
-  - "3.3"
   - "3.4"
   - "3.5"
 

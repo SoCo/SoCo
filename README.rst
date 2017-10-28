@@ -30,7 +30,7 @@ Visit the `SoCo documentation`_ for a more detailed overview of all the function
 Installation
 ------------
 
-SoCo requires Python 2.7, or 3.3 or newer.
+SoCo requires Python 2.7, or 3.4 or newer.
 
 Use pip:
 
