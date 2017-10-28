@@ -149,23 +149,23 @@ class deprecated(object):
         @functools.wraps(deprecated_fn)
         def decorated(*args, **kwargs):
 
-            message = "Call to deprecated function {0}.".format(
+            message = "Call to deprecated function {}.".format(
                 deprecated_fn.__name__)
             if self.will_be_removed_in is not None:
-                message += " Will be removed in version {0}.".format(
+                message += " Will be removed in version {}.".format(
                     self.will_be_removed_in)
             if self.alternative is not None:
-                message += " Use {0} instead.".format(self.alternative)
+                message += " Use {} instead.".format(self.alternative)
             warnings.warn(message, stacklevel=2)
 
             return deprecated_fn(*args, **kwargs)
 
-        docs = "\n\n  .. deprecated:: {0}\n".format(self.since_version)
+        docs = "\n\n  .. deprecated:: {}\n".format(self.since_version)
         if self.will_be_removed_in is not None:
-            docs += "\n     Will be removed in version {0}.".format(
+            docs += "\n     Will be removed in version {}.".format(
                 self.will_be_removed_in)
         if self.alternative is not None:
-            docs += "\n     Use `{0}` instead.".format(self.alternative)
+            docs += "\n     Use `{}` instead.".format(self.alternative)
         if decorated.__doc__ is None:
             decorated.__doc__ = ''
         decorated.__doc__ += docs

@@ -81,7 +81,7 @@ def wait(interval=0.1):
 # Test return strings that are used a lot
 NOT_TRUE = 'The method did not return True'
 NOT_EXP = 'The method did not return the expected value'
-NOT_TYPE = 'The return value of the method did not have the expected type: {0}'
+NOT_TYPE = 'The return value of the method did not have the expected type: {}'
 NOT_IN_RANGE = 'The returned value is not in the expected range'
 
 
@@ -278,7 +278,7 @@ class GetQueue(unittest.TestCase):
                                   'Item in queue is not a dictionary')
             self.assertEqual(sorted(item.keys()), self.qeueu_element_keys,
                              'The keys in the queue element dict are not the '
-                             'expected ones: {0}'.
+                             'expected ones: {}'.
                              format(self.qeueu_element_keys))
 
 
@@ -303,9 +303,9 @@ class GetCurrentTransportInfo(unittest.TestCase):
         self.assertEqual(self.transport_info_keys,
                          sorted(transport_info.keys()),
                          'The keys in the speaker info dict are not the '
-                         'expected ones: {0}'.format(self.transport_info_keys))
+                         'expected ones: {}'.format(self.transport_info_keys))
         for key, value in transport_info.items():
-            self.assertIsNotNone(value, 'The value for the key "{0}" is None '
+            self.assertIsNotNone(value, 'The value for the key "{}" is None '
                                  'which indicate that no value was found for '
                                  'it'.format(key))
 
@@ -331,10 +331,10 @@ class GetSpeakerInfo(unittest.TestCase):
         speaker_info = SOCO.get_speaker_info()
         self.assertIsInstance(speaker_info, dict, NOT_TYPE.format('dict'))
         self.assertEqual(self.info_keys, sorted(speaker_info.keys()), 'The '
-                         'keys in speaker info are not the expected ones: {0}'
+                         'keys in speaker info are not the expected ones: {}'
                          ''.format(self.info_keys))
         for key, value in speaker_info.items():
-            self.assertIsNotNone(value, 'The value for the key "{0}" is None '
+            self.assertIsNotNone(value, 'The value for the key "{}" is None '
                                  'which indicate that no value was found for '
                                  'it'.format(key))
 

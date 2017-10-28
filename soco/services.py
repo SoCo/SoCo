@@ -119,14 +119,14 @@ class Service(object):
         self.version = 1
         self.service_id = self.service_type
         #: str: The base URL for sending UPnP Actions.
-        self.base_url = 'http://{0}:1400'.format(self.soco.ip_address)
+        self.base_url = 'http://{}:1400'.format(self.soco.ip_address)
         #: str: The UPnP Control URL.
-        self.control_url = '/{0}/Control'.format(self.service_type)
+        self.control_url = '/{}/Control'.format(self.service_type)
         #: str: The service control protocol description URL.
-        self.scpd_url = '/xml/{0}{1}.xml'.format(
+        self.scpd_url = '/xml/{}{}.xml'.format(
             self.service_type, self.version)
         #: str: The service eventing subscription URL.
-        self.event_subscription_url = '/{0}/Event'.format(self.service_type)
+        self.event_subscription_url = '/{}/Event'.format(self.service_type)
         #: A cache for storing the result of network calls. By default, this is
         #: a `TimedCache` with a default timeout=0.
         self.cache = Cache(default_timeout=0)
@@ -458,7 +458,7 @@ class Service(object):
         if error_code is not None:
             description = self.UPNP_ERRORS.get(int(error_code), '')
             raise SoCoUPnPException(
-                message='UPnP Error {0} received: {1} from {2}'.format(
+                message='UPnP Error {} received: {} from {}'.format(
                     error_code, description, self.soco.ip_address),
                 error_code=error_code,
                 error_description=description,
@@ -547,28 +547,28 @@ class Service(object):
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
-        srvStateTables = tree.findall('{0}serviceStateTable'.format(ns))
+        srvStateTables = tree.findall('{}serviceStateTable'.format(ns))
         for srvStateTable in srvStateTables:
-            statevars = srvStateTable.findall('{0}stateVariable'.format(ns))
+            statevars = srvStateTable.findall('{}stateVariable'.format(ns))
             for state in statevars:
-                name = state.findtext('{0}name'.format(ns))
-                vartypes[name] = state.findtext('{0}dataType'.format(ns))
+                name = state.findtext('{}name'.format(ns))
+                vartypes[name] = state.findtext('{}dataType'.format(ns))
         # find all the actions
-        actionLists = tree.findall('{0}actionList'.format(ns))
+        actionLists = tree.findall('{}actionList'.format(ns))
         for actionList in actionLists:
-            actions = actionList.findall('{0}action'.format(ns))
+            actions = actionList.findall('{}action'.format(ns))
             for i in actions:
-                action_name = i.findtext('{0}name'.format(ns))
-                argLists = i.findall('{0}argumentList'.format(ns))
+                action_name = i.findtext('{}name'.format(ns))
+                argLists = i.findall('{}argumentList'.format(ns))
                 for argList in argLists:
-                    args_iter = argList.findall('{0}argument'.format(ns))
+                    args_iter = argList.findall('{}argument'.format(ns))
                     in_args = []
                     out_args = []
                     for arg in args_iter:
-                        arg_name = arg.findtext('{0}name'.format(ns))
-                        direction = arg.findtext('{0}direction'.format(ns))
+                        arg_name = arg.findtext('{}name'.format(ns))
+                        direction = arg.findtext('{}direction'.format(ns))
                         related_variable = arg.findtext(
-                            '{0}relatedStateVariable'.format(ns))
+                            '{}relatedStateVariable'.format(ns))
                         vartype = vartypes[related_variable]
                         if direction == "in":
                             in_args.append(Argument(arg_name, vartype))
@@ -588,13 +588,13 @@ class Service(object):
         scpd_body = requests.get(self.base_url + self.scpd_url).text
         tree = XML.fromstring(scpd_body.encode('utf-8'))
         # parse the state variables to get the relevant variable types
-        statevars = tree.findall('{0}stateVariable'.format(ns))
+        statevars = tree.findall('{}stateVariable'.format(ns))
         for state in statevars:
             # We are only interested if 'sendEvents' is 'yes', i.e this
             # is an eventable variable
             if state.attrib['sendEvents'] == "yes":
-                name = state.findtext('{0}name'.format(ns))
-                vartype = state.findtext('{0}dataType'.format(ns))
+                name = state.findtext('{}name'.format(ns))
+                vartype = state.findtext('{}dataType'.format(ns))
                 yield (name, vartype)
 
 

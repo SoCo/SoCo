@@ -109,5 +109,5 @@ class ZoneGroup(object):
         group_names = sorted([m.player_name for m in self.members])
         group_label = group_names[0]
         if len(group_names) > 1:
-            group_label += " + {0}".format(len(group_names) - 1)
+            group_label += " + {}".format(len(group_names) - 1)
         return group_label

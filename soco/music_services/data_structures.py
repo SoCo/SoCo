@@ -216,7 +216,7 @@ class MetadataDictBase(object):
         try:
             return self.metadata[key]
         except KeyError:
-            message = 'Class {0} has no attribute "{1}"'
+            message = 'Class {} has no attribute "{}"'
             raise AttributeError(message.format(self.__class__.__name__, key))
 
 
@@ -268,7 +268,7 @@ class MusicServiceItem(MetadataDictBase):
         # Form the item_id
         quoted_id = quote_url(content_dict['id'].encode('utf-8'))
         # The hex prefix remains a mistery for now
-        item_id = '0fffffff{0}'.format(quoted_id)
+        item_id = '0fffffff{}'.format(quoted_id)
         # Form the uri
         is_track = cls == get_class('MediaMetadataTrack')
         uri = form_uri(item_id, music_service, is_track)
@@ -281,7 +281,7 @@ class MusicServiceItem(MetadataDictBase):
     def __str__(self):
         """Return custom string representation"""
         title = self.metadata.get('title')
-        str_ = '<{0} title="{1}">'
+        str_ = '<{} title="{}">'
         return str_.format(self.__class__.__name__, title)
 
     def to_element(self, include_namespaces=False):

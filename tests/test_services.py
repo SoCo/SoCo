@@ -99,7 +99,7 @@ def test_method_dispatcher_function_creation(service):
     assert 'testing' in service.__dict__.keys()
     assert service.testing.__name__ == "testing"
     # check that send_command is actually called when we invoke a method
-    service.send_command = lambda x, y: "Hello {0}".format(x)
+    service.send_command = lambda x, y: "Hello {}".format(x)
     assert service.testing(service) == "Hello testing"
 
 

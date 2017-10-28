@@ -72,4 +72,4 @@ def ns_tag(ns_id, tag):
         >>> xml.ns_tag('dc','author')
         '{http://purl.org/dc/elements/1.1/}author'
     """
-    return '{{{0}}}{1}'.format(NAMESPACES[ns_id], tag)
+    return '{{{}}}{}'.format(NAMESPACES[ns_id], tag)
