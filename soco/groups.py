@@ -13,7 +13,7 @@ class ZoneGroup(object):
         ZoneGroup(
             uid='RINCON_000FD584236D01400:58',
             coordinator=SoCo("192.168.1.101"),
-            members=set([SoCo("192.168.1.101"), SoCo("192.168.1.102")])
+            members={SoCo("192.168.1.101"), SoCo("192.168.1.102")}
         )
 
 
@@ -25,7 +25,7 @@ class ZoneGroup(object):
         ZoneGroup(
             uid='RINCON_000FD584236D01400:58',
             coordinator=SoCo("192.168.1.101"),
-            members=set([SoCo("192.168.1.101"), SoCo("192.168.1.102")])
+            members={SoCo("192.168.1.101"), SoCo("192.168.1.102")}
         )
 
     From there, you can find the coordinator for the current group::
