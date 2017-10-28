@@ -7,8 +7,10 @@ from soco.soap import SoapMessage
 from soco.xml import XML
 
 try:
+    # New in Python 3.3
     from unittest import mock
 except ImportError:
+    # Python 2.7
     import mock
 
 
