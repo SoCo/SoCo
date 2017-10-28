@@ -7,10 +7,6 @@ from __future__ import unicode_literals
 from soco import xml
 
 
-def test_register_namespace():
-    assert xml.register_namespace
-
-
 def test_ns_tag():
     """Test the ns_tag function."""
     namespaces = ['http://purl.org/dc/elements/1.1/',

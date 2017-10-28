@@ -49,11 +49,11 @@ CLASSIFIERS = [
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.6',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.3',
     'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: Implementation :: CPython',
     'Programming Language :: Python :: Implementation :: PyPy',
     'Topic :: Home Automation',
     'Topic :: Multimedia :: Sound/Audio',
@@ -68,10 +68,6 @@ with io.open('README.rst', encoding='utf-8') as file:
 AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
 REQUIREMENTS = list(open('requirements.txt'))
-# Python 2.6 does not have importlib or OrderedDicts, so we need to install
-# the backports
-if sys.version_info < (2, 7):
-    REQUIREMENTS.extend(['importlib', 'ordereddict'])
 
 setup(
     name=NAME,
