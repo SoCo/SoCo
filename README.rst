@@ -23,10 +23,6 @@ Visit the `SoCo documentation`_ for a more detailed overview of all the function
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
 
-.. image:: https://img.shields.io/pypi/dm/soco.svg?style=flat
-    :target: https://pypi.python.org/pypi/soco/
-    :alt: Number of PyPI downloads
-
 Installation
 ------------
 
