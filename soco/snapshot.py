@@ -97,8 +97,8 @@ class Snapshot(object):
         if self.media_uri.split(':')[0] != 'x-rincon':
             self.is_coordinator = True
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
-            if self.media_uri.split('#')[1] \
-                    == '0':  # pylint: disable=simplifiable-if-statement
+            # pylint: disable=simplifiable-if-statement
+            if self.media_uri.split('#')[1] == '0':
                 # playing local queue
                 self.is_playing_queue = True
             else:
