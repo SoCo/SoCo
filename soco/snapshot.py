@@ -191,7 +191,7 @@ class Snapshot(object):
 
             elif self.is_playing_cloud_queue:
                 # was playing a cloud queue started by Alexa
-                # No way found yet to re-start this so prevent it throwing an error!
+                # No way yet to re-start this so prevent it throwing an error!
                 pass
 
             else:
