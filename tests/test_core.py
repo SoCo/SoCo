@@ -27,7 +27,7 @@ def moco():
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
         'ContentDirectory', 'ZoneGroupTopology')
-    patchers = [mock.patch('soco.core.{0}'.format(service))
+    patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
         patch.start()
@@ -49,7 +49,7 @@ def moco_only_on_master():
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
         'ContentDirectory', 'ZoneGroupTopology')
-    patchers = [mock.patch('soco.core.{0}'.format(service))
+    patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
         patch.start()
@@ -199,10 +199,10 @@ class TestSoco:
         assert moco.speaker_info == {}
 
     def test_soco_str(self, moco):
-        assert str(moco) == "<SoCo object at ip {0}>".format(IP_ADDR)
+        assert str(moco) == "<SoCo object at ip {}>".format(IP_ADDR)
 
     def test_soco_repr(self, moco):
-        assert repr(moco) == 'SoCo("{0}")'.format(IP_ADDR)
+        assert repr(moco) == 'SoCo("{}")'.format(IP_ADDR)
 
     @mock.patch("soco.core.requests")
     @pytest.mark.parametrize('refresh', [None, False, True])
@@ -597,7 +597,7 @@ class TestAVTransport:
         playlist_name = "cool music"
         playlist_id = 1
         moco.avTransport.CreateSavedQueue.return_value = {
-            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
+            'AssignedObjectID': 'SQ:{}'.format(playlist_id)
         }
         playlist = moco.create_sonos_playlist(playlist_name)
         moco.avTransport.CreateSavedQueue.assert_called_once_with(
@@ -607,7 +607,7 @@ class TestAVTransport:
              ('EnqueuedURIMetaData', '')]
         )
         assert playlist.title == playlist_name
-        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{}".format(
             playlist_id)
         assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"
@@ -616,7 +616,7 @@ class TestAVTransport:
         playlist_name = "saved queue"
         playlist_id = 1
         moco.avTransport.SaveQueue.return_value = {
-            'AssignedObjectID': 'SQ:{0}'.format(playlist_id)
+            'AssignedObjectID': 'SQ:{}'.format(playlist_id)
         }
         playlist = moco.create_sonos_playlist_from_queue(playlist_name)
         moco.avTransport.SaveQueue.assert_called_once_with(
@@ -625,7 +625,7 @@ class TestAVTransport:
              ('ObjectID', '')]
         )
         assert playlist.title == playlist_name
-        expected_uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(
+        expected_uri = "file:///jffs/settings/savedqueues.rsq#{}".format(
             playlist_id)
         assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"

@@ -10,21 +10,7 @@ from __future__ import (
 import sys
 import re
 
-try:
-    import xml.etree.cElementTree as XML
-except ImportError:
-    import xml.etree.ElementTree as XML
-
-# This is a Python 2.6 compatbility hack. Pre 2.7 ElementTree raised
-# SyntaxError !!! if it encountered invalid chars in the XML, which is what
-# this exception is used for. It is only used one place in services. If we ever
-# drop support for Python 2.6 this should be removed
-try:
-    PARSEERROR = XML.ParseError
-except AttributeError:
-    # .ParseError did not exist pre 2.7;
-    # https://github.com/s3tools/s3cmd/issues/424
-    PARSEERROR = SyntaxError
+import xml.etree.ElementTree as XML
 
 
 # Create regular expression for filtering invalid characters, from:
@@ -63,19 +49,8 @@ NAMESPACES = {
 
 # Register common namespaces to assist in serialisation (avoids the ns:0
 # prefixes in XML output )
-try:
-    register_namespace = XML.register_namespace
-except AttributeError:
-    # Python 2.6: see http://effbot.org/zone/element-namespaces.htm
-    import xml.etree.ElementTree as XML2
-
-    def register_namespace(a_prefix, a_uri):
-        """Registers a namespace prefix to assist in serialization."""
-        # pylint: disable=protected-access
-        XML2._namespace_map[a_uri] = a_prefix
-
 for prefix, uri in NAMESPACES.items():
-    register_namespace(prefix, uri)
+    XML.register_namespace(prefix, uri)
 
 
 def ns_tag(ns_id, tag):
@@ -94,4 +69,4 @@ def ns_tag(ns_id, tag):
         >>> xml.ns_tag('dc','author')
         '{http://purl.org/dc/elements/1.1/}author'
     """
-    return '{{{0}}}{1}'.format(NAMESPACES[ns_id], tag)
+    return '{{{}}}{}'.format(NAMESPACES[ns_id], tag)

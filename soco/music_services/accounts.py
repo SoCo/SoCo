@@ -49,7 +49,7 @@ class Account(object):
         self.key = ''
 
     def __repr__(self):
-        return "<{0} '{1}:{2}:{3}' at {4}>".format(
+        return "<{} '{}:{}:{}' at {}>".format(
             self.__class__.__name__,
             self.serial_number,
             self.service_type,
@@ -77,7 +77,7 @@ class Account(object):
         # This returns an encrypted string, and, so far, we cannot decrypt it
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
-        settings_url = "http://{0}:1400/status/accounts".format(
+        settings_url = "http://{}:1400/status/accounts".format(
             device.ip_address)
         result = requests.get(settings_url).content
         log.debug("Account data: %s", result)

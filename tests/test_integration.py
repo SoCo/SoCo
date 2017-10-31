@@ -403,14 +403,13 @@ class TestSonosPlaylist(object):
 
     def test_create(self, soco):
         """Test creating a new empty Sonos playlist."""
-        existing_playlists = set([x.item_id
-                                  for x in soco.get_sonos_playlists()])
+        existing_playlists = {x.item_id for x in soco.get_sonos_playlists()}
         new_playlist = soco.create_sonos_playlist(title=self.playlist_name)
         assert type(new_playlist) is DidlPlaylistContainer
 
-        new_pl = set([x.item_id for x in soco.get_sonos_playlists()])
+        new_pl = {x.item_id for x in soco.get_sonos_playlists()}
         assert new_pl != existing_playlists
-        assert new_pl - existing_playlists == set([new_playlist.item_id])
+        assert new_pl - existing_playlists == {new_playlist.item_id}
 
     def test_create_from_queue(self, soco):
         """Test creating a Sonos playlist from the current queue."""
@@ -453,7 +452,7 @@ class TestSonosPlaylist(object):
         hpl_i = max([int(x.item_id.split(':')[1])
                      for x in soco.get_sonos_playlists()])
         with pytest.raises(SoCoUPnPException):
-            soco.remove_sonos_playlist('SQ:{0}'.format(hpl_i + 1))
+            soco.remove_sonos_playlist('SQ:{}'.format(hpl_i + 1))
 
 
 class TestTimer(object):

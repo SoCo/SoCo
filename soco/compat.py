@@ -35,19 +35,6 @@ try:  # python 2.7 - this has to be done the other way round
 except ImportError:  # python 3
     from pickle import dumps  # noqa
 
-# Support Python 2.6
-try:  # Python 2.7+
-    from logging import NullHandler  # noqa
-except ImportError:
-    import logging
-
-    class NullHandler(logging.Handler):
-
-        """Create a null handler if using Python 2.6"""
-
-        def emit(self, record):
-            pass
-
 
 def with_metaclass(meta, *bases):
     """A Python 2/3 compatible way of declaring a metaclass.

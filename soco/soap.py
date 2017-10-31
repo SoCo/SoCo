@@ -63,7 +63,7 @@ class SoapFault(SoCoException):
         return '%s: %s' % (self.faultcode, self.faultstring)
 
     def __repr__(self):
-        return "SoapFault(faultcode={0}, faultstring={1}, detail={2})".format(
+        return "SoapFault(faultcode={}, faultstring={}, detail={})".format(
             repr(self.faultcode),
             repr(self.faultstring),
             repr(self.detail)
@@ -157,7 +157,7 @@ class SoapMessage(object):
 
         headers = {'Content-Type': 'text/xml; charset="utf-8"'}
         if soap_action is not None:
-            headers.update({'SOAPACTION': '"{0}"'.format(soap_action)})
+            headers.update({'SOAPACTION': '"{}"'.format(soap_action)})
         if http_headers is not None:
             headers.update(http_headers)
         return headers
@@ -176,7 +176,7 @@ class SoapMessage(object):
         """
 
         if soap_header is not None:
-            return '<s:Header>{0}</s:Header>'.format(soap_header)
+            return '<s:Header>{}</s:Header>'.format(soap_header)
         else:
             return ''
 

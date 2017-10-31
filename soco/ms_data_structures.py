@@ -36,7 +36,7 @@ def tags_with_text(xml, tags=None):
         elif len(element) > 0:  # pylint: disable=len-as-condition
             tags_with_text(element, tags)
         else:
-            message = 'Unknown XML structure: {0}'.format(element)
+            message = 'Unknown XML structure: {}'.format(element)
             raise ValueError(message)
     return tags
 
@@ -114,7 +114,7 @@ class MusicServiceItem(object):
             tag = item.tag[len(NAMESPACES['ms']) + 2:]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
             if tag not in cls.valid_fields:
-                message = 'The info tag \'{0}\' is not allowed for this item'.\
+                message = 'The info tag \'{}\' is not allowed for this item'.\
                     format(tag)
                 raise ValueError(message)
             content[tag] = item.text
@@ -139,7 +139,7 @@ class MusicServiceItem(object):
         # Check for all required values
         for key in cls.required_fields:
             if key not in content:
-                message = 'An XML field that correspond to the key \'{0}\' '\
+                message = 'An XML field that correspond to the key \'{}\' '\
                     'is required. See the docstring for help.'.format(key)
 
         return cls.from_dict(content)
@@ -186,9 +186,9 @@ class MusicServiceItem(object):
             middle = self.content['title'].encode('ascii', 'replace')[0:40]
         else:
             middle = str(self.content).encode('ascii', 'replace')[0:40]
-        return '<{0} \'{1}\' at {2}>'.format(self.__class__.__name__,
-                                             middle,
-                                             hex(id(self)))
+        return '<{} \'{}\' at {}>'.format(self.__class__.__name__,
+                                          middle,
+                                          hex(id(self)))
 
     def __str__(self):
         """Return the str value for the item::
@@ -238,7 +238,7 @@ class MusicServiceItem(object):
         # Check if we have the attributes to create the didl metadata:
         for key in ['extended_id', 'title', 'item_class']:
             if not hasattr(self, key):
-                message = 'The property \'{0}\' is not present on this item. '\
+                message = 'The property \'{}\' is not present on this item. '\
                     'This indicates that this item was not meant to create '\
                     'didl_metadata'.format(key)
                 raise DIDLMetadataError(message)
@@ -481,7 +481,7 @@ class MSArtistTracklist(MusicServiceItem):
     def uri(self):
         """Return the URI."""
         # x-rincon-cpcontainer:100f006cartistpopsongsid_1566
-        return 'x-rincon-cpcontainer:100f006c{0}'.format(self.item_id)
+        return 'x-rincon-cpcontainer:100f006c{}'.format(self.item_id)
 
 
 class MSArtist(MusicServiceItem):
