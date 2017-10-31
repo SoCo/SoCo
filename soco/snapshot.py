@@ -7,6 +7,12 @@ This is useful for scenarios such as when you want to switch to radio
 or an announcement and then back again to what was playing previously.
 
 Warning:
+    Sonos has introduced control via Amazon Alexa. A new cloud queue is
+    created and at present there appears no way to restart this
+    queue from snapshot. Currently if a cloud queue was playing it will
+    not restart.
+
+Warning:
     This class is designed to be created used and destroyed. It is not
     designed to be reused or long lived. The init sets up defaults for
     one use.
@@ -50,6 +56,7 @@ class Snapshot(object):
         self.media_uri = None
         self.is_coordinator = False
         self.is_playing_queue = False
+        self.is_playing_cloud_queue = False
 
         self.volume = None
         self.mute = None
@@ -90,7 +97,15 @@ class Snapshot(object):
         self.media_uri = media_info['CurrentURI']
         # extract source from media uri
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
-            self.is_playing_queue = True
+            # The pylint error below is a false positive, see about removing it
+            # in the future
+            # pylint: disable=simplifiable-if-statement
+            if self.media_uri.split('#')[1] == '0':
+                # playing local queue
+                self.is_playing_queue = True
+            else:
+                # playing cloud queue - started from Alexa
+                self.is_playing_cloud_queue = True
 
         # Save the volume, mute and other sound settings
         self.volume = self.device.volume
@@ -160,7 +175,6 @@ class Snapshot(object):
                 # was playing from playlist
 
                 if self.playlist_position is not None:
-
                     # The position in the playlist returned by
                     # get_current_track_info starts at 1, but when
                     # playing from playlist, the index starts at 0
@@ -176,6 +190,12 @@ class Snapshot(object):
                 # Need to make sure there is a proper track selected first
                 self.device.play_mode = self.play_mode
                 self.device.cross_fade = self.cross_fade
+
+            elif self.is_playing_cloud_queue:
+                # was playing a cloud queue started by Alexa
+                # No way yet to re-start this so prevent it throwing an error!
+                pass
+
             else:
                 # was playing a stream (radio station, file, or nothing)
                 # reinstate uri and meta data
