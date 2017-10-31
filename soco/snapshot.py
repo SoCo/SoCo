@@ -82,13 +82,13 @@ class Snapshot(object):
                 Useful for determining whether playing an alert on a device
                 will ungroup it.
         """
+        # get if device coordinator (or slave) True (or False)
+        self.is_coordinator = self.device.is_coordinator
+
         # Get information about the currently playing media
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
-
         # extract source from media uri
-        if self.media_uri.split(':')[0] != 'x-rincon':
-            self.is_coordinator = True
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
             self.is_playing_queue = True
 
