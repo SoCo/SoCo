@@ -97,7 +97,7 @@ class Snapshot(object):
         if self.media_uri.split(':')[0] != 'x-rincon':
             self.is_coordinator = True
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
-            if self.media_uri.split('#')[1] == '0':
+            if self.media_uri.split('#')[1] == '0':  # pylint: disable=simplifiable-if-statement
                 # playing local queue
                 self.is_playing_queue = True
             else:
@@ -172,7 +172,6 @@ class Snapshot(object):
                 # was playing from playlist
 
                 if self.playlist_position is not None:
-
                     # The position in the playlist returned by
                     # get_current_track_info starts at 1, but when
                     # playing from playlist, the index starts at 0
