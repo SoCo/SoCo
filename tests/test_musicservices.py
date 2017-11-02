@@ -248,7 +248,7 @@ def test_get_names():
 def test_get_subscribed_names():
     names = MusicService.get_subscribed_services_names()
     assert len(names) == 4
-    assert set(names) == set(['TuneIn', 'Spotify', 'Spreaker', 'radioPup'])
+    assert set(names) == {'TuneIn', 'Spotify', 'Spreaker', 'radioPup'}
 
 
 def test_create_music_service():
@@ -281,7 +281,7 @@ def test_search():
     }
     categories = spotify.available_search_categories
     assert len(categories) == 3
-    assert set(categories) == set(['stations', 'shows', 'hosts'])
+    assert set(categories) == {'stations', 'shows', 'hosts'}
     with pytest.raises(MusicServiceException) as excinfo:
         spotify.search('badcategory')
     assert "support the 'badcategory' search category" in str(excinfo.value)

@@ -13,7 +13,7 @@ Topology is available from each :class:`soco.SoCo` instance.
     ZoneGroup(
         uid='RINCON_000E5879136C01400:58',
         coordinator=SoCo("192.168.1.101"),
-        members=set([SoCo("192.168.1.101"), SoCo("192.168.1.102")])
+        members={SoCo("192.168.1.101"), SoCo("192.168.1.102")}
     )
 
 A group of speakers is represented by a :class:`soco.groups.ZoneGroup`.
