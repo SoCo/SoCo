@@ -95,7 +95,16 @@ class Snapshot(object):
         # Get information about the currently playing media
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
-        # extract source from media uri
+        # Extract source from media uri - below some media URI value examples:
+        #  'x-rincon-queue:RINCON_000E5859E49601400#0'
+        #       - playing a local queue always #0 for local queue)
+        #
+        #  'x-rincon-queue:RINCON_000E5859E49601400#6'
+        #       - playing a cloud queue where #x changes with each queue)
+        #
+        #  -'x-rincon:RINCON_000E5859E49601400'
+        #       - a slave player pointing to coordinator player
+
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
             # The pylint error below is a false positive, see about removing it
             # in the future
