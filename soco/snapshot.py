@@ -88,7 +88,10 @@ class Snapshot(object):
             bool: `True` if the device is a coordinator, `False` otherwise.
                 Useful for determining whether playing an alert on a device
                 will ungroup it.
-        """
+         """
+        # get if device coordinator (or slave) True (or False)
+        self.is_coordinator = self.device.is_coordinator
+
         # Get information about the currently playing media
         media_info = self.device.avTransport.GetMediaInfo([('InstanceID', 0)])
         self.media_uri = media_info['CurrentURI']
@@ -103,8 +106,6 @@ class Snapshot(object):
         #  -'x-rincon:RINCON_000E5859E49601400'
         #       - a slave player pointing to coordinator player
 
-        if self.media_uri.split(':')[0] != 'x-rincon':
-            self.is_coordinator = True
         if self.media_uri.split(':')[0] == 'x-rincon-queue':
             # pylint: disable=simplifiable-if-statement
             if self.media_uri.split('#')[1] == '0':
