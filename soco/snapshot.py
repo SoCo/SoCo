@@ -88,7 +88,7 @@ class Snapshot(object):
             bool: `True` if the device is a coordinator, `False` otherwise.
                 Useful for determining whether playing an alert on a device
                 will ungroup it.
-         """
+        """
         # get if device coordinator (or slave) True (or False)
         self.is_coordinator = self.device.is_coordinator
 
