@@ -466,30 +466,32 @@ class Subscription(object):
         }
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
-        response = requests.request(
-            'SUBSCRIBE', service.base_url + service.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        self.sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-        # capital letter)
-        if timeout.lower() == 'infinite':
-            self.timeout = None
-        else:
-            self.timeout = int(timeout.lstrip('Second-'))
-        self._timestamp = time.time()
-        self.is_subscribed = True
-        log.info(
-            "Subscribed to %s, sid: %s",
-            service.base_url + service.event_subscription_url, self.sid)
-        # Add the queue to the master dict of queues so it can be looked up
-        # by sid
-        with _sid_to_event_queue_lock:
-            _sid_to_event_queue[self.sid] = self.events
-        # And do the same for the sid to service mapping
+
+        # Lock out EventNotifyHandler during registration
         with _sid_to_service_lock:
+            response = requests.request(
+                'SUBSCRIBE', service.base_url + service.event_subscription_url,
+                headers=headers)
+            response.raise_for_status()
+            self.sid = response.headers['sid']
+            timeout = response.headers['timeout']
+            # According to the spec, timeout can be "infinite" or "second-123"
+            # where 123 is a number of seconds.  Sonos uses "Second-123" (with
+            # a capital letter)
+            if timeout.lower() == 'infinite':
+                self.timeout = None
+            else:
+                self.timeout = int(timeout.lstrip('Second-'))
+            self._timestamp = time.time()
+            self.is_subscribed = True
+            log.info(
+                "Subscribed to %s, sid: %s",
+                service.base_url + service.event_subscription_url, self.sid)
+            # Add the queue to the master dict of queues so it can be looked up
+            # by sid
+            with _sid_to_event_queue_lock:
+                _sid_to_event_queue[self.sid] = self.events
+            # And do the same for the sid to service mapping
             _sid_to_service[self.sid] = self.service
         # Register this subscription to be unsubscribed at exit if still alive
         # This will not happen if exit is abnormal (eg in response to a
