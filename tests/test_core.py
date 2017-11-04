@@ -559,29 +559,34 @@ class TestAVTransport:
 
     def test_is_playing_radio(self, moco):
         moco.avTransport.reset_mock()
-        moco.avTransport.GetPositionInfo.return_value = {
-            'TrackURI': 'x-rincon-mp3radio://example.com:80/myradio'
+        moco.avTransport.GetMediaInfo.return_value = {
+            'CurrentURI': 'x-rincon-mp3radio://example.com:80/myradio'
         }
-        playing_tv = moco.is_playing_radio
-        assert playing_tv
-        moco.avTransport.GetPositionInfo.assert_called_once_with(
-            [('InstanceID', 0),
-             ('Channel', 'Master')]
+        playing_radio = moco.is_playing_radio
+        assert playing_radio
+        moco.avTransport.GetMediaInfo.assert_called_once_with(
+            [('InstanceID', 0)]
         )
 
-        moco.avTransport.GetPositionInfo.return_value = {
-            'TrackURI': 'not-radio',
+        moco.avTransport.GetMediaInfo.return_value = {
+            'CurrentURI': 'x-sonosapi-stream:s126362?sid=254&flags=8224&sn=0'
         }
-        playing_tv = moco.is_playing_radio
-        assert not playing_tv
+        playing_radio = moco.is_playing_radio
+        assert playing_radio
+
+        moco.avTransport.GetMediaInfo.return_value = {
+            'CurrentURI': 'not-radio',
+        }
+        playing_radio = moco.is_playing_radio
+        assert not playing_radio
 
     def test_is_playing_line_in(self, moco):
         moco.avTransport.reset_mock()
         moco.avTransport.GetPositionInfo.return_value = {
             'TrackURI': 'x-rincon-stream:blah-blah'
         }
-        playing_tv = moco.is_playing_line_in
-        assert playing_tv
+        playing_line_in = moco.is_playing_line_in
+        assert playing_line_in
         moco.avTransport.GetPositionInfo.assert_called_once_with(
             [('InstanceID', 0),
              ('Channel', 'Master')]
@@ -590,8 +595,8 @@ class TestAVTransport:
         moco.avTransport.GetPositionInfo.return_value = {
             'TrackURI': 'not-line-in',
         }
-        playing_tv = moco.is_playing_line_in
-        assert not playing_tv
+        playing_line_in = moco.is_playing_line_in
+        assert not playing_line_in
 
     def test_create_sonos_playlist(self, moco):
         playlist_name = "cool music"
