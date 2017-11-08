@@ -59,7 +59,7 @@ def from_didl_string(string):
             # causes problems.
             raise DIDLMetadataError("Illegal child of DIDL element: <%s>"
                                     % elt.tag)
-    _LOG.error(
+    _LOG.debug(
         'Created data structures: %.20s (CUT) from Didl string "%.20s" (CUT)',
         items, string,
     )
