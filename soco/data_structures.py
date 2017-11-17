@@ -501,10 +501,13 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if parent_id is None:
             raise DIDLMetadataError("Missing parentID attribute")
         parent_id = really_unicode(parent_id)
+
+        # CAUTION: This implementation deviates from the spec.
+        # Elements are normally required to have a `restricted` tag, but
+        # Spotify direct violates this. To make it work, a missing restricted
+        # tag is interpreted as `restricted = True`.
         restricted = element.get('restricted', None)
-        if restricted is None:
-            raise DIDLMetadataError("Missing restricted attribute")
-        restricted = True if restricted in [1, 'true', 'True'] else False
+        restricted = False if restricted in [0, 'false', 'False'] else True
 
         # There must be a title. According to spec, it should be the first
         # child, but Sonos does not abide by this
