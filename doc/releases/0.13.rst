@@ -1,0 +1,117 @@
+SoCo 0.13 release notes
+***********************
+
+**SoCo 0.13** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* The IP address used by the events listener can be configured (`#444
+  <https://github.com/SoCo/SoCo/pull/444>`_)
+
+* Add support for night mode (`#421 <https://github.com/SoCo/SoCo/pull/421>`_)
+  and dialog mode (`#422 <https://github.com/SoCo/SoCo/pull/422>`_) on devices
+  supporting the respective feature.
+
+* Add queue-able data structures for the music service items (`#455
+  <https://github.com/SoCo/SoCo/pull/455>`_)
+
+* Add a method for queueing multiple items with a single request (`#470
+  <https://github.com/SoCo/SoCo/pull/470>`_)
+
+* Add methods to get and set the uri(s) of a ``DidlObject``. (`#482
+  <https://github.com/SoCo/SoCo/pull/482>`_)
+
+* Add support for line in from other speakers (`#460
+  <https://github.com/SoCo/SoCo/pull/460>`_)
+
+* Enhance ``add_to_queue()`` to with optional position argument (`#471
+  <https://github.com/SoCo/SoCo/pull/471>`_)
+
+* Added ``by_name`` function to discovery to be able to get a device by
+  ``player_name`` (`#487 <https://github.com/SoCo/SoCo/pull/487>`_)
+
+* allow choice of how to play streams in ``play_uri`` (override Sonos default
+  with ``force_radio=True``) (`#491 <https://github.com/SoCo/SoCo/pull/491>`_)
+
+* Added ``ramp_to_volume()`` method to smoothly change the volume (`#506
+  <https://github.com/SoCo/SoCo/pull/506>`_)
+
+* Added FAQ, documentation and two examples to explain using SoCo's Snapshot
+  function (`#493 <https://github.com/SoCo/SoCo/pull/493>`_)
+
+* Update documentation for ``add_uri_to_queue`` (`#503
+  <https://github.com/SoCo/SoCo/pull/503>`_)
+
+* Added a FAQ section to the docs with play_uri and play local files answers
+  (`#481 <https://github.com/SoCo/SoCo/pull/481>`_)
+
+* A few queue related micro examples was added to the examples page in the docs
+  (`#484 <https://github.com/SoCo/SoCo/pull/484>`_)
+
+* Further documentation updates (`#435
+  <https://github.com/SoCo/SoCo/pull/435>`_, `#436
+  <https://github.com/SoCo/SoCo/pull/436>`_, `#459
+  <https://github.com/SoCo/SoCo/pull/459>`_, `#476
+  <https://github.com/SoCo/SoCo/pull/476>`_, `#489
+  <https://github.com/SoCo/SoCo/pull/489>`_, `#496
+  <https://github.com/SoCo/SoCo/pull/496>`_, `#522
+  <https://github.com/SoCo/SoCo/pull/522>`_)
+
+
+Bugfixes
+========
+
+* Fixes an issue where restarting an application that had subscribed to events
+  sometimes causes an error when the events are delivered to the new instance
+  (`#437 <https://github.com/SoCo/SoCo/pull/437>`_)
+
+* Fixes an issue where multiple threads trying to subscribe to events in
+  parallel would sometimes cause SoCo to attempt to create multiple event
+  listener servers and fail on ``socket.bind()``. (`#437
+  <https://github.com/SoCo/SoCo/pull/437>`_)
+
+* Fixes an issue where SoCo would not recognize
+  ``object.container.playlistContainer.sonos-favorite`` when receiving events
+  (`#438 <https://github.com/SoCo/SoCo/pull/438>`_).
+
+* Fixes a bug in ``play_uri`` where it would not play a http or https prefixed
+  radio stream due to a change in the Sonos API (issue #434). This change
+  fixes it by replacing the two http type prefixes with Sonos'
+  ``x-rincon-mp3radio://`` prefix (`#434
+  <https://github.com/SoCo/SoCo/issues/434>`_, `#443
+  <https://github.com/SoCo/SoCo/pull/443>`_)
+
+* Fixes an exception being raised on Windows with ``discover``. The error was
+  caused by ``socket.getsockname`` raising an exception on Windows with and
+  unconnected unbound socket. Fixed by now simply logging the sockets. (`#445
+  <https://github.com/SoCo/SoCo/issues/445>`_)
+
+* Change to use SoCo method to determine coordinator in Snapshot (`#529
+  <https://github.com/SoCo/SoCo/pull/529>`_, `#519
+  <https://github.com/SoCo/SoCo/issues/519>`_)
+
+* Prevent error when queue started from Alexa and using snapshot. Currently
+  there is no was to restart a cloud queue from SoCo, this PR just prevents
+  Snapshot causing an error. (`#530 <https://github.com/SoCo/SoCo/pull/530>`_,
+  `#521 <https://github.com/SoCo/SoCo/issues/521>`_)
+
+*  Fix ``add_multiple_to_queue`` fails with too many items (`#488
+   <https://github.com/SoCo/SoCo/pull/488>`_)
+
+* Fixed log level (`#534 <https://github.com/SoCo/SoCo/pull/534>`_)
+
+
+Backwards Compatability
+=======================
+
+* Dropped support for Python 2.6 (`#325
+  <https://github.com/SoCo/SoCo/issues/325>`_, `#526
+  <https://github.com/SoCo/SoCo/pull/526>`_) and added support for 3.6 (`#528
+  <https://github.com/SoCo/SoCo/pull/528>`_)
+
