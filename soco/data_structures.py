@@ -488,8 +488,11 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if parent_id is None:
             raise DIDLMetadataError("Missing parentID attribute")
         restricted = element.get('restricted', None)
-        if restricted is None:
-            raise DIDLMetadataError("Missing restricted attribute")
+        
+        # The Alexa update changed the metadata so that restricted is not always
+        # added to objects you want, and is added to objects you don't want.
+        #if restricted is None:
+        #    raise DIDLMetadataError("Missing restricted attribute")
         restricted = True if restricted in [1, 'true', 'True'] else False
 
         # There must be a title. According to spec, it should be the first
