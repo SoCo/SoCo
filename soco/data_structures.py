@@ -419,7 +419,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             # way.
             setattr(self, key, value)
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches
     @classmethod
     def from_element(cls, element):     # pylint: disable=R0914
         """Create an instance of this class from an ElementTree xml Element.
@@ -473,7 +473,10 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if title_elt is None:
             raise DIDLMetadataError(
                 "Missing title element")
-        title = really_unicode(title_elt.text)
+        if title_elt.text:
+            title = really_unicode(title_elt.text)
+        else:
+            title = ""
 
         # Deal with any resource elements
         resources = []
