@@ -126,8 +126,13 @@ def parse_event_xml(xml_event):
                         value = last_change_var.text
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
-                    if value.startswith('<DIDL-Lite'):
+                    
+                    # The Alexa updates changed the content of certain tags and they need
+                    # to be ignored for now to prevent continuous exceptions
+                    # This should be improved when there is deeper Soco/Alexa integration needed
+                    if value.startswith('<DIDL-Lite') and tag!='av_transport_uri_meta_data': 
                         value = from_didl_string(value)[0]
+                        
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
