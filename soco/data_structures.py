@@ -194,9 +194,14 @@ class DidlResource(object):
         content = {}
         # required
         content['protocol_info'] = element.get('protocolInfo')
-        if content['protocol_info'] is None:
-            raise Exception('Could not create Resource from Element: '
-                            'protocolInfo not found (required).')
+        
+        # With the Alexa update, the 'protocolInfo' tag does not appear on data containers where it 
+        # possibly should and probably did in the past.  This execption should be ignored with the new formats.
+          
+        #if content['protocol_info'] is None:
+        #    raise Exception('Could not create Resource from Element: '
+        #                    'protocolInfo not found (required).')
+        
         # Optional
         content['import_uri'] = element.get('importUri')
         content['size'] = _int_helper('size')
