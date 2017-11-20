@@ -393,6 +393,7 @@ class SoCo(_SocoSingletonBase):
         """Smoothly change the volume.
 
         There are three ramp types available:
+
             * ``'SLEEP_TIMER_RAMP_TYPE'`` (default): Linear ramp from the
               current volume up or down to the new volume. The ramp rate is
               1.25 steps per second. For example: To change from volume 50 to
@@ -401,7 +402,7 @@ class SoCo(_SocoSingletonBase):
               30 seconds, and then ramps the volume up to the desired value at
               a rate of 2.5 steps per second. For example: Volume 30 would take
               12 seconds for the ramp up (not considering the wait time).
-            * `'AUTOPLAY_RAMP_TYPE'``: Resets the volume to zero and then
+            * ``'AUTOPLAY_RAMP_TYPE'``: Resets the volume to zero and then
               quickly ramps up at a rate of 50 steps per second. For example:
               Volume 30 will take only 0.6 seconds.
 
@@ -416,7 +417,7 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             int: The ramp time in seconds, rounded down. Note that this does
-                not include the wait time.
+            not include the wait time.
         """
         response = self.renderingControl.RampToVolume([
             ('InstanceID', 0),
