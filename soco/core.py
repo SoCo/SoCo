@@ -433,15 +433,24 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def jump_to_track(self, index):
-        """ Jump to another track in the queue.
+        """Jump to another track in the queue.
+
+        Note:
+            This function can only be used if the player is already set to use
+            the queue. If not use `play_from_queue`. This is faster than
+            `play_from_queue` if already using the queue, as it does not
+            reinstate the queue.
+
+        If the queue is already playing it will continue to play using the
+        new track after jump_to_track. If paused it will remain paused.
 
         Arguments:
-            index (int): the index of the track to play; first item in the
-                queue is 0.
+            index (int): The index of the track to play; first item in the
+                queue is 0
 
         Raises:
-            SoCoUPnPException: UPnP Error 711 if the index is invalid or the
-                queue isn't currently playing.
+            SoCoUPnPException: UPnP Error 701 if the queue isn't currently
+                playing, UPnP Error 711 if the index is invalid.
         """
         self.avTransport.Seek([
             ('InstanceID', 0),
