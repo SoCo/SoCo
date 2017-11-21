@@ -4,50 +4,11 @@
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint: https://github.com/PyCQA/pylint/issues/782
 
-"""Classes to handle Sonos UPnP Events and Subscriptions."""
+"""Classes to handle Sonos UPnP Events and Subscriptions.
 
-from __future__ import unicode_literals
+.. _example1:
 
-import atexit
-import logging
-import socket
-import threading
-import time
-import weakref
-
-import requests
-
-from . import config
-from .compat import (
-    Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
-)
-from .data_structures_entry import from_didl_string
-from .exceptions import SoCoException
-from .utils import camel_to_underscore
-from .xml import XML
-
-log = logging.getLogger(__name__)  # pylint: disable=C0103
-
-
-def parse_event_xml(xml_event):
-    """Parse the body of a UPnP event.
-
-    Args:
-        xml_event (bytes): bytes containing the body of the event encoded
-            with utf-8.
-
-    Returns:
-        dict: A dict with keys representing the evented variables. The
-            relevant value will usually be a string representation of the
-            variable's value, but may on occasion be:
-
-            * a dict (eg when the volume changes, the value will itself be a
-              dict containing the volume for each channel:
-              :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
-            * an instance of a `DidlObject` subclass (eg if it represents
-              track metadata).
-
-    Example:
+    Example 1:
 
         Run this code, and change your volume, tracks etc::
 
@@ -57,6 +18,8 @@ def parse_event_xml(xml_event):
             except:  # Py2.7
                 from Queue import Empty
 
+            import logging
+            logging.basicConfig()
             import soco
             from pprint import pprint
             from soco.events import event_listener
@@ -83,6 +46,98 @@ def parse_event_xml(xml_event):
                     sub2.unsubscribe()
                     event_listener.stop()
                     break
+
+.. _example2:
+
+    Example 2 (with a twisted reactor):
+
+        Run this code, and change your volume, tracks etc::
+
+            from twisted.internet import reactor
+
+            import logging
+            logging.basicConfig()
+            import soco
+            from pprint import pprint
+            from soco.events import event_listener
+
+            def print_event(event):
+                try:
+                    pprint (event.variables)
+                except Exception as e:
+                    print 'There was an error in print_event:', e
+
+            def main():
+                # pick a device at random and use it to get
+                # the group coordinator
+                device = soco.discover().pop()
+                device = device.group.coordinator
+                print (device.player_name)
+
+                sub = device.renderingControl.subscribe()
+                sub2 = device.avTransport.subscribe()
+                sub.callback = print_event
+                sub2.callback = print_event
+
+                def before_shutdown():
+                    sub.unsubscribe()
+                    sub2.unsubscribe()
+                    event_listener.stop()
+
+                reactor.addSystemEventTrigger(
+                    'before', 'shutdown', before_shutdown)
+
+            if __name__=='__main__':
+                reactor.callWhenRunning(main)
+                reactor.run()
+"""
+
+from __future__ import unicode_literals
+
+import logging
+import socket
+import time
+
+from . import config
+from .compat import Queue
+from .data_structures_entry import from_didl_string
+from .exceptions import SoCoException
+from .utils import camel_to_underscore
+from .xml import XML
+
+# Import base modules from events_base, unless a twisted.internet.reactor
+# is detected in the application, in which case import base modules from
+# events_base_twisted.
+import sys
+if 'twisted.internet.reactor' in sys.modules.keys():
+    from .events_base_twisted import (
+        NotifyHandler, Listener, SubscriptionBase, Subscriptions
+    )
+else:
+    from .events_base import (
+        NotifyHandler, Listener, SubscriptionBase, Subscriptions
+    )
+
+log = logging.getLogger(__name__)  # pylint: disable=C0103
+
+def parse_event_xml(xml_event):
+    # pylint: disable=too-many-branches
+    """Parse the body of a UPnP event.
+
+    Args:
+        xml_event (bytes): bytes containing the body of the event encoded
+            with utf-8.
+
+    Returns:
+        dict: A dict with keys representing the evented variables. The
+        relevant value will usually be a string representation of the
+        variable's value, but may on occasion be:
+
+        * a dict (eg when the volume changes, the value will itself be a
+          dict containing the volume for each channel:
+          :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
+        * an instance of a `DidlObject` subclass (eg if it represents
+          track metadata).
     """
 
     result = {}
@@ -110,6 +165,11 @@ def parse_event_xml(xml_event):
                 if instance is None:
                     instance = last_change_tree.find(
                         "{urn:schemas-upnp-org:metadata-1-0/RCS/}InstanceID")
+                # Fix for issue described at
+                # https://github.com/SoCo/SoCo/issues/378
+                if instance is None:
+                    instance = last_change_tree.find(
+                        "{urn:schemas-sonos-com:metadata-1-0/Queue/}QueueID")
                 # Look at each variable within the LastChange event
                 for last_change_var in instance:
                     tag = last_change_var.tag
@@ -198,169 +258,163 @@ class Event(object):
         """
         raise TypeError('Event object does not support attribute assignment')
 
+class EventNotifyHandler(NotifyHandler):
+    """Handles HTTP ``NOTIFY`` Verbs sent to the Event Listener server.
 
-class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    """A TCP server which handles each new request in a new thread."""
-    allow_reuse_address = True
+    A ``NOTIFY`` request will be sent by a Sonos device when a state
+    variable changes. See the `UPnP Spec §4.3 [pdf]
+    <http://upnp.org/specs/arch/UPnP-arch
+    -DeviceArchitecture-v1.1.pdf>`_  for details.
 
+    Inherits from `soco.events_base.NotifyHandler`, unless a twisted reactor
+    is detected, in which case it inherits from
+    `soco.events_base_twisted.NotifyHandler`.
+    """
+    # pylint: disable=too-many-public-methods
 
-class EventNotifyHandler(BaseHTTPRequestHandler):
-    """Handles HTTP ``NOTIFY`` Verbs sent to the listener server."""
-
-    def do_NOTIFY(self):  # pylint: disable=invalid-name
-        """Serve a ``NOTIFY`` request.
-
-        A ``NOTIFY`` request will be sent by a Sonos device when a state
-        variable changes. See the `UPnP Spec §4.3 [pdf]
-        <http://upnp.org/specs/arch/UPnP-arch
-        -DeviceArchitecture-v1.1.pdf>`_  for details.
+    def handle_notification(self, headers, content):
         """
+        Builds an `Event` object and sends it to the relevant
+        `Subscription` object.
+
+        Args:
+            headers (dict): A dict of received headers.
+            content (str): A string of received content.
+
+        Note:
+            The :py:mod:`soco.events` module has a **subscriptions**
+            object which keeps a record of `Subscription` objects. The
+            *get_service* method of the **subscriptions** object is used
+            to look up the service to which the event relates and the
+            *send_to_service* method of the **subscriptions** object is
+            used to send an event to the relevant `Subscription`. When
+            the Event Listener runs in a thread(the default), locks are
+            used by both these methods for thread safety. The `Event`
+            object will be sent to the event queue of the relevant
+            `Subscription` object (see :ref:`Example 1 <example1>` above),
+            unless the application is using twisted, in which case the
+            *send_to_service* method of the **subscriptions** object will
+            first check to see whether the *callback* variable of the relevant
+            `Subscription` has been set. If it has been and is callable,
+            then the *callback* will be called with the `Event` object
+            (see :ref:`Example 2 <example2>` above). Otherwise, the `Event`
+            object will be sent to the event queue of the relevant
+            `Subscription` object. The **subscriptions** object is a
+            `events_base.Subscriptions` object from `soco.events_base`,
+            unless a twisted reactor is detected, in which case it is a
+            `soco.events_base_twisted.Subscriptions` object from
+            `soco.events_base_twisted`.
+         """
+
         timestamp = time.time()
-        headers = requests.structures.CaseInsensitiveDict(self.headers)
-        seq = headers['seq']  # Event sequence number
-        sid = headers['sid']  # Event Subscription Identifier
-        content_length = int(headers['content-length'])
-        content = self.rfile.read(content_length)
+        seq = headers['seq'] # Event sequence number
+        sid = headers['sid'] # Event Subscription Identifier
         # find the relevant service from the sid
-        with _sid_to_service_lock:
-            service = _sid_to_service.get(sid)
+        service = subscriptions.get_service(sid)
         # It might have been removed by another thread
         if service:
-            log.info(
-                "Event %s received for %s service on thread %s at %s", seq,
-                service.service_id, threading.current_thread(), timestamp)
+            self.log_event(seq, service.service_id, timestamp)
             log.debug("Event content: %s", content)
             variables = parse_event_xml(content)
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)
-            # pass the event details on to the service so it can update its
-            # cache.
+            # pass the event details on to the service so it can update
+            # its cache.
             # pylint: disable=protected-access
             service._update_cache_on_event(event)
-            # Find the right queue, and put the event on it
-            with _sid_to_event_queue_lock:
-                try:
-                    _sid_to_event_queue[sid].put(event)
-                except KeyError:  # The key have been deleted in another thread
-                    pass
+            # Pass the event on for handling
+            subscriptions.send_to_service(sid, event)
         else:
             log.info("No service registered for %s", sid)
-        self.send_response(200)
-        self.end_headers()
-
-    def log_message(self, fmt, *args):  # pylint: disable=arguments-differ
-        # Divert standard webserver logging to the debug log
-        log.debug(fmt, *args)
 
 
-class EventServerThread(threading.Thread):
-    """The thread in which the event listener server will run."""
+class EventListener(Listener):
+    """The Event Listener server.
 
-    def __init__(self, address):
-        """
-        Args:
-            address (tuple): The (ip, port) address on which the server
-                should listen.
-        """
-        super(EventServerThread, self).__init__()
-        #: `threading.Event`: Used to signal that the server should stop.
-        self.stop_flag = threading.Event()
-        #: `tuple`: The (ip, port) address on which the server is
-        #: configured to listen.
-        self.address = address
+    Runs an http server which is an endpoint for ``NOTIFY``
+    requests from Sonos devices. The server will run in a thread,
+    unless the application is using twisted.
 
-    def run(self):
-        """Start the server on the local IP at port 1400 (default).
+    The Event Listener will listen on the local machine at port 1400
+    (default). Make sure that your firewall allows connections to this port.
 
-        Handling of requests is delegated to an instance of the
-        `EventNotifyHandler` class.
-        """
-        listener = EventServer(self.address, EventNotifyHandler)
-        log.info("Event listener running on %s", listener.server_address)
-        # Listen for events until told to stop
-        while not self.stop_flag.is_set():
-            listener.handle_request()
+    Inherits from `soco.events_base.Listener`, unless a twisted reactor
+    is detected, in which case it inherits from
+    `soco.events_base_twisted.Listener`.
 
-
-class EventListener(object):
-    """The Event Listener.
-
-    Runs an http server in a thread which is an endpoint for ``NOTIFY``
-    requests from Sonos devices.
+    Note:
+        The port on which the Event Listener attempts to listen is configurable.
+        See `config.EVENT_LISTENER_PORT`. If the application is using twisted
+        (see :ref:`Example 2 <example2>` above) and this port is unavailable,
+        the Event Listener will attempt to listen on the next available port,
+        within a range of 100 from `config.EVENT_LISTENER_PORT`.
 
     """
 
     def __init__(self):
-        super(EventListener, self).__init__()
+        super(EventListener, self).__init__(EventNotifyHandler,
+            config.EVENT_LISTENER_PORT)
         #: `bool`: Indicates whether the server is currently running
         self.is_running = False
-        self._start_lock = threading.Lock()
-        self._listener_thread = None
         #: `tuple`: The address (ip, port) on which the server is
         #: configured to listen.
         # Empty for the moment. (It is set in `start`)
         self.address = ()
 
     def start(self, any_zone):
-        """Start the event listener listening on the local machine at port 1400
-        (default)
-
-        Make sure that your firewall allows connections to this port
+        """ Starts the Event Listener.
 
         Args:
             any_zone (SoCo): Any Sonos device on the network. It does not
                 matter which device. It is used only to find a local IP address
                 reachable by the Sonos net.
-
-        Note:
-            The port on which the event listener listens is configurable.
-            See `config.EVENT_LISTENER_PORT`
         """
 
         # Find our local network IP address which is accessible to the
         # Sonos net, see http://stackoverflow.com/q/166506
-        with self._start_lock:
-            if not self.is_running:
-                # Use configured IP address if there is one, else detect
-                # automatically.
-                if config.EVENT_LISTENER_IP:
-                    ip_address = config.EVENT_LISTENER_IP
-                else:
-                    temp_sock = socket.socket(socket.AF_INET,
+        if not self.is_running:
+            # Use configured IP address if there is one, else detect
+            # automatically.
+            if config.EVENT_LISTENER_IP:
+                ip_address = config.EVENT_LISTENER_IP
+            else:
+                temp_sock = socket.socket(socket.AF_INET,
                                               socket.SOCK_DGRAM)
-                    temp_sock.connect((any_zone.ip_address,
-                                       config.EVENT_LISTENER_PORT))
+                try:
+                    # doesn't have to be reachable
+                    temp_sock.connect((any_zone.ip_address, 0))
                     ip_address = temp_sock.getsockname()[0]
+                except: # pylint: disable=bare-except
+                    log.exception(
+                        'Could not start Event Listener: check network.')
+                    ip_address = None
+                finally:
                     temp_sock.close()
-
-                # Start the event listener server in a separate thread.
-                self.address = (ip_address, config.EVENT_LISTENER_PORT)
-                self._listener_thread = EventServerThread(self.address)
-                self._listener_thread.daemon = True
-                self._listener_thread.start()
-                self.is_running = True
-                log.info("Event listener started")
+            if ip_address: #Otherwise, no point trying to start server
+                # Check what port we actually got (twisted only)
+                port = super(EventListener, self).start(ip_address)
+                if port:
+                    self.address = (ip_address, port)
+                    self.is_running = True
+                    log.info("Event Listener started")
 
     def stop(self):
-        """Stop the event listener."""
-        # Signal the thread to stop before handling the next request
-        self._listener_thread.stop_flag.set()
-        # Send a dummy request in case the http server is currently listening
-        try:
-            urlopen(
-                'http://%s:%s/' % (self.address[0], self.address[1]))
-        except URLError:
-            # If the server is already shut down, we receive a socket error,
-            # which we ignore.
-            pass
-        # wait for the thread to finish
-        self._listener_thread.join()
+        """Stop the Event Listener."""
+        if not self.is_running:
+            return
         self.is_running = False
-        log.info("Event listener stopped")
+        super(EventListener, self).stop(self.address)
+        log.info("Event Listener stopped")
 
+class Subscription(SubscriptionBase):
 
-class Subscription(object):
-    """A class representing the subscription to a UPnP event."""
+    """A class representing the subscription to a UPnP event.
+
+    Inherits from `soco.events_base.SubscriptionBase`, unless a
+    twisted reactor is detected, in which case it inherits from
+    `soco.events_base_twisted.SubscriptionBase`.
+
+    """
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, service, event_queue=None):
@@ -390,12 +444,10 @@ class Subscription(object):
         self._has_been_unsubscribed = False
         # The time when the subscription was made
         self._timestamp = None
-        # Used to keep track of the auto_renew thread
-        self._auto_renew_thread = None
-        self._auto_renew_thread_flag = threading.Event()
 
     def subscribe(self, requested_timeout=None, auto_renew=False):
-        """Subscribe to the service.
+        """subscribe(requested_timeout=None, auto_renew=False)
+        Subscribe to the service.
 
         If requested_timeout is provided, a subscription valid for that number
         of seconds will be requested, but not guaranteed. Check
@@ -414,27 +466,6 @@ class Subscription(object):
                 automatically shortly before timeout. Default `False`.
         """
 
-        class AutoRenewThread(threading.Thread):
-            """Used by the auto_renew code to renew a subscription from within
-            a thread.
-
-            """
-
-            def __init__(self, interval, stop_flag, sub, *args, **kwargs):
-                super(AutoRenewThread, self).__init__(*args, **kwargs)
-                self.interval = interval
-                self.sub = sub
-                self.stop_flag = stop_flag
-                self.daemon = True
-
-            def run(self):
-                sub = self.sub
-                stop_flag = self.stop_flag
-                interval = self.interval
-                while not stop_flag.wait(interval):
-                    log.info("Autorenewing subscription %s", sub.sid)
-                    sub.renew()
-
         # TIMEOUT is provided for in the UPnP spec, but it is not clear if
         # Sonos pays any attention to it. A timeout of 86400 secs always seems
         # to be allocated
@@ -443,7 +474,7 @@ class Subscription(object):
             raise SoCoException(
                 'Cannot resubscribe instance once unsubscribed')
         service = self.service
-        # The event listener must be running, so start it if not
+        # The Event Listener must be running, so start it if not
         if not event_listener.is_running:
             event_listener.start(service.soco)
         # an event subscription looks like this:
@@ -461,47 +492,46 @@ class Subscription(object):
         }
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
-        response = requests.request(
-            'SUBSCRIBE', service.base_url + service.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        self.sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-        # capital letter)
-        if timeout.lower() == 'infinite':
-            self.timeout = None
-        else:
-            self.timeout = int(timeout.lstrip('Second-'))
-        self._timestamp = time.time()
-        self.is_subscribed = True
-        log.info(
-            "Subscribed to %s, sid: %s",
-            service.base_url + service.event_subscription_url, self.sid)
-        # Add the queue to the master dict of queues so it can be looked up
-        # by sid
-        with _sid_to_event_queue_lock:
-            _sid_to_event_queue[self.sid] = self.events
-        # And do the same for the sid to service mapping
-        with _sid_to_service_lock:
-            _sid_to_service[self.sid] = self.service
-        # Register this subscription to be unsubscribed at exit if still alive
-        # This will not happen if exit is abnormal (eg in response to a
-        # signal or fatal interpreter error - see the docs for `atexit`).
-        atexit.register(self.unsubscribe)
 
-        # Set up auto_renew
-        if not auto_renew:
-            return
-        # Autorenew just before expiry, say at 85% of self.timeout seconds
-        interval = self.timeout * 85 / 100
-        auto_renew_thread = AutoRenewThread(
-            interval, self._auto_renew_thread_flag, self)
-        auto_renew_thread.start()
+        def success(headers): # pylint: disable=missing-docstring
+            self.sid = headers['sid']
+            timeout = headers['timeout']
+            # According to the spec, timeout can be "infinite" or "second-123"
+            # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
+            # capital letter)
+            if timeout.lower() == 'infinite':
+                self.timeout = None
+            else:
+                self.timeout = int(timeout.lstrip('Second-'))
+            self._timestamp = time.time()
+            self.is_subscribed = True
+            log.info(
+                "Subscribed to %s, sid: %s",
+                service.base_url + service.event_subscription_url, self.sid)
+            # Register the subscription so it can be looked up by sid
+            # and unsubscribed at exit
+            subscriptions.register(self)
+
+            # Set up auto_renew
+            if not auto_renew:
+                return
+            # Autorenew just before expiry, say at 85% of self.timeout seconds
+            interval = self.timeout * 85 / 100
+            self.auto_renew_start(interval)
+
+        def failure(): # pylint: disable=missing-docstring
+            # Should an exception be raised?
+            log.warning(
+                "Could not subscribe to %s",
+                service.base_url + service.event_subscription_url)
+
+        self.request(
+            'SUBSCRIBE', service.base_url + service.event_subscription_url,
+            headers, success, failure)
 
     def renew(self, requested_timeout=None):
-        """Renew the event subscription.
+        """renew(requested_timeout=None)
+        Renew the event subscription.
 
         You should not try to renew a subscription which has been
         unsubscribed, or once it has expired.
@@ -511,18 +541,26 @@ class Subscription(object):
                 request should be made. If None (the default), use the timeout
                 requested on subscription.
         """
-        # NB This code is sometimes called from a separate thread (when
+        # NB This code may be called from a separate thread when
         # subscriptions are auto-renewed. Be careful to ensure thread-safety
 
+        log.info("Autorenewing subscription %s", self.sid)
+        # log.warning is used below, as raising
+        # Exceptions from within a thread seems pointless
         if self._has_been_unsubscribed:
-            raise SoCoException(
+            log.warning(
                 'Cannot renew subscription once unsubscribed')
+            return
         if not self.is_subscribed:
-            raise SoCoException(
+            log.warning(
                 'Cannot renew subscription before subscribing')
+            return
         if self.time_left == 0:
-            raise SoCoException(
+            log.warning(
                 'Cannot renew subscription after expiry')
+            # If the subscription has timed out, it seems appropriate
+            # to cancel it.
+            self._cancel_subscription()
 
         # SUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
@@ -535,28 +573,40 @@ class Subscription(object):
             requested_timeout = self.requested_timeout
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
-        response = requests.request(
+
+        def success(headers): # pylint: disable=missing-docstring
+            timeout = headers['timeout']
+            # According to the spec, timeout can be "infinite" or "second-123"
+            # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
+            # a capital letter)
+            if timeout.lower() == 'infinite':
+                self.timeout = None
+            else:
+                self.timeout = int(timeout.lstrip('Second-'))
+            self._timestamp = time.time()
+            self.is_subscribed = True
+            log.info(
+                "Renewed subscription to %s, sid: %s",
+                self.service.base_url + self.service.event_subscription_url,
+                self.sid)
+
+        def failure(): # pylint: disable=missing-docstring
+            log.warning(
+                "Could not renew subscription to %s, sid: %s",
+                self.service.base_url + self.service.event_subscription_url,
+                self.sid)
+            # If the renewal has failed, it seems appropriate
+            # to cancel the subscription.
+            self._cancel_subscription()
+
+        self.request(
             'SUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-        # a capital letter)
-        if timeout.lower() == 'infinite':
-            self.timeout = None
-        else:
-            self.timeout = int(timeout.lstrip('Second-'))
-        self._timestamp = time.time()
-        self.is_subscribed = True
-        log.info(
-            "Renewed subscription to %s, sid: %s",
-            self.service.base_url + self.service.event_subscription_url,
-            self.sid)
+            headers, success, failure)
 
     def unsubscribe(self):
-        """Unsubscribe from the service's events.
+        """unsubscribe()
+        Unsubscribe from the service's events.
 
         Once unsubscribed, a Subscription instance should not be reused
         """
@@ -564,9 +614,8 @@ class Subscription(object):
         # subscribed, fails silently
         if self._has_been_unsubscribed or not self.is_subscribed:
             return
+        self._cancel_subscription()
 
-        # Cancel any auto renew
-        self._auto_renew_thread_flag.set()
         # Send an unsubscribe request like this:
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
@@ -574,29 +623,34 @@ class Subscription(object):
         headers = {
             'SID': self.sid
         }
-        response = requests.request(
+        def success(*arg): # pylint: disable=missing-docstring, unused-argument
+            log.info(
+                "Unsubscribed from %s, sid: %s",
+                self.service.base_url + self.service.event_subscription_url,
+                self.sid)
+
+        def failure(): # pylint: disable=missing-docstring
+            log.warning(
+                "Error attempting to unsubscribe from %s, sid: %s",
+                self.service.base_url + self.service.event_subscription_url,
+                self.sid)
+
+        self.request(
             'UNSUBSCRIBE',
             self.service.base_url + self.service.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
+            headers, success, failure)
+
+    def _cancel_subscription(self): # pylint: disable=missing-docstring
         self.is_subscribed = False
-        self._timestamp = None
-        log.info(
-            "Unsubscribed from %s, sid: %s",
-            self.service.base_url + self.service.event_subscription_url,
-            self.sid)
-        # remove queue from event queues and sid to service mappings
-        with _sid_to_event_queue_lock:
-            try:
-                del _sid_to_event_queue[self.sid]
-            except KeyError:
-                pass
-        with _sid_to_service_lock:
-            try:
-                del _sid_to_service[self.sid]
-            except KeyError:
-                pass
+        # Set the self._has_been_unsubscribed flag now
+        # to prevent reuse of the subscription, even if
+        # an attempt to unsubscribe fails
         self._has_been_unsubscribed = True
+        self._timestamp = None
+        # unregister subscription
+        subscriptions.unregister(self)
+        # Cancel any auto renew
+        self.auto_renew_cancel()
 
     @property
     def time_left(self):
@@ -612,19 +666,5 @@ class Subscription(object):
             time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
 
-
-# pylint: disable=C0103
-event_listener = EventListener()
-
-# Thread safe mappings.
-# Used to store a mapping of sids to event queues
-_sid_to_event_queue = weakref.WeakValueDictionary()
-# Used to store a mapping of sids to service instances
-_sid_to_service = weakref.WeakValueDictionary()
-
-# The locks to go with them
-# You must only ever access the mapping in the context of this lock, eg:
-#   with _sid_to_event_queue_lock:
-#       queue = _sid_to_event_queue[sid]
-_sid_to_event_queue_lock = threading.Lock()
-_sid_to_service_lock = threading.Lock()
+subscriptions = Subscriptions() # pylint: disable=C0103
+event_listener = EventListener() # pylint: disable=C0103
