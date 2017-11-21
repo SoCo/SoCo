@@ -431,9 +431,6 @@ class SoCo(_SocoSingletonBase):
 
         index: the index of the track to play; first item in the queue is 0
         start: If the item that has been set should start playing
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
         # Grab the speaker's information if we haven't already since we'll need
         # it in the next step.
@@ -461,10 +458,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play(self):
-        """Play the currently selected track.
-
-        Raises SoCoException (or a subclass) upon errors.
-        """
+        """Play the currently selected track."""
         self.avTransport.Play([
             ('InstanceID', 0),
             ('Speed', 1)
@@ -488,9 +482,6 @@ class SoCo(_SocoSingletonBase):
             title (str): The title to show in the player (if no meta).
             start (bool): If the URI that has been set should start playing.
             force_radio (bool): forces a uri to play as a radio stream.
-
-        Raises:
-            SoCoException: (or a subclass) upon errors.
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
@@ -559,10 +550,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def pause(self):
-        """Pause the currently playing track.
-
-        Raises SoCoException (or a subclass) upon errors.
-        """
+        """Pause the currently playing track."""
         self.avTransport.Pause([
             ('InstanceID', 0),
             ('Speed', 1)
@@ -570,10 +558,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def stop(self):
-        """Stop the currently playing track.
-
-        Raises SoCoException (or a subclass) upon errors.
-        """
+        """Stop the currently playing track."""
         self.avTransport.Stop([
             ('InstanceID', 0),
             ('Speed', 1)
@@ -583,9 +568,6 @@ class SoCo(_SocoSingletonBase):
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
         format of HH:MM:SS or H:MM:SS.
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
             raise ValueError('invalid timestamp, use HH:MM:SS format')
@@ -599,8 +581,6 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     def next(self):
         """Go to the next track.
-
-        Raises SoCoException (or a subclass) upon errors.
 
         Keep in mind that next() can return errors
         for a variety of reasons. For example, if the Sonos is streaming
@@ -616,8 +596,6 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     def previous(self):
         """Go back to the previously played track.
-
-        Raises SoCoException (or a subclass) upon errors.
 
         Keep in mind that previous() can return errors
         for a variety of reasons. For example, previous() will return an error
@@ -1030,8 +1008,6 @@ class SoCo(_SocoSingletonBase):
         Seems to work ok even if you remove what was previously the group
         master from it's own group. If the speaker was not in a group also
         returns ok.
-
-        Raises SoCoException (or a subclass) upon errors.
         """
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
@@ -1046,12 +1022,6 @@ class SoCo(_SocoSingletonBase):
         Args:
             source (SoCo): The speaker whose line-in should be played.
                 Default is line-in from the speaker itself.
-
-        Raises:
-             SoCoException: Upon errors, we'll attempt to parse the error and
-                return a UPnP error code. If that fails, the raw response sent
-                back from the Sonos speaker will be returned.
-
         """
         if source:
             uid = source.uid
@@ -1101,8 +1071,6 @@ class SoCo(_SocoSingletonBase):
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
         speaker will be returned.
-
-        Raises SoCoException (or a subclass) upon errors.
         """
 
         self.avTransport.SetAVTransportURI([
@@ -1451,9 +1419,6 @@ class SoCo(_SocoSingletonBase):
         required as an argument, where the first index is 0.
 
         index: the index of the track to remove; first item in the queue is 0
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
         # TODO: what do these parameters actually do?
         updid = '0'
@@ -1466,10 +1431,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def clear_queue(self):
-        """Removes all tracks from the queue.
-
-        Raises SoCoException (or a subclass) upon errors.
-        """
+        """Removes all tracks from the queue."""
         self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
         ])
@@ -1741,9 +1703,6 @@ class SoCo(_SocoSingletonBase):
         Returns:
             int or NoneType: Number of seconds left in timer. If there is no
                 sleep timer currently set it will return None.
-
-        Raises SoCoException (or a subclass) upon errors.
-
         """
         resp = self.avTransport.GetRemainingSleepTimerDuration([
             ('InstanceID', 0),
