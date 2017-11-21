@@ -437,11 +437,6 @@ class SoCo(_SocoSingletonBase):
         index: the index of the track to play; first item in the queue is 0
         start: If the item that has been set should start playing
 
-        Returns:
-        True if the Sonos speaker successfully started playing the track.
-        False if the track did not start (this may be because it was not
-        requested to start because "start=False")
-
         Raises SoCoException (or a subclass) upon errors.
 
         """
@@ -467,15 +462,11 @@ class SoCo(_SocoSingletonBase):
 
         # finally, just play what's set if needed
         if start:
-            return self.play()
-        return False
+            self.play()
 
     @only_on_master
     def play(self):
         """Play the currently selected track.
-
-        Returns:
-        True if the Sonos speaker successfully started playing the track.
 
         Raises SoCoException (or a subclass) upon errors.
         """
@@ -575,9 +566,6 @@ class SoCo(_SocoSingletonBase):
     def pause(self):
         """Pause the currently playing track.
 
-        Returns:
-        True if the Sonos speaker successfully paused the track.
-
         Raises SoCoException (or a subclass) upon errors.
         """
         self.avTransport.Pause([
@@ -588,9 +576,6 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     def stop(self):
         """Stop the currently playing track.
-
-        Returns:
-        True if the Sonos speaker successfully stopped the playing track.
 
         Raises SoCoException (or a subclass) upon errors.
         """
@@ -603,9 +588,6 @@ class SoCo(_SocoSingletonBase):
     def seek(self, timestamp):
         """ Seeks to a given timestamp in the current track, specified in the
         format of HH:MM:SS or H:MM:SS.
-
-        Returns:
-        True if the Sonos speaker successfully seeked to the timecode.
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -623,9 +605,6 @@ class SoCo(_SocoSingletonBase):
     def next(self):
         """Go to the next track.
 
-        Returns:
-        True if the Sonos speaker successfully skipped to the next track.
-
         Raises SoCoException (or a subclass) upon errors.
 
         Keep in mind that next() can return errors
@@ -642,9 +621,6 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     def previous(self):
         """Go back to the previously played track.
-
-        Returns:
-        True if the Sonos speaker successfully went to the previous track.
 
         Raises SoCoException (or a subclass) upon errors.
 
@@ -1060,9 +1036,6 @@ class SoCo(_SocoSingletonBase):
         master from it's own group. If the speaker was not in a group also
         returns ok.
 
-        Returns:
-        True if this speaker has left the group.
-
         Raises SoCoException (or a subclass) upon errors.
         """
 
@@ -1137,9 +1110,6 @@ class SoCo(_SocoSingletonBase):
 
     def switch_to_tv(self):
         """Switch the playbar speaker's input to TV.
-
-        Returns:
-        True if the Sonos speaker successfully switched to TV.
 
         If an error occurs, we'll attempt to parse the error and return a UPnP
         error code. If that fails, the raw response sent back from the Sonos
@@ -1495,9 +1465,6 @@ class SoCo(_SocoSingletonBase):
 
         index: the index of the track to remove; first item in the queue is 0
 
-        Returns:
-            True if the Sonos speaker successfully removed the track
-
         Raises SoCoException (or a subclass) upon errors.
 
         """
@@ -1513,9 +1480,6 @@ class SoCo(_SocoSingletonBase):
     @only_on_master
     def clear_queue(self):
         """Removes all tracks from the queue.
-
-        Returns:
-        True if the Sonos speaker cleared the queue.
 
         Raises SoCoException (or a subclass) upon errors.
         """
