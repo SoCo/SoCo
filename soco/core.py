@@ -609,21 +609,48 @@ class SoCo(_SocoSingletonBase):
         ])
 
     @only_on_master
-    def seek(self, timestamp):
-        """Seek to a given timestamp in the current track, specified in the
-        format of HH:MM:SS or H:MM:SS.
+    def seek(self, position=None, track=None):
+        """ Seeks to a given position.
+
+        You can seek both a relative position in the current track and a track
+        number in the queue.
+        It is even possible to seek to a tuple or dict containing the absolute
+        position (track and relative pos.)::
+
+            t = ('0:00:00', 0)
+            player.seek(*t)
+            d = {'position': '0:00:00', 'track': 0}
+            player.seek(**d)
+
+        Args:
+            position (str): The desired timestamp in the current track,
+                specified in the format of HH:MM:SS or H:MM:SS
+            track (int): The (0-based) track index in the queue
 
         Raises:
-            ValueError: if the given timestamp is invalid.
-        """
-        if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
-            raise ValueError('invalid timestamp, use HH:MM:SS format')
+            ValueError: If neither position nor track are specified.
+            SoCoException: (or a subclass) upon other errors.
 
-        self.avTransport.Seek([
-            ('InstanceID', 0),
-            ('Unit', 'REL_TIME'),
-            ('Target', timestamp)
-        ])
+        """
+
+        if track is None and position is None:
+            raise ValueError
+
+        if track is not None:
+            self.avTransport.Seek([
+                ('InstanceID', 0),
+                ('Unit', 'TRACK_NR'),
+                ('Target', track + 1)
+            ])
+
+        if position is not None:
+            if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', position):
+                raise ValueError('invalid timestamp, use HH:MM:SS format')
+            self.avTransport.Seek([
+                ('InstanceID', 0),
+                ('Unit', 'REL_TIME'),
+                ('Target', position)
+            ])
 
     @only_on_master
     def next(self):
