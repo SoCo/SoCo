@@ -1215,7 +1215,7 @@ class SoCo(_SocoSingletonBase):
             metadata = XML.fromstring(really_utf8(metadata))
             # Try parse trackinfo
             trackinfo = metadata.findtext('.//{urn:schemas-rinconnetworks-com:'
-                                          'metadata-1-0/}streamContent')
+                                          'metadata-1-0/}streamContent') or ''
             index = trackinfo.find(' - ')
 
             if index > -1:
