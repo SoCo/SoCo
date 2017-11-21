@@ -234,9 +234,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def player_name(self):
-        """The speaker's name.
-
-        A string.
+        """str: The speaker's name.
         """
         # We could get the name like this:
         # result = self.deviceProperties.GetZoneAttributes()
@@ -257,7 +255,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def uid(self):
-        """A unique identifier.
+        """str: A unique identifier.
 
         Looks like: ``'RINCON_000XXXXXXXXXX1400'``
         """
@@ -284,7 +282,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def household_id(self):
-        """A unique identifier for all players in a household.
+        """str: A unique identifier for all players in a household.
 
         Looks like: ``'Sonos_asahHKgjgJGjgjGjggjJgjJG34'``
         """
@@ -297,10 +295,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_visible(self):
-        """Is this zone visible? A zone might be invisible if, for example it
-        is a bridge, or the slave part of stereo pair.
-
-        return True or False
+        """bool: Is this zone visible? A zone might be invisible if, for
+        example it is a bridge, or the slave part of stereo pair.
         """
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
@@ -310,7 +306,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_bridge(self):
-        """Is this zone a bridge?"""
+        """bool: Is this zone a bridge?
+        """
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, there is no need to go further
         if self._is_bridge is not None:
@@ -323,9 +320,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_coordinator(self):
-        """Return True if this zone is a group coordinator, otherwise False.
-
-        return True or False
+        """bool: Is this zone a group coordinator?
         """
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
@@ -636,7 +631,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def mute(self):
-        """The speaker's mute state.
+        """bool: The speaker's mute state.
 
         True if muted, False otherwise
         """
@@ -660,7 +655,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def volume(self):
-        """The speaker's volume.
+        """int: The speaker's volume.
 
         An integer between 0 and 100.
         """
@@ -685,7 +680,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def bass(self):
-        """The speaker's bass EQ.
+        """int: The speaker's bass EQ.
 
         An integer between -10 and 10.
         """
@@ -709,7 +704,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def treble(self):
-        """The speaker's treble EQ.
+        """int: The speaker's treble EQ.
 
         An integer between -10 and 10.
         """
@@ -733,8 +728,9 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def loudness(self):
-        """The Sonos speaker's loudness compensation. True if on, otherwise
-        False.
+        """bool: The Sonos speaker's loudness compensation.
+
+        True if on, False otherwise.
 
         Loudness is a complicated topic. You can find a nice summary about this
         feature here: http://forums.sonos.com/showthread.php?p=4698#post4698
@@ -758,10 +754,9 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def night_mode(self):
-        """Get the Sonos speaker's night mode. True if on, False if off,
-        None if not supported.
+        """bool: The speaker's night mode.
 
-        :returns bool or None
+        True if on, False if off, None if not supported.
         """
         if not self.speaker_info:
             self.get_speaker_info()
@@ -797,10 +792,9 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def dialog_mode(self):
-        """Get the Sonos speaker's dialog mode. True if on, False if off,
-        None if not supported.
+        """bool: Get the Sonos speaker's dialog mode.
 
-        :returns bool or None
+        True if on, False if off, None if not supported.
         """
         if not self.speaker_info:
             self.get_speaker_info()
@@ -960,15 +954,16 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_groups(self):
-        """Return a set of all the available groups."""
+        """set of :class:`soco.groups.ZoneGroup`: All available groups."""
         self._parse_zone_group_state()
         return self._groups
 
     @property
     def group(self):
-        """The Zone Group of which this device is a member.
+        """:class:`soco.groups.ZoneGroup`: The Zone Group of which this device
+        is a member.
 
-        group will be None if this zone is a slave in a stereo pair.
+        None if this zone is a slave in a stereo pair.
         """
 
         for group in self.all_groups:
@@ -989,13 +984,13 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def all_zones(self):
-        """Return a set of all the available zones."""
+        """set of :class:`soco.groups.ZoneGroup`: All available zones."""
         self._parse_zone_group_state()
         return self._all_zones
 
     @property
     def visible_zones(self):
-        """Return an set of all visible zones."""
+        """set of :class:`soco.groups.ZoneGroup`: All visible zones."""
         self._parse_zone_group_state()
         return self._visible_zones
 
@@ -1071,10 +1066,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_radio(self):
-        """Is the speaker playing radio?
-
-        return True or False
-        """
+        """bool: Is the speaker playing radio?"""
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
@@ -1084,9 +1076,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_line_in(self):
-        """ Is the speaker playing line-in?
-
-        return True or False
+        """bool: Is the speaker playing line-in?
         """
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
@@ -1097,10 +1087,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_tv(self):
-        """Is the playbar speaker input from TV?
-
-        return True or False
-        """
+        """bool: Is the playbar speaker input from TV?"""
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
@@ -1126,8 +1113,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def status_light(self):
-        """The white Sonos status light between the mute button and the volume
-        up button on the speaker.
+        """bool: The white Sonos status light between the mute button and the
+        volume up button on the speaker.
 
         True if on, otherwise False.
         """
@@ -1359,7 +1346,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def queue_size(self):
-        """Get size of queue."""
+        """int: Size of the queue."""
         response = self.contentDirectory.Browse([
             ('ObjectID', 'Q:0'),
             ('BrowseFlag', 'BrowseMetadata'),
