@@ -610,12 +610,12 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def seek(self, position=None, track=None):
-        """ Seeks to a given position.
+        """Seek to a given position.
 
         You can seek both a relative position in the current track and a track
         number in the queue.
         It is even possible to seek to a tuple or dict containing the absolute
-        position (track and relative pos.)::
+        position (relative pos. and track nr.)::
 
             t = ('0:00:00', 0)
             player.seek(*t)
@@ -629,12 +629,22 @@ class SoCo(_SocoSingletonBase):
 
         Raises:
             ValueError: If neither position nor track are specified.
-            SoCoException: (or a subclass) upon other errors.
+            SoCoUPnPException: UPnP Error 701 if seeking is not supported,
+                UPnP Error 711 if the target is invalid.
 
+        Note:
+            The `track` parameter can only be used if the queue is currently
+            playing. If not use :py:meth:`play_from_queue`.
+
+        This is currently faster than :py:meth:`play_from_queue` if already
+        using the queue, as it does not reinstate the queue.
+
+        If speaker is already playing it will continue to play after
+        seek. If paused it will remain paused.
         """
 
         if track is None and position is None:
-            raise ValueError
+            raise ValueError('No position or track information given')
 
         if track is not None:
             self.avTransport.Seek([
@@ -645,7 +655,7 @@ class SoCo(_SocoSingletonBase):
 
         if position is not None:
             if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', position):
-                raise ValueError('invalid timestamp, use HH:MM:SS format')
+                raise ValueError('Invalid timestamp, use HH:MM:SS format')
             self.avTransport.Seek([
                 ('InstanceID', 0),
                 ('Unit', 'REL_TIME'),
