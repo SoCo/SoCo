@@ -295,8 +295,10 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_visible(self):
-        """bool: Is this zone visible? A zone might be invisible if, for
-        example it is a bridge, or the slave part of stereo pair.
+        """bool: Is this zone visible?
+
+        A zone might be invisible if, for example, it is a bridge, or the slave
+        part of stereo pair.
         """
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
@@ -426,11 +428,14 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_from_queue(self, index, start=True):
-        """ Play a track from the queue by index. The index number is
-        required as an argument, where the first index is 0.
+        """ Play a track from the queue by index.
 
-        index: the index of the track to play; first item in the queue is 0
-        start: If the item that has been set should start playing
+        The index number is required as an argument, where the first index
+        is 0.
+
+        Args:
+            index (int): 0-based index of the track to play
+            start (bool): If the item that has been set should start playing
         """
         # Grab the speaker's information if we haven't already since we'll need
         # it in the next step.
@@ -468,7 +473,7 @@ class SoCo(_SocoSingletonBase):
     # pylint: disable=too-many-arguments
     def play_uri(self, uri='', meta='', title='', start=True,
                  force_radio=False):
-        """Play a URI
+        """Play a URI.
 
         Playing a URI will replace what was playing with the stream given by
         the URI. For some streams at least a title is required as metadata.
@@ -566,7 +571,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def seek(self, timestamp):
-        """ Seeks to a given timestamp in the current track, specified in the
+        """ Seek to a given timestamp in the current track, specified in the
         format of HH:MM:SS or H:MM:SS.
         """
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
@@ -988,12 +993,7 @@ class SoCo(_SocoSingletonBase):
         [zone.join(self) for zone in self.visible_zones if zone is not self]
 
     def join(self, master):
-        """Join this speaker to another "master" speaker.
-
-        ..  note:: The signature of this method has changed in 0.8. It now
-            requires a SoCo instance to be passed as `master`, not an IP
-            address
-        """
+        """Join this speaker to another "master" speaker."""
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
             ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
@@ -1187,15 +1187,15 @@ class SoCo(_SocoSingletonBase):
         """Get information about the Sonos speaker.
 
         Arguments:
-        refresh -- Refresh the speaker info cache.
-        timeout -- How long to wait for the server to send
-                   data before giving up, as a float, or a
-                   (`connect timeout, read timeout`_) tuple
-                   e.g. (3, 5). Default is no timeout.
+            refresh(bool): Refresh the speaker info cache.
+            timeout: How long to wait for the server to send
+                data before giving up, as a float, or a
+                `(connect timeout, read timeout)` tuple
+                e.g. (3, 5). Default is no timeout.
 
         Returns:
-        Information about the Sonos speaker, such as the UID, MAC Address, and
-        Zone Name.
+            dict: Information about the Sonos speaker, such as the UID,
+            MAC Address, and Zone Name.
         """
         if self.speaker_info and refresh is False:
             return self.speaker_info
@@ -1242,11 +1242,13 @@ class SoCo(_SocoSingletonBase):
         """Get the current playback state.
 
         Returns:
-        A dictionary containing the following information about the speakers
-        playing state
-        current_transport_state (PLAYING, TRANSITIONING, PAUSED_PLAYBACK,
-                                 STOPPED),
-        current_trasnport_status (OK, ?), current_speed(1,?)
+            dict: The following information about the
+            speaker's playing state:
+
+            *   current_transport_state (``PLAYING``, ``TRANSITIONING``,
+                ``PAUSED_PLAYBACK``, ``STOPPED``)
+            *   current_transport_status (OK, ?)
+            *   current_speed(1, ?)
 
         This allows us to know if speaker is playing or not. Don't know other
         states of CurrentTransportStatus and CurrentSpeed.
@@ -1336,8 +1338,9 @@ class SoCo(_SocoSingletonBase):
         return queue_size
 
     def get_sonos_playlists(self, *args, **kwargs):
-        """ Convenience method for:
-            get_music_library_information('sonos_playlists')
+        """ Convenience method for
+            `get_music_library_information('sonos_playlists')`.
+
             Refer to the docstring for that method
 
         """
@@ -1347,7 +1350,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def add_uri_to_queue(self, uri, position=0, as_next=False):
-        """Adds the URI to the queue.
+        """Add the URI to the queue.
 
         For arguments and return value see `add_to_queue`.
         """
@@ -1359,7 +1362,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def add_to_queue(self, queueable_item, position=0, as_next=False):
-        """Adds a queueable item to the queue.
+        """Add a queueable item to the queue.
 
         Args:
             queueable_item (DidlObject or MusicServiceItem): The item to be
@@ -1381,7 +1384,7 @@ class SoCo(_SocoSingletonBase):
         return int(qnumber)
 
     def add_multiple_to_queue(self, items, container=None):
-        """Adds a sequence of items to the queue.
+        """Add a sequence of items to the queue.
 
         Args:
             items (list): A sequence of items to the be added to the queue
@@ -1418,7 +1421,8 @@ class SoCo(_SocoSingletonBase):
         """ Remove a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
 
-        index: the index of the track to remove; first item in the queue is 0
+        Args:
+            index (int): The (0-based) index of the track to remove
         """
         # TODO: what do these parameters actually do?
         updid = '0'
@@ -1441,9 +1445,9 @@ class SoCo(_SocoSingletonBase):
         """Get favorite radio shows from Sonos' Radio app.
 
         Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio shows,
-        represented as a dictionary with `title` and `uri` keys.
+            A list containing the total number of favorites, the number of
+            favorites returned, and the actual list of favorite radio shows,
+            represented as a dictionary with `title` and `uri` keys.
 
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
@@ -1460,15 +1464,7 @@ class SoCo(_SocoSingletonBase):
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio stations,
-        represented as a dictionary with `title` and `uri` keys.
-
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        See :meth:`get_favorite_radio_shows` for return type and remarks.
         """
         message = 'The output type of this method will probably change in '\
                   'the future to use SoCo data structures'
@@ -1479,15 +1475,7 @@ class SoCo(_SocoSingletonBase):
     def get_sonos_favorites(self, start=0, max_items=100):
         """Get Sonos favorites.
 
-        Returns:
-        A list containing the total number of favorites, the number of
-        favorites returned, and the actual list of favorite radio stations,
-        represented as a dictionary with `title`, `uri` and `meta` keys.
-
-        Depending on what you're building, you'll want to check to see if the
-        total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
-        get the entire list of favorites.
+        See :meth:`get_favorite_radio_shows` for return type and remarks.
         """
         message = 'The output type of this method will probably change in '\
                   'the future to use SoCo data structures'
@@ -1497,10 +1485,12 @@ class SoCo(_SocoSingletonBase):
     def __get_favorites(self, favorite_type, start=0, max_items=100):
         """ Helper method for `get_favorite_radio_*` methods.
 
-        Arguments:
-        favorite_type -- Specify either `RADIO_STATIONS` or `RADIO_SHOWS`.
-        start -- Which number to start the retrieval from. Used for paging.
-        max_items -- The total number of results to return.
+        Args:
+            favorite_type (str): Specify either `RADIO_STATIONS` or
+                `RADIO_SHOWS`.
+            start (int): Which number to start the retrieval from. Used for
+                paging.
+            max_items (int): The total number of results to return.
 
         """
         if favorite_type != RADIO_SHOWS and favorite_type != RADIO_STATIONS:
@@ -1547,7 +1537,8 @@ class SoCo(_SocoSingletonBase):
     def _update_album_art_to_full_uri(self, item):
         """Update an item's Album Art URI to be an absolute URI.
 
-        :param item: The item to update the URI for
+        Args:
+            item: The item to update the URI for
         """
         if getattr(item, 'album_art_uri', False):
             item.album_art_uri = self._build_album_art_full_uri(
@@ -1556,10 +1547,10 @@ class SoCo(_SocoSingletonBase):
     def create_sonos_playlist(self, title):
         """Create a new empty Sonos playlist.
 
-        :params title: Name of the playlist
+        Args:
+            title: Name of the playlist
 
-        :returns: An instance of
-            :py:class:`~.soco.data_structures.DidlPlaylistContainer`
+        :rtype: :py:class:`~.soco.data_structures.DidlPlaylistContainer`
         """
         response = self.avTransport.CreateSavedQueue([
             ('InstanceID', 0),
@@ -1581,10 +1572,10 @@ class SoCo(_SocoSingletonBase):
     def create_sonos_playlist_from_queue(self, title):
         """Create a new Sonos playlist from the current queue.
 
-        :params title: Name of the playlist
+        Args:
+            title: Name of the playlist
 
-        :returns: An instance of
-            :py:class:`~.soco.data_structures.DidlPlaylistContainer`
+        :rtype: :py:class:`~.soco.data_structures.DidlPlaylistContainer`
         """
         # Note: probably same as Queue service method SaveAsSonosPlaylist
         # but this has not been tested.  This method is what the
@@ -1623,9 +1614,10 @@ class SoCo(_SocoSingletonBase):
     def add_item_to_sonos_playlist(self, queueable_item, sonos_playlist):
         """Adds a queueable item to a Sonos' playlist.
 
-        :param queueable_item: the item to add to the Sonos' playlist
-        :param sonos_playlist: the Sonos' playlist to which the item should
-            be added
+        Args:
+            queueable_item: the item to add to the Sonos' playlist
+            sonos_playlist: the Sonos' playlist to which the item should
+                be added
         """
         # Get the update_id for the playlist
         response, _ = self.music_library._music_lib_search(
