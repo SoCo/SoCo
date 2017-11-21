@@ -117,69 +117,98 @@ class SoCo(_SocoSingletonBase):
     SoCo instances created with the same ip address are in fact the *same* SoCo
     instance, reflecting the real world position.
 
-    ..  rubric:: Methods
+    ..  rubric:: Basic Methods
     ..  autosummary::
 
+        play_from_queue
         play
         play_uri
-        play_from_queue
         pause
         stop
         seek
         next
         previous
-        switch_to_line_in
-        switch_to_tv
+        mute
+        volume
+        play_mode
+        cross_fade
+        ramp_to_volume
         get_current_track_info
         get_speaker_info
-        partymode
-        join
-        unjoin
-        get_queue
         get_current_transport_info
-        add_uri_to_queue
+
+    ..  rubric:: Queue Management
+    ..  autosummary::
+
+        get_queue
+        queue_size
         add_to_queue
+        add_uri_to_queue
         add_multiple_to_queue
         remove_from_queue
         clear_queue
-        create_sonos_playlist
-        create_sonos_playlist_from_queue
-        remove_sonos_playlist
-        add_item_to_sonos_playlist
-        get_item_album_art_uri
-        set_sleep_timer
-        get_sleep_timer
 
-    ..  rubric:: Properties
-    .. warning::
-
-        These properties are not generally cached and may obtain information
-        over the network, so may take longer than expected to set or return
-        a value. It may be a good idea for you to cache the value in your
-        own code.
-
+    ..  rubric:: Group Management
     ..  autosummary::
 
+        group
+        partymode
+        join
+        unjoin
+        all_groups
+        all_zones
+        visible_zones
+
+    ..  rubric:: Player Identity and Settings
+    ..  autosummary::
+
+        player_name
         uid
         household_id
-        mute
-        volume
+        is_visible
+        is_bridge
+        is_coordinator
         bass
         treble
         loudness
         night_mode
         dialog_mode
-        cross_fade
         status_light
-        player_name
-        play_mode
-        queue_size
 
-        is_playing_tv
+    ..  rubric:: Playlists and Favorites
+    ..  autosummary::
+
+        get_sonos_playlists
+        create_sonos_playlist
+        create_sonos_playlist_from_queue
+        remove_sonos_playlist
+        add_item_to_sonos_playlist
+        reorder_sonos_playlist
+        clear_sonos_playlist
+        move_in_sonos_playlist
+        remove_from_sonos_playlist
+        get_sonos_playlist_by_attr
+        get_favorite_radio_shows
+        get_favorite_radio_stations
+        get_sonos_favorites
+
+    ..  rubric:: Miscellaneous
+    ..  autosummary::
+
+        switch_to_line_in
         is_playing_radio
         is_playing_line_in
+        is_playing_tv
+        switch_to_tv
+        set_sleep_timer
+        get_sleep_timer
 
+    .. warning::
 
+        Properties on this object are not generally cached and may obtain
+        information over the network, so may take longer than expected to set
+        or return a value. It may be a good idea for you to cache the value in
+        your own code.
     """
 
     _class_group = 'SoCo'
