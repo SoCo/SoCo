@@ -1400,6 +1400,9 @@ class SoCo(_SocoSingletonBase):
                 added. Default is 0 (add URI at the end of the queue).
             as_next (bool): Whether this URI should be played as the next
                 track in shuffle mode. This only works if `play_mode=SHUFFLE`.
+
+        Returns:
+            int: The index of the new item in the queue.
         """
         metadata = to_didl_string(queueable_item)
         response = self.avTransport.AddURIToQueue([
