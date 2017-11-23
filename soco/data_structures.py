@@ -454,18 +454,23 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                 "UPnP class is incorrect. Expected '{0}',"
                 " got '{1}'".format(cls.item_class, item_class))
 
-        # parent_id, item_id  and restricted are stored as attibutes on the
+        # parent_id, item_id  and restricted are stored as attributes on the
         # element
-        item_id = really_unicode(element.get('id', None))
+        item_id = element.get('id', None)
         if item_id is None:
             raise DIDLMetadataError("Missing id attribute")
-        parent_id = really_unicode(element.get('parentID', None))
+        item_id = really_unicode(item_id)
+        parent_id = element.get('parentID', None)
         if parent_id is None:
             raise DIDLMetadataError("Missing parentID attribute")
+        parent_id = really_unicode(parent_id)
+
+        # CAUTION: This implementation deviates from the spec.
+        # Elements are normally required to have a `restricted` tag, but
+        # Spotify direct violates this. To make it work, a missing restricted
+        # tag is interpreted as `restricted = True`.
         restricted = element.get('restricted', None)
-        if restricted is None:
-            raise DIDLMetadataError("Missing restricted attribute")
-        restricted = True if restricted in [1, 'true', 'True'] else False
+        restricted = False if restricted in [0, 'false', 'False'] else True
 
         # There must be a title. According to spec, it should be the first
         # child, but Sonos does not abide by this
@@ -473,7 +478,10 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         if title_elt is None:
             raise DIDLMetadataError(
                 "Missing title element")
-        title = really_unicode(title_elt.text)
+        title = title_elt.text
+        if title_elt.text is None:
+            title = ''
+        title = really_unicode(title)
 
         # Deal with any resource elements
         resources = []
