@@ -209,6 +209,19 @@ class SoCo(_SocoSingletonBase):
         information over the network, so may take longer than expected to set
         or return a value. It may be a good idea for you to cache the value in
         your own code.
+
+    .. note::
+
+        Since all methods/properties on this object will result in an UPnP
+        request, they might result in an exception without it being mentioned
+        in the Raises section.
+
+        In most cases, the exception will be a
+        :class:`soco.exceptions.SoCoUPnPException`
+        (if the player returns an UPnP error code), but in special cases
+        it might also be another :class:`soco.exceptions.SoCoException`
+        or even a `requests` exception.
+
     """
 
     _class_group = 'SoCo'
@@ -1095,12 +1108,7 @@ class SoCo(_SocoSingletonBase):
         return re.match(r'^x-sonos-htastream:', track_uri) is not None
 
     def switch_to_tv(self):
-        """Switch the playbar speaker's input to TV.
-
-        If an error occurs, we'll attempt to parse the error and return a UPnP
-        error code. If that fails, the raw response sent back from the Sonos
-        speaker will be returned.
-        """
+        """Switch the playbar speaker's input to TV."""
 
         self.avTransport.SetAVTransportURI([
             ('InstanceID', 0),
