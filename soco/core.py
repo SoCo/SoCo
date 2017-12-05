@@ -276,8 +276,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def player_name(self):
-        """str: The speaker's name.
-        """
+        """str: The speaker's name."""
         # We could get the name like this:
         # result = self.deviceProperties.GetZoneAttributes()
         # return result["CurrentZoneName"]
@@ -350,8 +349,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_bridge(self):
-        """bool: Is this zone a bridge?
-        """
+        """bool: Is this zone a bridge?"""
         # Since this does not change over time (?) check whether we already
         # know the answer. If so, there is no need to go further
         if self._is_bridge is not None:
@@ -364,8 +362,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_coordinator(self):
-        """bool: Is this zone a group coordinator?
-        """
+        """bool: Is this zone a group coordinator?"""
         # We could do this:
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
         # but it is better to do it in the following way, which uses the
@@ -407,7 +404,7 @@ class SoCo(_SocoSingletonBase):
     @property
     @only_on_master  # Only for symmetry with the setter
     def cross_fade(self):
-        """The speaker's cross fade state.
+        """bool: The speaker's cross fade state.
 
         True if enabled, False otherwise
         """
@@ -470,7 +467,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_from_queue(self, index, start=True):
-        """ Play a track from the queue by index.
+        """Play a track from the queue by index.
 
         The index number is required as an argument, where the first index
         is 0.
@@ -613,8 +610,11 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def seek(self, timestamp):
-        """ Seek to a given timestamp in the current track, specified in the
+        """Seek to a given timestamp in the current track, specified in the
         format of HH:MM:SS or H:MM:SS.
+
+        Raises:
+            ValueError: if the given timestamp is invalid.
         """
         if not re.match(r'^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$', timestamp):
             raise ValueError('invalid timestamp, use HH:MM:SS format')
@@ -658,7 +658,7 @@ class SoCo(_SocoSingletonBase):
     def mute(self):
         """bool: The speaker's mute state.
 
-        True if muted, False otherwise
+        True if muted, False otherwise.
         """
 
         response = self.renderingControl.GetMute([
@@ -1088,8 +1088,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def is_playing_line_in(self):
-        """bool: Is the speaker playing line-in?
-        """
+        """bool: Is the speaker playing line-in?"""
         response = self.avTransport.GetPositionInfo([
             ('InstanceID', 0),
             ('Channel', 'Master')
@@ -1375,10 +1374,10 @@ class SoCo(_SocoSingletonBase):
         return queue_size
 
     def get_sonos_playlists(self, *args, **kwargs):
-        """ Convenience method for
-            `get_music_library_information('sonos_playlists')`.
+        """Convenience method for
+        `get_music_library_information('sonos_playlists')`.
 
-            Refer to the docstring for that method
+        Refer to the docstring for that method
 
         """
         args = tuple(['sonos_playlists'] + list(args))
@@ -1458,7 +1457,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def remove_from_queue(self, index):
-        """ Remove a track from the queue by index. The index number is
+        """Remove a track from the queue by index. The index number is
         required as an argument, where the first index is 0.
 
         Args:
@@ -1475,7 +1474,7 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def clear_queue(self):
-        """Removes all tracks from the queue."""
+        """Remove all tracks from the queue."""
         self.avTransport.RemoveAllTracksFromQueue([
             ('InstanceID', 0),
         ])
@@ -1485,9 +1484,9 @@ class SoCo(_SocoSingletonBase):
         """Get favorite radio shows from Sonos' Radio app.
 
         Returns:
-            A list containing the total number of favorites, the number of
-            favorites returned, and the actual list of favorite radio shows,
-            represented as a dictionary with `title` and `uri` keys.
+            dict: A dictionary containing the total number of favorites, the
+            number of favorites returned, and the actual list of favorite radio
+            shows, represented as a dictionary with `title` and `uri` keys.
 
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
@@ -1655,9 +1654,9 @@ class SoCo(_SocoSingletonBase):
         """Adds a queueable item to a Sonos' playlist.
 
         Args:
-            queueable_item: the item to add to the Sonos' playlist
-            sonos_playlist: the Sonos' playlist to which the item should
-                be added
+            queueable_item (DidlObject): the item to add to the Sonos' playlist
+            sonos_playlist (DidlPlaylistContainer): the Sonos' playlist to
+                which the item should be added
         """
         # Get the update_id for the playlist
         response, _ = self.music_library._music_lib_search(
