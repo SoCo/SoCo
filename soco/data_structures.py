@@ -456,7 +456,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             # way.
             setattr(self, key, value)
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-branches
     @classmethod
     def from_element(cls, element):     # pylint: disable=R0914
         """Create an instance of this class from an ElementTree xml Element.
@@ -504,21 +504,18 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
         # CAUTION: This implementation deviates from the spec.
         # Elements are normally required to have a `restricted` tag, but
-        # Spotify direct violates this. To make it work, a missing restricted
+        # Spotify Direct violates this. To make it work, a missing restricted
         # tag is interpreted as `restricted = True`.
         restricted = element.get('restricted', None)
         restricted = False if restricted in [0, 'false', 'False'] else True
 
-        # There must be a title. According to spec, it should be the first
-        # child, but Sonos does not abide by this
+        # Similarily, all elements should have a title tag, but Spotify Direct
+        # does not comply
         title_elt = element.find(ns_tag('dc', 'title'))
-        if title_elt is None:
-            raise DIDLMetadataError(
-                "Missing title element")
-        title = title_elt.text
-        if title_elt.text is None:
+        if title_elt is None or not title_elt.text:
             title = ''
-        title = really_unicode(title)
+        else:
+            title = really_unicode(title_elt.text)
 
         # Deal with any resource elements
         resources = []
