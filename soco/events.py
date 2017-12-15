@@ -226,9 +226,10 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
         content = self.rfile.read(content_length)
-        # find the relevant service from the sid
-        with _sid_to_service_lock:
+        # Find the relevant service and queue from the sid
+        with _sid_mapping_lock:
             service = _sid_to_service.get(sid)
+            event_queue = _sid_to_event_queue.get(sid)
         # It might have been removed by another thread
         if service:
             log.info(
@@ -242,12 +243,8 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
             # cache.
             # pylint: disable=protected-access
             service._update_cache_on_event(event)
-            # Find the right queue, and put the event on it
-            with _sid_to_event_queue_lock:
-                try:
-                    _sid_to_event_queue[sid].put(event)
-                except KeyError:  # The key have been deleted in another thread
-                    pass
+            # Put the event on the queue
+            event_queue.put(event)
         else:
             log.info("No service registered for %s", sid)
         self.send_response(200)
@@ -468,7 +465,7 @@ class Subscription(object):
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
 
         # Lock out EventNotifyHandler during registration
-        with _sid_to_service_lock:
+        with _sid_mapping_lock:
             response = requests.request(
                 'SUBSCRIBE', service.base_url + service.event_subscription_url,
                 headers=headers)
@@ -489,10 +486,10 @@ class Subscription(object):
                 service.base_url + service.event_subscription_url, self.sid)
             # Add the queue to the master dict of queues so it can be looked up
             # by sid
-            with _sid_to_event_queue_lock:
-                _sid_to_event_queue[self.sid] = self.events
+            _sid_to_event_queue[self.sid] = self.events
             # And do the same for the sid to service mapping
             _sid_to_service[self.sid] = self.service
+
         # Register this subscription to be unsubscribed at exit if still alive
         # This will not happen if exit is abnormal (eg in response to a
         # signal or fatal interpreter error - see the docs for `atexit`).
@@ -593,12 +590,11 @@ class Subscription(object):
             self.service.base_url + self.service.event_subscription_url,
             self.sid)
         # remove queue from event queues and sid to service mappings
-        with _sid_to_event_queue_lock:
+        with _sid_mapping_lock:
             try:
                 del _sid_to_event_queue[self.sid]
             except KeyError:
                 pass
-        with _sid_to_service_lock:
             try:
                 del _sid_to_service[self.sid]
             except KeyError:
@@ -629,9 +625,8 @@ _sid_to_event_queue = weakref.WeakValueDictionary()
 # Used to store a mapping of sids to service instances
 _sid_to_service = weakref.WeakValueDictionary()
 
-# The locks to go with them
-# You must only ever access the mapping in the context of this lock, eg:
-#   with _sid_to_event_queue_lock:
+# The lock to go with them
+# You must only ever access the mappings in the context of this lock, eg:
+#   with _sid_mapping_lock:
 #       queue = _sid_to_event_queue[sid]
-_sid_to_event_queue_lock = threading.Lock()
-_sid_to_service_lock = threading.Lock()
+_sid_mapping_lock = threading.Lock()
