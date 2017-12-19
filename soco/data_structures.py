@@ -39,6 +39,10 @@ from .xml import (
     XML, ns_tag
 )
 
+# Due to cyclic import problems, we only import from_didl_string at runtime.
+# from data_structures_entry import from_didl_string
+_FROM_DIDL_STRING_FUNCTION = None
+
 
 ###############################################################################
 # MISC HELPER FUNCTIONS                                                       #
@@ -806,7 +810,17 @@ class DidlFavorite(DidlItem):
     @property
     def reference(self):
         """The Didl object this favorite refers to."""
-        ref = from_didl_string(getattr(self, 'resource_meta_data'))[0]
+
+        # Import from_didl_string if it isn't present already. The import
+        # happens here because it would cause cyclic import errors if the
+        # import happened at load time.
+        global _FROM_DIDL_STRING_FUNCTION  # pylint: disable=global-statement
+        if not _FROM_DIDL_STRING_FUNCTION:
+            from . import data_structures_entry
+            _FROM_DIDL_STRING_FUNCTION = data_structures_entry.from_didl_string
+
+        ref = _FROM_DIDL_STRING_FUNCTION(
+            getattr(self, 'resource_meta_data'))[0]
         # The resMD metadata lacks a <res> tag, so we use the resources from
         # the favorite to make 'reference' playable.
         ref.resources = self.resources
