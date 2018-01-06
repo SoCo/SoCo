@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=star-args
+# pylint: disable=star-args,too-many-locals
 
 """Plugin for the Wimp music service (Service ID 20)"""
 

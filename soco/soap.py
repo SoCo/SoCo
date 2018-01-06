@@ -312,3 +312,5 @@ class SoapMessage(object):
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
             response.raise_for_status()
+
+        return None

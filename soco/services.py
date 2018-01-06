@@ -409,6 +409,7 @@ class Service(object):
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
             response.raise_for_status()
+        return None
 
     def handle_upnp_error(self, xml_error):
         """Disect a UPnP error, and raise an appropriate exception.
