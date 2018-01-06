@@ -226,3 +226,4 @@ def by_name(name):
     for device in discover():
         if device.player_name == name:
             return device
+    return None

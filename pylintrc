@@ -6,7 +6,7 @@
 # duplicate code check disabled whilst refactoring of wimp plugin is in
 # progress
 disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods,
-    bad-option-value,no-else-return
+    bad-option-value,no-else-return,cyclic-import
 
 
 [REPORTS]
