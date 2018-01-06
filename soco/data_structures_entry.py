@@ -50,7 +50,10 @@ def from_didl_string(string):
             except KeyError:
                 raise DIDLMetadataError("Unknown UPnP class: %s" % item_class)
             item = cls.from_element(elt)
-            item = attempt_datastructure_upgrade(item)
+            # The following line has been commented out because
+            # it results in soco.get_queue() returning incomplete
+            # information and likely has other unintended consequences
+            #item = attempt_datastructure_upgrade(item)
             items.append(item)
         else:
             # <desc> elements are allowed as an immediate child of <DIDL-Lite>
