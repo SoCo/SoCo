@@ -39,6 +39,10 @@ from .xml import (
     XML, ns_tag
 )
 
+# Due to cyclic import problems, we only import from_didl_string at runtime.
+# from data_structures_entry import from_didl_string
+_FROM_DIDL_STRING_FUNCTION = None
+
 
 ###############################################################################
 # MISC HELPER FUNCTIONS                                                       #
@@ -61,6 +65,7 @@ def to_didl_string(*args):
             'xmlns': "urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/",
             'xmlns:dc': "http://purl.org/dc/elements/1.1/",
             'xmlns:upnp': "urn:schemas-upnp-org:metadata-1-0/upnp/",
+            'xmlns:r': "urn:schemas-rinconnetworks-com:metadata-1-0/"
         })
     for arg in args:
         didl.append(arg.to_element())
@@ -738,47 +743,6 @@ class DidlAudioItem(DidlItem):
         }
     )
 
-# Browsing Sonos Favorites produces some odd looking DIDL-Lite. The object
-# class is 'object.itemobject.item.sonos-favorite', which is probably a typo
-# in Sonos' code somewhere.
-
-# Here is an example:
-# <?xml version="1.0" ?>
-# <DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-#     xmlns:dc="http://purl.org/dc/elements/1.1/"
-#     xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-#     xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">
-#   <item id="FV:2/13" parentID="FV:2" restricted="false">
-#     <dc:title>Shake It Off</dc:title>
-#     <upnp:class>object.itemobject.item.sonos-favorite</upnp:class>
-#     <r:ordinal>4</r:ordinal>
-#     <res protocolInfo="sonos.com-spotify:*:audio/x-spotify:*">
-#         x-sonos-spotify:spotify%3atrack%3a7n.......?sid=9&amp;flags=32</res>
-#     <upnp:albumArtURI>http://o.scd.....</upnp:albumArtURI>
-#     <r:type>instantPlay</r:type>
-#     <r:description>By Taylor Swift</r:description>
-#     <r:resMD>&lt;DIDL-Lite xmlns:dc=&quot;
-#       http://purl.org/dc/elements/1.1/&quot;
-#       xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot;
-#       xmlns:r=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;
-#       xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot;&gt;
-#       &lt;item id=&quot;00030020spotify%3atrack%3a7n9Q6b...74uCtajkddPt&quot;
-#       parentID=&quot;0006006ctoplist%2ftracks%2fregion%2fGB&quot;
-#       restricted=&quot;true&quot;&gt;&lt;dc:title&gt;Shake It Off
-#       &lt;/dc:title&gt;&lt;upnp:class&gt;object.item.audioItem.musicTrack
-#       &lt;/upnp:class&gt;&lt;desc id=&quot;cdudn&quot;
-#       nameSpace=&quot;urn:schemas-rinconnetworks-com:metadata-1-0/&quot;&gt;
-#       SA_RINCON2311_XXXXX&lt;/desc&gt;
-#       &lt;/item&gt;
-#       &lt;/DIDL-Lite&gt;
-#     </r:resMD>
-#   </item>
-# </DIDL-Lite>
-
-# Note the r:ordinal, r:type; r:description, r:resMD elements which are not
-# seen (?) anywhere else
-# We're ignoring this for the moment!
-
 
 class DidlMusicTrack(DidlAudioItem):
 
@@ -813,7 +777,6 @@ class DidlAudioBroadcast(DidlAudioItem):
             'radio_call_sign': ('upnp', 'radioCallSign'),
             'radio_station_id': ('upnp', 'radioStationID'),
             'channel_nr': ('upnp', 'channelNr'),
-
         }
     )
 
@@ -828,6 +791,50 @@ class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
     # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBroadcast.sonos-favorite'
+
+
+class DidlFavorite(DidlItem):
+
+    """Class that represents a Sonos favorite."""
+
+    # the DIDL Lite class for this object.
+    item_class = 'object.itemobject.item.sonos-favorite'
+    _translation = DidlItem._translation.copy()
+    _translation.update(
+        {
+            'type': ('r', 'type'),
+            'description': ('r', 'description'),
+            'favorite_nr': ('r', 'ordinal'),
+            'resource_meta_data': ('r', 'resMD')
+        }
+    )
+
+    # The resMD tag contains the metadata of the Didl object referenced by this
+    # favorite. For user convenience, we will parse this metadata and make the
+    # object available via the 'reference' property.
+    @property
+    def reference(self):
+        """The Didl object this favorite refers to."""
+
+        # Import from_didl_string if it isn't present already. The import
+        # happens here because it would cause cyclic import errors if the
+        # import happened at load time.
+        global _FROM_DIDL_STRING_FUNCTION  # pylint: disable=global-statement
+        if not _FROM_DIDL_STRING_FUNCTION:
+            from . import data_structures_entry
+            _FROM_DIDL_STRING_FUNCTION = data_structures_entry.from_didl_string
+
+        ref = _FROM_DIDL_STRING_FUNCTION(
+            getattr(self, 'resource_meta_data'))[0]
+        # The resMD metadata lacks a <res> tag, so we use the resources from
+        # the favorite to make 'reference' playable.
+        ref.resources = self.resources
+        return ref
+
+    @reference.setter
+    def reference(self, value):
+        setattr(self, 'resource_meta_data', to_didl_string(value))
+        self.resources = value.resources
 
 
 ###############################################################################
@@ -1045,6 +1052,14 @@ class DidlMusicGenre(DidlGenre):
     # the DIDL Lite class for this object.
     item_class = 'object.container.genre.musicGenre'
     tag = 'item'
+
+
+class DidlRadioShow(DidlContainer):
+    """Class that represents a radio show."""
+
+    # the DIDL Lite class for this object.
+    item_class = 'object.container.radioShow'
+    # A radio show doesn't seem to have any special attributes
 
 
 ###############################################################################
