@@ -1310,6 +1310,7 @@ class SoCo(_SocoSingletonBase):
             self.speaker_info['mac_address'] = mac
 
             return self.speaker_info
+        return None
 
     def get_current_transport_info(self):
         """Get the current playback state.
