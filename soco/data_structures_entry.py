@@ -52,8 +52,8 @@ def from_didl_string(string):
             item = cls.from_element(elt)
             # The following line has been commented out because
             # it results in soco.get_queue() returning incomplete
-            # information and likely has other unintended consequences
-            #item = attempt_datastructure_upgrade(item)
+            # information and likely has other unintended consequences:
+            # item = attempt_datastructure_upgrade(item)
             items.append(item)
         else:
             # <desc> elements are allowed as an immediate child of <DIDL-Lite>
