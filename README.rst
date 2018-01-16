@@ -31,7 +31,7 @@ Visit the `SoCo documentation`_ for a more detailed overview of all the function
              Spotify and Napster.
 
 	     Issue #557 is a meta issue for this problem and you can
-             use that to track progress on solving the issue, but
+             use that to track progress on solving the issues, but
              *please refrain from posting "me too" comments* in
              there. Also, there is no need to open any more separate
              issue about this.
