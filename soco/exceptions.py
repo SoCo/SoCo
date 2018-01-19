@@ -80,3 +80,43 @@ class SoCoSlaveException(SoCoException):
 
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
+
+
+class SoCoFault(object):
+    """Class to represent a failed object instantiation.
+
+    It rethrows the exception on any use.
+    """
+
+    def __init__(self, exception, **kwargs):
+        """
+        Args:
+            exception (Exception): The exception which should be thrown on use
+            kwargs: Items to add to the object dict, as additional information
+                about the fault.
+        """
+        self.__dict__ = kwargs
+        self.__dict__['exception'] = exception
+
+    def __getattr__(self, name):
+        raise self.exception
+
+    def __setattr__(self, name, value):
+        raise self.exception
+
+    def __getitem__(self, item):
+        raise self.exception
+
+    def __eq__(self, other):
+        raise self.exception
+
+    def __ne__(self, other):
+        raise self.exception
+
+    def __repr__(self):
+        return '<{0} ({1}) at {2}>'.format(self.__class__.__name__,
+                                           self.exception.__class__.__name__,
+                                           hex(id(self)))
+
+    def __str__(self):
+        return self.__repr__()
