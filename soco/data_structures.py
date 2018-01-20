@@ -1178,6 +1178,7 @@ class Queue(ListOfMusicInfoItems):
 # SPECIAL DICTS                                                               #
 ###############################################################################
 
+# pylint: disable=too-many-ancestors
 class DescriptorDict(collections.MutableMapping, dict):
 
     """A dict which handles descriptor items like descriptor attributes."""
