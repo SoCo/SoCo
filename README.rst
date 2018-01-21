@@ -23,6 +23,22 @@ Visit the `SoCo documentation`_ for a more detailed overview of all the function
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
 
+.. warning:: Sonos has changed the way music service account
+             information is available. This means that **currently a
+             group of music service will give authentication issues
+             and cannot be used at all**. Known members of this group
+             are: Google Play Music, Apple Music, Amazon Music,
+             Spotify and Napster.
+
+	     Issue #557 is a meta issue for this problem and you can
+             use that to track progress on solving the issues, but
+             *please refrain from posting "me too" comments* in
+             there. Also, there is no need to open any more separate
+             issue about this.
+
+	     If you have another music service that should be on the
+	     list, comment in #557
+
 Installation
 ------------
 
