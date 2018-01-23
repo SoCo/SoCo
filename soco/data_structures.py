@@ -795,7 +795,10 @@ class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
 class DidlFavorite(DidlItem):
 
-    """Class that represents a Sonos favorite."""
+    """Class that represents a Sonos favorite.
+
+    Note that the favorite itself isn't playable in all cases, please use the
+    object returned by `favorite.reference` instead."""
 
     # the DIDL Lite class for this object.
     item_class = 'object.itemobject.item.sonos-favorite'
