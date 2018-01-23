@@ -1101,12 +1101,14 @@ class SoCo(_SocoSingletonBase):
 
         return True or False
         """
-        response = self.avTransport.GetPositionInfo([
-            ('InstanceID', 0),
-            ('Channel', 'Master')
-        ])
-        track_uri = response['TrackURI']
-        return re.match(r'^x-rincon-mp3radio:', track_uri) is not None
+        response = self.avTransport.GetMediaInfo(
+            [('InstanceID', 0)]
+        )
+        media_current_uri = response['CurrentURI']
+
+        return \
+            media_current_uri.startswith('x-rincon-mp3radio:') or \
+            media_current_uri.startswith('x-sonosapi-stream:')
 
     @property
     def is_playing_line_in(self):
