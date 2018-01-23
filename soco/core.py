@@ -429,20 +429,43 @@ class SoCo(_SocoSingletonBase):
         return int(response['RampTime'])
 
     @only_on_master
+    def jump_to_track(self, index):
+        """Jump to another track in the queue.
+
+        Note:
+            This function can only be used if the player is already set to use
+            the queue. If not use `play_from_queue`. This is faster than
+            `play_from_queue` if already using the queue, as it does not
+            reinstate the queue.
+
+        If the queue is already playing it will continue to play using the
+        new track after jump_to_track. If paused it will remain paused.
+
+        Arguments:
+            index (int): The index of the track to play; first item in the
+                queue is 0
+
+        Raises:
+            SoCoUPnPException: UPnP Error 701 if the queue isn't currently
+                playing, UPnP Error 711 if the index is invalid.
+        """
+        self.avTransport.Seek([
+            ('InstanceID', 0),
+            ('Unit', 'TRACK_NR'),
+            ('Target', index + 1)
+        ])
+
+    @only_on_master
     def play_from_queue(self, index, start=True):
-        """ Play a track from the queue by index. The index number is
-        required as an argument, where the first index is 0.
+        """ Play a track from the queue by index.
 
-        index: the index of the track to play; first item in the queue is 0
-        start: If the item that has been set should start playing
+        Arguments:
+            index (int): the index of the track to play; first item in the
+                queue is 0.
+            start (bool): If the item that has been set should start playing
 
-        Returns:
-        True if the Sonos speaker successfully started playing the track.
-        False if the track did not start (this may be because it was not
-        requested to start because "start=False")
-
-        Raises SoCoException (or a subclass) upon errors.
-
+        Raises:
+             SoCoUPnPException: UPnP Error 711 if the index is invalid.
         """
         # Grab the speaker's information if we haven't already since we'll need
         # it in the next step.
@@ -458,16 +481,11 @@ class SoCo(_SocoSingletonBase):
         ])
 
         # second, set the track number with a seek command
-        self.avTransport.Seek([
-            ('InstanceID', 0),
-            ('Unit', 'TRACK_NR'),
-            ('Target', index + 1)
-        ])
+        self.jump_to_track(index)
 
         # finally, just play what's set if needed
         if start:
-            return self.play()
-        return False
+            self.play()
 
     @only_on_master
     def play(self):
