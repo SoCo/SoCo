@@ -226,11 +226,12 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
         sid = headers['sid']  # Event Subscription Identifier
         content_length = int(headers['content-length'])
         content = self.rfile.read(content_length)
-        # find the relevant service from the sid
-        with _sid_to_service_lock:
-            service = _sid_to_service.get(sid)
+        # Find the relevant service and queue from the sid
+        with _subscriptions_lock:
+            subscription = _subscriptions.get(sid)
         # It might have been removed by another thread
-        if service:
+        if subscription:
+            service = subscription.service
             log.info(
                 "Event %s received for %s service on thread %s at %s", seq,
                 service.service_id, threading.current_thread(), timestamp)
@@ -242,12 +243,8 @@ class EventNotifyHandler(BaseHTTPRequestHandler):
             # cache.
             # pylint: disable=protected-access
             service._update_cache_on_event(event)
-            # Find the right queue, and put the event on it
-            with _sid_to_event_queue_lock:
-                try:
-                    _sid_to_event_queue[sid].put(event)
-                except KeyError:  # The key have been deleted in another thread
-                    pass
+            # Put the event on the queue
+            subscription.events.put(event)
         else:
             log.info("No service registered for %s", sid)
         self.send_response(200)
@@ -466,31 +463,31 @@ class Subscription(object):
         }
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
-        response = requests.request(
-            'SUBSCRIBE', service.base_url + service.event_subscription_url,
-            headers=headers)
-        response.raise_for_status()
-        self.sid = response.headers['sid']
-        timeout = response.headers['timeout']
-        # According to the spec, timeout can be "infinite" or "second-123"
-        # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-        # capital letter)
-        if timeout.lower() == 'infinite':
-            self.timeout = None
-        else:
-            self.timeout = int(timeout.lstrip('Second-'))
-        self._timestamp = time.time()
-        self.is_subscribed = True
-        log.info(
-            "Subscribed to %s, sid: %s",
-            service.base_url + service.event_subscription_url, self.sid)
-        # Add the queue to the master dict of queues so it can be looked up
-        # by sid
-        with _sid_to_event_queue_lock:
-            _sid_to_event_queue[self.sid] = self.events
-        # And do the same for the sid to service mapping
-        with _sid_to_service_lock:
-            _sid_to_service[self.sid] = self.service
+
+        # Lock out EventNotifyHandler during registration
+        with _subscriptions_lock:
+            response = requests.request(
+                'SUBSCRIBE', service.base_url + service.event_subscription_url,
+                headers=headers)
+            response.raise_for_status()
+            self.sid = response.headers['sid']
+            timeout = response.headers['timeout']
+            # According to the spec, timeout can be "infinite" or "second-123"
+            # where 123 is a number of seconds.  Sonos uses "Second-123" (with
+            # a capital letter)
+            if timeout.lower() == 'infinite':
+                self.timeout = None
+            else:
+                self.timeout = int(timeout.lstrip('Second-'))
+            self._timestamp = time.time()
+            self.is_subscribed = True
+            log.info(
+                "Subscribed to %s, sid: %s",
+                service.base_url + service.event_subscription_url, self.sid)
+            # Add the subscription to the master dict so it can be looked up
+            # by sid
+            _subscriptions[self.sid] = self
+
         # Register this subscription to be unsubscribed at exit if still alive
         # This will not happen if exit is abnormal (eg in response to a
         # signal or fatal interpreter error - see the docs for `atexit`).
@@ -591,14 +588,10 @@ class Subscription(object):
             self.service.base_url + self.service.event_subscription_url,
             self.sid)
         # remove queue from event queues and sid to service mappings
-        with _sid_to_event_queue_lock:
+
+        with _subscriptions_lock:
             try:
-                del _sid_to_event_queue[self.sid]
-            except KeyError:
-                pass
-        with _sid_to_service_lock:
-            try:
-                del _sid_to_service[self.sid]
+                del _subscriptions[self.sid]
             except KeyError:
                 pass
         self._has_been_unsubscribed = True
@@ -621,15 +614,12 @@ class Subscription(object):
 # pylint: disable=C0103
 event_listener = EventListener()
 
-# Thread safe mappings.
-# Used to store a mapping of sids to event queues
-_sid_to_event_queue = weakref.WeakValueDictionary()
-# Used to store a mapping of sids to service instances
-_sid_to_service = weakref.WeakValueDictionary()
+# Thread safe mapping.
+# Used to store a mapping of sid to subscription.
+_subscriptions = weakref.WeakValueDictionary()
 
-# The locks to go with them
+# The lock to go with it
 # You must only ever access the mapping in the context of this lock, eg:
-#   with _sid_to_event_queue_lock:
-#       queue = _sid_to_event_queue[sid]
-_sid_to_event_queue_lock = threading.Lock()
-_sid_to_service_lock = threading.Lock()
+#   with _subscriptions_lock:
+#       queue = _subscriptions[sid].events
+_subscriptions_lock = threading.Lock()
