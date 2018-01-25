@@ -61,7 +61,7 @@ class HttpServer(Thread):
         self.httpd.socket.close()
 
 
-def add_random_file_from_present_folder(machine_ip, port, zone_name):
+def add_random_file_from_present_folder(machine_ip, port, zone):
     """Add a random non-py file from this folder and subfolders to soco"""
     # Make a list of music files, right now it is done by collection all files
     # below the current folder whose extension does not start with .py
@@ -81,24 +81,6 @@ def add_random_file_from_present_folder(machine_ip, port, zone_name):
     )
     print('\nPlaying random file:', random_file)
     netpath = 'http://{}:{}/{}'.format(machine_ip, port, random_file)
-
-    # Get the zone
-    zone = by_name(zone_name)
-
-    # Check is a zone by the given name was found
-    if zone is None:
-        zone_names = [zone_.player_name for zone_ in discover()]
-        print("No Sonos player names '{}'. Player names are {}"\
-              .format(zone_name, zone_names))
-        sys.exit(1)
-
-    # Check whether the zone is a coordinator (stand alone zone or
-    # master of a group)
-    if not zone.is_coordinator:
-        print("The zone '{}' is not a group master, and therefore cannot "
-              "play music. Please use '{}' in stead"\
-              .format(zone_name, zone.group.coordinator.player_name))
-        sys.exit(2)
 
     number_in_queue = zone.add_uri_to_queue(netpath)
     # play_from_queue indexes are 0-based
@@ -140,6 +122,24 @@ def main():
           " IP of this machine: {args.ip}\n"
           " Use port: {args.port}".format(args=args))
 
+    # Get the zone
+    zone = by_name(args.zone)
+
+    # Check if a zone by the given name was found
+    if zone is None:
+        zone_names = [zone_.player_name for zone_ in discover()]
+        print("No Sonos player named '{}'. Player names are {}"\
+              .format(args.zone, zone_names))
+        sys.exit(1)
+
+    # Check whether the zone is a coordinator (stand alone zone or
+    # master of a group)
+    if not zone.is_coordinator:
+        print("The zone '{}' is not a group master, and therefore cannot "
+              "play music. Please use '{}' in stead"\
+              .format(args.zone, zone.group.coordinator.player_name))
+        sys.exit(2)
+
     # Setup and start the http server
     server = HttpServer(args.port)
     server.start()
@@ -149,11 +149,11 @@ def main():
     # add_random_file_from_present_folder is just an example, but it may be
     # helpful in figuring out how to format the urls
     try:
-        add_random_file_from_present_folder(args.ip, args.port, args.zone)
+        add_random_file_from_present_folder(args.ip, args.port, zone)
         # Remember the http server runs in its own daemonized thread, so it is
         # necessary to keep the main thread alive. So sleep for 3 years.
         time.sleep(10**8)
     except KeyboardInterrupt:
         server.stop()
-    
+
 main()
