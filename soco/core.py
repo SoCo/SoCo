@@ -1138,9 +1138,9 @@ class SoCo(_SocoSingletonBase):
         """Get information about the currently playing track.
 
         Returns:
-        A dictionary containing the following information about the currently
-        playing track: playlist_position, duration, title, artist, album,
-        position and a link to the album art.
+            dict: A dictionary containing information about the currently
+            playing track: playlist_position, duration, title, artist, album,
+            position and an album_art link.
 
         If we're unable to return data for a field, we'll return an empty
         string. This can happen for all kinds of reasons so be sure to check
