@@ -457,6 +457,10 @@ class Subscription(object):
 
         # pylint: disable=unbalanced-tuple-unpacking
         ip_address, port = event_listener.address
+
+        if config.EVENT_ADVERTISE_IP:
+            ip_address = config.EVENT_ADVERTISE_IP
+
         headers = {
             'Callback': '<http://{}:{}>'.format(ip_address, port),
             'NT': 'upnp:event'
