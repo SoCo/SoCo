@@ -307,7 +307,7 @@ def get_alarms(zone=None):
         instance.recurrence = values['Recurrence']
         instance.enabled = values['Enabled'] == '1'
         instance.zone = next((z for z in zone.all_zones
-                         if z.uid == values['RoomUUID']), None)
+                              if z.uid == values['RoomUUID']), None)
         # some alarms are not associated to zones -> filter these out
         if instance.zone is None:
             continue
