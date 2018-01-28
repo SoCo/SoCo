@@ -33,7 +33,7 @@ from .services import (
     zone_group_state_shared_cache,
 )
 from .utils import (
-    really_utf8, camel_to_underscore, deprecated
+    really_utf8, camel_to_underscore
 )
 from .xml import XML
 
@@ -1801,115 +1801,6 @@ class SoCo(_SocoSingletonBase):
                     int(times[2]))
         else:
             return None
-
-    # Deprecated methods - moved to music_library.py
-    # pylint: disable=missing-docstring, too-many-arguments
-    @deprecated('0.12', "soco.music_library.get_artists", '0.14')
-    def get_artists(self, *args, **kwargs):
-        return self.music_library.get_artists(*args, **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_album_artists", '0.14')
-    def get_album_artists(self, *args, **kwargs):
-        return self.music_library.get_album_artists(*args, **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_music_library_information",
-                '0.14')
-    def get_albums(self, *args, **kwargs):
-        return self.music_library.get_music_library_information(*args,
-                                                                **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_music_library_information",
-                '0.14')
-    def get_genres(self, *args, **kwargs):
-        return self.music_library.get_music_library_information(*args,
-                                                                **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_composers", '0.14')
-    def get_composers(self, *args, **kwargs):
-        return self.music_library.get_music_library_information(*args,
-                                                                **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_tracks", '0.14')
-    def get_tracks(self, *args, **kwargs):
-        return self.music_library.get_tracks(*args, **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_playlists", '0.14')
-    def get_playlists(self, *args, **kwargs):
-        return self.music_library.get_music_library_information(*args,
-                                                                **kwargs)
-
-    @deprecated('0.12', "soco.music_library.get_music_library_information",
-                '0.14')
-    def get_music_library_information(self, search_type, start=0,
-                                      max_items=100, full_album_art_uri=False,
-                                      search_term=None, subcategories=None,
-                                      complete_result=False):
-        return self.music_library.get_music_library_information(
-            search_type,
-            start,
-            max_items,
-            full_album_art_uri,
-            search_term,
-            subcategories,
-            complete_result
-        )
-
-    @deprecated('0.12', "soco.music_library.browse", '0.14')
-    def browse(self, ml_item=None, start=0, max_items=100,
-               full_album_art_uri=False, search_term=None, subcategories=None):
-        return self.music_library.browse(ml_item, start, max_items,
-                                         full_album_art_uri, search_term,
-                                         subcategories)
-
-    @deprecated('0.12', "soco.music_library.browse_by_idstring", '0.14')
-    def browse_by_idstring(self, search_type, idstring, start=0,
-                           max_items=100, full_album_art_uri=False):
-        return self.music_library.browse_by_idstring(search_type, idstring,
-                                                     start,
-                                                     max_items,
-                                                     full_album_art_uri)
-
-    @property
-    @deprecated('0.12', "soco.music_library.library_updating", '0.14')
-    def library_updating(self):
-        """.."""
-        return self.music_library.library_updating
-
-    @deprecated('0.12', "soco.music_library.start_library_update", '0.14')
-    def start_library_update(self, album_artist_display_option=''):
-        return self.music_library.start_library_update(
-            album_artist_display_option)
-
-    @deprecated('0.12', "soco.music_library.search_track", '0.14')
-    def search_track(self, artist, album=None, track=None,
-                     full_album_art_uri=False):
-        return self.music_library.search_track(
-            artist, album, track, full_album_art_uri
-        )
-
-    @deprecated('0.12', "soco.music_library.get_albums_for_artist", '0.14')
-    def get_albums_for_artist(self, artist, full_album_art_uri=False):
-        return self.music_library.get_albums_for_artist(
-            artist, full_album_art_uri
-        )
-
-    @deprecated('0.12', "soco.music_library.get_tracks_for_album", '0.14')
-    def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
-        return self.music_library.get_tracks_for_album(
-            artist, album, full_album_art_uri
-        )
-
-    @property
-    @deprecated('0.12', "soco.music_library.album_artist_display", '0.14')
-    def album_artist_display_option(self):
-        """.."""
-        return self.music_library.album_artist_display_option
-
-    def _build_album_art_full_uri(self, url):
-        return self.music_library._build_album_art_full_uri(url)
-
-    def _music_lib_search(self, search, start, max_items):
-        return self.music_library._music_lib_search(search, start, max_items)
 
     @only_on_master
     def reorder_sonos_playlist(self, sonos_playlist, tracks, new_pos,
