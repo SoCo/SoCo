@@ -416,7 +416,7 @@ class TestSonosPlaylist(object):
         playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
         assert type(playlist) is DidlPlaylistContainer
 
-        prslt = soco.browse(ml_item=playlist)
+        prslt = soco.music_library.browse(ml_item=playlist)
         qrslt = soco.get_queue()
         assert len(prslt) == len(qrslt)
         assert prslt.total_matches == qrslt.total_matches

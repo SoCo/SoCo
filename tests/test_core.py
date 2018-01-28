@@ -704,7 +704,7 @@ class TestAVTransport:
         moco.contentDirectory.Browse.side_effect = SoCoUPnPException(
             "No such object", "701", "error XML")
 
-        result = moco.search_track("artist")
+        result = moco.music_library.search_track("artist")
 
         assert len(result) == 0
 
@@ -729,7 +729,7 @@ class TestAVTransport:
             'UpdateID': '0'
         }
 
-        result = moco.search_track("artist", "album", "track")
+        result = moco.music_library.search_track("artist", "album", "track")
 
         assert len(result) == 0
 
@@ -751,7 +751,7 @@ class TestAVTransport:
             'TotalMatches': '2',
             'UpdateID': '0'
         }
-        results = moco.search_track("The Artist")
+        results = moco.music_library.search_track("The Artist")
 
         assert results.number_returned == 2
 
@@ -781,7 +781,7 @@ class TestAVTransport:
             'UpdateID': '0'
         }
 
-        results = moco.search_track("The Artist", "The Album")
+        results = moco.music_library.search_track("The Artist", "The Album")
 
         assert len(results) == 3
 
@@ -859,15 +859,15 @@ class TestContentDirectory:
     def test_soco_library_updating(self, moco):
         moco.contentDirectory.GetShareIndexInProgress.return_value = {
             'IsIndexing': '0'}
-        assert not moco.library_updating
+        assert not moco.music_library.library_updating
         moco.contentDirectory.reset_mock()
         moco.contentDirectory.GetShareIndexInProgress.return_value = {
             'IsIndexing': '1'}
-        assert moco.library_updating
+        assert moco.music_library.library_updating
 
     def test_soco_start_library_update(self, moco):
         moco.contentDirectory.RefreshShareIndex.return_value = True
-        assert moco.start_library_update()
+        assert moco.music_library.start_library_update()
         moco.contentDirectory.RefreshShareIndex.assert_called_with([
             ('AlbumArtistDisplayOption', ''),
         ])
