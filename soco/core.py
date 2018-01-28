@@ -33,7 +33,7 @@ from .services import (
     zone_group_state_shared_cache,
 )
 from .utils import (
-    really_utf8, camel_to_underscore
+    really_utf8, camel_to_underscore, deprecated
 )
 from .xml import XML
 
