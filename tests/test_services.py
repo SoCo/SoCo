@@ -67,6 +67,7 @@ DUMMY_VALID_ACTION = "".join([
         '</s:Body>'
     '</s:Envelope>'])  # noqa PEP8
 
+TEST_ARGS = [('first', 'one'), ('second', 2)]
 
 @pytest.fixture()
 def service():
@@ -146,6 +147,21 @@ def test_unwrap_invalid_char(service):
     assert service.unwrap_arguments(responce_with_invalid_char) == {
         "CurrentLEDState": "On",
         "Unicode": "AB"}
+
+
+def test_compose(service):
+    """Test argument composition."""
+    service.DEFAULT_ARGS = {}
+    assert set(service.compose_args(TEST_ARGS, None)) == set(TEST_ARGS)
+    assert set(service.compose_args(None, dict(TEST_ARGS))) == set(TEST_ARGS)
+    assert set(service.compose_args(TEST_ARGS, {'third': 3})) == \
+           set(TEST_ARGS + [('third', 3)])
+    service.DEFAULT_ARGS = {'third': 'default'}
+    assert set(service.compose_args(TEST_ARGS, None)) == \
+           set(TEST_ARGS + [('third', 'default')])
+    assert service.compose_args(TEST_ARGS + [('third', 3)], None) == \
+           set(TEST_ARGS + [('third', 3)])
+
 
 def test_build_command(service):
     """Test creation of SOAP body and headers from a command."""

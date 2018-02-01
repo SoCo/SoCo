@@ -63,10 +63,31 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
 # log.setLevel(logging.INFO)
 
+
 #: A UPnP Action and its arguments.
-Action = namedtuple('Action', 'name, in_args, out_args')
+class Action(namedtuple('ActionBase', 'name, in_args, out_args')):
+    def __str__(self):
+        args = ', '.join(str(arg) for arg in self.in_args)
+        returns = ', '.join(str(arg) for arg in self.out_args)
+        return '{0}({1}) -> {{{2}}}'.format(self.name, args, returns)
+
+
 #: A UPnP Argument and its type.
-Argument = namedtuple('Argument', 'name, vartype')
+class Argument(namedtuple('ArgumentBase', 'name, vartype')):
+    def __str__(self):
+        argument, datatype = self.name, self.vartype.datatype
+        if self.vartype.default:
+            argument = "{0}={1}".format(self.name, self.vartype.default)
+        if self.vartype.list:
+            datatype = '[{0}]'.format(', '.join(self.vartype.list))
+        if self.vartype.range:
+            datatype = '[{0}..{0}]'.format(self.vartype.range[0],
+                                           self.vartype.range[1])
+        return '{0}: {1}'.format(argument, datatype)
+
+
+#: An argument type with default value and range.
+Vartype = namedtuple('Vartype', 'datatype, default, list, range')
 
 # A shared cache for ZoneGroupState. Each zone has the same info, so when a
 # SoCo instance is asked for group info, we can cache it and return it when
@@ -538,8 +559,6 @@ class Service(object):
         """
 
         # pylint: disable=too-many-locals
-        # TODO: Provide for Allowed value list, Allowed value range,
-        # default value
         # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
         # get the scpd body as bytes, and feed directly to elementtree
@@ -553,7 +572,15 @@ class Service(object):
             statevars = srvStateTable.findall('{}stateVariable'.format(ns))
             for state in statevars:
                 name = state.findtext('{}name'.format(ns))
-                vartypes[name] = state.findtext('{}dataType'.format(ns))
+                datatype = state.findtext('{}dataType'.format(ns))
+                default = state.findtext('{}defaultValue'.format(ns))
+                vlist = [item.text for item in
+                         state.find('{}allowedValueList'.format(ns)) or ()
+                         ] or None
+                vrange = [item.text for item in
+                          state.find('{}allowedValueRange'.format(ns)) or ()
+                          ] or None
+                vartypes[name] = Vartype(datatype, default, vlist, vrange)
         # find all the actions
         actionLists = tree.findall('{}actionList'.format(ns))
         for actionList in actionLists:
