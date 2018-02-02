@@ -182,6 +182,7 @@ class Service(object):
             611: 'Invalid Control URL',
             612: 'No Such Session',
         }
+        self.DEFAULT_ARGS = {}
 
     def __getattr__(self, action):
         """Called when a method on the instance cannot be found.
@@ -259,7 +260,7 @@ class Service(object):
             xml_response (str):  SOAP/xml response text (unicode,
                 not utf-8).
         Returns:
-             dict: a dict of ``{argument_name, value)}`` items.
+             dict: a dict of ``{argument_name: value}`` items.
         """
 
         # A UPnP SOAP response (including headers) looks like this:
@@ -303,6 +304,30 @@ class Service(object):
         action_response = tree.find(
             "{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
         return dict((i.tag, i.text or "") for i in action_response)
+
+    def compose_args(self, args, kwargs):
+        """Compose the argument list from list of tuples or dictionary form.
+
+        Args:
+            args (list): Arguments as a list of ``(name, value)`` tuples
+                specifying the name of each argument and its value, eg
+                ``[('InstanceID', 0), ('Speed', 1)]``. The value
+                can be a string or something with a string representation.
+            kwargs (dict): Arguments as a dict, eg
+                ``{'InstanceID': 0, 'Speed': 1}.
+
+        This merges args and kwargs into a single argument list, with
+        ``DEFAULT_ARGS`` as default values.
+        The ``kwargs`` take precedence over the ``args``.
+
+        Returns:
+            list: a list of ``(name, value)`` tuples.
+        """
+        # TODO: Use the information from iter_actions() to select default args
+        composed = self.DEFAULT_ARGS.copy()
+        composed.update(args or ())
+        composed.update(kwargs or ())
+        return list(composed.items())
 
     def build_command(self, action, args=None):
         """Build a SOAP request.
@@ -357,14 +382,15 @@ class Service(object):
         # is set over the network
         return (headers, body)
 
-    def send_command(self, action, args=None, cache=None, cache_timeout=None):
+    def send_command(self, action, args=None, cache=None, cache_timeout=None,
+                     **kwargs):
         """Send a command to a Sonos device.
 
         Args:
             action (str): the name of an action (a string as specified in the
                 service description XML file) to be sent.
             args (list, optional): Relevant arguments as a list of (name,
-                value) tuples.
+                value) tuples, as an alternative to ``kwargs``.
             cache (Cache): A cache is operated so that the result will be
                 stored for up to ``cache_timeout`` seconds, and a subsequent
                 call with the same arguments within that period will be
@@ -377,9 +403,10 @@ class Service(object):
                 the cache identified by the service's `cache` attribute will
                 be used, but a different cache object may be specified in
                 the `cache` parameter.
+            kwargs: Relevant arguments for the command.
 
         Returns:
-             dict: a dict of ``{argument_name, value)}`` items.
+             dict: a dict of ``{argument_name, value}`` items.
 
         Raises:
             `SoCoUPnPException`: if a SOAP error occurs.
@@ -387,6 +414,7 @@ class Service(object):
             `requests.exceptions.HTTPError`: if an http error.
 
         """
+        args = self.compose_args(args, kwargs)
         if cache is None:
             cache = self.cache
         result = cache.get(action, args)
@@ -779,6 +807,7 @@ class AVTransport(Service):
             738: 'Bad Domain Name',
             739: 'Server Error',
         })
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
 
 
 class Queue(Service):
