@@ -64,16 +64,16 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 # log.setLevel(logging.INFO)
 
 
-#: A UPnP Action and its arguments.
 class Action(namedtuple('ActionBase', 'name, in_args, out_args')):
+    """A UPnP Action and its arguments."""
     def __str__(self):
         args = ', '.join(str(arg) for arg in self.in_args)
         returns = ', '.join(str(arg) for arg in self.out_args)
         return '{0}({1}) -> {{{2}}}'.format(self.name, args, returns)
 
 
-#: A UPnP Argument and its type.
 class Argument(namedtuple('ArgumentBase', 'name, vartype')):
+    """A UPnP Argument and its type."""
     def __str__(self):
         argument, datatype = self.name, self.vartype.datatype
         if self.vartype.default:
@@ -81,7 +81,7 @@ class Argument(namedtuple('ArgumentBase', 'name, vartype')):
         if self.vartype.list:
             datatype = '[{0}]'.format(', '.join(self.vartype.list))
         if self.vartype.range:
-            datatype = '[{0}..{0}]'.format(self.vartype.range[0],
+            datatype = '[{0}..{1}]'.format(self.vartype.range[0],
                                            self.vartype.range[1])
         return '{0}: {1}'.format(argument, datatype)
 
