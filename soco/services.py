@@ -760,6 +760,7 @@ class RenderingControl(Service):
         super(RenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
         self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
 
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
@@ -831,3 +832,4 @@ class GroupRenderingControl(Service):
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
         self.event_subscription_url = \
             "/MediaRenderer/GroupRenderingControl/Event"
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
