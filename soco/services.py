@@ -34,7 +34,9 @@ from __future__ import (
 )
 
 import logging
-from collections import namedtuple
+from collections import (
+    namedtuple, OrderedDict
+)
 from xml.sax.saxutils import escape
 
 import requests
@@ -182,7 +184,7 @@ class Service(object):
             611: 'Invalid Control URL',
             612: 'No Such Session',
         }
-        self.DEFAULT_ARGS = {}
+        self.DEFAULT_ARGS = OrderedDict()
 
     def __getattr__(self, action):
         """Called when a method on the instance cannot be found.

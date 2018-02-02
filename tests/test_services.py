@@ -159,7 +159,7 @@ def test_compose(service):
     service.DEFAULT_ARGS = {'third': 'default'}
     assert set(service.compose_args(TEST_ARGS, None)) == \
            set(TEST_ARGS + [('third', 'default')])
-    assert service.compose_args(TEST_ARGS + [('third', 3)], None) == \
+    assert set(service.compose_args(TEST_ARGS + [('third', 3)], None)) == \
            set(TEST_ARGS + [('third', 3)])
 
 
