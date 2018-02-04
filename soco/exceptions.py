@@ -4,6 +4,8 @@
 
 from __future__ import unicode_literals
 
+import collections
+
 
 class SoCoException(Exception):
 
@@ -80,3 +82,31 @@ class SoCoSlaveException(SoCoException):
 
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
+
+
+# pylint: disable=too-many-ancestors
+class ErrorDict(collections.Mapping, dict):
+    """A dict which supports seterror() to raise an exception on object
+    retrieval."""
+
+    def __init__(self, *args, **kwargs):
+        dict.__init__(self, *args, **kwargs)
+        self._errors = {}
+
+    def seterror(self, key, error):
+        """Set an exception to raise when a key is retrieved."""
+        if error:
+            self._errors[key] = error
+        else:
+            del self._errors
+
+    def __getitem__(self, key):
+        if key in self._errors:
+            raise self._errors[key]
+        return dict.__getitem__(self, key)
+
+    def __iter__(self):
+        return dict.__iter__(self)
+
+    def __len__(self):
+        return dict.__len__(self)
