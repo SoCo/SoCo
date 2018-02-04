@@ -95,7 +95,10 @@ class ErrorDict(collections.Mapping, dict):
 
     def seterror(self, key, error):
         """Set an exception to raise when a key is retrieved."""
-        self._errors[key] = error
+        if error:
+            self._errors[key] = error
+        else:
+            del self._errors
 
     def __getitem__(self, key):
         if key in self._errors:
