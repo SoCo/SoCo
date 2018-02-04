@@ -22,7 +22,7 @@ from .compat import (
     Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
 )
 from .data_structures_entry import from_didl_string
-from .exceptions import SoCoException
+from .exceptions import SoCoException, ErrorDict
 from .utils import camel_to_underscore
 from .xml import XML
 
@@ -86,7 +86,7 @@ def parse_event_xml(xml_event):
                     break
     """
 
-    result = {}
+    result = ErrorDict()
     tree = XML.fromstring(xml_event)
     # property values are just under the propertyset, which
     # uses this namespace
@@ -136,7 +136,13 @@ def parse_event_xml(xml_event):
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
                     if value.startswith('<DIDL-Lite'):
-                        value = from_didl_string(value)[0]
+                        # Set any parsing exceptions to be reraised by the
+                        # ErrorDict
+                        try:
+                            value = from_didl_string(value)[0]
+                        except SoCoException as ex:
+                            result.seterror(tag, ex)
+                            continue
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
