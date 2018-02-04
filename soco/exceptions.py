@@ -107,12 +107,6 @@ class SoCoFault(object):
     def __getitem__(self, item):
         raise self.exception
 
-    def __eq__(self, other):
-        raise self.exception
-
-    def __ne__(self, other):
-        raise self.exception
-
     def __repr__(self):
         return '<{0} ({1}) at {2}>'.format(self.__class__.__name__,
                                            self.exception.__class__.__name__,
