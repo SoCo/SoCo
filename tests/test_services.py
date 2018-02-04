@@ -9,7 +9,9 @@ from __future__ import unicode_literals
 import pytest
 
 from soco.exceptions import SoCoUPnPException
-from soco.services import Service
+from soco.services import (
+    Service, Action, Argument, Vartype
+)
 
 try:
     from unittest import mock
@@ -67,7 +69,18 @@ DUMMY_VALID_ACTION = "".join([
         '</s:Body>'
     '</s:Envelope>'])  # noqa PEP8
 
-TEST_ARGS = [('first', 'one'), ('second', 2)]
+DUMMY_VARTYPE = Vartype('ui4', None, None, None)
+
+DUMMY_ACTIONS = [Action(
+        name='Test',
+        in_args=[
+            Argument(name='Argument1', vartype=DUMMY_VARTYPE),
+            Argument(name='Argument2', vartype=DUMMY_VARTYPE)
+        ],
+        out_args=[]
+    )]
+
+DUMMY_ARGS = [('Argument1', 1), ('Argument2', 2)]
 
 @pytest.fixture()
 def service():
@@ -151,16 +164,30 @@ def test_unwrap_invalid_char(service):
 
 def test_compose(service):
     """Test argument composition."""
+    service._actions = DUMMY_ACTIONS
     service.DEFAULT_ARGS = {}
-    assert set(service.compose_args(TEST_ARGS, None)) == set(TEST_ARGS)
-    assert set(service.compose_args(None, dict(TEST_ARGS))) == set(TEST_ARGS)
-    assert set(service.compose_args(TEST_ARGS, {'third': 3})) == \
-           set(TEST_ARGS + [('third', 3)])
-    service.DEFAULT_ARGS = {'third': 'default'}
-    assert set(service.compose_args(TEST_ARGS, None)) == \
-           set(TEST_ARGS + [('third', 'default')])
-    assert set(service.compose_args(TEST_ARGS + [('third', 3)], None)) == \
-           set(TEST_ARGS + [('third', 3)])
+
+    with pytest.raises(AttributeError):
+        service.compose_args('Error')
+
+    with pytest.raises(ValueError):
+        service.compose_args('Test', [('Argument1', 1)])
+    with pytest.raises(ValueError):
+        service.compose_args('Test', Argument1=1)
+    with pytest.raises(ValueError):
+        service.compose_args('Test', DUMMY_ARGS+[('Error', 3)])
+    with pytest.raises(ValueError):
+        service.compose_args('Test', **dict(DUMMY_ARGS+[('Error', 3)]))
+
+    assert service.compose_args(DUMMY_ARGS) == DUMMY_ARGS
+    assert service.compose_args(**dict(DUMMY_ARGS)) == DUMMY_ARGS
+
+    service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
+    assert service.compose_args(DUMMY_ARGS) == DUMMY_ARGS
+    assert service.compose_args(**dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args(DUMMY_ARGS[1:]) == DUMMY_ARGS
+    assert service.compose_args(**dict(DUMMY_ARGS[1:])) == DUMMY_ARGS
+
 
 
 def test_build_command(service):
