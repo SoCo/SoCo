@@ -85,7 +85,7 @@ class NotSupportedException(SoCoException):
 class SoCoFault(object):
     """Class to represent a failed object instantiation.
 
-    It rethrows the exception on any use.
+    It rethrows the exception on common use.
     """
 
     def __init__(self, exception, **kwargs):
