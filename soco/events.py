@@ -141,6 +141,11 @@ def parse_event_xml(xml_event):
                         try:
                             value = from_didl_string(value)[0]
                         except SoCoException as ex:
+                            log.error("Event contains illegal metadata"
+                                      "for '%s'.\n"
+                                      "Error message: '%s'\n"
+                                      "The result will be a SoCoFault.",
+                                      tag, str(ex))
                             value = SoCoFault(ex, metadata=value)
                     channel = last_change_var.get('channel')
                     if channel is not None:
