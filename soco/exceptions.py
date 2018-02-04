@@ -108,9 +108,9 @@ class SoCoFault(object):
         raise self.exception
 
     def __repr__(self):
-        return '<{0} ({1}) at {2}>'.format(self.__class__.__name__,
-                                           self.exception.__class__.__name__,
-                                           hex(id(self)))
+        return '<{0}: {1} at {2}>'.format(self.__class__.__name__,
+                                          repr(self.exception),
+                                          hex(id(self)))
 
     def __str__(self):
         return self.__repr__()
