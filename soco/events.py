@@ -47,6 +47,7 @@ def parse_event_xml(xml_event):
               :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
             * an instance of a `DidlObject` subclass (eg if it represents
               track metadata).
+            * a `SoCoFault` (if a variable contains illegal metadata)
 
     Example:
 
@@ -173,7 +174,8 @@ class Event(object):
             `time.time` function).
         service (str): the service which is subscribed to the event.
         variables (dict, optional): contains the ``{names: values}`` of the
-            evented variables. Defaults to `None`.
+            evented variables. Defaults to `None`. The values may be
+            `SoCoFault` objects if the metadata could not be parsed.
 
     Raises:
         AttributeError:  Not all attributes are returned with each event. An
