@@ -120,6 +120,7 @@ else:
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
+
 # pylint: disable=too-many-branches
 def parse_event_xml(xml_event):
     """Parse the body of a UPnP event.
@@ -262,6 +263,7 @@ class Event(object):
         """
         raise TypeError('Event object does not support attribute assignment')
 
+
 class EventNotifyHandler(NotifyHandler):
     """Handles HTTP ``NOTIFY`` Verbs sent to the Event Listener server.
 
@@ -311,8 +313,8 @@ class EventNotifyHandler(NotifyHandler):
          """
 
         timestamp = time.time()
-        seq = headers['seq'] # Event sequence number
-        sid = headers['sid'] # Event Subscription Identifier
+        seq = headers['seq']  # Event sequence number
+        sid = headers['sid']  # Event Subscription Identifier
         # find the relevant service from the sid
         service = subscriptions.get_service(sid)
         # It might have been removed by another thread
@@ -347,11 +349,12 @@ class EventListener(Listener):
     `soco.events_base_twisted.Listener`.
 
     Note:
-        The port on which the Event Listener attempts to listen is configurable.
-        See `config.EVENT_LISTENER_PORT`. If the application is using twisted
-        (see :ref:`Example 2 <example2>` above) and this port is unavailable,
-        the Event Listener will attempt to listen on the next available port,
-        within a range of 100 from `config.EVENT_LISTENER_PORT`.
+        The port on which the Event Listener attempts to listen is
+        configurable. See `config.EVENT_LISTENER_PORT`. If the application
+        is using twisted (see :ref:`Example 2 <example2>` above) and this
+        port is unavailable, the Event Listener will attempt to listen on
+        the next available port, within a range of 100 from
+        `config.EVENT_LISTENER_PORT`.
 
     """
 
@@ -388,13 +391,13 @@ class EventListener(Listener):
                     # doesn't have to be reachable
                     temp_sock.connect((any_zone.ip_address, 0))
                     ip_address = temp_sock.getsockname()[0]
-                except: # pylint: disable=bare-except
+                except socket.error:
                     log.exception(
                         'Could not start Event Listener: check network.')
                     ip_address = None
                 finally:
                     temp_sock.close()
-            if ip_address: #Otherwise, no point trying to start server
+            if ip_address:  # Otherwise, no point trying to start server
                 # Check what port we actually got (twisted only)
                 port = super(EventListener, self).start(ip_address)
                 if port:
@@ -409,6 +412,7 @@ class EventListener(Listener):
         self.is_running = False
         super(EventListener, self).stop(self.address)
         log.info("Event Listener stopped")
+
 
 class Subscription(SubscriptionBase):
 
@@ -497,12 +501,13 @@ class Subscription(SubscriptionBase):
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
 
-        def success(headers): # pylint: disable=missing-docstring
+        # pylint: disable=missing-docstring
+        def success(headers):
             self.sid = headers['sid']
             timeout = headers['timeout']
             # According to the spec, timeout can be "infinite" or "second-123"
-            # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-            # capital letter)
+            # where 123 is a number of seconds.  Sonos uses "Second-123"
+            # (with a capital letter)
             if timeout.lower() == 'infinite':
                 self.timeout = None
             else:
@@ -523,7 +528,8 @@ class Subscription(SubscriptionBase):
             interval = self.timeout * 85 / 100
             self.auto_renew_start(interval)
 
-        def failure(): # pylint: disable=missing-docstring
+        # pylint: disable=missing-docstring
+        def failure():
             # Should an exception be raised?
             log.warning(
                 "Could not subscribe to %s",
@@ -582,11 +588,12 @@ class Subscription(SubscriptionBase):
         if requested_timeout is not None:
             headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
 
-        def success(headers): # pylint: disable=missing-docstring
+        # pylint: disable=missing-docstring
+        def success(headers):
             timeout = headers['timeout']
             # According to the spec, timeout can be "infinite" or "second-123"
-            # where 123 is a number of seconds.  Sonos uses "Second-123" (with a
-            # a capital letter)
+            # where 123 is a number of seconds.  Sonos uses "Second-123"
+            # (with a capital letter)
             if timeout.lower() == 'infinite':
                 self.timeout = None
             else:
@@ -598,7 +605,8 @@ class Subscription(SubscriptionBase):
                 self.service.base_url + self.service.event_subscription_url,
                 self.sid)
 
-        def failure(): # pylint: disable=missing-docstring
+        # pylint: disable=missing-docstring
+        def failure():
             log.warning(
                 "Could not renew subscription to %s, sid: %s",
                 self.service.base_url + self.service.event_subscription_url,
@@ -631,13 +639,16 @@ class Subscription(SubscriptionBase):
         headers = {
             'SID': self.sid
         }
-        def success(*arg): # pylint: disable=missing-docstring, unused-argument
+
+        # pylint: disable=missing-docstring, unused-argument
+        def success(*arg):
             log.info(
                 "Unsubscribed from %s, sid: %s",
                 self.service.base_url + self.service.event_subscription_url,
                 self.sid)
 
-        def failure(): # pylint: disable=missing-docstring
+        # pylint: disable=missing-docstring
+        def failure():
             log.warning(
                 "Error attempting to unsubscribe from %s, sid: %s",
                 self.service.base_url + self.service.event_subscription_url,
@@ -648,7 +659,8 @@ class Subscription(SubscriptionBase):
             self.service.base_url + self.service.event_subscription_url,
             headers, success, failure)
 
-    def _cancel_subscription(self): # pylint: disable=missing-docstring
+    # pylint: disable=missing-docstring
+    def _cancel_subscription(self):
         self.is_subscribed = False
         # Set the self._has_been_unsubscribed flag now
         # to prevent reuse of the subscription, even if
@@ -674,6 +686,5 @@ class Subscription(SubscriptionBase):
             time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
 
-subscriptions = Subscriptions() # pylint: disable=C0103
-event_listener = EventListener() # pylint: disable=C0103
-
+subscriptions = Subscriptions()  # pylint: disable=C0103
+event_listener = EventListener()  # pylint: disable=C0103
