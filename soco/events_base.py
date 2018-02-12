@@ -27,9 +27,11 @@ from .compat import (
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
+
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """A TCP server which handles each new request in a new thread."""
     allow_reuse_address = True
+
 
 class EventServerThread(threading.Thread):
     """The thread in which the event listener server will run."""
@@ -63,6 +65,7 @@ class EventServerThread(threading.Thread):
         # Listen for events until told to stop
         while not self.stop_flag.is_set():
             listener.handle_request()
+
 
 class NotifyHandler(BaseHTTPRequestHandler):
     """Base class for `soco.events.EventNotifyHandler`
@@ -99,6 +102,7 @@ class NotifyHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):  # pylint: disable=arguments-differ
         # Divert standard webserver logging to the debug log
         log.debug(fmt, *args)
+
 
 class Listener(object):
     """Base class for `soco.events.EventListener`
@@ -157,6 +161,7 @@ class Listener(object):
         # check if join timed out and issue a warning if it did
         if self._listener_thread.isAlive():
             log.warning('Event Listener did not shutdown gracefully.')
+
 
 class SubscriptionBase(object):
     """Base class for `soco.events.Subscription`
@@ -225,7 +230,7 @@ class SubscriptionBase(object):
         try:
             response = requests.request(method, url, headers=headers)
             response.raise_for_status()
-        except: # pylint: disable=bare-except
+        except requests.exceptions.RequestException:
             log.exception('Problem sending request')
         else:
             if success:
@@ -234,6 +239,7 @@ class SubscriptionBase(object):
 
         if failure:
             failure()
+
 
 class Subscriptions(object):
     """Maintains mappings of sids to event queues and sids to service
@@ -247,7 +253,8 @@ class Subscriptions(object):
         #: Used to store a mapping of sid to subscription
         self.subscriptions = weakref.WeakValueDictionary()
         # The lock to go with it
-        # You must only ever access the mapping in the context of this lock, eg:
+        # You must only ever access the mapping in the context of this lock,
+        # eg:
         #   with self.subscriptions_lock:
         #       queue = self.subscriptions[sid].events
         #: `threading.Lock`: for use with `subscriptions`
@@ -317,4 +324,3 @@ class Subscriptions(object):
                 self.subscriptions[sid].events.put(event)
             except KeyError:  # The key may have been deleted in another thread
                 pass
-
