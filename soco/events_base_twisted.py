@@ -14,7 +14,7 @@ imported from `soco.events_base`
 
 # Importing unicode_literals results in twisted errors,
 # so the import has been commented out.
-#from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 import threading
 import weakref
@@ -30,10 +30,12 @@ from twisted.web.http_headers import Headers
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
+
 class NotifyHandler(Resource):
     """Base class for `soco.events.EventNotifyHandler`
     """
     isLeaf = True
+
     def render_NOTIFY(self, request):  # pylint: disable=invalid-name
         """Handles HTTP ``NOTIFY`` Verbs sent to the Event Listener server by
         calling `handle_notification` with the headers and content.
@@ -61,6 +63,7 @@ class NotifyHandler(Resource):
         log.info(
             "Event %s received for %s service at %s", seq,
             service_id, timestamp)
+
 
 class Listener(object):
     """Base class for `soco.events.EventListener`
@@ -108,7 +111,7 @@ class Listener(object):
                                               interface=ip_address)
                 break
             # pylint: disable=invalid-name
-            except twisted.internet.error.CannotListenError, e:
+            except twisted.internet.error.CannotListenError as e:
                 log.warning(e)
                 continue
 
@@ -122,6 +125,7 @@ class Listener(object):
         """Stop the listener."""
         port, self.port = self.port, None
         port.stopListening()
+
 
 class SubscriptionBase(object):
     """Base class for `soco.events.Subscription`
@@ -187,31 +191,25 @@ class SubscriptionBase(object):
             url.encode('latin-1'),
             Headers(headers)
         )
-        d = agent.request(*args) # pylint: disable=invalid-name
+        d = agent.request(*args)  # pylint: disable=invalid-name
 
         if success:
-            def on_success(response): # pylint: disable=missing-docstring
-                try:
-                    response_headers = {}
-                    for header in response.headers.getAllRawHeaders():
-                        response_headers[header[0].lower()] = header[1][0]
-                    success(response_headers)
-                except: # pylint: disable=bare-except
-                    log.exception('Problem executing function on_success')
+            def on_success(response):  # pylint: disable=missing-docstring
+                response_headers = {}
+                for header in response.headers.getAllRawHeaders():
+                    response_headers[header[0].lower()] = header[1][0]
+                success(response_headers)
             d.addCallback(on_success)
 
-        def on_failure(f): # pylint: disable=invalid-name, missing-docstring
+        def on_failure(f):  # pylint: disable=invalid-name, missing-docstring
             if f.check(twisted.internet.error.ConnectError):
                 log.warning('Connection error: %s', f.value)
             else:
-                log.exception('Problem executing function on_failure')
+                log.exception('Problem executing SubscriptionBase.request')
             if failure:
-                try:
-                    failure()
-                except: # pylint: disable=bare-except
-                    log.exception(
-                        'Problem executing failure from function on_failure')
+                failure()
         d.addErrback(on_failure)
+
 
 class Subscriptions(object):
     """Maintains a mapping of sids to `soco.events.Subscription` instances.
@@ -289,4 +287,3 @@ class Subscriptions(object):
                 callback(event)
             else:
                 subscription.events.put(event)
-
