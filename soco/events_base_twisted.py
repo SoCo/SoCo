@@ -20,6 +20,7 @@ import threading
 import weakref
 import logging
 
+# pylint: disable=import-error
 from twisted.internet import reactor
 from twisted.web.server import Site
 from twisted.web.resource import Resource
