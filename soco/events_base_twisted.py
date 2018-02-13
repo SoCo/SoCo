@@ -82,10 +82,10 @@ class Listener(object):
         self.notify_handler = notify_handler
         #: `int`: Port on which to listen.
         self.requested_port_number = requested_port_number
-        #:  :py:class:`twisted.internet.tcp.Port`: set at `start`
+        #:  :py:class:`twisted.internet.tcp.Port`: set at `listen`
         self.port = None
 
-    def start(self, ip_address):
+    def listen(self, ip_address):
         """ Start the listener listening on the local machine at
         `requested_port_number`. If this port is unavailable, the
         listener will attempt to listen on the next available port,
@@ -119,9 +119,11 @@ class Listener(object):
             log.info("Event listener running on %s", (ip_address,
                                                       self.port.port))
             return self.port.port
+        else:
+            return None
 
     # pylint: disable=unused-argument
-    def stop(self, *args):
+    def stop_listening(self, *args):
         """Stop the listener."""
         port, self.port = self.port, None
         port.stopListening()
@@ -268,6 +270,8 @@ class Subscriptions(object):
         if sid in self.sid_to_subscription.keys():
             subscription = self.sid_to_subscription[sid]
             return subscription.service
+        else:
+            return None
 
     def send_to_service(self, sid, event):
         """Send an `Event` to the relevant callback or event_queue.
