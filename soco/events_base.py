@@ -124,7 +124,7 @@ class Listener(object):
         #: `EventServerThread`: thread on which to run.
         self._listener_thread = None
 
-    def start(self, ip_address):
+    def listen(self, ip_address):
         """ Start the listener listening on the local machine at
         `requested_port_number`.
 
@@ -134,7 +134,7 @@ class Listener(object):
 
         Returns:
             int: `requested_port_number`. Included for compatibility with
-            `soco.events_base_twisted.Listener.start`
+            `soco.events_base_twisted.Listener.listen`
         """
         self._listener_thread = EventServerThread((ip_address,
                                                    self.requested_port_number),
@@ -143,7 +143,7 @@ class Listener(object):
         self._listener_thread.start()
         return self.requested_port_number
 
-    def stop(self, address):
+    def stop_listening(self, address):
         """Stop the listener."""
         # Signal the thread to stop before handling the next request
         self._listener_thread.stop_flag.set()
@@ -310,6 +310,8 @@ class Subscriptions(object):
         # It might have been removed by another thread
         if subscription:
             return subscription.service
+        else:
+            return None
 
     def send_to_service(self, sid, event):
         """Send an `Event` to the relevant event_queue.
