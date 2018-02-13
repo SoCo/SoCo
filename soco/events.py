@@ -399,7 +399,7 @@ class EventListener(Listener):
                     temp_sock.close()
             if ip_address:  # Otherwise, no point trying to start server
                 # Check what port we actually got (twisted only)
-                port = super(EventListener, self).start(ip_address)
+                port = self.listen(ip_address)
                 if port:
                     self.address = (ip_address, port)
                     self.is_running = True
@@ -410,7 +410,7 @@ class EventListener(Listener):
         if not self.is_running:
             return
         self.is_running = False
-        super(EventListener, self).stop(self.address)
+        self.stop_listening(self.address)
         log.info("Event Listener stopped")
 
 
@@ -685,6 +685,7 @@ class Subscription(SubscriptionBase):
         else:
             time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
+
 
 subscriptions = Subscriptions()  # pylint: disable=C0103
 event_listener = EventListener()  # pylint: disable=C0103
