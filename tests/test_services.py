@@ -193,14 +193,14 @@ def test_compose(service):
         service.compose_args('Test', None, dict(DUMMY_ARGS+[('Error', 3)]))
 
     assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, **dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
 
     service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
 
     assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, **dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
     assert service.compose_args('Test', DUMMY_ARGS[1:], {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, **dict(DUMMY_ARGS[1:])) \
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS[1:])) \
         == DUMMY_ARGS
 
 
