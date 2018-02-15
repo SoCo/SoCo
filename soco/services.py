@@ -34,9 +34,7 @@ from __future__ import (
 )
 
 import logging
-from collections import (
-    namedtuple, OrderedDict
-)
+from collections import namedtuple
 from xml.sax.saxutils import escape
 
 import requests
@@ -338,19 +336,19 @@ class Service(object):
             `ValueError`: If the argument lists do not match the action
                 signature.
         """
-        in_argdict2 = dict(in_arglist or ())
+        in_arglist_as_dict = dict(in_arglist or ())
 
-        action = None
-        for act in self.actions:
-            if act.name == action_name:
-                action = act
+        for action in self.actions:
+            if action.name == action_name:
+                # The found 'action' will be visible from outside the loop
                 break
-        if action is None:
+        else:
             raise AttributeError('Unknown Action: {0}'.format(action_name))
 
         # Check for given argument names which do not occur in the expected
         # argument list
-        unexpected = (set(in_argdict) | set(in_argdict2)) - \
+        # pylint: disable=undefined-loop-variable
+        unexpected = (set(in_argdict) | set(in_arglist_as_dict)) - \
             set(argument.name for argument in action.in_args)
         if unexpected:
             raise ValueError(
@@ -365,8 +363,8 @@ class Service(object):
             if name in in_argdict:
                 composed.append((name, in_argdict[name]))
                 continue
-            if name in in_argdict2:
-                composed.append((name, in_argdict2[name]))
+            if name in in_arglist_as_dict:
+                composed.append((name, in_arglist_as_dict[name]))
                 continue
             if name in self.DEFAULT_ARGS:
                 composed.append((name, self.DEFAULT_ARGS[name]))
@@ -692,13 +690,14 @@ class Service(object):
                 name = state.findtext('{}name'.format(ns))
                 datatype = state.findtext('{}dataType'.format(ns))
                 default = state.findtext('{}defaultValue'.format(ns))
-                vlist = [item.text for item in
-                         state.find('{}allowedValueList'.format(ns)) or ()
-                         ] or None
-                vrange = [item.text for item in
-                          state.find('{}allowedValueRange'.format(ns)) or ()
-                          ] or None
-                vartypes[name] = Vartype(datatype, default, vlist, vrange)
+                value_list_elt = state.find('{}allowedValueList'.format(ns))\
+                    or ()
+                value_list = [item.text for item in value_list_elt] or None
+                value_range_elt = state.find('{}allowedValueRange'.format(ns))\
+                    or ()
+                value_range = [item.text for item in value_range_elt] or None
+                vartypes[name] = Vartype(datatype, default, value_list,
+                                         value_range)
         # find all the actions
         actionLists = tree.findall('{}actionList'.format(ns))
         for actionList in actionLists:
