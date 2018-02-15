@@ -80,3 +80,13 @@ class SoCoSlaveException(SoCoException):
 
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
+
+
+class ErrorDescriptor(object):
+    """Descriptor which raises an error on __get__."""
+
+    def __init__(self, exception):
+        self._exception = exception
+
+    def __get__(self, obj, obj_type=None):
+        raise self._exception

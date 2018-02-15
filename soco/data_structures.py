@@ -28,6 +28,7 @@ helpful.
 
 from __future__ import unicode_literals
 
+import collections
 import sys
 import textwrap
 import warnings
@@ -1174,3 +1175,39 @@ class Queue(ListOfMusicInfoItems):
             self.__class__.__name__,
             super(Queue, self).__repr__(),
         )
+
+
+###############################################################################
+# SPECIAL DICTS                                                               #
+###############################################################################
+
+# pylint: disable=too-many-ancestors
+class DescriptorDict(collections.MutableMapping, dict):
+
+    """A dict which handles descriptor items like descriptor attributes."""
+
+    def __getitem__(self, key):
+        item = dict.__getitem__(self, key)
+        if hasattr(item, '__get__'):
+            return item.__get__(self)
+        return item
+
+    def __setitem__(self, key, value):
+        if key in self.keys():
+            item = dict.__getitem__(self, key)
+            if hasattr(item, '__set__'):
+                return item.__set__(self, value)
+        return dict.__setitem__(self, key, value)
+
+    def __delitem__(self, key):
+        if key in self.keys():
+            item = dict.__getitem__(self, key)
+            if hasattr(item, '__del__'):
+                return item.__del__(self)
+        return dict.__delitem__(self, key)
+
+    def __iter__(self):
+        return dict.__iter__(self)
+
+    def __len__(self):
+        return dict.__len__(self)
