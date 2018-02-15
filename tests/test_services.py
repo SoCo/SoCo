@@ -69,16 +69,28 @@ DUMMY_VALID_ACTION = "".join([
         '</s:Body>'
     '</s:Envelope>'])  # noqa PEP8
 
-DUMMY_VARTYPE = Vartype('ui4', None, None, None)
+DUMMY_VARTYPE = Vartype('string', None, None, None)
 
-DUMMY_ACTIONS = [Action(
+DUMMY_ACTIONS = [
+    Action(
+        name='SetAVTransportURI',
+        in_args=[
+            Argument(name='InstanceID', vartype=DUMMY_VARTYPE),
+            Argument(name='CurrentURI', vartype=DUMMY_VARTYPE),
+            Argument(name='CurrentURIMetaData', vartype=DUMMY_VARTYPE),
+            Argument(name='Unicode', vartype=DUMMY_VARTYPE)
+        ],
+        out_args=[]
+    ),
+    Action(
         name='Test',
         in_args=[
             Argument(name='Argument1', vartype=DUMMY_VARTYPE),
             Argument(name='Argument2', vartype=DUMMY_VARTYPE)
         ],
         out_args=[]
-    )]
+    )
+]
 
 DUMMY_ARGS = [('Argument1', 1), ('Argument2', 2)]
 
@@ -88,7 +100,9 @@ def service():
 
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
-    return Service(mock_soco)
+    mock_service = Service(mock_soco)
+    mock_service._actions = DUMMY_ACTIONS
+    return mock_service
 
 
 def test_init_defaults(service):
@@ -164,29 +178,30 @@ def test_unwrap_invalid_char(service):
 
 def test_compose(service):
     """Test argument composition."""
-    service._actions = DUMMY_ACTIONS
     service.DEFAULT_ARGS = {}
 
     with pytest.raises(AttributeError):
-        service.compose_args('Error')
+        service.compose_args('Error', None, {})
 
     with pytest.raises(ValueError):
-        service.compose_args('Test', [('Argument1', 1)])
+        service.compose_args('Test', [('Argument1', 1)], {})
     with pytest.raises(ValueError):
-        service.compose_args('Test', Argument1=1)
+        service.compose_args('Test', None, {'Argument1': 1})
     with pytest.raises(ValueError):
-        service.compose_args('Test', DUMMY_ARGS+[('Error', 3)])
+        service.compose_args('Test', DUMMY_ARGS+[('Error', 3)], {})
     with pytest.raises(ValueError):
-        service.compose_args('Test', **dict(DUMMY_ARGS+[('Error', 3)]))
+        service.compose_args('Test', None, dict(DUMMY_ARGS+[('Error', 3)]))
 
-    assert service.compose_args(DUMMY_ARGS) == DUMMY_ARGS
-    assert service.compose_args(**dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
+    assert service.compose_args('Test', None, **dict(DUMMY_ARGS)) == DUMMY_ARGS
 
     service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
-    assert service.compose_args(DUMMY_ARGS) == DUMMY_ARGS
-    assert service.compose_args(**dict(DUMMY_ARGS)) == DUMMY_ARGS
-    assert service.compose_args(DUMMY_ARGS[1:]) == DUMMY_ARGS
-    assert service.compose_args(**dict(DUMMY_ARGS[1:])) == DUMMY_ARGS
+
+    assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
+    assert service.compose_args('Test', None, **dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args('Test', DUMMY_ARGS[1:], {}) == DUMMY_ARGS
+    assert service.compose_args('Test', None, **dict(DUMMY_ARGS[1:])) \
+        == DUMMY_ARGS
 
 
 
