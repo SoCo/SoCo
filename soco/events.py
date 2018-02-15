@@ -610,6 +610,14 @@ class Subscription(object):
             time_left = self.timeout - (time.time() - self._timestamp)
             return time_left if time_left > 0 else 0
 
+    def __enter__(self):
+        if not self.is_subscribed:
+            self.subscribe()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.unsubscribe()
+
 
 # pylint: disable=C0103
 event_listener = EventListener()
