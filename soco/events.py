@@ -22,7 +22,7 @@ from .compat import (
     Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
 )
 from .data_structures_entry import from_didl_string
-from .exceptions import SoCoException, SoCoFault
+from .exceptions import SoCoException, SoCoFault, EventParseException
 from .utils import camel_to_underscore
 from .xml import XML
 
@@ -141,13 +141,16 @@ def parse_event_xml(xml_event):
                         # user can handle it
                         try:
                             value = from_didl_string(value)[0]
-                        except SoCoException as ex:
-                            log.error("Event contains illegal metadata"
-                                      "for '%s'.\n"
-                                      "Error message: '%s'\n"
-                                      "The result will be a SoCoFault.",
-                                      tag, str(ex))
-                            value = SoCoFault(ex, metadata=value)
+                        except SoCoException as original_exception:
+                            log.warning("Event contains illegal metadata"
+                                        "for '%s'.\n"
+                                        "Error message: '%s'\n"
+                                        "The result will be a SoCoFault.",
+                                        tag, str(original_exception))
+                            event_parse_exception = EventParseException(
+                                tag, value, original_exception
+                            )
+                            value = SoCoFault(event_parse_exception)
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
