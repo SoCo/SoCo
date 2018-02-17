@@ -9,7 +9,9 @@ from __future__ import unicode_literals
 import pytest
 
 from soco.exceptions import SoCoUPnPException
-from soco.services import Service
+from soco.services import (
+    Service, Action, Argument, Vartype
+)
 
 try:
     from unittest import mock
@@ -67,6 +69,32 @@ DUMMY_VALID_ACTION = "".join([
         '</s:Body>'
     '</s:Envelope>'])  # noqa PEP8
 
+DUMMY_VARTYPE = Vartype('string', None, None, None)
+
+DUMMY_ACTIONS = [
+    Action(
+        name='SetAVTransportURI',
+        in_args=[
+            Argument(name='InstanceID', vartype=DUMMY_VARTYPE),
+            Argument(name='CurrentURI', vartype=DUMMY_VARTYPE),
+            Argument(name='CurrentURIMetaData', vartype=DUMMY_VARTYPE),
+            Argument(name='Unicode', vartype=DUMMY_VARTYPE)
+        ],
+        out_args=[]
+    ),
+    Action(
+        name='Test',
+        in_args=[
+            Argument(name='Argument1', vartype=DUMMY_VARTYPE),
+            Argument(name='Argument2', vartype=DUMMY_VARTYPE)
+        ],
+        out_args=[]
+    )
+]
+
+DUMMY_ARGS = [('Argument1', 1), ('Argument2', 2)]
+
+DUMMY_ARGS_ALTERNATIVE = [('Argument1', 3), ('Argument2', 2)]
 
 @pytest.fixture()
 def service():
@@ -74,7 +102,9 @@ def service():
 
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
-    return Service(mock_soco)
+    mock_service = Service(mock_soco)
+    mock_service._actions = DUMMY_ACTIONS
+    return mock_service
 
 
 def test_init_defaults(service):
@@ -146,6 +176,46 @@ def test_unwrap_invalid_char(service):
     assert service.unwrap_arguments(responce_with_invalid_char) == {
         "CurrentLEDState": "On",
         "Unicode": "AB"}
+
+
+def test_compose(service):
+    """Test argument composition."""
+    service.DEFAULT_ARGS = {}
+
+    # Detect unknown action
+    with pytest.raises(AttributeError):
+        service.compose_args('Error', None, {})
+
+    # Detect missing / unknown arguments
+    with pytest.raises(ValueError):
+        service.compose_args('Test', [('Argument1', 1)], {})
+    with pytest.raises(ValueError):
+        service.compose_args('Test', None, {'Argument1': 1})
+    with pytest.raises(ValueError):
+        service.compose_args('Test', DUMMY_ARGS+[('Error', 3)], {})
+    with pytest.raises(ValueError):
+        service.compose_args('Test', None, dict(DUMMY_ARGS+[('Error', 3)]))
+
+    # Check correct output
+    assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
+    assert service.compose_args('Test', reversed(DUMMY_ARGS), {}) == DUMMY_ARGS
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
+
+    # Set Argument1 = 1 as default
+    service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
+
+    # Check that arguments are completed with default values
+    assert service.compose_args('Test', DUMMY_ARGS[1:], {}) == DUMMY_ARGS
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS[1:])) \
+        == DUMMY_ARGS
+
+    # Check that given arguments override the default values
+    assert service.compose_args('Test', DUMMY_ARGS_ALTERNATIVE, {}) \
+        == DUMMY_ARGS_ALTERNATIVE
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS_ALTERNATIVE)) \
+        == DUMMY_ARGS_ALTERNATIVE
+
+
 
 def test_build_command(service):
     """Test creation of SOAP body and headers from a command."""

@@ -63,10 +63,33 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
 # log.setLevel(logging.INFO)
 
-#: A UPnP Action and its arguments.
-Action = namedtuple('Action', 'name, in_args, out_args')
-#: A UPnP Argument and its type.
-Argument = namedtuple('Argument', 'name, vartype')
+
+class Action(namedtuple('ActionBase', 'name, in_args, out_args')):
+    """A UPnP Action and its arguments."""
+    def __str__(self):
+        args = ', '.join(str(arg) for arg in self.in_args)
+        returns = ', '.join(str(arg) for arg in self.out_args)
+        return '{0}({1}) -> {{{2}}}'.format(self.name, args, returns)
+
+
+class Argument(namedtuple('ArgumentBase', 'name, vartype')):
+    """A UPnP Argument and its type."""
+    def __str__(self):
+        argument = self.name
+        if self.vartype.default:
+            argument = "{0}={1}".format(self.name, self.vartype.default)
+        return '{0}: {1}'.format(argument, str(self.vartype))
+
+
+class Vartype(namedtuple('VartypeBase', 'datatype, default, list, range')):
+    """An argument type with default value and range."""
+    def __str__(self):
+        if self.list:
+            return '[{0}]'.format(', '.join(self.list))
+        if self.range:
+            return '[{0}..{1}]'.format(self.range[0], self.range[1])
+        return self.datatype
+
 
 # A shared cache for ZoneGroupState. Each zone has the same info, so when a
 # SoCo instance is asked for group info, we can cache it and return it when
@@ -131,6 +154,11 @@ class Service(object):
         #: a `TimedCache` with a default timeout=0.
         self.cache = Cache(default_timeout=0)
 
+        # Caching variables for actions and event_vars, will be filled when
+        # they are requested for the first time
+        self._actions = None
+        self._event_vars = None
+
         # From table 3.3 in
         # http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.1.pdf
         # This list may not be complete, but should be good enough to be going
@@ -161,6 +189,7 @@ class Service(object):
             611: 'Invalid Control URL',
             612: 'No Such Session',
         }
+        self.DEFAULT_ARGS = {}
 
     def __getattr__(self, action):
         """Called when a method on the instance cannot be found.
@@ -238,7 +267,7 @@ class Service(object):
             xml_response (str):  SOAP/xml response text (unicode,
                 not utf-8).
         Returns:
-             dict: a dict of ``{argument_name, value)}`` items.
+             dict: a dict of ``{argument_name: value}`` items.
         """
 
         # A UPnP SOAP response (including headers) looks like this:
@@ -282,6 +311,71 @@ class Service(object):
         action_response = tree.find(
             "{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
         return dict((i.tag, i.text or "") for i in action_response)
+
+    def compose_args(self, action_name, in_arglist, in_argdict):
+        """Compose the argument list from list of tuples or dictionary form.
+
+        Args:
+            action_name (str): The name of the action to be performed.
+            in_arglist (list): Arguments as a list of ``(name, value)``
+                tuples specifying the name of each argument and its value, eg
+                ``[('InstanceID', 0), ('Speed', 1)]``. The value
+                can be a string or something with a string representation.
+            in_argdict (dict): Arguments as a dict, eg
+                ``{'InstanceID': 0, 'Speed': 1}.
+
+        This merges args and kwargs into a single argument list, with
+        ``DEFAULT_ARGS`` as default values.
+        The ``argdict`` takes precedence over the ``arglist``.
+
+        Returns:
+            list: a list of ``(name, value)`` tuples.
+
+        Raises:
+            `AttributeError`: If this service does not support the action.
+            `ValueError`: If the argument lists do not match the action
+                signature.
+        """
+        in_arglist_as_dict = dict(in_arglist or ())
+
+        for action in self.actions:
+            if action.name == action_name:
+                # The found 'action' will be visible from outside the loop
+                break
+        else:
+            raise AttributeError('Unknown Action: {0}'.format(action_name))
+
+        # Check for given argument names which do not occur in the expected
+        # argument list
+        # pylint: disable=undefined-loop-variable
+        unexpected = (set(in_argdict) | set(in_arglist_as_dict)) - \
+            set(argument.name for argument in action.in_args)
+        if unexpected:
+            raise ValueError(
+                "Unexpected argument '{0}'. Method signature: {1}"
+                .format(next(iter(unexpected)), str(action))
+            )
+
+        # List the (name, value) tuples for each argument in the argument list
+        composed = []
+        for argument in action.in_args:
+            name = argument.name
+            if name in in_argdict:
+                composed.append((name, in_argdict[name]))
+                continue
+            if name in in_arglist_as_dict:
+                composed.append((name, in_arglist_as_dict[name]))
+                continue
+            if name in self.DEFAULT_ARGS:
+                composed.append((name, self.DEFAULT_ARGS[name]))
+                continue
+            if argument.vartype.default is not None:
+                composed.append((name, argument.vartype.default))
+            raise ValueError(
+                "Missing argument '{0}'. Method signature: {1}"
+                .format(argument.name, str(action))
+            )
+        return composed
 
     def build_command(self, action, args=None):
         """Build a SOAP request.
@@ -336,14 +430,15 @@ class Service(object):
         # is set over the network
         return (headers, body)
 
-    def send_command(self, action, args=None, cache=None, cache_timeout=None):
+    def send_command(self, action, args=None, cache=None, cache_timeout=None,
+                     **kwargs):
         """Send a command to a Sonos device.
 
         Args:
             action (str): the name of an action (a string as specified in the
                 service description XML file) to be sent.
             args (list, optional): Relevant arguments as a list of (name,
-                value) tuples.
+                value) tuples, as an alternative to ``kwargs``.
             cache (Cache): A cache is operated so that the result will be
                 stored for up to ``cache_timeout`` seconds, and a subsequent
                 call with the same arguments within that period will be
@@ -356,16 +451,21 @@ class Service(object):
                 the cache identified by the service's `cache` attribute will
                 be used, but a different cache object may be specified in
                 the `cache` parameter.
+            kwargs: Relevant arguments for the command.
 
         Returns:
-             dict: a dict of ``{argument_name, value)}`` items.
+             dict: a dict of ``{argument_name, value}`` items.
 
         Raises:
+            `AttributeError`: If this service does not support the action.
+            `ValueError`: If the argument lists do not match the action
+                signature.
             `SoCoUPnPException`: if a SOAP error occurs.
             `UnknownSoCoException`: if an unknonwn UPnP error occurs.
-            `requests.exceptions.HTTPError`: if an http error.
+            `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
+        args = self.compose_args(action, args, kwargs)
         if cache is None:
             cache = self.cache
         result = cache.get(action, args)
@@ -518,6 +618,43 @@ class Service(object):
         """
         pass
 
+    @property
+    def actions(self):
+        """The service's actions with their arguments.
+
+        Returns:
+            list(`Action`): A list of Action namedtuples, consisting of
+            action_name (str), in_args (list of Argument namedtuples,
+            consisting of name and argtype), and out_args (ditto).
+
+        The return value looks like this::
+            [
+                Action(
+                    name='GetMute',
+                    in_args=[
+                        Argument(name='InstanceID', ...),
+                        Argument(
+                            name='Channel',
+                            vartype='string',
+                            list=['Master', 'LF', 'RF', 'SpeakerOnly'],
+                            range=None
+                        )
+                    ],
+                    out_args=[
+                        Argument(name='CurrentMute, ...)
+                    ]
+                )
+                Action(...)
+            ]
+
+        Its string representation will look like this::
+            GetMute(InstanceID: ui4, Channel: [Master, LF, RF, SpeakerOnly]) \
+            -> {CurrentMute: boolean}
+        """
+        if self._actions is None:
+            self._actions = list(self.iter_actions())
+        return self._actions
+
     def iter_actions(self):
         """Yield the service's actions with their arguments.
 
@@ -531,15 +668,13 @@ class Service(object):
             Action(
                 name='SetFormat',
                 in_args=[
-                    Argument(name='DesiredTimeFormat', vartype='string'),
-                    Argument(name='DesiredDateFormat', vartype='string')],
+                    Argument(name='DesiredTimeFormat', vartype=<Vartype>),
+                    Argument(name='DesiredDateFormat', vartype=<Vartype>)],
                 out_args=[]
             )
         """
 
         # pylint: disable=too-many-locals
-        # TODO: Provide for Allowed value list, Allowed value range,
-        # default value
         # pylint: disable=invalid-name
         ns = '{urn:schemas-upnp-org:service-1-0}'
         # get the scpd body as bytes, and feed directly to elementtree
@@ -553,7 +688,16 @@ class Service(object):
             statevars = srvStateTable.findall('{}stateVariable'.format(ns))
             for state in statevars:
                 name = state.findtext('{}name'.format(ns))
-                vartypes[name] = state.findtext('{}dataType'.format(ns))
+                datatype = state.findtext('{}dataType'.format(ns))
+                default = state.findtext('{}defaultValue'.format(ns))
+                value_list_elt = state.find('{}allowedValueList'.format(ns))\
+                    or ()
+                value_list = [item.text for item in value_list_elt] or None
+                value_range_elt = state.find('{}allowedValueRange'.format(ns))\
+                    or ()
+                value_range = [item.text for item in value_range_elt] or None
+                vartypes[name] = Vartype(datatype, default, value_list,
+                                         value_range)
         # find all the actions
         actionLists = tree.findall('{}actionList'.format(ns))
         for actionList in actionLists:
@@ -576,6 +720,17 @@ class Service(object):
                         else:
                             out_args.append(Argument(arg_name, vartype))
                     yield Action(action_name, in_args, out_args)
+
+    @property
+    def event_vars(self):
+        """The service's eventable variables.
+
+        Returns:
+            list(tuple): A list of (variable name, data type) tuples.
+        """
+        if self._event_vars is None:
+            self._event_vars = list(self.iter_event_vars())
+        return self._event_vars
 
     def iter_event_vars(self):
         """Yield the services eventable variables.
@@ -705,6 +860,7 @@ class RenderingControl(Service):
         super(RenderingControl, self).__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
         self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
 
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
@@ -752,6 +908,7 @@ class AVTransport(Service):
             738: 'Bad Domain Name',
             739: 'Server Error',
         })
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
 
 
 class Queue(Service):
@@ -775,3 +932,4 @@ class GroupRenderingControl(Service):
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
         self.event_subscription_url = \
             "/MediaRenderer/GroupRenderingControl/Event"
+        self.DEFAULT_ARGS.update({'InstanceID': 0})
