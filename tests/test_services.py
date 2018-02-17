@@ -94,6 +94,8 @@ DUMMY_ACTIONS = [
 
 DUMMY_ARGS = [('Argument1', 1), ('Argument2', 2)]
 
+DUMMY_ARGS_ALTERNATIVE = [('Argument1', 3), ('Argument2', 2)]
+
 @pytest.fixture()
 def service():
     """A mock Service, for use as a test fixture."""
@@ -180,9 +182,11 @@ def test_compose(service):
     """Test argument composition."""
     service.DEFAULT_ARGS = {}
 
+    # Detect unknown action
     with pytest.raises(AttributeError):
         service.compose_args('Error', None, {})
 
+    # Detect missing / unknown arguments
     with pytest.raises(ValueError):
         service.compose_args('Test', [('Argument1', 1)], {})
     with pytest.raises(ValueError):
@@ -192,16 +196,24 @@ def test_compose(service):
     with pytest.raises(ValueError):
         service.compose_args('Test', None, dict(DUMMY_ARGS+[('Error', 3)]))
 
+    # Check correct output
     assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
+    assert service.compose_args('Test', reversed(DUMMY_ARGS), {}) == DUMMY_ARGS
     assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
 
+    # Set Argument1 = 1 as default
     service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
 
-    assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
+    # Check that arguments are completed with default values
     assert service.compose_args('Test', DUMMY_ARGS[1:], {}) == DUMMY_ARGS
     assert service.compose_args('Test', None, dict(DUMMY_ARGS[1:])) \
         == DUMMY_ARGS
+
+    # Check that given arguments override the default values
+    assert service.compose_args('Test', DUMMY_ARGS_ALTERNATIVE, {}) \
+        == DUMMY_ARGS_ALTERNATIVE
+    assert service.compose_args('Test', None, dict(DUMMY_ARGS_ALTERNATIVE)) \
+        == DUMMY_ARGS_ALTERNATIVE
 
 
 
