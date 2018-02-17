@@ -1214,8 +1214,8 @@ class SoCo(_SocoSingletonBase):
             album_art_url = metadata.findtext(
                 './/{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI')
             if album_art_url is not None:
-                track['album_art'] = self._build_album_art_full_uri(
-                    album_art_url)
+                track['album_art'] = \
+                    self.music_library.build_album_art_full_uri(album_art_url)
 
         return track
 
@@ -1580,7 +1580,7 @@ class SoCo(_SocoSingletonBase):
             item: The item to update the URI for
         """
         if getattr(item, 'album_art_uri', False):
-            item.album_art_uri = self._build_album_art_full_uri(
+            item.album_art_uri = self.music_library.build_album_art_full_uri(
                 item.album_art_uri)
 
     def create_sonos_playlist(self, title):
@@ -1684,7 +1684,8 @@ class SoCo(_SocoSingletonBase):
         """Get an item's Album Art absolute URI."""
 
         if getattr(item, 'album_art_uri', False):
-            return self._build_album_art_full_uri(item.album_art_uri)
+            return self.music_library.build_album_art_full_uri(
+                item.album_art_uri)
         else:
             return None
 
