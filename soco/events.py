@@ -22,7 +22,7 @@ from .compat import (
     Queue, BaseHTTPRequestHandler, URLError, socketserver, urlopen
 )
 from .data_structures_entry import from_didl_string
-from .exceptions import SoCoException
+from .exceptions import SoCoException, SoCoFault, EventParseException
 from .utils import camel_to_underscore
 from .xml import XML
 
@@ -47,6 +47,7 @@ def parse_event_xml(xml_event):
               :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
             * an instance of a `DidlObject` subclass (eg if it represents
               track metadata).
+            * a `SoCoFault` (if a variable contains illegal metadata)
 
     Example:
 
@@ -136,7 +137,20 @@ def parse_event_xml(xml_event):
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
                     if value.startswith('<DIDL-Lite'):
-                        value = from_didl_string(value)[0]
+                        # Wrap any parsing exception in a SoCoFault, so the
+                        # user can handle it
+                        try:
+                            value = from_didl_string(value)[0]
+                        except SoCoException as original_exception:
+                            log.warning("Event contains illegal metadata"
+                                        "for '%s'.\n"
+                                        "Error message: '%s'\n"
+                                        "The result will be a SoCoFault.",
+                                        tag, str(original_exception))
+                            event_parse_exception = EventParseException(
+                                tag, value, original_exception
+                            )
+                            value = SoCoFault(event_parse_exception)
                     channel = last_change_var.get('channel')
                     if channel is not None:
                         if result.get(tag) is None:
@@ -163,7 +177,8 @@ class Event(object):
             `time.time` function).
         service (str): the service which is subscribed to the event.
         variables (dict, optional): contains the ``{names: values}`` of the
-            evented variables. Defaults to `None`.
+            evented variables. Defaults to `None`. The values may be
+            `SoCoFault` objects if the metadata could not be parsed.
 
     Raises:
         AttributeError:  Not all attributes are returned with each event. An

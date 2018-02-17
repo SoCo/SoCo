@@ -80,3 +80,66 @@ class SoCoSlaveException(SoCoException):
 
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
+
+
+class EventParseException(SoCoException):
+    """Raised when a parsing exception occurs during event handling.
+
+    Attributes:
+        tag (str): The tag for which the exception occured
+        metadata (str): The metadata which failed to parse
+        __cause__ (Exception): The original exception
+    """
+
+    def __init__(self, tag, metadata, cause):
+        """
+        Args:
+            tag (str): The tag for which the exception occured
+            metadata (str): The metadata which failed to parse
+            cause (Exception): The original exception
+        """
+        super(EventParseException, self).__init__()
+        self.tag = tag
+        self.metadata = metadata
+        self.__cause__ = cause
+
+    def __str__(self):
+        return "Invalid metadata for '{}'".format(self.tag)
+
+
+class SoCoFault(object):
+    """Class to represent a failed object instantiation.
+
+    It rethrows the exception on common use.
+
+    Attributes:
+        exception: The exception which will be thrown on use
+    """
+
+    def __init__(self, exception):
+        """
+        Args:
+            exception (Exception): The exception which should be thrown on use
+        """
+        self.__dict__['exception'] = exception
+
+    def __getattr__(self, name):
+        raise self.exception
+
+    def __setattr__(self, name, value):
+        raise self.exception
+
+    def __getitem__(self, item):
+        raise self.exception
+
+    def __setitem__(self, key, value):
+        raise self.exception
+
+    def __repr__(self):
+        return '<{0}: {1} at {2}>'.format(self.__class__.__name__,
+                                          repr(self.exception),
+                                          hex(id(self)))
+
+    def __str__(self):
+        return '<{0}: {1}>'.format(self.__class__.__name__,
+                                   repr(self.exception))
