@@ -83,7 +83,13 @@ class NotSupportedException(SoCoException):
 
 
 class EventParseException(SoCoException):
-    """Raised when a parsing exception occurs during event handling."""
+    """Raised when a parsing exception occurs during event handling.
+
+    Attributes:
+        tag (str): The tag for which the exception occured
+        metadata (str): The metadata which failed to parse
+        __cause__ (Exception): The original exception
+    """
 
     def __init__(self, tag, metadata, cause):
         """
