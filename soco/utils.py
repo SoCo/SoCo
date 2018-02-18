@@ -8,6 +8,8 @@ from __future__ import (
 
 import functools
 import re
+import os
+import subprocess
 import warnings
 
 from .compat import (
@@ -186,3 +188,62 @@ def url_escape_path(path):
     """
     # Using 'safe' arg does not seem to work for python 2.6
     return quote_url(path.encode('utf-8')).replace('/', '%2F')
+
+
+def get_git_revision():
+    """Return the git revision as a string"""
+    # The first part of this function is borrowed from numpy
+    # https://github.com/numpy/numpy/blob/master/setup.py#L70-L92)
+    this_file_dir = os.path.dirname(os.path.realpath(__file__))
+    def _minimal_ext_cmd(cmd):
+        """Execute a command in a minimal environment"""
+        # construct minimal environment
+        env = {}
+        for key in ['SYSTEMROOT', 'PATH']:
+            value = os.environ.get(key)
+            if value is not None:
+                env[key] = value
+        # LANGUAGE is used on win32
+        env['LANGUAGE'] = 'C'
+        env['LANG'] = 'C'
+        env['LC_ALL'] = 'C'
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=this_file_dir,
+            env=env,
+        )
+        out = process.communicate()[0]
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, cmd)
+        return out
+
+    try:
+        out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
+        git_revision = out.strip().decode('ascii')
+        return git_revision
+    except:  # pylint: disable=bare-except
+        pass
+
+    # If we cannot call git, try and read the revision from git files directly
+    git_dir = os.path.join(this_file_dir, '..', '.git')
+    try:
+        # Read the content of HEAD
+        with open(os.path.join(git_dir, 'HEAD'), 'rb') as file_:
+            head = file_.read().decode('ascii').strip()
+
+        # If on a branch, HEAD points to another ref
+        if head.startswith('ref: '):
+            ref = head.replace('ref: ', '')
+            # Assume the content of git refs are always unix style
+            ref_components = ref.split('/')
+            # Read the content of the ref
+            with open(os.path.join(git_dir, *ref_components), 'rb') as file_:
+                git_revision = file_.read().decode('ascii').strip()
+        else:
+            git_revision = head
+    except:  # pylint: disable=bare-except
+        return 'Unknown'
+
+    return git_revision

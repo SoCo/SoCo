@@ -45,11 +45,20 @@ Create and Publish
   using the release notes from the documentation. The release notes can be
   abbreviated if a link to the documentation is provided.
 
+* In ``__init__.py`` set _RELEASE to ``True`` (but do not commit) and
+  re-run tests for (just in case)
+
 * Upload the release to PyPI.
 
 .. code-block:: bash
 
     python setup.py sdist bdist_wheel upload
+
+* Revert change in ``__init__.py``, so as to leave a clean git archive.
+
+.. code-block:: bash
+
+    git checkout __init__.py
 
 * Enable doc builds for the newly released version on `Read the Docs
   <https://readthedocs.org/dashboard/soco/versions/>`_.
@@ -57,6 +66,9 @@ Create and Publish
 
 Wrap-Up
 -------
+
+* In ``__init__.py`` set _RELEASE back to ``False`` and commit and
+  push the change to github.
 
 * Create the milestone for the next release (with the most likely version
   number) and close the milestone for the current release.
