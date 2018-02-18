@@ -47,9 +47,3 @@ Bugfixes
 * Don't throw exceptions when parsing metadata with missing/empty tags, to fix
   event errors. (`#467 <https://github.com/SoCo/SoCo/pull/467>`_)
 
-
-Backwards Compatability
-=======================
-
-* Removed the deprecated methods which were moved in 0.12 from `core.py` to
-  `music_library.py` (`#542 <https://github.com/SoCo/SoCo/pull/542>`_)
