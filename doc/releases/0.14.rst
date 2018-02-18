@@ -1,0 +1,55 @@
+SoCo 0.14 release notes
+***********************
+
+**SoCo 0.14** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* Add support for Sonos favorites, which can now be browsed and played through
+  the usual methods. (`#478 <https://github.com/SoCo/SoCo/pull/478>`_)
+
+* Revised the play_local_files examples including a off-by-one bug fix,
+  configuration as command line argument, IP address auto detection and more
+  robust Sonos player selection.
+  (`#570 <https://github.com/SoCo/SoCo/pull/570>`_)
+
+* Handle default value / allowed value range in Service.iter_actions and
+  format the resulting actions
+  (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
+
+* Allow keyword arguments in Service commands
+  (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
+
+* Handle QueueID properly in event xml. (`#546
+  <https://github.com/SoCo/SoCo/pull/546>`_)
+
+* Further documentation updates (`#540
+  <https://github.com/SoCo/SoCo/pull/#540>`_,
+  `#569 <https://github.com/SoCo/SoCo/pull/569>`_)
+
+
+Bugfixes
+========
+
+* Small bugfix to stop an error where `None` would be returned by
+  `metadata.findtext`. Instead, an empty string is returned.
+  (`#539 <https://github.com/SoCo/SoCo/pull/539>`_)
+
+* Fix a race that could lead to events being missed shortly after a
+  subscription was started. (`#533 <https://github.com/SoCo/SoCo/pull/533>`_)
+
+* Don't throw exceptions when parsing metadata with missing/empty tags, to fix
+  event errors. (`#467 <https://github.com/SoCo/SoCo/pull/467>`_)
+
+
+Backwards Compatability
+=======================
+
+* Removed the deprecated methods which were moved in 0.12 from `core.py` to
+  `music_library.py` (`#542 <https://github.com/SoCo/SoCo/pull/542>`_)
