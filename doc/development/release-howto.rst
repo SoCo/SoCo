@@ -58,6 +58,11 @@ Create and Publish
 Wrap-Up
 -------
 
+* Update the version number in ``__init__.py`` with an added "+" to
+  indicate development status (see `example
+  <https://github.com/SoCo/SoCo/commit/2bf8caf7736772920bafd1
+  81d8b844269d95be17>`__).
+
 * Create the milestone for the next release (with the most likely version
   number) and close the milestone for the current release.
 
