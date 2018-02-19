@@ -19,10 +19,6 @@ New Features and Improvements
   robust Sonos player selection.
   (`#570 <https://github.com/SoCo/SoCo/pull/570>`_)
 
-* Handle default value / allowed value range in Service.iter_actions and
-  format the resulting actions
-  (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
-
 * Allow keyword arguments in Service commands
   (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
 
