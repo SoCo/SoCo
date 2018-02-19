@@ -73,16 +73,6 @@ DUMMY_VARTYPE = Vartype('string', None, None, None)
 
 DUMMY_ACTIONS = [
     Action(
-        name='SetAVTransportURI',
-        in_args=[
-            Argument(name='InstanceID', vartype=DUMMY_VARTYPE),
-            Argument(name='CurrentURI', vartype=DUMMY_VARTYPE),
-            Argument(name='CurrentURIMetaData', vartype=DUMMY_VARTYPE),
-            Argument(name='Unicode', vartype=DUMMY_VARTYPE)
-        ],
-        out_args=[]
-    ),
-    Action(
         name='Test',
         in_args=[
             Argument(name='Argument1', vartype=DUMMY_VARTYPE),
@@ -103,7 +93,6 @@ def service():
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
     mock_service = Service(mock_soco)
-    mock_service._actions = DUMMY_ACTIONS
     return mock_service
 
 
@@ -180,39 +169,28 @@ def test_unwrap_invalid_char(service):
 
 def test_compose(service):
     """Test argument composition."""
+    service._actions = DUMMY_ACTIONS
     service.DEFAULT_ARGS = {}
 
     # Detect unknown action
     with pytest.raises(AttributeError):
-        service.compose_args('Error', None, {})
-
+        service.compose_args('Error', {})
     # Detect missing / unknown arguments
     with pytest.raises(ValueError):
-        service.compose_args('Test', [('Argument1', 1)], {})
+        service.compose_args('Test', {'Argument1': 1})
     with pytest.raises(ValueError):
-        service.compose_args('Test', None, {'Argument1': 1})
-    with pytest.raises(ValueError):
-        service.compose_args('Test', DUMMY_ARGS+[('Error', 3)], {})
-    with pytest.raises(ValueError):
-        service.compose_args('Test', None, dict(DUMMY_ARGS+[('Error', 3)]))
+        service.compose_args('Test', dict(DUMMY_ARGS+[('Error', 3)]))
 
     # Check correct output
-    assert service.compose_args('Test', DUMMY_ARGS, {}) == DUMMY_ARGS
-    assert service.compose_args('Test', reversed(DUMMY_ARGS), {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, dict(DUMMY_ARGS)) == DUMMY_ARGS
+    assert service.compose_args('Test', dict(DUMMY_ARGS)) == DUMMY_ARGS
 
     # Set Argument1 = 1 as default
     service.DEFAULT_ARGS = dict(DUMMY_ARGS[:1])
 
     # Check that arguments are completed with default values
-    assert service.compose_args('Test', DUMMY_ARGS[1:], {}) == DUMMY_ARGS
-    assert service.compose_args('Test', None, dict(DUMMY_ARGS[1:])) \
-        == DUMMY_ARGS
-
+    assert service.compose_args('Test', dict(DUMMY_ARGS[1:])) == DUMMY_ARGS
     # Check that given arguments override the default values
-    assert service.compose_args('Test', DUMMY_ARGS_ALTERNATIVE, {}) \
-        == DUMMY_ARGS_ALTERNATIVE
-    assert service.compose_args('Test', None, dict(DUMMY_ARGS_ALTERNATIVE)) \
+    assert service.compose_args('Test', dict(DUMMY_ARGS_ALTERNATIVE)) \
         == DUMMY_ARGS_ALTERNATIVE
 
 

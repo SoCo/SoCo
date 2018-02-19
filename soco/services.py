@@ -312,21 +312,15 @@ class Service(object):
             "{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
         return dict((i.tag, i.text or "") for i in action_response)
 
-    def compose_args(self, action_name, in_arglist, in_argdict):
-        """Compose the argument list from list of tuples or dictionary form.
+    def compose_args(self, action_name, in_argdict):
+        """Compose the argument list from an argument dictionary, with
+        respect for default values.
 
         Args:
             action_name (str): The name of the action to be performed.
-            in_arglist (list): Arguments as a list of ``(name, value)``
-                tuples specifying the name of each argument and its value, eg
-                ``[('InstanceID', 0), ('Speed', 1)]``. The value
-                can be a string or something with a string representation.
             in_argdict (dict): Arguments as a dict, eg
-                ``{'InstanceID': 0, 'Speed': 1}.
-
-        This merges args and kwargs into a single argument list, with
-        ``DEFAULT_ARGS`` as default values.
-        The ``argdict`` takes precedence over the ``arglist``.
+                ``{'InstanceID': 0, 'Speed': 1}. The values
+                can be a string or something with a string representation.
 
         Returns:
             list: a list of ``(name, value)`` tuples.
@@ -336,7 +330,6 @@ class Service(object):
             `ValueError`: If the argument lists do not match the action
                 signature.
         """
-        in_arglist_as_dict = dict(in_arglist or ())
 
         for action in self.actions:
             if action.name == action_name:
@@ -348,7 +341,7 @@ class Service(object):
         # Check for given argument names which do not occur in the expected
         # argument list
         # pylint: disable=undefined-loop-variable
-        unexpected = (set(in_argdict) | set(in_arglist_as_dict)) - \
+        unexpected = set(in_argdict) - \
             set(argument.name for argument in action.in_args)
         if unexpected:
             raise ValueError(
@@ -362,9 +355,6 @@ class Service(object):
             name = argument.name
             if name in in_argdict:
                 composed.append((name, in_argdict[name]))
-                continue
-            if name in in_arglist_as_dict:
-                composed.append((name, in_arglist_as_dict[name]))
                 continue
             if name in self.DEFAULT_ARGS:
                 composed.append((name, self.DEFAULT_ARGS[name]))
@@ -465,7 +455,8 @@ class Service(object):
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
-        args = self.compose_args(action, args, kwargs)
+        if args is None:
+            args = self.compose_args(action, kwargs)
         if cache is None:
             cache = self.cache
         result = cache.get(action, args)
