@@ -189,7 +189,8 @@ SoCo supports the following controls amongst others:
 -  Set the speaker’s Zone Name
 -  Start a music library update and determine if one is in progress
 
-SoCo also supports lower level access from Python to all Sonos services.
+SoCo also supports lower level access from Python to all Sonos services
+(e.g. ContentDirectory or RenderingControl).
 
 
 Related Projects
