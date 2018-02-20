@@ -981,7 +981,7 @@ class SoCo(_SocoSingletonBase):
     def all_groups(self):
         """set of :class:`soco.groups.ZoneGroup`: All available groups."""
         self._parse_zone_group_state()
-        return self._groups
+        return self._groups.copy()
 
     @property
     def group(self):
@@ -1011,13 +1011,13 @@ class SoCo(_SocoSingletonBase):
     def all_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All available zones."""
         self._parse_zone_group_state()
-        return self._all_zones
+        return self._all_zones.copy()
 
     @property
     def visible_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All visible zones."""
         self._parse_zone_group_state()
-        return self._visible_zones
+        return self._visible_zones.copy()
 
     def partymode(self):
         """Put all the speakers in the network in the same group, a.k.a Party
