@@ -134,13 +134,12 @@ Features
 
 SoCo supports the following controls amongst others:
 
--  Play
--  Pause
--  Stop
--  Next track
--  Previous track
--  Get current transport information(if speaker is
-   playing,paused,stopped)
+-  Play, Pause, Stop
+-  Next track, Previous track
+-  Volume get and set
+-  Mute (or unmute)
+-  Get current transport information (if speaker is
+   playing, paused or stopped)
 -  Get information about the currently playing track
 
    -  Track title
@@ -152,16 +151,31 @@ SoCo supports the following controls amongst others:
    -  Playlist position (for example, item 5 in the playlist)
    -  Track URI
 
--  Mute (or unmute) the speaker
--  Get or set the speaker volume
--  Get or set the speaker’s bass EQ
--  Get or set the speaker’s treble EQ
--  Toggle the speaker’s loudness compensation
--  Toggle the speaker's night mode
--  Toggle the speaker's dialog mode
--  Turn on (or off) the white status light on the unit
+-  Receive events when the player state changes
+-  Search for and play music items:
+
+   -  Local music library
+   -  Webradio via TuneIn and music services (still unstable)
+   -  Saved Sonos favorites, favorite radio stations and shows
+
 -  Switch the speaker’s source to line-in or TV input (if the Zone Player
    supports it)
+-  Manage the Sonos queue:
+
+   -  Get the items in the queue
+   -  Add items to the queue
+   -  Clear the queue
+   -  Play a specific song from the queue
+
+-  Join or unjoin speakers from a group
+-  Put all Sonos speakers in a network into “party mode”.
+
+-  Get or set alarms
+-  Get or set sleep timers
+
+-  Get or set the speaker’s bass and treble EQ
+-  Toggle the speaker’s loudness compensation, night mode and dialog mode
+-  Toggle the white status light on the unit
 -  Get the speaker’s information
 
    -  Zone Name
@@ -173,18 +187,10 @@ SoCo supports the following controls amongst others:
    -  MAC Address
 
 -  Set the speaker’s Zone Name
--  Find all the Sonos speakers in a network.
--  Put all Sonos speakers in a network into “party mode”.
--  “Unjoin” speakers from a group.
--  Manage the Sonos queue (get the items in it, add to it, clear it,
-   play a specific song from it)
--  Get the saved favorite radio stations and shows (title and stream
-   URI)
--  Search for and play item from your music library
 -  Start a music library update and determine if one is in progress
 
-SoCo also supports lower level access from Python to all Sonos services (eg
-Alarms)
+SoCo also supports lower level access from Python to all Sonos services
+(e.g. ContentDirectory or RenderingControl).
 
 
 Related Projects
