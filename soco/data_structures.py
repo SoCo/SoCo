@@ -411,6 +411,10 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         # only seems to use one, so we won't bother with a list
         self.desc = desc
 
+        # Initialize all allowed class-specific attributes to None
+        for key in self._translation:
+            setattr(self, key, None)
+
         for key, value in kwargs.items():
             # For each attribute, check to see if this class allows it
             if key not in self._translation:
@@ -502,6 +506,8 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             if result is not None:
                 # We store info as unicode internally.
                 content[key] = really_unicode(result)
+            else:
+                content[key] = None
 
         # Convert type for original track number
         if content.get('original_track_number') is not None:
