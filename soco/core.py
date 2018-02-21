@@ -1079,32 +1079,52 @@ class SoCo(_SocoSingletonBase):
     @property
     def is_playing_radio(self):
         """bool: Is the speaker playing radio?"""
-        response = self.avTransport.GetPositionInfo([
-            ('InstanceID', 0),
-            ('Channel', 'Master')
-        ])
-        track_uri = response['TrackURI']
-        return re.match(r'^x-rincon-mp3radio:', track_uri) is not None
+        return self.music_source == 'RADIO'
 
     @property
     def is_playing_line_in(self):
         """bool: Is the speaker playing line-in?"""
-        response = self.avTransport.GetPositionInfo([
-            ('InstanceID', 0),
-            ('Channel', 'Master')
-        ])
-        track_uri = response['TrackURI']
-        return re.match(r'^x-rincon-stream:', track_uri) is not None
+        return self.music_source == 'LINE_IN'
 
     @property
     def is_playing_tv(self):
         """bool: Is the playbar speaker input from TV?"""
-        response = self.avTransport.GetPositionInfo([
-            ('InstanceID', 0),
-            ('Channel', 'Master')
-        ])
+        return self.music_source == 'TV'
+
+    SOURCES = {
+        r'^$': 'NONE',
+        r'^x-file-cifs:': 'LIBRARY',
+        r'^x-rincon-mp3radio:': 'RADIO',
+        r'^x-sonosapi-stream:': 'RADIO',
+        r'^https?:': 'WEB_FILE',
+        r'^x-rincon-stream:': 'LINE_IN',
+        r'^x-sonos-htastream:': 'TV'
+    }
+
+    @property
+    def music_source(self):
+        """The current source of music.
+
+        Possible values are:
+
+        *   ``'NONE'`` -- speaker has no music to play.
+        *   ``'LIBRARY'`` -- speaker is playing queued titles from the music
+            library.
+        *   ``'RADIO'`` -- speaker is playing radio.
+        *   ``'WEB_FILE'`` -- speaker is playing a music file via http/https.
+        *   ``'LINE_IN'`` -- speaker is playing music from the line-in at
+            another Sonos speaker.
+        *   ``'TV'`` -- speaker is playing input from TV.
+        *   ``'UNKNOWN'`` -- any other input.
+
+        """
+        response = self.avTransport.GetPositionInfo(
+            [('InstanceID', 0), ('Channel', 'Master')])
         track_uri = response['TrackURI']
-        return re.match(r'^x-sonos-htastream:', track_uri) is not None
+        for regex, source in self.SOURCES.items():
+            if re.match(regex, track_uri) is not None:
+                return source
+        return "UNKNOWN"
 
     def switch_to_tv(self):
         """Switch the playbar speaker's input to TV."""
