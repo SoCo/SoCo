@@ -1103,7 +1103,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def music_source(self):
-        """The current source of music.
+        """str: The current source of music.
 
         Possible values are:
 
