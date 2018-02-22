@@ -289,6 +289,7 @@ class Snapshot(object):
 
     def __enter__(self):
         self.snapshot()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.restore()
