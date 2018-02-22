@@ -286,3 +286,10 @@ class Snapshot(object):
             for queue_group in self.queue:
                 for queue_item in queue_group:
                     self.device.add_uri_to_queue(queue_item.uri)
+
+    def __enter__(self):
+        self.snapshot()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.restore()
