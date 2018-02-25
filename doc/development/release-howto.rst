@@ -7,24 +7,18 @@ This document describes the necessary steps for creating a new release of SoCo.
 Preparations
 ------------
 
-* Assign a version number to the release, according to `semantic versioning
-  <http://semver.org/>`_. Tag names should be prefixed with ``v``.
+* Verify the version number stated in the release ticket (according to
+  `semantic versioning <http://semver.org/>`_. Tag names should be prefixed
+  with ``v``.
 
-* Create a GitHub issue for the new version (eg `Release 0.7 #108
-  <https://github.com/SoCo/SoCo/issues/108>`_). This issue can be used
-  to discuss included changes, the version number, etc.
+* Create the release notes in ``release_notes.html`` by copying contents from
+  the release notes issue. Texts can be rewritten for legibility.
 
-* Create a milestone for the planned release (if it does not already exist).
-  The milestone can be used to track issues relating to the release. All
-  relevant issues should be assigned to the milestone.
-
-* Create the release notes in ``release_notes.html``.
+* Verify that all tests pass.
 
 
 Create and Publish
 ------------------
-
-* Verify that all tests pass.
 
 * Update the version number in ``__init__.py`` (see
   `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
@@ -51,19 +45,29 @@ Create and Publish
 
     python setup.py sdist bdist_wheel upload
 
-* Enable doc builds for the newly released version on `Read the Docs
-  <https://readthedocs.org/dashboard/soco/versions/>`_.
-
 
 Wrap-Up
 -------
+
+* Close the milestone and issues for the release.
 
 * Update the version number in ``__init__.py`` with an added "+" to
   indicate development status (see `example
   <https://github.com/SoCo/SoCo/commit/2bf8caf7736772920bafd1
   81d8b844269d95be17>`__).
 
-* Create the milestone for the next release (with the most likely version
-  number) and close the milestone for the current release.
-
 * Share the news!
+
+
+Preparation for next release
+----------------------------
+
+* Define the next version number and expected release date (3 month after the
+  current release date, as per `#524
+  <https://github.com/SoCo/SoCo/issues/524>`_)).
+
+* Create the milestone and set the release date.
+
+* Create an issue for the upcoming release (tagged as `Release
+  <https://github.com/SoCo/SoCo/issues?q=is%3Aissue+is%3Aopen+label%3ARelease>`_),
+  and one for the corresponding release notes.
