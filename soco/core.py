@@ -1096,6 +1096,9 @@ class SoCo(_SocoSingletonBase):
         r'^x-file-cifs:': 'LIBRARY',
         r'^x-rincon-mp3radio:': 'RADIO',
         r'^x-sonosapi-stream:': 'RADIO',
+        r'^aac:': 'RADIO',
+        r'^x-sonosapi-radio:': 'RADIO',
+        r'^hls-radio:': 'RADIO',
         r'^https?:': 'WEB_FILE',
         r'^x-rincon-stream:': 'LINE_IN',
         r'^x-sonos-htastream:': 'TV'
