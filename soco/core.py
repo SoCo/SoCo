@@ -1307,6 +1307,25 @@ class SoCo(_SocoSingletonBase):
 
         return playstate
 
+    def get_available_actions(self):
+        """Get the transport actions that are currently available on the
+        speaker.
+
+        Returns:
+            list: A list of strings representing the available actions, such as
+                `['Set', 'Stop', 'Play'].`
+
+        Possible list items are: ``Set``, ``Stop``, ``Pause``, ``Play``,
+        ``Next``, ``Previous``, ``SeekTime``, ``SeekTrackNr``.
+        """
+        result = self.avTransport.GetCurrentTransportActions([
+            ('InstanceID', 0)
+        ])
+        actions = result['Actions']
+        # The actions might look like 'X_DLNA_SeekTime', but we only want the
+        # last part
+        return [action.split('_')[-1] for action in actions.split(', ')]
+
     def get_queue(self, start=0, max_items=100, full_album_art_uri=False):
         """Get information about the queue.
 
