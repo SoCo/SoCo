@@ -195,10 +195,8 @@ class SoCo(_SocoSingletonBase):
     ..  rubric:: Miscellaneous
     ..  autosummary::
 
+        music_source
         switch_to_line_in
-        is_playing_radio
-        is_playing_line_in
-        is_playing_tv
         switch_to_tv
         set_sleep_timer
         get_sleep_timer
