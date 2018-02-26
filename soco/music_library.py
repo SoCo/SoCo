@@ -53,7 +53,7 @@ class MusicLibrary(object):
         self.soco = soco if soco is not None else discovery.any_soco()
         self.contentDirectory = self.soco.contentDirectory
 
-    def _build_album_art_full_uri(self, url):
+    def build_album_art_full_uri(self, url):
         """Ensure an Album Art URI is an absolute URI.
 
         Args:
