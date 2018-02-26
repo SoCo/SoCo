@@ -32,6 +32,7 @@ import sys
 import textwrap
 import warnings
 
+from .discovery import any_soco
 from .compat import with_metaclass
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode
@@ -722,6 +723,16 @@ class DidlItem(DidlObject):
             'album_art_uri': ('upnp', 'albumArtURI'),
         }
     )
+
+    @property
+    def full_album_art_uri(self):
+        """str: The absolute album art uri.
+
+        This will use the IP address of a random player on the network.
+        """
+        library = any_soco().music_library
+        album_art_uri = getattr(self, 'album_art_uri')
+        return library.build_album_art_full_uri(album_art_uri)
 
 
 class DidlAudioItem(DidlItem):
