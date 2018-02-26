@@ -200,6 +200,7 @@ class SoCo(_SocoSingletonBase):
         is_playing_line_in
         is_playing_tv
         switch_to_tv
+        get_available_actions
         set_sleep_timer
         get_sleep_timer
 
