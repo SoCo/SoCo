@@ -1344,7 +1344,7 @@ class SoCo(_SocoSingletonBase):
         for item in items:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
-                self._update_album_art_to_full_uri(item)
+                self.music_library._update_album_art_to_full_uri(item)
             queue.append(item)
 
         # pylint: disable=star-args
@@ -1573,16 +1573,6 @@ class SoCo(_SocoSingletonBase):
 
         return result
 
-    def _update_album_art_to_full_uri(self, item):
-        """Update an item's Album Art URI to be an absolute URI.
-
-        Args:
-            item: The item to update the URI for
-        """
-        if getattr(item, 'album_art_uri', False):
-            item.album_art_uri = self.music_library.build_album_art_full_uri(
-                item.album_art_uri)
-
     def create_sonos_playlist(self, title):
         """Create a new empty Sonos playlist.
 
@@ -1679,15 +1669,6 @@ class SoCo(_SocoSingletonBase):
             # this index therefore probably amounts to adding it "at the end"
             ('AddAtIndex', 4294967295)
         ])
-
-    def get_item_album_art_uri(self, item):
-        """Get an item's Album Art absolute URI."""
-
-        if getattr(item, 'album_art_uri', False):
-            return self.music_library.build_album_art_full_uri(
-                item.album_art_uri)
-        else:
-            return None
 
     @only_on_master
     def set_sleep_timer(self, sleep_time_seconds):
@@ -1843,7 +1824,7 @@ class SoCo(_SocoSingletonBase):
         # track_list = ','.join(track_list)
         # position_list = ','.join(position_list)
         if update_id == 0:  # retrieve the update id for the object
-            response, _ = self._music_lib_search(object_id, 0, 1)
+            response, _ = self.music_library._music_lib_search(object_id, 0, 1)
             update_id = response['UpdateID']
         change = 0
 
