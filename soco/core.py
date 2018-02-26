@@ -173,6 +173,7 @@ class SoCo(_SocoSingletonBase):
         loudness
         night_mode
         dialog_mode
+        trueplay
         status_light
 
     ..  rubric:: Playlists and Favorites
@@ -851,6 +852,35 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('EQType', 'DialogLevel'),
             ('DesiredValue', int(dialog_mode))
+        ])
+
+    @property
+    def trueplay(self):
+        """bool: The player's trueplay status.
+
+        Returns `True` for enabled, `False` for disabled and `None` for not
+        available.
+        """
+        response = self.renderingControl.GetRoomCalibrationStatus([
+            ('InstanceID', 0)
+        ])
+        if response['RoomCalibrationAvailable'] == '0':
+            return None
+        if response['RoomCalibrationEnabled'] == '0':
+            return False
+        return True
+
+    @trueplay.setter
+    def trueplay(self, trueplay_state):
+        """Enable or disable trueplay.
+
+        Args:
+            trueplay_state (bool): The desired trueplay status. True for on,
+                False for off.
+        """
+        self.renderingControl.SetRoomCalibrationStatus([
+            ('InstanceID', 0),
+            ('RoomCalibrationEnabled', int(trueplay_state))
         ])
 
     def _parse_zone_group_state(self):
