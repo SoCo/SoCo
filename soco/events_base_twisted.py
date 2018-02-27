@@ -43,10 +43,10 @@ class NotifyHandler(Resource):
         """
         headers = {}
         for header in request.requestHeaders.getAllRawHeaders():
-            headers[header[0].lower()] = header[1][0]
+            headers[header[0].decode('utf8').lower()] = header[1][0].decode('utf8')
         content = request.content.read()
-        self.handle_notification(headers, content)
-        return 'OK'
+        self.handle_notification(headers, content.decode('utf8'))
+        return b'OK'
 
     def handle_notification(self, headers, content):
         """This function is overriden in `soco.events.EventNotifyHandler`
@@ -200,7 +200,7 @@ class SubscriptionBase(object):
             def on_success(response):  # pylint: disable=missing-docstring
                 response_headers = {}
                 for header in response.headers.getAllRawHeaders():
-                    response_headers[header[0].lower()] = header[1][0]
+                    response_headers[header[0].decode('utf8').lower()] = header[1][0].decode('utf8')
                 success(response_headers)
             d.addCallback(on_success)
 
