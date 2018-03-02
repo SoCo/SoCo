@@ -207,12 +207,14 @@ class TestDidlObject():
             parent_id='pid',
             item_id='iid',
             creator='a_creator',
+            write_status='wstatus',
             desc='dummy')
         the_dict = {
             'title': 'a_title',
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
+            'write_status': 'wstatus',
             'restricted': True,
             'desc': 'dummy'
         }
@@ -282,12 +284,18 @@ class TestDidlObject():
 
     def test_didl_object_to_dict(self):
         didl_object = data_structures.DidlObject(
-            title='a_title', parent_id='pid', item_id='iid', creator='a_creator')
+            title='a_title',
+            parent_id='pid',
+            item_id='iid',
+            creator='a_creator',
+            write_status='wstatus'
+        )
         the_dict = {
             'title': 'a_title',
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
+            'write_status': 'wstatus',
             'restricted': True,
             'desc': 'RINCON_AssociatedZPUDN'
         }
@@ -302,16 +310,20 @@ class TestDidlObject():
     def test_didl_object_to_dict_resources(self):
         resources_list = [data_structures.DidlResource('a%20uri',
                                                        'a:protocol:info:xx')]
-        didl_object = data_structures.DidlObject(title='a_title',
-                                                 parent_id='pid',
-                                                 item_id='iid',
-                                                 creator='a_creator',
-                                                 resources=resources_list)
+        didl_object = data_structures.DidlObject(
+            title='a_title',
+            parent_id='pid',
+            item_id='iid',
+            creator='a_creator',
+            write_status='wstatus',
+            resources=resources_list
+        )
         the_dict = {
             'title': 'a_title',
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
+            'write_status': 'wstatus',
             'restricted': True,
             'desc': 'RINCON_AssociatedZPUDN',
             'resources': [resource.to_dict() for resource in resources_list]
@@ -321,16 +333,20 @@ class TestDidlObject():
     def test_didl_object_to_dict_resources_remove_nones(self):
         resources_list = [data_structures.DidlResource('a%20uri',
                                                        'a:protocol:info:xx')]
-        didl_object = data_structures.DidlObject(title='a_title',
-                                                 parent_id='pid',
-                                                 item_id='iid',
-                                                 creator='a_creator',
-                                                 resources=resources_list)
+        didl_object = data_structures.DidlObject(
+            title='a_title',
+            parent_id='pid',
+            item_id='iid',
+            creator='a_creator',
+            write_status='wstatus',
+            resources=resources_list
+        )
         the_dict = {
             'title': 'a_title',
             'parent_id': 'pid',
             'item_id': 'iid',
             'creator': 'a_creator',
+            'write_status': 'wstatus',
             'restricted': True,
             'desc': 'RINCON_AssociatedZPUDN',
             'resources': [resource.to_dict(remove_nones=True)
@@ -340,7 +356,12 @@ class TestDidlObject():
 
     def test_didl_object_to_element(self):
         didl_object = data_structures.DidlObject(
-            title='a_title', parent_id='pid', item_id='iid', creator='a_creator')
+            title='a_title',
+            parent_id='pid',
+            item_id='iid',
+            creator='a_creator',
+            write_status='wstatus'
+        )
         # we seem to have to go through this to get ElementTree to deal
         # with namespaces properly!
         elt = XML.fromstring(XML.tostring(didl_object.to_element(True)))
@@ -351,6 +372,7 @@ class TestDidlObject():
             '<item id="iid" parentID="pid" restricted="true">' +
             '<dc:title>a_title</dc:title>' +
             '<dc:creator>a_creator</dc:creator>' +
+            '<upnp:writeStatus>wstatus</upnp:writeStatus>' +
             '<upnp:class>object</upnp:class><desc id="cdudn" ' +
             'nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">' +
             'RINCON_AssociatedZPUDN</desc></item></dummy>')[0]

@@ -651,13 +651,15 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
 
         # Add the rest of the metadata attributes (i.e all those listed in
         # _translation) as sub-elements of the item element.
-        for key, value in self._translation.items():
-            if hasattr(self, key):
+        # pylint: disable=invalid-name
+        for key, (ns, tag) in self._translation.items():
+            value = getattr(self, key)
+            if value:
                 # Some attributes have a namespace of '', which means they
                 # are in the default namespace. We need to handle those
                 # carefully
-                tag = "%s:%s" % value if value[0] else "%s" % value[1]
-                XML.SubElement(elt, tag).text = ("%s" % getattr(self, key))
+                tag = "%s:%s" % (ns, tag) if ns else "%s" % tag
+                XML.SubElement(elt, tag).text = ("%s" % value)
         # Now add in the item class
         XML.SubElement(elt, 'upnp:class').text = self.item_class
 
