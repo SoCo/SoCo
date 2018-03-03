@@ -44,6 +44,10 @@ def resource_dict():
     return {'uri': 'a%20uri', 'protocol_info': 'a:protocol:info:xx'}
 
 
+def _strip_ns(tag):
+    return tag[tag.find('}')+1:]
+
+
 def assert_xml_equal(left, right, explain=None):
     """Helper function for comparing XML elements.
 
@@ -59,34 +63,43 @@ def assert_xml_equal(left, right, explain=None):
     """
     def _build_explanation(left, right, explain):
         if left.tag != right.tag:
-            explain.append('tag <%s> does not match tag <%s>' % (left.tag,
-                                                                 right.tag))
-        for name, value in left.attrib.items():
-            if right.get(name) != value:
-                explain.append(
-                    '%s attribute of element <%s> does not match: %s=%r, %s=%r' %
-                    (name, left.tag, name, value, name, right.get(name)))
-        for name in right.attrib:
-            if name not in left.attrib:
-                explain.append(
-                    'right element <%s> has attribute %s but left does not' %
-                    (left.tag, name))
+            explain.append('tag <%s> does not match tag <%s>' %
+                           (left.tag, right.tag))
+        tag = _strip_ns(left.tag)
+        for attrib in set(left.attrib) - set(right.attrib):
+            explain.append('left element <%s> has attribute %s but right does not' %
+                           (tag, attrib))
+        for attrib in set(right.attrib) - set(left.attrib):
+            explain.append('right element <%s> has attribute %s but left does not' %
+                           (tag, attrib))
+        for attrib in set(left.attrib) & set(right.attrib):
+            if left.get(attrib) != right.get(attrib):
+                explain.append('attribute %s for element <%s>: %r != %r' %
+                               (attrib, tag, left.get(attrib), right.get(attrib)))
         if left.text != right.text:
-            explain.append(
-                'text for element <%s>: %r != %r' %
-                (left.tag, left.text, right.text))
+            explain.append('text for element <%s>: %r != %r' %
+                           (tag, left.text, right.text))
         if left.tail != right.tail:
-            explain.append(
-                'tail for element <%s>: %r != %r' %
-                (left.tag, left.text, right.text))
-        for i1, i2 in zip(left, right):
-            _build_explanation(i1, i2, explain)
+            explain.append('tail for element <%s>: %r != %r' %
+                           (tag, left.tail, right.tail))
+
+        left_childtags = set(child.tag for child in left)
+        right_childtags = set(child.tag for child in right)
+        for child_tag in left_childtags - right_childtags:
+            explain.append('left element <%s> has child <%s> but right does not' %
+                           (tag, _strip_ns(child_tag)))
+        for child_tag in right_childtags - left_childtags:
+            explain.append('right element <%s> has child <%s> but left does not' %
+                           (tag, _strip_ns(child_tag)))
+        for child_tag in right_childtags & left_childtags:
+            _build_explanation(left.find(child_tag), right.find(child_tag),
+                               explain)
         return
 
     explain = []
     _build_explanation(left, right, explain)
     if explain != []:
-        header = "Comparing XML elements %s and %s" % (left, right)
+        header = "Comparing XML elements %s and %s:\n" % (left, right)
         assert False, header + '\n'.join(explain)
 
 
