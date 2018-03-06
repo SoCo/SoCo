@@ -43,7 +43,8 @@ from xml.sax.saxutils import escape
 import requests
 
 from .cache import Cache
-from .events import Subscription
+from . import events
+from . import config
 from .exceptions import (
     SoCoUPnPException, UnknownSoCoException
 )
@@ -65,6 +66,9 @@ from .xml import XML, illegal_xml_re
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 # logging.basicConfig()
 # log.setLevel(logging.INFO)
+
+if config.EVENTS_MODULE is None:
+    config.EVENTS_MODULE = events
 
 
 class Action(namedtuple('ActionBase', 'name, in_args, out_args')):
@@ -565,7 +569,8 @@ class Service(object):
         raise UnknownSoCoException(xml_error)
 
     def subscribe(
-            self, requested_timeout=None, auto_renew=False, event_queue=None):
+            self, requested_timeout=None, auto_renew=False, event_queue=None,
+            strict=True):
         """Subscribe to the service's events.
 
         Args:
@@ -577,22 +582,28 @@ class Service(object):
             auto_renew (bool): If auto_renew is `True`, the subscription will
                 automatically be renewed just before it expires, if possible.
                 Default is `False`.
-
             event_queue (:class:`~queue.Queue`): a thread-safe queue object on
                 which received events will be put. If not specified,
                 a (:class:`~queue.Queue`) will be created and used.
+            strict (bool, optional): If True and an Exception occurs during
+                execution, the Exception will be raised or, if False, the
+                Exception will be logged and the Subscription instance will be
+                returned. Default `True`.
 
         Returns:
-            `Subscription`: an insance of `Subscription`, representing
-                the new subscription.
+            `Subscription`: an instance of :class:`~soco.events.Subscription`,
+                representing the new subscription. If config.EVENTS_MODULE has
+                been set to refer to :py:mod:`events_twisted`, a deferred will
+                be returned with the Subscription as its result and
+                deferred.subscription will be set to refer to the Subscription.
 
         To unsubscribe, call the `unsubscribe` method on the returned object.
         """
-        subscription = Subscription(
+        subscription = config.EVENTS_MODULE.Subscription(
             self, event_queue)
-        subscription.subscribe(
-            requested_timeout=requested_timeout, auto_renew=auto_renew)
-        return subscription
+        return subscription.subscribe(
+            requested_timeout=requested_timeout, auto_renew=auto_renew,
+            strict=strict)
 
     def _update_cache_on_event(self, event):
         """Update the cache when an event is received.
