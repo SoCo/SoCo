@@ -506,8 +506,6 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
             if result is not None:
                 # We store info as unicode internally.
                 content[key] = really_unicode(result)
-            else:
-                content[key] = None
 
         # Convert type for original track number
         if content.get('original_track_number') is not None:
