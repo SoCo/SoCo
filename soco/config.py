@@ -30,7 +30,7 @@ See also:
     The :mod:`soco.cache` module.
 """
 
-+EVENT_ADVERTISE_IP = None
+EVENT_ADVERTISE_IP = None
 """The IP on which to advertise to Sonos.
 
 The default of None means that the relevant IP address will be detected
