@@ -398,6 +398,16 @@ class TestAVTransport:
             [('InstanceID', 0), ('Speed', 1)]
         )
 
+    def test_soco_play_uri_with_title(self, moco):
+        uri = 'http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3'
+        moco.play_uri(uri, title='<Fast & Loose>')
+
+        moco.avTransport.SetAVTransportURI.assert_called_with([
+            ('InstanceID', 0),
+            ('CurrentURI', uri),
+            ('CurrentURIMetaData', '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="R:0/0/0" parentID="R:0/0" restricted="true"><dc:title>&lt;Fast &amp; Loose&gt;</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>')
+        ])
+
     def test_soco_pause(self, moco):
         moco.pause()
         moco.avTransport.Pause.assert_called_once_with(
