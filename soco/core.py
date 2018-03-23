@@ -1185,8 +1185,6 @@ class SoCo(_SocoSingletonBase):
                 track['title'] = metadata.findtext('.//{http://purl.org/dc/'
                                                    'elements/1.1/}title')
                 if not track['title']:
-                    _LOG.warning('Could not handle track info: "%s"',
-                                 trackinfo)
                     track['title'] = trackinfo
 
         # If the speaker is playing from the line-in source, querying for track
