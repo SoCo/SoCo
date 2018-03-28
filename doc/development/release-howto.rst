@@ -29,7 +29,9 @@ Create and Publish
 
     git tag -a v0.7 -m 'release version 0.7'
 
-* Push the tag. This will create a new release on GitHub.
+* Push the tag. This will create a new release on GitHub, and will
+  automatically deploy the new version to PyPI (see `#593
+  <https://github.com/SoCo/SoCo/pull/593>`_)
 
 .. code-block:: bash
 
@@ -38,12 +40,6 @@ Create and Publish
 * Update the `GitHub release <https://github.com/SoCo/SoCo/releases/new>`_
   using the release notes from the documentation. The release notes can be
   abbreviated if a link to the documentation is provided.
-
-* Upload the release to PyPI.
-
-.. code-block:: bash
-
-    python setup.py sdist bdist_wheel upload
 
 
 Wrap-Up
