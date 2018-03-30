@@ -36,7 +36,7 @@ If you have another music service that should be on the list, comment in #557
 Installation
 ------------
 
-SoCo requires Python 2.7, or 3.3 or newer.
+SoCo requires Python 2.7, or 3.4 or newer.
 
 Use pip:
 
