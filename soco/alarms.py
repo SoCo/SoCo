@@ -306,8 +306,11 @@ def get_alarms(zone=None):
             datetime.strptime(values['Duration'], "%H:%M:%S").time()
         instance.recurrence = values['Recurrence']
         instance.enabled = values['Enabled'] == '1'
-        instance.zone = [z for z in zone.all_zones
-                         if z.uid == values['RoomUUID']][0]
+        instance.zone = next((z for z in zone.all_zones
+                              if z.uid == values['RoomUUID']), None)
+        # some alarms are not associated to zones -> filter these out
+        if instance.zone is None:
+            continue
         instance.program_uri = None if values['ProgramURI'] ==\
             "x-rincon-buzzer:0" else values['ProgramURI']
         instance.program_metadata = values['ProgramMetaData']
