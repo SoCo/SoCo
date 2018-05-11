@@ -53,7 +53,7 @@ class MusicLibrary(object):
         self.soco = soco if soco is not None else discovery.any_soco()
         self.contentDirectory = self.soco.contentDirectory
 
-    def _build_album_art_full_uri(self, url):
+    def build_album_art_full_uri(self, url):
         """Ensure an Album Art URI is an absolute URI.
 
         Args:
@@ -67,6 +67,16 @@ class MusicLibrary(object):
         if not url.startswith(('http:', 'https:')):
             url = 'http://' + self.soco.ip_address + ':1400' + url
         return url
+
+    def _update_album_art_to_full_uri(self, item):
+        """Update an item's Album Art URI to be an absolute URI.
+
+        Args:
+            item: The item to update the URI for
+        """
+        if getattr(item, 'album_art_uri', False):
+            item.album_art_uri = self.build_album_art_full_uri(
+                item.album_art_uri)
 
     def get_artists(self, *args, **kwargs):
         """Convenience method for `get_music_library_information`
@@ -304,7 +314,7 @@ class MusicLibrary(object):
             for item in items:
                 # Check if the album art URI should be fully qualified
                 if full_album_art_uri:
-                    self.soco._update_album_art_to_full_uri(item)
+                    self._update_album_art_to_full_uri(item)
                 # Append the item to the list
                 item_list.append(item)
 
@@ -378,7 +388,7 @@ class MusicLibrary(object):
         for container in containers:
             # Check if the album art URI should be fully qualified
             if full_album_art_uri:
-                self.soco._update_album_art_to_full_uri(container)
+                self._update_album_art_to_full_uri(container)
             item_list.append(container)
 
         # pylint: disable=star-args
