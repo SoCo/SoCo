@@ -766,7 +766,7 @@ class DidlMusicTrack(DidlAudioItem):
 
 class DidlAudioBook(DidlAudioItem):
 
-    """Class that represents a music library track."""
+    """Class that represents an audio book."""
 
     # the DIDL Lite class for this object.
     item_class = 'object.item.audioItem.audioBook'
