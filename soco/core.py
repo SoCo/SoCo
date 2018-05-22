@@ -4,13 +4,14 @@
 the main entry to the SoCo functionality
 """
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, unicode_literals
 
 import datetime
 import logging
 import re
 import socket
 from functools import wraps
+from xml.sax.saxutils import escape
 import warnings
 
 import requests
@@ -574,7 +575,9 @@ class SoCo(_SocoSingletonBase):
                 'metadata-1-0/">{service}</desc></item></DIDL-Lite>'
             tunein_service = 'SA_RINCON65031_'
             # Radio stations need to have at least a title to play
-            meta = meta_template.format(title=title, service=tunein_service)
+            meta = meta_template.format(
+                title=escape(title),
+                service=tunein_service)
 
         # change uri prefix to force radio style display and commands
         if force_radio:
