@@ -889,7 +889,7 @@ class DidlMusicAlbum(DidlAlbum):
     # name: (ns, tag)
     # pylint: disable=protected-access
     #:
-    _translation = DidlAudioItem._translation.copy()
+    _translation = DidlAlbum._translation.copy()
     _translation.update(
         {
             'artist': ('upnp', 'artist'),
