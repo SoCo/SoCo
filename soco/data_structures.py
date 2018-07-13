@@ -764,6 +764,24 @@ class DidlMusicTrack(DidlAudioItem):
     )
 
 
+class DidlAudioBook(DidlAudioItem):
+
+    """Class that represents an audio book."""
+
+    # the DIDL Lite class for this object.
+    item_class = 'object.item.audioItem.audioBook'
+    # name: (ns, tag)
+    _translation = DidlAudioItem._translation.copy()
+    _translation.update(
+        {
+            'storageMedium': ('upnp', 'storageMedium'),
+            'producer': ('upnp', 'producer'),
+            'contributor': ('dc', 'contributor'),
+            'date': ('dc', 'date'),
+        }
+    )
+
+
 class DidlAudioBroadcast(DidlAudioItem):
 
     """Class that represents an audio broadcast."""
