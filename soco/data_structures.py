@@ -160,7 +160,7 @@ class DidlResource(object):
                 try:
                     return int(result)
                 except ValueError:
-                    raise ValueError(
+                    raise DIDLMetadataError(
                         'Could not convert {0} to an integer'.format(name))
             else:
                 return None
@@ -169,8 +169,8 @@ class DidlResource(object):
         # required
         content['protocol_info'] = element.get('protocolInfo')
         if content['protocol_info'] is None:
-            raise Exception('Could not create Resource from Element: '
-                            'protocolInfo not found (required).')
+            raise DIDLMetadataError('Could not create Resource from Element: '
+                                    'protocolInfo not found (required).')
         # Optional
         content['import_uri'] = element.get('importUri')
         content['size'] = _int_helper('size')
@@ -200,8 +200,9 @@ class DidlResource(object):
             ~xml.etree.ElementTree.Element: an Element.
         """
         if not self.protocol_info:
-            raise Exception('Could not create Element for this resource: '
-                            'protocolInfo not set (required).')
+            raise DIDLMetadataError('Could not create Element for this'
+                                    'resource:'
+                                    'protocolInfo not set (required).')
         root = XML.Element('res')
 
         # Required
