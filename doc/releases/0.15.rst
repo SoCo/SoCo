@@ -1,0 +1,64 @@
+SoCo 0.15 release notes
+***********************
+
+**SoCo 0.15** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* Add ``__enter__`` and ``__exit__`` methods to Subscription, for automatic
+  unsubscription in a with-block
+  (`#563 <https://github.com/SoCo/SoCo/pull/563>`_)
+
+* Add ``__enter__`` and ``__exit__`` methods to Snapshot, for automatic snapshot
+  and restore in a with block (`#588 <https://github.com/SoCo/SoCo/pull/588>`_)
+
+* Handle default value / allowed value range in ``Service.iter_actions`` and
+  format the resulting actions
+  (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
+
+* Allow keyword arguments in Service commands
+  (`#573 <https://github.com/SoCo/SoCo/pull/573>`_)
+
+* Auto deploy new tagged releases to PyPI
+  (`#593 <https://github.com/SoCo/SoCo/pull/593>`_)
+
+* Documentation updates (`#580 <https://github.com/SoCo/SoCo/pull/580>`_)
+
+
+Bugfixes
+========
+
+* Prevent parsing exceptions during event handling from killing the exception
+  thread. Instead, return a ``DidlFault``, which will reraise the exception
+  when the user tries to use it
+  (`#567 <https://github.com/SoCo/SoCo/pull/567>`_)
+
+* Fixed the set returned by ``discover()`` being modified later
+  (`#582 <https://github.com/SoCo/SoCo/pull/582>`_)
+
+* Fixed regression in ``send_command``
+  (`#577 <https://github.com/SoCo/SoCo/pull/577>`_)
+
+* Fixed regression due to removed deprecated methods
+  (`#596 <https://github.com/SoCo/SoCo/pull/596>`_)
+
+* Improved error handling with speakers not associated to a room
+  (`#555 <https://github.com/SoCo/SoCo/pull/555>`_)
+
+
+Backwards Compatability
+=======================
+
+* Dropped support for Python 3.3 #527
+  (`#527 <https://github.com/SoCo/SoCo/pull/527>`_)
+
+* Removed the deprecated methods which were moved in 0.12 from ``core.py`` to
+  ``music_library.py`` and move the assoctiated tests
+  (`#542 <https://github.com/SoCo/SoCo/pull/542>`_)
+
