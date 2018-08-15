@@ -1,0 +1,75 @@
+SoCo 0.16 release notes
+***********************
+
+**SoCo 0.16** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* Make events server configurable
+  (`#602 <https://github.com/SoCo/SoCo/pull/602>`_)
+
+ * Allow the user a choice in how the event listener is implemented. The
+   default is for the event listener to use the requests library and run in a
+   thread. This update allows the user to run the event listener using the
+   ``twisted.internet`` library, by setting the ``config.EVENTS_MODULE`` module
+   to point to the ``events_twisted`` module. See the example in
+   ``events_twisted``.
+
+ * Stop the event listener when the last active subscription is unsubscribed.
+
+ * Raise ``SoCoException`` on an attempt to subscribe a subscription more than
+   once (use ``Subscription.renew()`` instead).
+
+ * Allow an optional ``strict`` parameter for ``Subscription.subscribe()``,
+   ``Subscription.renew()`` and ``Subscription.unsubscribe()``. If set to
+   ``False``, Exceptions will be logged rather than raised. Default: ``True``
+
+ * Upon autorenewal, call ``Subscription.renew()`` with the ``strict`` flag set
+   to ``False``, so that any Exception is logged, not raised. This is because
+   there is no calling code to catch an Exception.
+
+ * Provide for calling code to set ``Subscription.auto_renew_fail`` to refer to
+   a callback function. If an Exception occurs upon autorenewal, this callback
+   will be called with the Exception as the sole parameter.
+
+ * If an Exception occurs upon ``Subscription.subscribe()`` or
+   ``Subscription.renew()``, cancel the subscription, unless the Exception was
+   a ``SoCoException`` on ``Subscription.subscribe()``. For example, if an
+   Exception occurs because the network went down, the subscription will be
+   cancelled.
+
+ * Use a threading lock with ``Subscription.subscribe()``,
+   ``Subscription.renew()`` and ``Subscription.unsubscribe()``, because
+   autorenewal occurs from a thread.
+
+* Allow the user to configure the event listener IP address that is sent to the
+  Sonos speakers. The default is to auto detect, but it can now be overridden.
+  This allows for more complex network configurations (e.g. using Docker
+  containers) to be supported.
+  (`#604 <https://github.com/SoCo/SoCo/pull/604>`_)
+
+* The ``play_uri`` method now accepts title arguments that need XML escaping.
+  (`#605 <https://github.com/SoCo/SoCo/pull/605>`_)
+
+* A harmless "Could not handle track info" warning has been removed.
+  (`#606 <https://github.com/SoCo/SoCo/pull/606>`_)
+
+* Let ``from_didl_string`` throw ``DIDLMetadataErrors``, allowing them to be
+  caught in the event handling code.
+  (`#601 <https://github.com/SoCo/SoCo/pull/601>`_)
+
+* Added support for ``object.item.audioItem.audioBook``
+  (`#618 <https://github.com/SoCo/SoCo/pull/618>`_)
+
+
+Bugfixes
+========
+
+* Fix ``DidlMusicAlbum`` inheriting fields from ``DidlAudioItem`` instead of
+  ``DidlAlbum`` (`#592 <https://github.com/SoCo/SoCo/pull/592>`_)
