@@ -1533,7 +1533,7 @@ class SoCo(_SocoSingletonBase):
             max_items (int): The total number of results to return.
 
         """
-        if favorite_type != RADIO_SHOWS and favorite_type != RADIO_STATIONS:
+        if favorite_type not in (RADIO_SHOWS, RADIO_STATIONS):
             favorite_type = SONOS_FAVORITES
 
         response = self.contentDirectory.Browse([
