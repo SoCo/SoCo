@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=star-args, too-many-arguments, fixme
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """
 This module contains classes for handling DIDL-Lite metadata.
 

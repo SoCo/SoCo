@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """Access to the Music Library.
 
 The Music Library is the collection of music stored on your local network.

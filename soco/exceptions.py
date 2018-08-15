@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """Exceptions that are used by SoCo."""
 
 from __future__ import unicode_literals

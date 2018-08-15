@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=fixme
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """Classes for handling SoCo's basic SOAP requirements.
 
 This module does not handle anything like the full `SOAP Specification

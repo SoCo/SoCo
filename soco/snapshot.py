@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=too-many-instance-attributes
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """Functionality to support saving and restoring the current Sonos state.
 
 This is useful for scenarios such as when you want to switch to radio

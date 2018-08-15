@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """Data structures for music service items
 
 The basis for this implementation is this page in the Sonos API

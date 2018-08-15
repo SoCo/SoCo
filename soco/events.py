@@ -4,6 +4,10 @@
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint: https://github.com/PyCQA/pylint/issues/782
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
+
 """Classes to handle Sonos UPnP Events and Subscriptions."""
 
 from __future__ import unicode_literals

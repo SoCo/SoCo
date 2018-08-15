@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=R0201,E0711
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """This is the __init__ module for the plugins.
 
 It contains the base class for all plugins

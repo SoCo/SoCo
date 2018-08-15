@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=not-context-manager
+# pylint: disable=not-context-manager,useless-object-inheritance
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint: https://github.com/PyCQA/pylint/issues/782
+
+# NOTE: useless-object-inheritance needed for Python 2.x compatability
 
 """This module contains the classes underlying SoCo's caching system."""
 

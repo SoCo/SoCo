@@ -2,6 +2,9 @@
 # pylint: disable = star-args, too-many-arguments, unsupported-membership-test
 # pylint: disable = not-an-iterable
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """This module contains all the data structures for music service plugins."""
 
 # This needs to be integrated with Music Library data structures
