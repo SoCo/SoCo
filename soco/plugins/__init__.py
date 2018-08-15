@@ -41,8 +41,8 @@ class SoCoPlugin(object):
         clsname = parts[-1]
 
         mod = importlib.import_module(modname)
-        cls = getattr(mod, clsname)
+        class_ = getattr(mod, clsname)
 
-        _LOG.info('Loaded class %s', cls)
+        _LOG.info('Loaded class %s', class_)
 
-        return cls(soco, *args, **kwargs)
+        return class_(soco, *args, **kwargs)
