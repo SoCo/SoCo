@@ -304,7 +304,7 @@ class DidlMetaClass(type):
 
     """Meta class for all Didl objects."""
 
-    def __new__(mcs, name, bases, attrs):
+    def __new__(cls, name, bases, attrs):
         """Create a new instance.
 
         Args:
@@ -312,7 +312,7 @@ class DidlMetaClass(type):
             bases (tuple): Base classes.
             attrs (dict): attributes defined for the class.
         """
-        new_cls = super(DidlMetaClass, mcs).__new__(mcs, name, bases, attrs)
+        new_cls = super(DidlMetaClass, cls).__new__(cls, name, bases, attrs)
         # Register all subclasses with the global _DIDL_CLASS_TO_CLASS mapping
         item_class = attrs.get('item_class', None)
         if item_class is not None:
