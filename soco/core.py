@@ -788,7 +788,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if self.speaker_info['model_name'] not in {'Sonos Playbase', 'Sonos Playbar', 'Sonos Beam'}:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -808,7 +808,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if self.speaker_info['model_name'] not in {'Sonos Playbase', 'Sonos Playbar', 'Sonos Beam'}:
             message = 'This device does not support night mode'
             raise NotSupportedException(message)
 
@@ -826,7 +826,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if self.speaker_info['model_name'] not in {'Sonos Playbase', 'Sonos Playbar', 'Sonos Beam'}:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -846,7 +846,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if self.speaker_info['model_name'] not in {'Sonos Playbase', 'Sonos Playbar', 'Sonos Beam'}:
             message = 'This device does not support dialog mode'
             raise NotSupportedException(message)
 
