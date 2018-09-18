@@ -204,6 +204,18 @@ class TestSoco:
     def test_soco_repr(self, moco):
         assert repr(moco) == 'SoCo("{}")'.format(IP_ADDR)
 
+    @pytest.mark.parametrize('model_name', (
+        ('Play:5', False),
+        ('Sonos One', False),
+        ('PLAYBAR', True),
+        ('Sonos Beam', True),
+        ('Sonos Playbar', True),
+        ('Sonos Playbase', True)))
+    def test_soco_is_soundbar(self, moco, model_name):
+        moco._is_soundbar = None
+        moco.speaker_info['model_name'] = model_name[0]
+        assert moco.is_soundbar == model_name[1]
+
     @mock.patch("soco.core.requests")
     @pytest.mark.parametrize('refresh', [None, False, True])
     def test_soco_get_speaker_info_speaker_not_set_refresh(
