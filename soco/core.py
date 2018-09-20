@@ -1089,20 +1089,6 @@ class SoCo(_SocoSingletonBase):
         """bool: Is the playbar speaker input from TV?"""
         return self.music_source == 'TV'
 
-    SOURCES = {
-        r'^$': 'NONE',
-        r'^x-file-cifs:': 'LIBRARY',
-        r'^x-rincon-mp3radio:': 'RADIO',
-        r'^x-sonosapi-stream:': 'RADIO',
-        r'^aac:': 'RADIO',
-        r'^x-sonosapi-radio:': 'RADIO',
-        r'^hls-radio:': 'RADIO',
-        r'^https?:': 'WEB_FILE',
-        r'^x-rincon-stream:': 'LINE_IN',
-        r'^x-sonos-htastream:': 'TV',
-        r'^x-sonos-vli:.*,airplay:': 'AIRPLAY'
-    }
-
     @property
     def music_source(self):
         """str: The current source of music.
@@ -2022,6 +2008,18 @@ NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
 # Valid play modes
 PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL',
               'SHUFFLE_REPEAT_ONE', 'REPEAT_ONE')
+# URI prefixes for music sources
+SOURCES = {r'^$': 'NONE',
+           r'^x-file-cifs:': 'LIBRARY',
+           r'^x-rincon-mp3radio:': 'RADIO',
+           r'^x-sonosapi-stream:': 'RADIO',
+           r'^aac:': 'RADIO',
+           r'^x-sonosapi-radio:': 'RADIO',
+           r'^hls-radio:': 'RADIO',
+           r'^https?:': 'WEB_FILE',
+           r'^x-rincon-stream:': 'LINE_IN',
+           r'^x-sonos-htastream:': 'TV',
+           r'^x-sonos-vli:.*,airplay:': 'AIRPLAY'}
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
