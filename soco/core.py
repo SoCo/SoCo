@@ -1099,7 +1099,8 @@ class SoCo(_SocoSingletonBase):
         r'^hls-radio:': 'RADIO',
         r'^https?:': 'WEB_FILE',
         r'^x-rincon-stream:': 'LINE_IN',
-        r'^x-sonos-htastream:': 'TV'
+        r'^x-sonos-htastream:': 'TV',
+        r'^x-sonos-vli:.*,airplay:': 'AIRPLAY'
     }
 
     @property
