@@ -1109,7 +1109,7 @@ class SoCo(_SocoSingletonBase):
         response = self.avTransport.GetPositionInfo(
             [('InstanceID', 0), ('Channel', 'Master')])
         track_uri = response['TrackURI']
-        for regex, source in self.SOURCES.items():
+        for regex, source in SOURCES.items():
             if re.match(regex, track_uri) is not None:
                 return source
         return "UNKNOWN"
