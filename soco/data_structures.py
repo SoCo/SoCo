@@ -1055,6 +1055,12 @@ class DidlPlaylistContainerFavorite(DidlPlaylistContainer):
     item_class = 'object.container.playlistContainer.sonos-favorite'
 
 
+class DidlPlaylistContainerTracklist(DidlPlaylistContainer):
+
+    """Class that represents a Sonos tracklist."""
+    item_class = 'object.container.playlistContainer.tracklist'
+
+
 class DidlGenre(DidlContainer):
 
     """A content directory class representing a general genre."""
