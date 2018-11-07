@@ -174,6 +174,7 @@ class SoCo(_SocoSingletonBase):
         loudness
         night_mode
         dialog_mode
+        surround_mode
         status_light
 
     ..  rubric:: Playlists and Favorites
@@ -788,7 +789,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if 'PLAYBAR' or 'PLAYBAR' not in self.speaker_info['model_name']:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -808,7 +809,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
             message = 'This device does not support night mode'
             raise NotSupportedException(message)
 
@@ -819,6 +820,44 @@ class SoCo(_SocoSingletonBase):
         ])
 
     @property
+    def surround_mode(self):
+        """bool: The speaker's surround mode.
+
+        True if on, False if off, None if not supported.
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+            return None
+
+        response = self.renderingControl.GetEQ([
+            ('InstanceID', 0),
+            ('EQType', 'SurroundMode')
+        ])
+        return bool(int(response['CurrentValue']))
+
+    @surround_mode.setter
+    def surround_mode(self, surround_mode):
+        """Switch on/off the speaker's surround mode.
+
+        :param surround_mode: Enable or disable night mode
+        :type surround_mode: bool
+        :raises NotSupportedException: If the device does not support
+        night mode.
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+            message = 'This device does not support night mode'
+            raise NotSupportedException(message)
+
+        self.renderingControl.SetEQ([
+            ('InstanceID', 0),
+            ('EQType', 'SurroundMode'),
+            ('DesiredValue', int(surround_mode))
+        ])
+
+    @property
     def dialog_mode(self):
         """bool: Get the Sonos speaker's dialog mode.
 
@@ -826,7 +865,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -846,7 +885,7 @@ class SoCo(_SocoSingletonBase):
         """
         if not self.speaker_info:
             self.get_speaker_info()
-        if 'PLAYBAR' not in self.speaker_info['model_name']:
+        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
             message = 'This device does not support dialog mode'
             raise NotSupportedException(message)
 

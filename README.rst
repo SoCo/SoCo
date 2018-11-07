@@ -174,7 +174,7 @@ SoCo supports the following controls amongst others:
 -  Get or set sleep timers
 
 -  Get or set the speaker’s bass and treble EQ
--  Toggle the speaker’s loudness compensation, night mode and dialog mode
+-  Toggle the speaker’s loudness compensation, night mode, dialog mode and surround mode
 -  Toggle the white status light on the unit
 -  Get the speaker’s information
 
