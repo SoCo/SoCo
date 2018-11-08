@@ -169,6 +169,7 @@ class SoCo(_SocoSingletonBase):
         is_visible
         is_bridge
         is_coordinator
+        is_soundbar
         bass
         treble
         loudness
@@ -261,6 +262,7 @@ class SoCo(_SocoSingletonBase):
         self._groups = set()
         self._is_bridge = None
         self._is_coordinator = False
+        self._is_soundbar = None
         self._player_name = None
         self._uid = None
         self._household_id = None
@@ -371,6 +373,18 @@ class SoCo(_SocoSingletonBase):
         # zone group topology, to capitalise on any caching.
         self._parse_zone_group_state()
         return self._is_coordinator
+
+    @property
+    def is_soundbar(self):
+        """bool: Is this zone a soundbar (i.e. has night mode etc.)?"""
+        if self._is_soundbar is None:
+            if not self.speaker_info:
+                self.get_speaker_info()
+
+            model_name = self.speaker_info['model_name'].lower()
+            self._is_soundbar = any(model_name.endswith(s) for s in SOUNDBARS)
+
+        return self._is_soundbar
 
     @property
     def play_mode(self):
@@ -787,9 +801,7 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False if off, None if not supported.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'PLAYBAR' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -807,9 +819,7 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         night mode.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             message = 'This device does not support night mode'
             raise NotSupportedException(message)
 
@@ -825,9 +835,7 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False if off, None if not supported.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -845,9 +853,7 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         night mode.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             message = 'This device does not support night mode'
             raise NotSupportedException(message)
 
@@ -863,9 +869,7 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False if off, None if not supported.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             return None
 
         response = self.renderingControl.GetEQ([
@@ -883,9 +887,7 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         dialog mode.
         """
-        if not self.speaker_info:
-            self.get_speaker_info()
-        if 'PLAYBAR' or 'Beam' not in self.speaker_info['model_name']:
+        if not self.is_soundbar:
             message = 'This device does not support dialog mode'
             raise NotSupportedException(message)
 
@@ -2022,6 +2024,8 @@ NS = {'dc': '{http://purl.org/dc/elements/1.1/}',
 # Valid play modes
 PLAY_MODES = ('NORMAL', 'SHUFFLE_NOREPEAT', 'SHUFFLE', 'REPEAT_ALL',
               'SHUFFLE_REPEAT_ONE', 'REPEAT_ONE')
+# soundbar product names
+SOUNDBARS = ('playbase', 'playbar', 'beam')
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
