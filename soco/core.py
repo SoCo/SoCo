@@ -854,7 +854,7 @@ class SoCo(_SocoSingletonBase):
         night mode.
         """
         if not self.is_soundbar:
-            message = 'This device does not support night mode'
+            message = 'This device does not support surround mode'
             raise NotSupportedException(message)
 
         self.renderingControl.SetEQ([
