@@ -172,7 +172,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
                 _LOG.debug(
                     'Received discovery response from %s: "%s"', addr, data
                 )
-                if b"Sonos" in data:
+                if really_utf8(household_id) in data:
                     # Now we have an IP, we can build a SoCo instance and query
                     # that player for the topology to find the other players.
                     # It is much more efficient to rely upon the Zone
