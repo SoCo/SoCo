@@ -4,7 +4,10 @@ from __future__ import unicode_literals
 import socket
 import select
 
-from mock import patch, MagicMock as Mock, PropertyMock, call
+try:
+    from unittest.mock import Mock, patch, call
+except ImportError:
+    from mock import Mock, patch, call
 
 from soco import discover
 from soco import config
