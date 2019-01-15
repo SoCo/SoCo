@@ -54,7 +54,6 @@ class NullCache(_BaseCache):
 
     def put(self, item, *args, **kwargs):
         """Put an item into the cache."""
-        pass
 
     def get(self, *args, **kwargs):
         """Get an item from the cache."""
@@ -62,11 +61,9 @@ class NullCache(_BaseCache):
 
     def delete(self, *args, **kwargs):
         """Delete an item from the cache."""
-        pass
 
     def clear(self):
         """Empty the whole cache."""
-        pass
 
 
 class TimedCache(_BaseCache):

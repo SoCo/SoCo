@@ -91,7 +91,6 @@ class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
     here: http://www.artima.com/weblogs/viewpost.jsp?thread=236234 and
     here: http://mikewatkins.ca/2008/11/29/python-2-and-3-metaclasses/
     """
-    pass
 
 
 def only_on_master(function):
@@ -428,7 +427,7 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
         ])
         cross_fade_state = response['CrossfadeMode']
-        return True if int(cross_fade_state) else False
+        return bool(int(cross_fade_state))
 
     @cross_fade.setter
     @only_on_master
@@ -683,7 +682,7 @@ class SoCo(_SocoSingletonBase):
             ('Channel', 'Master')
         ])
         mute_state = response['CurrentMute']
-        return True if int(mute_state) else False
+        return bool(int(mute_state))
 
     @mute.setter
     def mute(self, mute):
@@ -782,7 +781,7 @@ class SoCo(_SocoSingletonBase):
             ('Channel', 'Master'),
         ])
         loudness = response["CurrentLoudness"]
-        return True if int(loudness) else False
+        return bool(int(loudness))
 
     @loudness.setter
     def loudness(self, loudness):
@@ -926,8 +925,7 @@ class SoCo(_SocoSingletonBase):
             zone._player_name = member_attribs['ZoneName']
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
-            is_visible = False if member_attribs.get(
-                'Invisible') == '1' else True
+            is_visible = (member_attribs.get('Invisible') != '1')
             if is_visible:
                 self._visible_zones.add(zone)
             self._all_zones.add(zone)
@@ -969,8 +967,8 @@ class SoCo(_SocoSingletonBase):
                 # is_bridge doesn't change, but it does no real harm to
                 # set/reset it here, just in case the zone has not been seen
                 # before
-                zone._is_bridge = True if member_element.attrib.get(
-                    'IsZoneBridge') == '1' else False
+                zone._is_bridge = (
+                    member_element.attrib.get('IsZoneBridge') == '1')
                 # add the zone to the members for this group
                 members.add(zone)
                 # Loop over Satellite elements if present, and process as for
@@ -1133,7 +1131,7 @@ class SoCo(_SocoSingletonBase):
         """
         result = self.deviceProperties.GetLEDState()
         LEDState = result["CurrentLEDState"]  # pylint: disable=invalid-name
-        return True if LEDState == "On" else False
+        return LEDState == "On"
 
     @status_light.setter
     def status_light(self, led_on):

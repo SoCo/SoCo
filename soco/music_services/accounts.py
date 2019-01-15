@@ -132,7 +132,7 @@ class Account(object):
         result = {}
         for xml_account in xml_accounts:
             serial_number = xml_account.get('SerialNum')
-            is_deleted = True if xml_account.get('Deleted') == '1' else False
+            is_deleted = (xml_account.get('Deleted') == '1')
             # cls._all_accounts is a weakvaluedict keyed by serial number.
             # We use it as a database to store details of the accounts we
             # know about. We need to update it with info obtained from the

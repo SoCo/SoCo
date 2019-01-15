@@ -175,7 +175,7 @@ def bool_str(string):
     """Returns a boolean from a string imput of 'true' or 'false'"""
     if string not in BOOL_STRS:
         raise ValueError('Invalid boolean string: "{}"'.format(string))
-    return True if string == 'true' else False
+    return string == 'true'
 
 
 # Music Service item base classes

@@ -128,7 +128,7 @@ class MusicServiceItem(object):
                 content[key] = int(value)
             if key in ['can_play', 'can_skip', 'can_add_to_favorites',
                        'can_enumerate']:
-                content[key] = True if value == 'true' else False
+                content[key] = (value == 'true')
         # Rename a single item
         content['item_id'] = content.pop('id')
         # And get the extended id
