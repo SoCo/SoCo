@@ -6,5 +6,5 @@ graphviz
 flake8
 pylint >= 1.4
 coveralls
-pytest-cov
+pytest-cov>=2.4.0,<2.6
 wheel
