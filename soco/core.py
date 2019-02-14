@@ -22,6 +22,7 @@ from .data_structures import (
     DidlObject, DidlPlaylistContainer, DidlResource,
     Queue, to_didl_string
 )
+from .cache import Cache
 from .data_structures_entry import from_didl_string
 from .exceptions import (
     SoCoSlaveException, SoCoUPnPException, NotSupportedException,
@@ -31,7 +32,6 @@ from .music_library import MusicLibrary
 from .services import (
     DeviceProperties, ContentDirectory, RenderingControl, AVTransport,
     ZoneGroupTopology, AlarmClock, SystemProperties, MusicServices,
-    zone_group_state_shared_cache,
 )
 from .utils import (
     really_utf8, camel_to_underscore, deprecated
@@ -265,7 +265,8 @@ class SoCo(_SocoSingletonBase):
         self._uid = None
         self._household_id = None
         self._visible_zones = set()
-        self._zgs_cache = None
+        self._zgs_cache = Cache(default_timeout=5)
+        self._zgs_result = None
 
         _LOG.debug("Created SoCo instance for ip: %s", ip_address)
 
@@ -919,6 +920,8 @@ class SoCo(_SocoSingletonBase):
             ip_addr = member_attribs['Location'].\
                 split('//')[1].split(':')[0]
             zone = config.SOCO_CLASS(ip_addr)
+            # share our cache
+            zone._zgs_cache = self._zgs_cache
             # uid doesn't change, but it's not harmful to (re)set it, in case
             # the zone is as yet unseen.
             zone._uid = member_attribs['UUID']
@@ -936,10 +939,10 @@ class SoCo(_SocoSingletonBase):
         # need to repeat all the XML parsing. In addition, switch on network
         # caching for a short interval (5 secs).
         zgs = self.zoneGroupTopology.GetZoneGroupState(
-            cache_timeout=5)['ZoneGroupState']
-        if zgs == self._zgs_cache:
+            cache=self._zgs_cache)['ZoneGroupState']
+        if zgs == self._zgs_result:
             return
-        self._zgs_cache = zgs
+        self._zgs_result = zgs
         tree = XML.fromstring(zgs.encode('utf-8'))
         # Empty the set of all zone_groups
         self._groups.clear()
@@ -1048,7 +1051,7 @@ class SoCo(_SocoSingletonBase):
             ('CurrentURI', 'x-rincon:{0}'.format(master.uid)),
             ('CurrentURIMetaData', '')
         ])
-        zone_group_state_shared_cache.clear()
+        self._zgs_cache.clear()
         self._parse_zone_group_state()
 
     def unjoin(self):
@@ -1062,7 +1065,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([
             ('InstanceID', 0)
         ])
-        zone_group_state_shared_cache.clear()
+        self._zgs_cache.clear()
         self._parse_zone_group_state()
 
     def switch_to_line_in(self, source=None):
