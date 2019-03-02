@@ -216,11 +216,7 @@ class Snapshot(object):
                     )
 
         # For all devices:
-        # Reinstate all the properties that are pretty easy to do
         self.device.mute = self.mute
-        self.device.bass = self.bass
-        self.device.treble = self.treble
-        self.device.loudness = self.loudness
 
         # Reinstate volume
         # Can only change volume on device with fixed volume set to False
@@ -236,6 +232,10 @@ class Snapshot(object):
 
         # now set volume if not fixed
         if not fixed_vol:
+            self.device.bass = self.bass
+            self.device.treble = self.treble
+            self.device.loudness = self.loudness
+
             if fade:
                 # if fade requested in restore
                 # set volume to 0 then fade up to saved volume (non blocking)
