@@ -1708,8 +1708,7 @@ class SoCo(_SocoSingletonBase):
             if 'Error 402 received' in str(err):
                 raise ValueError('invalid sleep_time_seconds, must be integer \
                     value between 0 and 86399 inclusive or None')
-            else:
-                raise
+            raise
         except ValueError:
             raise ValueError('invalid sleep_time_seconds, must be integer \
                 value between 0 and 86399 inclusive or None')

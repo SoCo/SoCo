@@ -559,10 +559,10 @@ class Service(object):
                 error_description=description,
                 error_xml=xml_error
             )
-        else:
-            # Unknown error, so just return the entire response
-            log.error("Unknown error received from %s", self.soco.ip_address)
-            raise UnknownSoCoException(xml_error)
+
+        # Unknown error, so just return the entire response
+        log.error("Unknown error received from %s", self.soco.ip_address)
+        raise UnknownSoCoException(xml_error)
 
     def subscribe(
             self, requested_timeout=None, auto_renew=False, event_queue=None):
