@@ -479,7 +479,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         # Spotify Direct violates this. To make it work, a missing restricted
         # tag is interpreted as `restricted = True`.
         restricted = element.get('restricted', None)
-        restricted = False if restricted in [0, 'false', 'False'] else True
+        restricted = (restricted not in [0, 'false', 'False'])
 
         # Similarily, all elements should have a title tag, but Spotify Direct
         # does not comply
