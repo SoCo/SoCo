@@ -480,6 +480,7 @@ class TestReorderSonosPlaylist(object):
     existing_playlists = None
     playlist_name = 'zSocoTestPlayList42'
     test_playlist = None
+    queue_length = None
 
     @pytest.yield_fixture(autouse=True, scope="class")
     def restore_sonos_playlists(self, soco):
@@ -495,27 +496,22 @@ class TestReorderSonosPlaylist(object):
             msg = 'You must have 3 or more items in your queue for testing.'
             pytest.fail(msg)
         playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
-        self.test_playlist = playlist
+        self.__class__.queue_length = soco.queue_size
+        self.__class__.test_playlist = playlist
         yield
 
-        # soco.remove_sonos_playlist(object_id=self.test_playlist.item_id)
-        soco.contentDirectory.DestroyObject([('ObjectID',
-                                              self.test_playlist.item_id)])
+        soco.contentDirectory.DestroyObject(
+            [('ObjectID', self.test_playlist.item_id)]
+        )
 
     def _reset_spl_contents(self, soco):
         """Ensure test playlist matches queue for each test."""
-        test_playlist = soco.get_sonos_playlist_by_attr('title',
-                                                        self.playlist_name)
-        response = soco.clear_sonos_playlist(test_playlist)
-        if response['length']:
-            msg = 'Failed to empty playlist. Unexpected result.'
-            pytest.fail(msg)
-        que = soco.get_queue()
-        num_tracks = 0
-        for track in que:
-            soco.add_item_to_sonos_playlist(track, test_playlist)
-            num_tracks += 1
-        return test_playlist, num_tracks
+        soco.contentDirectory.DestroyObject(
+            [('ObjectID', self.test_playlist.item_id)]
+        )
+        playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
+        self.__class__.test_playlist = playlist
+        return playlist, self.__class__.queue_length
 
     def test_reverse_track_order(self, soco):
         """Test reversing the tracks in the Sonos playlist."""
@@ -845,10 +841,10 @@ class TestReorderSonosPlaylist(object):
         """Test test_get_sonos_playlist_by_attr."""
         test_playlist, _ = self._reset_spl_contents(soco)
         by_name = soco.get_sonos_playlist_by_attr('title', self.playlist_name)
-        assert test_playlist == by_name
+        assert test_playlist.item_id == by_name.item_id
         by_id = soco.get_sonos_playlist_by_attr('item_id',
                                                 test_playlist.item_id)
-        assert test_playlist == by_id
+        assert test_playlist.item_id == by_id.item_id
         with pytest.raises(AttributeError):
             soco.get_sonos_playlist_by_attr('fred', 'wilma')
 
