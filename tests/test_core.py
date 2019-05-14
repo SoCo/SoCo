@@ -58,88 +58,121 @@ def moco_only_on_master():
         patch.stop()
 
 
-ZGS = """<ZoneGroups>
-      <ZoneGroup Coordinator="RINCON_000ZZZ1400" ID="RINCON_000ZZZ1400:0">
-        <ZoneGroupMember
-            BootSeq="33"
-            Configuration="1"
-            Icon="x-rincon-roomicon:zoneextender"
-            Invisible="1"
-            IsZoneBridge="1"
-            Location="http://192.168.1.100:1400/xml/device_description.xml"
-            MinCompatibleVersion="22.0-00000"
-            SoftwareVersion="24.1-74200"
-            UUID="RINCON_000ZZZ1400"
-            ZoneName="BRIDGE"/>
-      </ZoneGroup>
-      <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
-        <ZoneGroupMember
-            BootSeq="44"
-            Configuration="1"
-            Icon="x-rincon-roomicon:living"
-            Location="http://192.168.1.101:1400/xml/device_description.xml"
-            MinCompatibleVersion="22.0-00000"
-            SoftwareVersion="24.1-74200"
-            UUID="RINCON_000XXX1400"
-            ZoneName="Living Room"/>
-        <ZoneGroupMember
-            BootSeq="52"
-            Configuration="1"
-            Icon="x-rincon-roomicon:kitchen"
-            Location="http://192.168.1.102:1400/xml/device_description.xml"
-            MinCompatibleVersion="22.0-00000"
-            SoftwareVersion="24.1-74200"
-            UUID="RINCON_000YYY1400"
-            ZoneName="Kitchen"/>
-      </ZoneGroup>
-      <ZoneGroup Coordinator="RINCON_000PPP1400" ID="RINCON_000PPP1400:49">
-        <ZoneGroupMember
-            BootSeq="8"
-            Configuration="1"
-            HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR;RINCON_000SSS1400:LR;RINCON_000QQQ1400:SW"
-            Icon="x-rincon-roomicon:living"
-            Location="http://192.168.1.103:1400/xml/device_description.xml"
-            MinCompatibleVersion="22.0-00000"
-            SoftwareVersion="24.0-71060"
-            UUID="RINCON_000PPP1400"
-            ZoneName="Home Theatre">
-          <Satellite
-              BootSeq="4"
+ZGS = """<ZoneGroupState>
+      <ZoneGroups>
+        <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000E5876A0E801400:210">
+          <ZoneGroupMember
+              UUID="RINCON_000XXX1400"
+              Location="http://192.168.1.101:1400/xml/device_description.xml"
+              ZoneName="Kitchen"
+              Icon="x-rincon-roomicon:kitchen"
               Configuration="1"
-              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000QQQ1400:SW"
-              Icon="x-rincon-roomicon:living"
-              Invisible="1"
-              Location="http://192.168.1.104:1400/xml/device_description.xml"
-              MinCompatibleVersion="22.0-00000"
-              SoftwareVersion="24.0-71060"
-              UUID="RINCON_000QQQ1400"
-              ZoneName="Home Theatre"/>
-          <Satellite
-              BootSeq="6"
+              SoftwareVersion="49.2-64250"
+              MinCompatibleVersion="48.0-00000"
+              LegacyCompatibleVersion="36.0-00000"
+              BootSeq="162"
+              TVConfigurationError="0"
+              HdmiCecAvailable="0"
+              WirelessMode="0"
+              WirelessLeafOnly="0"
+              HasConfiguredSSID="1"
+              ChannelFreq="2437"
+              BehindWifiExtender="0"
+              WifiEnabled="1"
+              Orientation="0"
+              RoomCalibrationState="4"
+              SecureRegState="3"
+              VoiceConfigState="0"
+              MicEnabled="0"
+              AirPlayEnabled="0"
+              IdleState="1"
+              MoreInfo=""/>
+          <ZoneGroupMember
+              UUID="RINCON_B8E93781F3EA01400"
+              Location="http://192.168.1.31:1400/xml/device_description.xml"
+              ZoneName="Living Room"
+              Icon="x-rincon-roomicon:masterbedroom"
               Configuration="1"
-              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000RRR1400:RR"
+              SoftwareVersion="49.2-64250"
+              MinCompatibleVersion="48.0-00000"
+              LegacyCompatibleVersion="36.0-00000"
+              BootSeq="226"
+              TVConfigurationError="0"
+              HdmiCecAvailable="0"
+              WirelessMode="0"
+              WirelessLeafOnly="0"
+              HasConfiguredSSID="1"
+              ChannelFreq="2437"
+              BehindWifiExtender="0"
+              WifiEnabled="1"
+              Orientation="0"
+              RoomCalibrationState="4"
+              SecureRegState="3"
+              VoiceConfigState="0"
+              MicEnabled="0"
+              AirPlayEnabled="0"
+              IdleState="1"
+              MoreInfo=""/>
+        </ZoneGroup>
+        <ZoneGroup Coordinator="RINCON_000E58A53FAE01400" ID="RINCON_000E58A53FAE01400:107">
+          <ZoneGroupMember
+              UUID="RINCON_000E58A53FAE01400"
+              Location="http://192.168.1.173:1400/xml/device_description.xml"
+              ZoneName="Stue"
               Icon="x-rincon-roomicon:living"
-              Invisible="1"
-              Location="http://192.168.1.105:1400/xml/device_description.xml"
-              MinCompatibleVersion="22.0-00000"
-              SoftwareVersion="24.0-71060"
-              UUID="RINCON_000RRR1400"
-              ZoneName="Home Theatre"/>
-          <Satellite
-              BootSeq="4"
               Configuration="1"
-              HTSatChanMapSet="RINCON_000PPP1400:LF,RF;RINCON_000SSS1400:LR"
-              Icon="x-rincon-roomicon:living"
-              Invisible="1"
-              Location="http://192.168.1.106:1400/xml/device_description.xml"
-              MinCompatibleVersion="22.0-00000"
-              SoftwareVersion="24.0-71060"
-              UUID="RINCON_000SSS1400"
-              ZoneName="Home Theatre"/>
-        </ZoneGroupMember>
-      </ZoneGroup>
-    </ZoneGroups>"""
-
+              SoftwareVersion="49.2-64250"
+              MinCompatibleVersion="48.0-00000"
+              LegacyCompatibleVersion="36.0-00000"
+              BootSeq="1777"
+              TVConfigurationError="0"
+              HdmiCecAvailable="0"
+              WirelessMode="0"
+              WirelessLeafOnly="0"
+              HasConfiguredSSID="0"
+              ChannelFreq="2437"
+              BehindWifiExtender="0"
+              WifiEnabled="1"
+              Orientation="0"
+              RoomCalibrationState="4"
+              SecureRegState="3"
+              VoiceConfigState="0"
+              MicEnabled="0"
+              AirPlayEnabled="0"
+              IdleState="1"
+              MoreInfo=""/>
+        </ZoneGroup>
+        <ZoneGroup Coordinator="RINCON_000E5884455C01400" ID="RINCON_000E5884455C01400:114">
+          <ZoneGroupMember
+              UUID="RINCON_000E5884455C01400"
+              Location="http://192.168.1.197:1400/xml/device_description.xml"
+              ZoneName="Kontor"
+              Icon="x-rincon-roomicon:office"
+              Configuration="1"
+              SoftwareVersion="49.2-64250"
+              MinCompatibleVersion="48.0-00000"
+              LegacyCompatibleVersion="36.0-00000"
+              BootSeq="196"
+              TVConfigurationError="0"
+              HdmiCecAvailable="0"
+              WirelessMode="0"
+              WirelessLeafOnly="0"
+              HasConfiguredSSID="1"
+              ChannelFreq="2437"
+              BehindWifiExtender="0"
+              WifiEnabled="1"
+              Orientation="0"
+              RoomCalibrationState="4"
+              SecureRegState="3"
+              VoiceConfigState="0"
+              MicEnabled="0"
+              AirPlayEnabled="0"
+              IdleState="0"
+              MoreInfo=""/>
+        </ZoneGroup>
+      </ZoneGroups>
+      <VanishedDevices></VanishedDevices>
+    </ZoneGroupState>"""
 
 @pytest.yield_fixture
 def moco_zgs(moco):
@@ -159,17 +192,17 @@ class TestSoco:
           </specVersion>
           <device>
             <deviceType>urn:schemas-upnp-org:device:ZonePlayer:1</deviceType>
-            <friendlyName>""" + IP_ADDR + """ - Sonos PLAY:3</friendlyName>
+            <friendlyName>""" + IP_ADDR + """ - Sonos Play:5</friendlyName>
             <manufacturer>Sonos, Inc.</manufacturer>
             <manufacturerURL>http://www.sonos.com</manufacturerURL>
             <modelNumber>S3</modelNumber>
-            <modelDescription>Sonos PLAY:3</modelDescription>
-            <modelName>Sonos PLAY:3</modelName>
-            <modelURL>http://www.sonos.com/products/zoneplayers/S3</modelURL>
-            <softwareVersion>29.5-91030</softwareVersion>
+            <modelDescription>Sonos Play:5</modelDescription>
+            <modelName>Sonos Play:3</modelName>
+            <modelURL>http://www.sonos.com/products/zoneplayers/S5</modelURL>
+            <softwareVersion>49.2-64250</softwareVersion>
             <hardwareVersion>1.8.1.2-2</hardwareVersion>
             <serialNum>00-11-22-33-44-55:E</serialNum>
-            <UDN>uuid:RINCON_00112233445501400</UDN>
+            <UDN>uuid:RINCON_000E5884455C01400</UDN>
             <iconList>
               <icon>
                 <id>0</id>
@@ -180,11 +213,179 @@ class TestSoco:
                 <url>/img/icon-S3.png</url>
               </icon>
             </iconList>
-            <minCompatibleVersion>28.0-00000</minCompatibleVersion>
-            <legacyCompatibleVersion>24.0-0000</legacyCompatibleVersion>
-            <displayVersion>5.4</displayVersion>
-            <extraVersion>OTP: </extraVersion>
+            <minCompatibleVersion>48.0-00000</minCompatibleVersion>
+            <legacyCompatibleVersion>36.0-00000</legacyCompatibleVersion>
+            <apiVersion>1.11.1</apiVersion>
+            <minApiVersion>1.1.0</minApiVersion>
+            <displayVersion>10.1.2</displayVersion>
+            <extraVersion>OTP: 1.1.1(1-16-4-zp5s-0.5)</extraVersion>
             <roomName>Room</roomName>
+            <displayName>Play:5</displayName>
+            <zoneType>5</zoneType>
+            <feature1>0x02000002</feature1>
+            <feature2>0x00006172</feature2>
+            <feature3>0x0003002a</feature3>
+            <seriesid>P100</seriesid>
+            <variant>0</variant>
+            <internalSpeakerSize>3</internalSpeakerSize>
+            <bassExtension>0.000</bassExtension>
+            <satGainOffset>0.000</satGainOffset>
+            <memory>32</memory>
+            <flash>32</flash>
+            <flashRepartitioned>1</flashRepartitioned>
+            <ampOnTime>425</ampOnTime>
+            <retailMode>0</retailMode>
+            <serviceList>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:AlarmClock:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:AlarmClock</serviceId>
+                <controlURL>/AlarmClock/Control</controlURL>
+                <eventSubURL>/AlarmClock/Event</eventSubURL>
+                <SCPDURL>/xml/AlarmClock1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:MusicServices:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:MusicServices</serviceId>
+                <controlURL>/MusicServices/Control</controlURL>
+                <eventSubURL>/MusicServices/Event</eventSubURL>
+                <SCPDURL>/xml/MusicServices1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:AudioIn:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:AudioIn</serviceId>
+                <controlURL>/AudioIn/Control</controlURL>
+                <eventSubURL>/AudioIn/Event</eventSubURL>
+                <SCPDURL>/xml/AudioIn1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:DeviceProperties:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:DeviceProperties</serviceId>
+                <controlURL>/DeviceProperties/Control</controlURL>
+                <eventSubURL>/DeviceProperties/Event</eventSubURL>
+                <SCPDURL>/xml/DeviceProperties1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:SystemProperties:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:SystemProperties</serviceId>
+                <controlURL>/SystemProperties/Control</controlURL>
+                <eventSubURL>/SystemProperties/Event</eventSubURL>
+                <SCPDURL>/xml/SystemProperties1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:ZoneGroupTopology:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:ZoneGroupTopology</serviceId>
+                <controlURL>/ZoneGroupTopology/Control</controlURL>
+                <eventSubURL>/ZoneGroupTopology/Event</eventSubURL>
+                <SCPDURL>/xml/ZoneGroupTopology1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:GroupManagement:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:GroupManagement</serviceId>
+                <controlURL>/GroupManagement/Control</controlURL>
+                <eventSubURL>/GroupManagement/Event</eventSubURL>
+                <SCPDURL>/xml/GroupManagement1.xml</SCPDURL>
+              </service>
+              <service>
+                <serviceType>urn:schemas-tencent-com:service:QPlay:1</serviceType>
+                <serviceId>urn:tencent-com:serviceId:QPlay</serviceId>
+                <controlURL>/QPlay/Control</controlURL>
+                <eventSubURL>/QPlay/Event</eventSubURL>
+                <SCPDURL>/xml/QPlay1.xml</SCPDURL>
+              </service>
+            </serviceList>
+            <deviceList>
+              <device>
+          <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
+          <friendlyName>192.168.1.197 - Sonos Play:5 Media Server</friendlyName>
+          <manufacturer>Sonos, Inc.</manufacturer>
+          <manufacturerURL>http://www.sonos.com</manufacturerURL>
+          <modelNumber>S5</modelNumber>
+          <modelDescription>Sonos Play:5 Media Server</modelDescription>
+          <modelName>Sonos Play:5</modelName>
+          <modelURL>http://www.sonos.com/products/zoneplayers/S5</modelURL>
+          <UDN>uuid:RINCON_000E5884455C01400_MS</UDN>
+          <serviceList>
+            <service>
+              <serviceType>urn:schemas-upnp-org:service:ContentDirectory:1</serviceType>
+              <serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>
+              <controlURL>/MediaServer/ContentDirectory/Control</controlURL>
+              <eventSubURL>/MediaServer/ContentDirectory/Event</eventSubURL>
+              <SCPDURL>/xml/ContentDirectory1.xml</SCPDURL>
+            </service>
+            <service>
+              <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                    <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                    <controlURL>/MediaServer/ConnectionManager/Control</controlURL>
+                    <eventSubURL>/MediaServer/ConnectionManager/Event</eventSubURL>
+                    <SCPDURL>/xml/ConnectionManager1.xml</SCPDURL>
+                  </service>
+                </serviceList>
+              </device>
+              <device>
+                <deviceType>urn:schemas-upnp-org:device:MediaRenderer:1</deviceType>
+          <friendlyName>Kontor - Sonos Play:5 Media Renderer</friendlyName>
+          <manufacturer>Sonos, Inc.</manufacturer>
+          <manufacturerURL>http://www.sonos.com</manufacturerURL>
+          <modelNumber>S5</modelNumber>
+          <modelDescription>Sonos Play:5 Media Renderer</modelDescription>
+          <modelName>Sonos Play:5</modelName>
+          <modelURL>http://www.sonos.com/products/zoneplayers/S5</modelURL>
+                <UDN>uuid:RINCON_000E5884455C01400_MR</UDN>
+                <serviceList>
+                  <service>
+                    <serviceType>urn:schemas-upnp-org:service:RenderingControl:1</serviceType>
+                    <serviceId>urn:upnp-org:serviceId:RenderingControl</serviceId>
+                    <controlURL>/MediaRenderer/RenderingControl/Control</controlURL>
+                    <eventSubURL>/MediaRenderer/RenderingControl/Event</eventSubURL>
+                    <SCPDURL>/xml/RenderingControl1.xml</SCPDURL>
+                  </service>
+                  <service>
+                    <serviceType>urn:schemas-upnp-org:service:ConnectionManager:1</serviceType>
+                    <serviceId>urn:upnp-org:serviceId:ConnectionManager</serviceId>
+                    <controlURL>/MediaRenderer/ConnectionManager/Control</controlURL>
+                    <eventSubURL>/MediaRenderer/ConnectionManager/Event</eventSubURL>
+                    <SCPDURL>/xml/ConnectionManager1.xml</SCPDURL>
+                  </service>
+                  <service>
+                    <serviceType>urn:schemas-upnp-org:service:AVTransport:1</serviceType>
+                    <serviceId>urn:upnp-org:serviceId:AVTransport</serviceId>
+                    <controlURL>/MediaRenderer/AVTransport/Control</controlURL>
+                    <eventSubURL>/MediaRenderer/AVTransport/Event</eventSubURL>
+                    <SCPDURL>/xml/AVTransport1.xml</SCPDURL>
+                  </service>
+                  <service>
+                    <serviceType>urn:schemas-sonos-com:service:Queue:1</serviceType>
+                    <serviceId>urn:sonos-com:serviceId:Queue</serviceId>
+                    <controlURL>/MediaRenderer/Queue/Control</controlURL>
+                    <eventSubURL>/MediaRenderer/Queue/Event</eventSubURL>
+                    <SCPDURL>/xml/Queue1.xml</SCPDURL>
+                  </service>
+              <service>
+                <serviceType>urn:schemas-upnp-org:service:GroupRenderingControl:1</serviceType>
+                <serviceId>urn:upnp-org:serviceId:GroupRenderingControl</serviceId>
+                <controlURL>/MediaRenderer/GroupRenderingControl/Control</controlURL>
+                <eventSubURL>/MediaRenderer/GroupRenderingControl/Event</eventSubURL>
+                <SCPDURL>/xml/GroupRenderingControl1.xml</SCPDURL>
+              </service>
+                </serviceList>
+                <X_Rhapsody-Extension xmlns="http://www.real.com/rhapsody/xmlns/upnp-1-0">
+                  <deviceID>urn:rhapsody-real-com:device-id-1-0:sonos_1:RINCON_000E5884455C01400</deviceID>
+                    <deviceCapabilities>
+                      <interactionPattern type="real-rhapsody-upnp-1-0"/>
+                    </deviceCapabilities>
+                </X_Rhapsody-Extension>
+                <qq:X_QPlay_SoftwareCapability xmlns:qq="http://www.tencent.com">QPlay:2</qq:X_QPlay_SoftwareCapability>
+                <iconList>
+                  <icon>
+                    <mimetype>image/png</mimetype>
+                    <width>48</width>
+                    <height>48</height>
+                    <depth>24</depth>
+                    <url>/img/icon-S5.png</url>
+                  </icon>
+                </iconList>
+              </device>
+            </deviceList>
           </device>
         </root>
     """
@@ -246,11 +447,11 @@ class TestSoco:
             'player_icon': "/img/icon-S3.png",
             'uid': "RINCON_000XXX1400",
             'serial_number': "00-11-22-33-44-55:E",
-            'software_version': "29.5-91030",
+            'software_version': "49.2-64250",
             'hardware_version': "1.8.1.2-2",
             'model_number': "S3",
-            'model_name': "Sonos PLAY:3",
-            'display_version': "5.4",
+            'model_name': "Sonos Play:3",
+            'display_version': "10.1.2",
             'mac_address': "00-11-22-33-44-55"
         }
         assert should == res
@@ -311,8 +512,8 @@ class TestSoco:
             'software_version': "29.5-91030",
             'hardware_version': "1.8.1.2-2",
             'model_number': "S3",
-            'model_name': "Sonos PLAY:3",
-            'display_version': "5.4",
+            'model_name': "Sonos Play:3",
+            'display_version': "10.1.2",
             'mac_address': "00-11-22-33-44-55"
         })
         assert should == res
@@ -904,6 +1105,8 @@ class TestZoneGroupTopology:
 
     def test_all_groups_have_coordinator(self, moco_zgs):
         for group in moco_zgs.all_groups:
+            print("GROUP", group.coordinator)
+            print(group)
             assert group.coordinator is not None
 
     def test_group(self, moco_zgs):
@@ -912,16 +1115,16 @@ class TestZoneGroupTopology:
 
     def test_all_zones(selfself, moco_zgs):
         zones = moco_zgs.all_zones
-        assert len(zones) == 7
-        assert len(set(zones)) == 7
+        assert len(zones) == 4
+        assert len(set(zones)) == 4
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
     def test_visible_zones(selfself, moco_zgs):
         zones = moco_zgs.visible_zones
-        assert len(zones) == 3
-        assert len(set(zones)) == 3
+        assert len(zones) == 4
+        assert len(set(zones)) == 4
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
