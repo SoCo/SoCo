@@ -36,11 +36,11 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.yield_fixture(scope='session')
-def soco():
+def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
     # Only one is used per test session, hence the decorator
-    ip = pytest.config.option.IP
+    ip = request.config.option.IP
     if ip is None:
         pytest.fail("No ip address specified. Use the --ip option.")
     soco = soco_module.SoCo(ip)
@@ -551,7 +551,10 @@ class TestReorderSonosPlaylist(object):
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
         assert spl[1].resources[0].uri == que[0].resources[0].uri
-        for s_item, q_item in zip(spl[2:], que[2:]):
+        # FIXME remove the list on spl and que before slicing, when
+        # the deprecated __getitem__ on ListOfMusicInfoItems is
+        # removed
+        for s_item, q_item in zip(list(spl)[2:], list(que)[2:]):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
     def test_remove_first_track(self, soco):
@@ -568,15 +571,17 @@ class TestReorderSonosPlaylist(object):
         assert response['length'] == num_tracks - 1
         assert response['update_id'] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
-        que = soco.get_queue()[1:]
+        # FIXME remove the list on queue() call, when the deprecated
+        # __getitem__ on ListOfMusicInfoItems is removed
+        que = list(soco.get_queue())[1:]
         for s_item, q_item in zip(spl, que):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
     def test_remove_first_track_full(self, soco):
         """Test removing first track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = [0] + range(num_tracks - 1)        # [0, 0, 1, ..., n-1]
-        new_pos = [None, ] + range(num_tracks - 1)  # [None, 0, ..., n-1]
+        tracks = [0] + list(range(num_tracks - 1))        # [0, 0, 1, ..., n-1]
+        new_pos = [None, ] + list(range(num_tracks - 1))  # [None, 0, ..., n-1]
         args = {'sonos_playlist': test_playlist.item_id,
                 'tracks': tracks,
                 'new_pos': new_pos}
@@ -585,7 +590,9 @@ class TestReorderSonosPlaylist(object):
         assert response['length'] == num_tracks - 1
         assert response['update_id'] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
-        que = soco.get_queue()[1:]
+        # FIXME remove the list on queue() call, when the deprecated
+        # __getitem__ on ListOfMusicInfoItems is removed
+        que = list(soco.get_queue())[1:]
         for s_item, q_item in zip(spl, que):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
@@ -593,7 +600,7 @@ class TestReorderSonosPlaylist(object):
         """Test removing last track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = range(num_tracks)
-        new_pos = range(num_tracks - 1) + [None, ]
+        new_pos = list(range(num_tracks - 1)) + [None, ]
         args = {'sonos_playlist': test_playlist.item_id,
                 'tracks': tracks,
                 'new_pos': new_pos}
@@ -602,7 +609,9 @@ class TestReorderSonosPlaylist(object):
         assert response['length'] == num_tracks - 1
         assert response['update_id'] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
-        que = soco.get_queue()[:-1]
+        # FIXME remove the list on queue() call, when the deprecated
+        # __getitem__ on ListOfMusicInfoItems is removed
+        que = list(soco.get_queue())[:-1]
         for s_item, q_item in zip(spl, que):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
@@ -745,7 +754,10 @@ class TestReorderSonosPlaylist(object):
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
         assert spl[1].resources[0].uri == que[0].resources[0].uri
-        for s_item, q_item in zip(spl[2:], que[2:]):
+        # FIXME remove the list on spl and que before slicing, when
+        # the deprecated __getitem__ on ListOfMusicInfoItems is
+        # removed
+        for s_item, q_item in zip(list(spl)[2:], list(que)[2:]):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
     def test_move_track_int(self, soco):
@@ -764,7 +776,10 @@ class TestReorderSonosPlaylist(object):
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
         assert spl[1].resources[0].uri == que[0].resources[0].uri
-        for s_item, q_item in zip(spl[2:], que[2:]):
+        # FIXME remove the list on spl and que before slicing, when
+        # the deprecated __getitem__ on ListOfMusicInfoItems is
+        # removed
+        for s_item, q_item in zip(list(spl)[2:], list(que)[2:]):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
     def test_clear_sonos_playlist(self, soco):
@@ -804,7 +819,10 @@ class TestReorderSonosPlaylist(object):
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
         assert spl[1].resources[0].uri == que[0].resources[0].uri
-        for s_item, q_item in zip(spl[2:], que[2:]):
+        # FIXME remove the list on spl and que before slicing, when
+        # the deprecated __getitem__ on ListOfMusicInfoItems is
+        # removed
+        for s_item, q_item in zip(list(spl)[2:], list(que)[2:]):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
     def test_remove_from_sonos_playlist(self, soco):
@@ -817,7 +835,9 @@ class TestReorderSonosPlaylist(object):
         assert response['length'] == num_tracks - 1
         assert response['update_id'] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
-        que = soco.get_queue()[1:]
+        # FIXME remove the list on queue() call, when the deprecated
+        # __getitem__ on ListOfMusicInfoItems is removed
+        que = list(soco.get_queue())[1:]
         for s_item, q_item in zip(spl, que):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
