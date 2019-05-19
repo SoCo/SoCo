@@ -23,8 +23,12 @@ import time
 import pytest
 
 import soco as soco_module
-from soco.data_structures import DidlMusicTrack
-from soco.data_structures import DidlPlaylistContainer
+from soco.data_structures import (
+    DidlMusicTrack,
+    DidlPlaylistContainer,
+    SearchResult,
+)
+from soco.music_library import MusicLibrary
 from soco.exceptions import SoCoUPnPException
 
 # Mark all tests in this module with the pytest custom "integration" marker so
@@ -850,3 +854,27 @@ class TestReorderSonosPlaylist(object):
 
         with pytest.raises(ValueError):
             soco.get_sonos_playlist_by_attr('item_id', 'wilma')
+
+
+class TestMusicLibrary(object):
+    """The the music library methods"""
+
+    search_types = list(MusicLibrary.SEARCH_TRANSLATION.keys())
+    specific_search_methods = (
+        "artists", "album_artists", "albums", "genres", "composers", "tracks",
+        "playlists", "sonos_favorites", "favorite_radio_stations",
+        "favorite_radio_shows",
+    )
+
+    @pytest.mark.parametrize("search_type", specific_search_methods)
+    def test_from_specific_search_methods(self, soco, search_type):
+        """Test getting favorites from the music library"""
+        search_method = getattr(soco.music_library, "get_" + search_type)
+        search_result = search_method()
+        assert isinstance(search_result, SearchResult)
+
+    @pytest.mark.parametrize("search_type", search_types)
+    def test_music_library_information(self, soco, search_type):
+        """Test getting favorites from the music library"""
+        search_result = soco.music_library.get_music_library_information(search_type)
+        assert isinstance(search_result, SearchResult)

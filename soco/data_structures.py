@@ -492,6 +492,10 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         # Deal with any resource elements
         resources = []
         for res_elt in element.findall(ns_tag('', 'res')):
+            # Not all Favorits have resources, so in case the "res"
+            # tage has no attributes, just skip it
+            if cls is DidlFavorite and not res_elt.attrib:
+                continue
             resources.append(
                 DidlResource.from_element(res_elt))
 

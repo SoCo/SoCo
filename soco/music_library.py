@@ -82,7 +82,7 @@ class MusicLibrary(object):
                 item.album_art_uri)
 
     def get_artists(self, *args, **kwargs):
-        """Convenience method for `get_music_library_information`
+        """Convenience method for `get_music_library_formation`
         with ``search_type='artists'``. For details of other arguments,
         see `that method
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
