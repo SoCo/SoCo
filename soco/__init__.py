@@ -19,7 +19,7 @@ from .exceptions import SoCoException, UnknownSoCoException
 __author__ = 'The SoCo-Team <python-soco@googlegroups.com>'
 # Please add the suffix "+" to the version after release, to make it
 # possible infer whether in development code from the version string
-__version__ = '0.16'
+__version__ = '0.17'
 __website__ = 'https://github.com/SoCo/SoCo'
 __license__ = 'MIT License'
 
