@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from soco.events import (
+from soco.events_base import (
     Event, parse_event_xml
 )
 
