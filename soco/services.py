@@ -498,11 +498,7 @@ class Service(object):
             # Internal server error. UPnP requires this to be returned if the
             # device does not like the action for some reason. The returned
             # content will be a SOAP Fault. Parse it and raise an error.
-            try:
-                self.handle_upnp_error(response.text)
-            except Exception as exc:
-                log.exception(str(exc))
-                raise
+            self.handle_upnp_error(response.text)
         else:
             # Something else has gone wrong. Probably a network error. Let
             # Requests handle it
