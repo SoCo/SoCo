@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
+# pylint: disable=useless-object-inheritance,no-else-continue
 
 """This module contains classes relating to Third Party music services."""
 
