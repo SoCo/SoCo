@@ -11,8 +11,8 @@ For more background on the project, please see Rahim's `blog post
 
 Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
 
-.. image:: https://travis-ci.org/SoCo/SoCo.svg?branch=master
-   :target: https://travis-ci.org/SoCo/SoCo
+.. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
+   :target: https://travis-ci.com/SoCo/SoCo
    :alt: Build Status
 
 .. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
