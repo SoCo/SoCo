@@ -773,8 +773,9 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False otherwise.
 
-        Loudness is a complicated topic. You can find a nice summary about this
-        feature here: http://forums.sonos.com/showthread.php?p=4698#post4698
+        Loudness is a complicated topic. You can read about it on
+        Wikipedia: https://en.wikipedia.org/wiki/Loudness
+
         """
         response = self.renderingControl.GetLoudness([
             ('InstanceID', 0),
