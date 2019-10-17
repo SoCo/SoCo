@@ -1,6 +1,10 @@
 SoCo
 ====
 
+.. image:: https://badges.gitter.im/SoCo/SoCo.svg
+   :alt: Join the chat at https://gitter.im/SoCo/SoCo
+   :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 SoCo (Sonos Controller) is a Python project that allows you to
 programmatically control `Sonos speakers`_. It was originally created at `Music
 Hack Day Sydney`_ by `Rahim Sonawalla`_ and is now developed by a `team of
