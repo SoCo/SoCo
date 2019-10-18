@@ -807,6 +807,14 @@ class DidlAudioBroadcast(DidlAudioItem):
     )
 
 
+class DidlRecentShow(DidlMusicTrack):
+
+    """Class that represents a recent radio show/podcast."""
+
+    # the DIDL Lite class for this object.
+    item_class = 'object.item.audioItem.musicTrack.recentShow'
+
+
 class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
     """Class that represents an audio broadcast Sonos favorite."""
