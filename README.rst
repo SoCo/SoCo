@@ -11,6 +11,10 @@ For more background on the project, please see Rahim's `blog post
 
 Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
 
+.. image:: https://badges.gitter.im/SoCo/SoCo.svg
+   :alt: Join the chat at https://gitter.im/SoCo/SoCo
+   :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 .. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
    :target: https://travis-ci.com/SoCo/SoCo
    :alt: Build Status
