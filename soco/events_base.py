@@ -289,7 +289,8 @@ class EventListenerBase(object):
                                               socket.SOCK_DGRAM)
                     try:
                         # doesn't have to be reachable
-                        temp_sock.connect((any_zone.ip_address, 0))
+                        temp_sock.connect((any_zone.ip_address,
+                                           config.EVENT_LISTENER_PORT))
                         ip_address = temp_sock.getsockname()[0]
                     except socket.error:
                         log.exception(
