@@ -70,7 +70,7 @@ import logging
 
 # Hack to make docs build without twisted installed
 if "sphinx" in sys.modules:
-    class Resource:
+    class Resource(object):
         """Fake Resource class to use when building docs"""
 else:
     from twisted.internet import reactor

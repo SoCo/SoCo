@@ -1,0 +1,15 @@
+SoCo 0.18.1 release notes
+*************************
+
+**SoCo 0.18.1** is a bugfix release to fix a single bug concerning events.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a Python
+package that allows you to programmatically control Sonos speakers.
+
+Bugfixes
+========
+
+* In events, fixed bug affecting some users in code to determine system's own
+  IP address. Some systems require a valid port to be used (not port 0), so we
+  use config.EVENT_LISTENER_PORT. `#680
+  <https://github.com/SoCo/SoCo/pull/680>`_
