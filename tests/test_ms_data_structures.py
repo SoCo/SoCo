@@ -238,7 +238,7 @@ def getter_attributes_test(name, from_xml, from_dict, result):
     assert getattr(from_dict, name) == result
 
 
-def common_tests(class_, xml_, dict_, parent_id):
+def common_tests(class_, xml_, dict_, parent_id, helpers):
     """Common tests for the MS classes."""
     xml_content = XML.fromstring(xml_.encode('utf8'))
 
@@ -268,10 +268,13 @@ def common_tests(class_, xml_, dict_, parent_id):
                 dict_encoded[key] = value
         didl = DIDL_TEMPLATE.format(item_class=class_.item_class,
                                     **dict_encoded)
-        assert XML.tostring(item_from_xml.didl_metadata).decode('ascii') == \
-            didl
-        assert XML.tostring(item_from_dict.didl_metadata).decode('ascii') == \
-            didl
+
+        assert helpers.compare_xml(
+            item_from_xml.didl_metadata, XML.fromstring(didl)
+        )
+        assert helpers.compare_xml(
+            item_from_dict.didl_metadata, XML.fromstring(didl)
+        )
     else:
         with pytest.raises(DIDLMetadataError):
             # pylint: disable=pointless-statement
@@ -291,13 +294,14 @@ def common_tests(class_, xml_, dict_, parent_id):
     return item_from_xml, item_from_dict
 
 
-def test_ms_track_search():
+def test_ms_track_search(helpers):
     """Test the MSTrack item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSTrack,
         MS_TRACK_SEARCH_XML,
         MS_TRACK_SEARCH_DICT,
-        '00020064tracksearch:pilgrim'
+        '00020064tracksearch:pilgrim',
+        helpers,
     )
     getter_attributes_test('artist', item_from_xml, item_from_dict,
                            MS_TRACK_SEARCH_DICT.get('artist'))
@@ -305,13 +309,14 @@ def test_ms_track_search():
                            MS_TRACK_SEARCH_DICT['uri'])
 
 
-def test_ms_album_search():
+def test_ms_album_search(helpers):
     """Test the MSAlbum item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSAlbum,
         MS_ALBUM_SEARCH_XML,
         MS_ALBUM_SEARCH_DICT,
-        '00020064albumsearch:de unge'
+        '00020064albumsearch:de unge',
+        helpers,
     )
     getter_attributes_test('artist', item_from_xml, item_from_dict,
                            MS_ALBUM_SEARCH_DICT.get('artist'))
@@ -319,23 +324,25 @@ def test_ms_album_search():
                            MS_ALBUM_SEARCH_DICT['uri'])
 
 
-def test_ms_artist_search():
+def test_ms_artist_search(helpers):
     """Test the MSAlbum item when instantiated from a search."""
     common_tests(
         MSArtist,
         MS_ARTIST_SEARCH_XML,
         MS_ARTIST_SEARCH_DICT,
-        '00020064artistsearch:Fritjof'
+        '00020064artistsearch:Fritjof',
+        helpers,
     )
 
 
-def test_ms_playlist_search():
+def test_ms_playlist_search(helpers):
     """Test the MSAlbum item when instantiated from a search."""
     item_from_xml, item_from_dict = common_tests(
         MSAlbumList,
         MS_PLAYLIST_SEARCH_XML,
         MS_PLAYLIST_SEARCH_DICT,
-        '00020064playlistsearch:Dans &'
+        '00020064playlistsearch:Dans &',
+        helpers,
     )
     getter_attributes_test('uri', item_from_xml, item_from_dict,
                            MS_PLAYLIST_SEARCH_DICT['uri'])
