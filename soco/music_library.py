@@ -597,3 +597,16 @@ class MusicLibrary(object):
         """
         result = self.contentDirectory.GetAlbumArtistDisplayOption()
         return result['AlbumArtistDisplayOption']
+        
+    def delete_library_share(self, share_name):
+        """Delete a music library share.
+
+        Args:
+            share_name (str): the name of the share to be deleted
+
+            share_name should be of the form '//hostname/sharename'
+        """
+        share_name = 'S:' + share_name
+        response = self.contentDirectory.DestroyObject([
+            ('ObjectID', share_name)
+        ])
