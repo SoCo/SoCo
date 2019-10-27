@@ -587,7 +587,6 @@ class MusicLibrary(object):
 
         * ``'WMP'`` - use Album Artists
         * ``'ITUNES'`` - use iTunes® Compilations
-
         * ``'NONE'`` - do not group compilations
 
         See Also:
