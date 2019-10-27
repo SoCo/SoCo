@@ -33,5 +33,6 @@ Contributors
 * phut
 * Dan Poirier
 * Jason Ting
+* Peter Toft
 * Scott G Waters
 

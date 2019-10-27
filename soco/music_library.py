@@ -24,6 +24,8 @@ from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
 
+import xml.etree.ElementTree as ET
+
 _LOG = logging.getLogger(__name__)
 
 
@@ -585,6 +587,7 @@ class MusicLibrary(object):
 
         * ``'WMP'`` - use Album Artists
         * ``'ITUNES'`` - use iTunes® Compilations
+
         * ``'NONE'`` - do not group compilations
 
         See Also:
@@ -597,15 +600,37 @@ class MusicLibrary(object):
         """
         result = self.contentDirectory.GetAlbumArtistDisplayOption()
         return result['AlbumArtistDisplayOption']
-        
+
+    def list_library_shares(self):
+        """List the music library shares.
+
+        Returns:
+            A list of shares
+        """
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'S:'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', '0'),
+            ('RequestedCount', '100'),
+            ('SortCriteria', '')
+        ])
+        xml_tree = ET.fromstring(response['Result'])
+        shares = []
+        for share in xml_tree:
+            # Extract the share name and strip the 'S:' from the start
+            # Add to the list of shares
+            shares.append((share.attrib['id'])[2:])
+        return shares
+
     def delete_library_share(self, share_name):
         """Delete a music library share.
 
         Args:
             share_name (str): the name of the share to be deleted
-
-            share_name should be of the form '//hostname/sharename'
+            share_name should be of the form `//hostname_or_IP/sharename`
         """
+        # share_name must be prefixed with 'S:'
         share_name = 'S:' + share_name
         response = self.contentDirectory.DestroyObject([
             ('ObjectID', share_name)
