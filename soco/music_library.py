@@ -12,6 +12,7 @@ For access to third party music streaming services, see the
 from __future__ import unicode_literals
 
 import logging
+import xml.etree.ElementTree as ET
 
 from . import discovery
 from .data_structures import (
@@ -23,8 +24,6 @@ from .data_structures import (
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
-
-import xml.etree.ElementTree as ET
 
 _LOG = logging.getLogger(__name__)
 
@@ -631,6 +630,6 @@ class MusicLibrary(object):
         """
         # share_name must be prefixed with 'S:'
         share_name = 'S:' + share_name
-        response = self.contentDirectory.DestroyObject([
+        self.contentDirectory.DestroyObject([
             ('ObjectID', share_name)
         ])
