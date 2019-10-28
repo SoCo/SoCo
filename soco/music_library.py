@@ -12,7 +12,7 @@ For access to third party music streaming services, see the
 from __future__ import unicode_literals
 
 import logging
-import xml.etree.ElementTree as ET
+import xmltodict
 
 from . import discovery
 from .data_structures import (
@@ -613,12 +613,12 @@ class MusicLibrary(object):
             ('RequestedCount', '100'),
             ('SortCriteria', '')
         ])
-        xml_tree = ET.fromstring(response['Result'])
+        xml_dict = xmltodict.parse(response['Result'])
         shares = []
-        for share in xml_tree:
+        for share in xml_dict['DIDL-Lite']['container']:
             # Extract the share name and strip the 'S:' from the start
             # Add to the list of shares
-            shares.append((share.attrib['id'])[2:])
+            shares.append(share['@id'][2:])
         return shares
 
     def delete_library_share(self, share_name):
@@ -626,10 +626,19 @@ class MusicLibrary(object):
 
         Args:
             share_name (str): the name of the share to be deleted
-            share_name should be of the form `//hostname_or_IP/sharename`
+            share_name should be of the form `//hostname_or_IP/share_path`
+            e.g., `//my_computer.local/my_music/lossless`
+
+        Returns:
+            0 on success, 1 on failure
         """
         # share_name must be prefixed with 'S:'
         share_name = 'S:' + share_name
-        self.contentDirectory.DestroyObject([
-            ('ObjectID', share_name)
-        ])
+        # TODO: normalise the error handling
+        try:
+            self.contentDirectory.DestroyObject([
+                ('ObjectID', share_name)
+            ])
+            return 0
+        except:
+            return 1
