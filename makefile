@@ -1,7 +1,7 @@
 
 lint: soco
 	flake8 soco
-	pylint soco --max-public-methods=23
+	pylint soco
 
 test:
 	py.test
