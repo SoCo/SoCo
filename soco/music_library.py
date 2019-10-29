@@ -600,10 +600,11 @@ class MusicLibrary(object):
         return result['AlbumArtistDisplayOption']
 
     def list_library_shares(self):
-        """List the music library shares.
+        """Return a list of the music library shares.
 
         Returns:
-            A list of shares (`str`)
+            list: The music library shares, which are strings of the form
+                ``'//hostname_or_IP/share_path'``.
         """
         response = self.contentDirectory.Browse([
             ('ObjectID', 'S:'),
@@ -613,11 +614,12 @@ class MusicLibrary(object):
             ('RequestedCount', '100'),
             ('SortCriteria', '')
         ])
-        # Extract the list of share 'container' data structures and iterate adding shares
+        # Extract the list of share 'containers' and add to list
         # Handle dictionary KeyError exceptions
         shares = []
         try:
-            for share in xmltodict.parse(response['Result'])['DIDL-Lite']['container']:
+            xml_dict = xmltodict.parse(response['Result'])
+            for share in xml_dict['DIDL-Lite']['container']:
                 shares.append(share['dc:title'])
         except KeyError:
             pass
@@ -627,12 +629,10 @@ class MusicLibrary(object):
         """Delete a music library share.
 
         Args:
-            share_name (str): the name of the share to be deleted
-            share_name should be of the form `//hostname_or_IP/share_path`
-            e.g., `//my_computer.local/my_music/lossless`
+            share_name (str): the name of the share to be deleted, which
+                should be of the form ``'//hostname_or_IP/share_path'``.
 
-        Exceptions:
-            Raises a SoCoUPnPException if share deletion fails
+        :raises: `SoCoUPnPException`
         """
         # share_name must be prefixed with 'S:'
         share_name = 'S:' + share_name
