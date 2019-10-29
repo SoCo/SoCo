@@ -603,7 +603,7 @@ class MusicLibrary(object):
         """List the music library shares.
 
         Returns:
-            A list of shares
+            A list of shares (`str`)
         """
         response = self.contentDirectory.Browse([
             ('ObjectID', 'S:'),
@@ -613,12 +613,14 @@ class MusicLibrary(object):
             ('RequestedCount', '100'),
             ('SortCriteria', '')
         ])
-        xml_dict = xmltodict.parse(response['Result'])
+        # Extract the list of share 'container' data structures and iterate adding shares
+        # Handle dictionary KeyError exceptions
         shares = []
-        for share in xml_dict['DIDL-Lite']['container']:
-            # Extract the share name and strip the 'S:' from the start
-            # Add to the list of shares
-            shares.append(share['@id'][2:])
+        try:
+            for share in xmltodict.parse(response['Result'])['DIDL-Lite']['container']:
+                shares.append(share['dc:title'])
+        except KeyError:
+            pass
         return shares
 
     def delete_library_share(self, share_name):
@@ -629,16 +631,11 @@ class MusicLibrary(object):
             share_name should be of the form `//hostname_or_IP/share_path`
             e.g., `//my_computer.local/my_music/lossless`
 
-        Returns:
-            0 on success, 1 on failure
+        Exceptions:
+            Raises a SoCoUPnPException if share deletion fails
         """
         # share_name must be prefixed with 'S:'
         share_name = 'S:' + share_name
-        # TODO: normalise the error handling
-        try:
-            self.contentDirectory.DestroyObject([
-                ('ObjectID', share_name)
-            ])
-            return 0
-        except:
-            return 1
+        self.contentDirectory.DestroyObject([
+            ('ObjectID', share_name)
+        ])
