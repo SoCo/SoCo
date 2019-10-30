@@ -68,12 +68,17 @@ class TestResource():
         assert res.uri == 'a%20uri'
         assert res.protocol_info == 'a:protocol:info:xx'
 
-    def test_create_didl_resource_to_from_element(self):
+    def test_create_didl_resource_to_from_element(self, helpers):
         res = data_structures.DidlResource('a%20uri', 'a:protocol:info:xx',
                                            bitrate=3)
         elt = res.to_element()
-        assert XML.tostring(elt) == (
-            b'<res bitrate="3" protocolInfo="a:protocol:info:xx">a%20uri</res>')
+        assert helpers.compare_xml(
+            elt,
+            XML.fromstring(
+                b'<res bitrate="3" '
+                b'protocolInfo="a:protocol:info:xx">a%20uri</res>'
+            )
+        )
         assert data_structures.DidlResource.from_element(elt) == res
 
     def test_didl_resource_to_dict(self):
