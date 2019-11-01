@@ -253,13 +253,9 @@ class MusicServiceItem(object):
 
         # Main element, ugly? yes! but I have given up on using namespaces
         # with xml.etree.ElementTree
-        item_attrib = {
-            'xmlns:dc': 'http://purl.org/dc/elements/1.1/',
-            'xmlns:upnp': 'urn:schemas-upnp-org:metadata-1-0/upnp/',
-            'xmlns:r': 'urn:schemas-rinconnetworks-com:metadata-1-0/',
-            'xmlns': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'
-        }
-        xml = XML.Element('DIDL-Lite', item_attrib)
+        xml = XML.Element(
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}DIDL-Lite'
+        )
         # Item sub element
         item_attrib = {
             'parentID': '',
@@ -269,17 +265,29 @@ class MusicServiceItem(object):
         # Only add the parent_id if we have it
         if self.parent_id:
             item_attrib['parentID'] = self.parent_id
-        item = XML.SubElement(xml, 'item', item_attrib)
+        item = XML.SubElement(
+            xml,
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item',
+            item_attrib,
+        )
 
         # Add title and class
-        XML.SubElement(item, 'dc:title').text = self.title
-        XML.SubElement(item, 'upnp:class').text = self.item_class
+        XML.SubElement(
+            item, '{http://purl.org/dc/elements/1.1/}title',
+        ).text = self.title
+        XML.SubElement(
+            item, '{urn:schemas-upnp-org:metadata-1-0/upnp/}class',
+        ).text = self.item_class
         # Add the desc element
         desc_attrib = {
             'id': 'cdudn',
             'nameSpace': 'urn:schemas-rinconnetworks-com:metadata-1-0/'
         }
-        desc = XML.SubElement(item, 'desc', desc_attrib)
+        desc = XML.SubElement(
+            item,
+            '{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}desc',
+            desc_attrib,
+        )
         desc.text = self.content['description']
 
         return xml

@@ -95,13 +95,12 @@ def attempt_datastructure_upgrade(didl_item):
         # matter what it is!
         item_id = '11111111{0}'.format(path)
 
-        # Ignore other metadata for now, in future ask ms data
-        # structure to upgrade metadata from the service
+        # Pass over all the available metadata in the metadata dict, in the
+        # future ask ms data structure to upgrade metadata from the service
         metadata = {}
-        try:
-            metadata['title'] = didl_item.title
-        except AttributeError:
-            pass
+        for key, value in didl_item.to_dict().items():
+            if key not in metadata:
+                metadata[key] = value
 
         # Get class
         try:
