@@ -619,8 +619,15 @@ class MusicLibrary(object):
         shares = []
         try:
             xml_dict = xmltodict.parse(response['Result'])
-            for share in xml_dict['DIDL-Lite']['container']:
-                shares.append(share['dc:title'])
+            unpacked = xml_dict['DIDL-Lite']['container']
+            # Multiple shares are returned as a list of dictionaries
+            if type(unpacked) == list:
+                for share in unpacked:
+                    shares.append(share['dc:title'])
+            # A single share is returned as a single dictionary
+            else:
+                shares.append(unpacked['dc:title'])
+        # No shares raises a KeyError
         except KeyError:
             pass
         return shares
