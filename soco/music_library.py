@@ -621,7 +621,7 @@ class MusicLibrary(object):
             xml_dict = xmltodict.parse(response['Result'])
             unpacked = xml_dict['DIDL-Lite']['container']
             # Multiple shares are returned as a list of dictionaries
-            if type(unpacked) == list:
+            if isinstance(unpacked, list):
                 for share in unpacked:
                     shares.append(share['dc:title'])
             # A single share is returned as a single dictionary
