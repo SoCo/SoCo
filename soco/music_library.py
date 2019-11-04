@@ -615,7 +615,6 @@ class MusicLibrary(object):
             ('SortCriteria', '')
         ])
         # Extract the list of share 'containers' and add to list
-        # Handle dictionary KeyError exceptions
         shares = []
         try:
             xml_dict = xmltodict.parse(response['Result'])
@@ -627,13 +626,14 @@ class MusicLibrary(object):
             # A single share is returned as a single dictionary
             else:
                 shares.append(unpacked['dc:title'])
-        # No shares raises a KeyError
+        # Zero shares raises a KeyError
         except KeyError:
             pass
         return shares
 
     def delete_library_share(self, share_name):
-        """Delete a music library share.
+        """Delete a music library share. This is a 'fire and forget' operation
+        that does no checking for successful removal.
 
         Args:
             share_name (str): the name of the share to be deleted, which
@@ -642,7 +642,6 @@ class MusicLibrary(object):
         :raises: `SoCoUPnPException`
         """
         # share_name must be prefixed with 'S:'
-        share_name = 'S:' + share_name
         self.contentDirectory.DestroyObject([
-            ('ObjectID', share_name)
+            ('ObjectID', 'S:' + share_name)
         ])

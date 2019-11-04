@@ -156,3 +156,58 @@ class TestMusicLibrary:
         moco.contentDirectory.RefreshShareIndex.assert_called_with([
             ('AlbumArtistDisplayOption', ''),
         ])
+
+    def test_soco_list_library_shares(self, moco):
+        # Tests with 2, 1 and 0 library shares
+        moco.contentDirectory.Browse.return_value = {
+            'TotalMatches': '2',
+            'NumberReturned': '2',
+            'UpdateID': '0',
+            'Result': ('<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                       'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                       'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                       'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                       '<container id="S://share_host/music_01/Music/Lossless" '
+                       'parentID="S:" restricted="true"><dc:title>//share_host/music_01/Music/Lossless'
+                       '</dc:title><upnp:class>object.container</upnp:class><res '
+                       'protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_XXXXXXXXXXXXX1400'
+                       '#S://share_host/music_01/Music/Lossless</res></container>'
+                       '<container id="S://share_host_2/music_01" parentID="S:" restricted="true">'
+                       '<dc:title>//share_host_2/music_01</dc:title><upnp:class>object.container'
+                       '</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist'
+                       ':RINCON_XXXXXXXXXXXXX1400#S://share_host_2/music_01</res></container></DIDL-Lite>')
+        }
+        results = moco.music_library.list_library_shares()
+        assert len(results) == 2
+        assert '//share_host/music_01/Music/Lossless' in results
+        assert '//share_host_2/music_01' in results
+
+        moco.contentDirectory.Browse.return_value = {
+            'TotalMatches': '1',
+            'NumberReturned': '1',
+            'UpdateID': '0',
+            'Result': ('<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                       'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                       'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                       'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                       '<container id="S://share_host/music_01/Music/Lossless" parentID="S:" restricted="true">'
+                       '<dc:title>//share_host/music_01/Music/Lossless</dc:title>'
+                       '<upnp:class>object.container</upnp:class><res protocolInfo="x-rincon-playlist:*:*:*">'
+                       'x-rincon-playlist:RINCON_XXXXXXXXXXXXXX400#'
+                       'S://share_host/music_01/Music/Lossless</res></container></DIDL-Lite>')
+        }
+        results = moco.music_library.list_library_shares()
+        assert len(results) == 1
+        assert '//share_host/music_01/Music/Lossless' in results
+
+        moco.contentDirectory.Browse.return_value = {
+            'TotalMatches': '0',
+            'NumberReturned': '0',
+            'UpdateID': '0',
+            'Result': ('<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                       'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                       'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                       'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"/>')
+        }
+        results = moco.music_library.list_library_shares()
+        assert len(results) == 0
