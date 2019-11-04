@@ -614,21 +614,20 @@ class MusicLibrary(object):
             ('RequestedCount', '100'),
             ('SortCriteria', '')
         ])
-        # Extract the list of share 'containers' and add to list
         shares = []
-        try:
-            xml_dict = xmltodict.parse(response['Result'])
-            unpacked = xml_dict['DIDL-Lite']['container']
-            # Multiple shares are returned as a list of dictionaries
-            if isinstance(unpacked, list):
-                for share in unpacked:
-                    shares.append(share['dc:title'])
-            # A single share is returned as a single dictionary
-            else:
-                shares.append(unpacked['dc:title'])
-        # Zero shares raises a KeyError
-        except KeyError:
-            pass
+        matches = response['TotalMatches']
+        # Zero matches
+        if matches == '0':
+            return shares
+        xml_dict = xmltodict.parse(response['Result'])
+        unpacked = xml_dict['DIDL-Lite']['container']
+        # One match
+        if matches == '1':
+            shares.append(unpacked['dc:title'])
+            return shares
+        # Otherwise it's multiple matches
+        for share in unpacked:
+            shares.append(share['dc:title'])
         return shares
 
     def delete_library_share(self, share_name):
