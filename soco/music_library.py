@@ -631,8 +631,7 @@ class MusicLibrary(object):
         return shares
 
     def delete_library_share(self, share_name):
-        """Delete a music library share. This is a 'fire and forget' operation
-        that does no checking for successful removal.
+        """Delete a music library share.
 
         Args:
             share_name (str): the name of the share to be deleted, which
