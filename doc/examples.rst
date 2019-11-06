@@ -180,3 +180,5 @@ To delete a network share, use the
 
   >>> device.music_library.delete_library_share('//share_host_01/music')
 
+You may want to check that the deletion has succeeded, by waiting a few seconds,
+then confirming that the share has disappeared from the list of shares.
