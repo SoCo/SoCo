@@ -34,9 +34,9 @@ that pique your interest: :ref:`speaker_topologies`, :ref:`events` and
 reference documentation <module_reference>`.
 
 If you have a question, start by consulting the :ref:`FAQ <faq>`. If
-your question remains unanswered, post a question in the `SoCo Google
-group <https://groups.google.com/forum/#!forum/python-soco>`_ or in
-the #soco channel on `freenode`_.
+your question remains unanswered, post a question in the `SoCo/SoCo
+Gitter chat room <https://gitter.im/SoCo/SoCo>`_ or in the `SoCo
+Google group <https://groups.google.com/forum/#!forum/python-soco>`_.
 
 If you are interested in participating in the development, plase read :ref:`the
 development documentation <development_topics>` and `file a bug
