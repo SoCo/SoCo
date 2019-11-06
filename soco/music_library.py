@@ -12,6 +12,7 @@ For access to third party music streaming services, see the
 from __future__ import unicode_literals
 
 import logging
+import xmltodict
 
 from . import discovery
 from .data_structures import (
@@ -597,3 +598,48 @@ class MusicLibrary(object):
         """
         result = self.contentDirectory.GetAlbumArtistDisplayOption()
         return result['AlbumArtistDisplayOption']
+
+    def list_library_shares(self):
+        """Return a list of the music library shares.
+
+        Returns:
+            list: The music library shares, which are strings of the form
+                ``'//hostname_or_IP/share_path'``.
+        """
+        response = self.contentDirectory.Browse([
+            ('ObjectID', 'S:'),
+            ('BrowseFlag', 'BrowseDirectChildren'),
+            ('Filter', '*'),
+            ('StartingIndex', '0'),
+            ('RequestedCount', '100'),
+            ('SortCriteria', '')
+        ])
+        shares = []
+        matches = response['TotalMatches']
+        # Zero matches
+        if matches == '0':
+            return shares
+        xml_dict = xmltodict.parse(response['Result'])
+        unpacked = xml_dict['DIDL-Lite']['container']
+        # One match
+        if matches == '1':
+            shares.append(unpacked['dc:title'])
+            return shares
+        # Otherwise it's multiple matches
+        for share in unpacked:
+            shares.append(share['dc:title'])
+        return shares
+
+    def delete_library_share(self, share_name):
+        """Delete a music library share.
+
+        Args:
+            share_name (str): the name of the share to be deleted, which
+                should be of the form ``'//hostname_or_IP/share_path'``.
+
+        :raises: `SoCoUPnPException`
+        """
+        # share_name must be prefixed with 'S:'
+        self.contentDirectory.DestroyObject([
+            ('ObjectID', 'S:' + share_name)
+        ])
