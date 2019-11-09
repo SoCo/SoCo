@@ -4,11 +4,11 @@ from __future__ import unicode_literals
 import socket
 import select
 
-from mock import patch, MagicMock as Mock, PropertyMock, call
+from mock import patch, MagicMock as Mock, call
 
 from soco import discover
 from soco import config
-from soco.discovery import any_soco, by_name
+from soco.discovery import by_name
 
 IP_ADDR = "192.168.1.101"
 TIMEOUT = 5

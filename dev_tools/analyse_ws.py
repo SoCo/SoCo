@@ -6,10 +6,20 @@
 from __future__ import print_function
 
 import argparse
-import os
-import sys
+import codecs
 import math
+import os
+import re
+import subprocess
+import sys
 import textwrap
+
+try:
+    from configparser import ConfigParser, NoOptionError
+    from io import StringIO
+except ImportError:
+    from ConfigParser import ConfigParser, NoOptionError
+    from StringIO import StringIO
 
 PLATFORM = sys.platform.lower()
 if PLATFORM == "win32":
@@ -21,10 +31,6 @@ else:
     import termios
 
     COLOR = True
-import re
-import codecs
-import ConfigParser
-import StringIO
 
 try:
     import pygments
@@ -37,7 +43,7 @@ try:
     # Temporarily re-directing stderr to StringIO to prevent start-up message
     # from rdpcap import
     STDERR = sys.stderr
-    sys.stderr = StringIO.StringIO()
+    sys.stderr = StringIO()
     from scapy.all import rdpcap
 
     sys.stderr = STDERR
@@ -51,7 +57,6 @@ try:
 except ImportError:
     print('Module "lxml" could not be imported. Please install it. Exiting!')
     sys.exit(102)
-import subprocess
 
 # Text bits that starts and ends the Sonos UPnP content
 STARTS = ["<s:Envelope", "<e:propertyset"]
@@ -83,7 +88,7 @@ class AnalyzeWS(object):
         try:
             this_dir = os.path.dirname(os.path.abspath(__file__))
             with open(os.path.join(this_dir, "analyse_ws.ini")) as file__:
-                self.config = ConfigParser.ConfigParser()
+                self.config = ConfigParser()
                 self.config.readfp(file__)
         except IOError:
             self.config = None
@@ -221,7 +226,7 @@ class AnalyzeWS(object):
         filename = self.__to_file(message_no)
         try:
             command = self.config.get("General", "browser_command")
-        except (ConfigParser.NoOptionError, AttributeError):
+        except (NoOptionError, AttributeError):
             print("Incorrect or missing .ini file. See --help.")
             sys.exit(5)
         command = str(command).format(filename)

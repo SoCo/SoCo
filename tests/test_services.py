@@ -13,7 +13,7 @@ from soco.services import Service, Action, Argument, Vartype
 
 try:
     from unittest import mock
-except:
+except ImportError:
     import mock  # TODO: add mock to requirements
 
 # Dummy known-good errors/responses etc.  These are not necessarily valid as

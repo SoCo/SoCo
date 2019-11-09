@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import pytest
-
 from soco.core import _SocoSingletonBase as Base
 
 
