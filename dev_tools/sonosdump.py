@@ -15,20 +15,21 @@ import soco.services
 def main():
     """ Run the main script """
     parser = argparse.ArgumentParser(
-        prog='',
-        description='Dump data about Sonos services'
+        prog="", description="Dump data about Sonos services"
     )
     parser.add_argument(
-        '-d', '--device',
+        "-d",
+        "--device",
         default=None,
         help="The ip address of the device to query. "
-             "If none is supplied, a random device will be used"
+        "If none is supplied, a random device will be used",
     )
     parser.add_argument(
-        '-s', '--service',
+        "-s",
+        "--service",
         default=None,
         help="Dump data relating to services matching this regexp "
-             "only, e.g. %(prog)s -s GroupRenderingControl"
+        "only, e.g. %(prog)s -s GroupRenderingControl",
     )
 
     args = parser.parse_args()
@@ -44,8 +45,7 @@ def main():
     services = (srv(device) for srv in soco.services.Service.__subclasses__())
 
     for srv in services:
-        if args.service is None or re.search(
-                args.service, srv.service_type):
+        if args.service is None or re.search(args.service, srv.service_type):
             print_details(srv)
 
 
@@ -68,5 +68,5 @@ def print_details(srv):
         print("\n\n")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
