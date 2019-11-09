@@ -47,32 +47,32 @@ def soco(request):
     ip = request.config.option.IP
     if ip is None:
         pytest.fail("No ip address specified. Use the --ip option.")
-    soco = soco_module.SoCo(ip)
+    soco_instance = soco_module.SoCo(ip)
     # Check the device is playing and has items in the queue
-    if len(soco.get_queue()) == 0:
+    if len(soco_instance.get_queue()) == 0:
         pytest.fail('Integration tests on the SoCo class must be run '
                     'with at least 1 item in the playlist.')
 
-    transport_info = soco.get_current_transport_info()
+    transport_info = soco_instance.get_current_transport_info()
     if transport_info['current_transport_state'] != 'PLAYING':
         pytest.fail('Integration tests on the SoCo class must be run '
                     'with the Sonos unit playing.')
     # Save the device's state
-    state = {'queue': soco.get_queue(0, 1000),
-             'current_track_info': soco.get_current_track_info()}
+    state = {'queue': soco_instance.get_queue(0, 1000),
+             'current_track_info': soco_instance.get_current_track_info()}
 
     # Yield the device to the test function
-    yield soco
+    yield soco_instance
 
     # Tear down. Restore state
-    soco.stop()
-    soco.clear_queue()
+    soco_instance.stop()
+    soco_instance.clear_queue()
     for track in state['queue']:
-        soco.add_to_queue(track)
-    soco.play_from_queue(
+        soco_instance.add_to_queue(track)
+    soco_instance.play_from_queue(
         int(state['current_track_info']['playlist_position']) - 1)
-    soco.seek(state['current_track_info']['position'])
-    soco.play()
+    soco_instance.seek(state['current_track_info']['position'])
+    soco_instance.play()
 
 
 def wait(interval=0.1):

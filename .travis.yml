@@ -1,15 +1,14 @@
 language: python
 python:
-  - "pypy" # Run slowest first so as not to hold up the build
+  - "pypy"  # Run slowest first so as not to hold up the build
   - "pypy3"
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
   - "3.8"
-  - "3.7-dev"
   - "3.8-dev"
+  - "3.9-dev"
   - "nightly"
 
 matrix:
@@ -28,6 +27,7 @@ install:
 
 script:
   - flake8 soco
+  - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
   - pylint soco
   - py.test --cov-config .coveragerc --cov soco .
 
@@ -42,5 +42,3 @@ deploy:
   on:
     tags: true
   distributions: sdist bdist_wheel
-
-sudo: false
