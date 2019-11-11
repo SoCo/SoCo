@@ -227,3 +227,29 @@ def by_name(name):
         if device.player_name == name:
             return device
     return None
+
+
+def by_ip_address(ip_address):
+    """ Return a device by its IP address.
+
+    This is useful in cases where normal discovery does not work, for
+    example where there are problems with multicast. The IP address of a
+    Sonos device must be known.
+
+    Args:
+        ip_address (str): The IPv4 address of the Sonos device.
+
+    Returns:
+        :class:`~.SoCo`: The device with the given IP address.
+        If no device is found at the address, `None` is returned.
+    """
+    device = config.SOCO_CLASS(ip_address)
+    # Test for a valid device
+    # If the request times out, it's probably not a good IP
+    try:
+        device.get_speaker_info(refresh=True, timeout=(5, 5))
+    except BaseException:  # pylint: disable=broad-except
+        # Some kind of exception
+        # TODO: trap specific exceptions # pylint: disable=fixme
+        return None
+    return device
