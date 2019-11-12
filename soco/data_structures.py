@@ -31,9 +31,9 @@ helpful.
 
 from __future__ import unicode_literals
 
+import collections
+import operator
 import sys
-import textwrap
-import warnings
 
 from .compat import with_metaclass
 from .exceptions import DIDLMetadataError
@@ -1109,9 +1109,37 @@ class DidlRadioShow(DidlContainer):
 # SPECIAL LISTS                                                               #
 ###############################################################################
 
-class ListOfMusicInfoItems(list):
+class ListOfMusicInfoItems(collections.Sequence):
 
-    """Abstract container class for a list of music information items.
+    """
+    Base class for various lists of music information items.
+    This is a in effect a read only list with additional attributes and
+    extended slicing semantics.
+    Example:
+        >>> alist = ListOfMusicInfoItems(
+        ...     [1, 2, 3, 4, 5, 6, 7],
+        ...     number_returned=7,
+        ...     total_matches=7,
+        ...     update_id=0
+        ... )
+        >>> alist
+        ListOfMusicInfoItems(items=[1, 2, 3, 4, 5, 6, 7])
+        Standard slicing and negative indices
+        >>> alist[2]
+        3
+        >>> alist[2:5]
+        [3, 4, 5]
+        >>> alist[-2]
+        6
+        Multiple slices
+        >>> alist[1:3, 5:6]
+        [2, 3, 6]
+        Repetition of indices
+        >>> alist[3, 3, 3]
+        [4, 4, 4]
+        Steps are supported
+        >>> alist[3:7:2]
+        [4, 6]
 
     Instances of this class are returned from queries into the music library
     or to music services. The attributes :attr:`~total_matches` and
@@ -1126,57 +1154,53 @@ class ListOfMusicInfoItems(list):
     """
 
     def __init__(self, items, number_returned, total_matches, update_id):
-        super(ListOfMusicInfoItems, self).__init__(items)
-        self._metadata = {
-            'item_list': list(items),
-            'number_returned': number_returned,
-            'total_matches': total_matches,
-            'update_id': update_id,
-        }
+        # pylint: disable=super-init-not-called
+        self._items = items
+        self.number_returned = number_returned
+        self.total_matches = total_matches
+        self.update_id = update_id
+        # self._metadata = {
+        #     'item_list': list(items),
+        #     'number_returned': number_returned,
+        #     'total_matches': total_matches,
+        #     'update_id': update_id,
+        # }
+
+    def __len__(self):
+        return len(self._items)
 
     def __getitem__(self, key):
-        """Legacy get metadata by string key or list item(s) by index.
-
-        .. deprecated:: 0.8
-
-            This overriding form of __getitem__ will be removed in the 3rd
-            release after 0.8. The metadata can be fetched via the named
-            attributes.
-        """
-        if key in self._metadata:
-            if key == 'item_list':
-                message = """
-                Calling [\'item_list\'] on search results to obtain the objects
-                is no longer necessary, since the object returned from searches
-                now is a list. This deprecated way of getting the items will
-                be removed from the third release after 0.8."""
-            else:
-                message = """
-                Getting metadata items by indexing the search result like a
-                dictionary [\'{0}\'] is deprecated. Please use the named
-                attribute {1}.{0} instead. The deprecated way of retrieving the
-                metadata will be removed from the third release after
-                0.8""".format(key, self.__class__.__name__)
-            message = textwrap.dedent(message).replace('\n', ' ').lstrip()
-            warnings.warn(message, stacklevel=2)
-            return self._metadata[key]
+        # This method is called whenever the list is indexed
+        # i.e. alist[someindex].  key is set to the index sought, so it can
+        # be a slice (alist[1:3] => key = slice(1, 3, None)), or an integer
+        # (alist[3] => key = 3). If multiple indices are provided, key will
+        # be an iterable containing integers and slices
+        # (alist[1, 2:3, 27:9:-1) => key = (1, slice(2, 3, None), slice(27, 9,
+        # -1))
+        result = []
+        # First, check whether we have multiple indices
+        if isinstance(key, collections.Iterable):
+            # For each index, get the item or slice from the underlying list
+            # The result will be a list of lists and integers
+            interim = [operator.getitem(self._items, i) for i in
+                       key]
+            # Flatten that list of lists and integers
+            for entry in interim:
+                if isinstance(entry, list):
+                    for each in entry:
+                        result.append(each)
+                else:
+                    result.append(entry)
         else:
-            return super(ListOfMusicInfoItems, self).__getitem__(key)
+            # Only one index or slice was requested, so get it
+            result = operator.getitem(self._items, key)
+        return result
 
-    @property
-    def number_returned(self):
-        """str: the number of returned matches."""
-        return self._metadata['number_returned']
-
-    @property
-    def total_matches(self):
-        """str: the number of total matches."""
-        return self._metadata['total_matches']
-
-    @property
-    def update_id(self):
-        """str: the update ID."""
-        return self._metadata['update_id']
+    def __repr__(self):
+        return '{0}(items={1})'.format(
+            self.__class__.__name__,
+            self._items.__repr__(),
+        )
 
 
 class SearchResult(ListOfMusicInfoItems):
@@ -1191,26 +1215,16 @@ class SearchResult(ListOfMusicInfoItems):
         super(SearchResult, self).__init__(
             items, number_returned, total_matches, update_id
         )
-        self._metadata['search_type'] = search_type
+        self.search_type = search_type
 
     def __repr__(self):
         return '{0}(items={1}, search_type=\'{2}\')'.format(
             self.__class__.__name__,
-            super(SearchResult, self).__repr__(),
+            self._items.__repr__(),
             self.search_type)
-
-    @property
-    def search_type(self):
-        """str: the search type."""
-        return self._metadata['search_type']
 
 
 class Queue(ListOfMusicInfoItems):
 
     """Container class that represents a queue."""
-
-    def __repr__(self):
-        return '{0}(items={1})'.format(
-            self.__class__.__name__,
-            super(Queue, self).__repr__(),
-        )
+    pass
