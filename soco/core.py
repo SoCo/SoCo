@@ -133,6 +133,7 @@ class SoCo(_SocoSingletonBase):
         play_mode
         cross_fade
         ramp_to_volume
+        set_relative_volume
         get_current_track_info
         get_speaker_info
         get_current_transport_info
@@ -478,6 +479,30 @@ class SoCo(_SocoSingletonBase):
             ('ProgramURI', '')
         ])
         return int(response['RampTime'])
+
+    def set_relative_volume(self, relative_volume):
+        """Adjust the volume up or down by a relative amount.
+
+        If the adjustment causes the volume to overshoot the maximum value
+        of 100, the volume will be set to 100. If the adjustment causes the
+        volume to undershoot the minimum value of 0, the volume will be set
+        to 0.
+
+        Args:
+            relative_volume (int): The relative volume adjustment. Can be
+                positive or negative.
+
+        Returns:
+            int: The new volume setting.
+        """
+        # Coerce to within the range -100 to +100
+        relative_volume = max(-100, min(relative_volume, 100))
+        response = self.renderingControl.SetRelativeVolume([
+            ('InstanceID', 0),
+            ('Channel', 'Master'),
+            ('Adjustment', relative_volume)
+        ])
+        return int(response['NewVolume'])
 
     @only_on_master
     def play_from_queue(self, index, start=True):
