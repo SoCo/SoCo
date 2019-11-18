@@ -31,7 +31,7 @@ from .music_library import MusicLibrary
 from .services import (
     DeviceProperties, ContentDirectory, RenderingControl, AVTransport,
     ZoneGroupTopology, AlarmClock, SystemProperties, MusicServices,
-    zone_group_state_shared_cache,
+    zone_group_state_shared_cache, GroupRenderingControl
 )
 from .utils import (
     really_utf8, camel_to_underscore, deprecated
@@ -158,6 +158,9 @@ class SoCo(_SocoSingletonBase):
         all_groups
         all_zones
         visible_zones
+        group_volume
+        group_mute
+        set_relative_group_volume
 
     ..  rubric:: Player Identity and Settings
     ..  autosummary::
@@ -248,6 +251,7 @@ class SoCo(_SocoSingletonBase):
         self.contentDirectory = ContentDirectory(self)
         self.deviceProperties = DeviceProperties(self)
         self.renderingControl = RenderingControl(self)
+        self.groupRenderingControl = GroupRenderingControl(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
         self.alarmClock = AlarmClock(self)
         self.systemProperties = SystemProperties(self)
@@ -1973,6 +1977,46 @@ class SoCo(_SocoSingletonBase):
                 return sonos_playlist
         raise ValueError('No match on "{0}" for value "{1}"'.format(attr_name,
                                                                     match))
+
+    @property
+    def group_volume(self):
+        """The volume of the group of which the speaker is a member.
+
+        An integer between 0 and 100.
+        """
+        response = self.groupRenderingControl.GetGroupVolume([
+            ('InstanceID', 0)
+        ])
+        return int(response['CurrentVolume'])
+
+    @group_volume.setter
+    def group_volume(self, group_volume):
+        group_volume = int(group_volume)
+        group_volume = max(0, min(group_volume, 100))  # Coerce in range
+        self.groupRenderingControl.SetGroupVolume([
+            ('InstanceID', 0),
+            ('DesiredVolume', group_volume)
+        ])
+
+    @property
+    def group_mute(self):
+        """The group mute state.
+
+        True or False.
+        """
+        response = self.groupRenderingControl.GetGroupMute([
+            ('InstanceID', 0)
+        ])
+        return bool(response['CurrentMute'])
+
+    @group_mute.setter
+    def group_mute(self, group_mute):
+        group_mute = bool(group_mute)
+        self.groupRenderingControl.SetGroupMute([
+            ('InstanceID', 0),
+            ('DesiredMute', group_mute)
+        ])
+
 
 
 # definition section
