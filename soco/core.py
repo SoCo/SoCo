@@ -1070,6 +1070,73 @@ class SoCo(_SocoSingletonBase):
         zone_group_state_shared_cache.clear()
         self._parse_zone_group_state()
 
+    @property
+    def group_volume(self):
+        """The volume of the group of which this speaker is a member.
+
+        An integer between 0 and 100.
+        """
+        response = self.groupRenderingControl.GetGroupVolume([
+            ('InstanceID', 0)
+        ])
+        return int(response['CurrentVolume'])
+
+    @group_volume.setter
+    def group_volume(self, group_volume):
+        group_volume = int(group_volume)
+        group_volume = max(0, min(group_volume, 100))  # Coerce in range
+        self.groupRenderingControl.SetGroupVolume([
+            ('InstanceID', 0),
+            ('DesiredVolume', group_volume)
+        ])
+
+    @property
+    def group_mute(self):
+        """The group mute state for the group of which this speaker
+        is a member.
+
+        True or False.
+        """
+        response = self.groupRenderingControl.GetGroupMute([
+            ('InstanceID', 0)
+        ])
+        return bool(response['CurrentMute'])
+
+    @group_mute.setter
+    def group_mute(self, group_mute):
+        group_mute = bool(group_mute)
+        self.groupRenderingControl.SetGroupMute([
+            ('InstanceID', 0),
+            ('DesiredMute', group_mute)
+        ])
+
+    @only_on_master
+    def set_relative_group_volume(self, relative_group_volume):
+        """Adjust the group volume up or down by a relative amount.
+
+        Makes a relative adjustment for the group of which this speaker is
+        the coordinator.
+
+        If the adjustment causes the volume to overshoot the maximum value
+        of 100, the volume will be set to 100. If the adjustment causes the
+        volume to undershoot the minimum value of 0, the volume will be set
+        to 0.
+
+        Args:
+            relative_group_volume (int): The relative volume adjustment. Can be
+                positive or negative.
+
+        Returns:
+            int: The new group volume setting.
+        """
+        # Coerce to within the range -100 to +100
+        relative_group_volume = max(-100, min(relative_group_volume, 100))
+        response = self.groupRenderingControl.SetRelativeGroupVolume([
+            ('InstanceID', 0),
+            ('Adjustment', relative_group_volume)
+        ])
+        return int(response['NewVolume'])
+
     def switch_to_line_in(self, source=None):
         """ Switch the speaker's input to line-in.
 
@@ -1977,46 +2044,6 @@ class SoCo(_SocoSingletonBase):
                 return sonos_playlist
         raise ValueError('No match on "{0}" for value "{1}"'.format(attr_name,
                                                                     match))
-
-    @property
-    def group_volume(self):
-        """The volume of the group of which the speaker is a member.
-
-        An integer between 0 and 100.
-        """
-        response = self.groupRenderingControl.GetGroupVolume([
-            ('InstanceID', 0)
-        ])
-        return int(response['CurrentVolume'])
-
-    @group_volume.setter
-    def group_volume(self, group_volume):
-        group_volume = int(group_volume)
-        group_volume = max(0, min(group_volume, 100))  # Coerce in range
-        self.groupRenderingControl.SetGroupVolume([
-            ('InstanceID', 0),
-            ('DesiredVolume', group_volume)
-        ])
-
-    @property
-    def group_mute(self):
-        """The group mute state.
-
-        True or False.
-        """
-        response = self.groupRenderingControl.GetGroupMute([
-            ('InstanceID', 0)
-        ])
-        return bool(response['CurrentMute'])
-
-    @group_mute.setter
-    def group_mute(self, group_mute):
-        group_mute = bool(group_mute)
-        self.groupRenderingControl.SetGroupMute([
-            ('InstanceID', 0),
-            ('DesiredMute', group_mute)
-        ])
-
 
 
 # definition section
