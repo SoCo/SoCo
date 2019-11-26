@@ -1028,6 +1028,14 @@ class TestRenderingControl:
         )
         assert ramp_time == 12
 
+    def test_set_relative_volume(self, moco):
+        moco.renderingControl.SetRelativeVolume.return_value = {'NewVolume': '75'}
+        new_volume = moco.set_relative_volume(25)
+        moco.renderingControl.SetRelativeVolume.assert_called_once_with(
+            [('InstanceID', 0), ('Channel', 'Master'), ('Adjustment', 25)]
+        )
+        assert new_volume == 75
+
     def test_soco_treble(self, moco):
         moco.renderingControl.GetTreble.return_value = {'CurrentTreble': '15'}
         assert moco.treble == 15
