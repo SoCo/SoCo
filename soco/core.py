@@ -1122,6 +1122,12 @@ class SoCo(_SocoSingletonBase):
         volume to undershoot the minimum value of 0, the volume will be set
         to 0.
 
+        This method is an alternative to using increment and decrement
+        assignment operators (+=, -=) on the `group_volume` property of a
+        `SoCo` instance. These operators perform the same function as
+        `set_relative_group_volume()` but require two network calls per
+        operation instead of one.
+
         Args:
             relative_group_volume (int): The relative volume adjustment. Can be
                 positive or negative.
@@ -1129,8 +1135,6 @@ class SoCo(_SocoSingletonBase):
         Returns:
             int: The new group volume setting.
         """
-        # Coerce to within the range -100 to +100
-        relative_group_volume = max(-100, min(relative_group_volume, 100))
         response = self.groupRenderingControl.SetRelativeGroupVolume([
             ('InstanceID', 0),
             ('Adjustment', relative_group_volume)
