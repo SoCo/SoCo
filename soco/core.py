@@ -130,8 +130,6 @@ class SoCo(_SocoSingletonBase):
         previous
         mute
         volume
-        get_balance
-        set_balance
         play_mode
         cross_fade
         ramp_to_volume
@@ -174,6 +172,7 @@ class SoCo(_SocoSingletonBase):
         bass
         treble
         loudness
+        balance
         night_mode
         dialog_mode
         status_light
@@ -721,47 +720,6 @@ class SoCo(_SocoSingletonBase):
             ('DesiredVolume', volume)
         ])
 
-    def get_balance(self):
-        """Get the left/right balance for the speaker(s).
-
-        Returns:
-            tuple: A 2-tuple (left, right) of integers between 0 and 100.
-        """
-
-        response_lf = self.renderingControl.GetVolume([
-            ('InstanceID', 0),
-            ('Channel', 'LF'),
-        ])
-        response_rf = self.renderingControl.GetVolume([
-            ('InstanceID', 0),
-            ('Channel', 'RF'),
-        ])
-        volume_lf = response_lf['CurrentVolume']
-        volume_rf = response_rf['CurrentVolume']
-        return int(volume_lf), int(volume_rf)
-
-    def set_balance(self, left, right):
-        """Set the left/right balance for the speaker(s).
-
-        Args:
-            left (int): Left channel volume between 0 and 100.
-            right (int): Right channel volume between 0 and 100.
-        """
-        left = int(left)
-        right = int(right)
-        left = max(0, min(left, 100))  # Coerce in range
-        right = max(0, min(right, 100))  # Coerce in range
-        self.renderingControl.SetVolume([
-            ('InstanceID', 0),
-            ('Channel', 'LF'),
-            ('DesiredVolume', left)
-        ])
-        self.renderingControl.SetVolume([
-            ('InstanceID', 0),
-            ('Channel', 'RF'),
-            ('DesiredVolume', right)
-        ])
-
     @property
     def bass(self):
         """int: The speaker's bass EQ.
@@ -835,6 +793,49 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredLoudness', loudness_value)
+        ])
+
+    @property
+    def balance(self):
+        """The left/right balance for the speaker(s).
+
+        Returns:
+            tuple: A 2-tuple (left, right) of integers between 0 and 100,
+            representing the volume of each channel. E.g., (100, 100)
+            represents full volume to both channels, whereas (100, 0)
+            represents left channel at full volume, right channel at zero
+            volume.
+        """
+
+        response_lf = self.renderingControl.GetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'LF'),
+        ])
+        response_rf = self.renderingControl.GetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'RF'),
+        ])
+        volume_lf = response_lf['CurrentVolume']
+        volume_rf = response_rf['CurrentVolume']
+        return int(volume_lf), int(volume_rf)
+
+    @balance.setter
+    def balance(self, left_right_tuple):
+        """Set the left/right balance for the speaker(s)."""
+        left, right = left_right_tuple
+        left = int(left)
+        right = int(right)
+        left = max(0, min(left, 100))  # Coerce in range
+        right = max(0, min(right, 100))  # Coerce in range
+        self.renderingControl.SetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'LF'),
+            ('DesiredVolume', left)
+        ])
+        self.renderingControl.SetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'RF'),
+            ('DesiredVolume', right)
         ])
 
     @property
