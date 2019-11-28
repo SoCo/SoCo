@@ -130,6 +130,8 @@ class SoCo(_SocoSingletonBase):
         previous
         mute
         volume
+        get_balance
+        set_balance
         play_mode
         cross_fade
         ramp_to_volume
@@ -717,6 +719,47 @@ class SoCo(_SocoSingletonBase):
             ('InstanceID', 0),
             ('Channel', 'Master'),
             ('DesiredVolume', volume)
+        ])
+
+    def get_balance(self):
+        """Get the left/right balance for the speaker(s).
+
+        Returns:
+            tuple: A 2-tuple (left, right) of integers between 0 and 100.
+        """
+
+        response_lf = self.renderingControl.GetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'LF'),
+        ])
+        response_rf = self.renderingControl.GetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'RF'),
+        ])
+        volume_lf = response_lf['CurrentVolume']
+        volume_rf = response_rf['CurrentVolume']
+        return int(volume_lf), int(volume_rf)
+
+    def set_balance(self, left, right):
+        """Set the left/right balance for the speaker(s).
+
+        Args:
+            left (int): Left channel volume between 0 and 100.
+            right (int): Right channel volume between 0 and 100.
+        """
+        left = int(left)
+        right = int(right)
+        left = max(0, min(left, 100))  # Coerce in range
+        right = max(0, min(right, 100))  # Coerce in range
+        self.renderingControl.SetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'LF'),
+            ('DesiredVolume', left)
+        ])
+        self.renderingControl.SetVolume([
+            ('InstanceID', 0),
+            ('Channel', 'RF'),
+            ('DesiredVolume', right)
         ])
 
     @property
