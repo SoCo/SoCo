@@ -501,6 +501,8 @@ class SoCo(_SocoSingletonBase):
         Returns:
             int: The new volume setting.
         """
+        relative_volume = int(relative_volume)
+        # Sonos will automatically handle out-of-range adjustments
         response = self.renderingControl.SetRelativeVolume([
             ('InstanceID', 0),
             ('Channel', 'Master'),
