@@ -800,11 +800,11 @@ class SoCo(_SocoSingletonBase):
         """The left/right balance for the speaker(s).
 
         Returns:
-            tuple: A 2-tuple (left, right) of integers between 0 and 100,
-            representing the volume of each channel. E.g., (100, 100)
-            represents full volume to both channels, whereas (100, 0)
-            represents left channel at full volume, right channel at zero
-            volume.
+            tuple: A 2-tuple (left_channel, right_channel) of integers
+            between 0 and 100, representing the volume of each channel.
+            E.g., (100, 100) represents full volume to both channels,
+            whereas (100, 0) represents left channel at full volume,
+            right channel at zero volume.
         """
 
         response_lf = self.renderingControl.GetVolume([
