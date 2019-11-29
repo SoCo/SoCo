@@ -1037,7 +1037,7 @@ class TestRenderingControl:
         moco.treble = '10'
         moco.renderingControl.SetTreble.assert_called_once_with(
             [('InstanceID', 0),
-                ('DesiredTreble', 10)]
+             ('DesiredTreble', 10)]
         )
 
     def test_soco_loudness(self, moco):
@@ -1050,7 +1050,35 @@ class TestRenderingControl:
         moco.loudness = False
         moco.renderingControl.SetLoudness.assert_called_once_with(
             [('InstanceID', 0), ('Channel', 'Master'),
-                ('DesiredLoudness', '0')]
+             ('DesiredLoudness', '0')]
+        )
+
+    def test_soco_balance(self, moco):
+        # GetVolume is called twice, once for each of the left
+        # and right channels
+        moco.renderingControl.GetVolume.return_value = {
+            'CurrentVolume': '100'}
+        assert moco.balance == (100, 100)
+        moco.renderingControl.GetVolume.assert_any_call(
+            [('InstanceID', 0),
+             ('Channel', 'LF')]
+        )
+        moco.renderingControl.GetVolume.assert_any_call(
+            [('InstanceID', 0),
+             ('Channel', 'RF'),]
+        )
+        # SetVolume is called twice, once for each of the left
+        # and right channels
+        moco.balance = (0, 100)
+        moco.renderingControl.SetVolume.assert_any_call(
+            [('InstanceID', 0),
+             ('Channel', 'LF'),
+             ('DesiredVolume', 0)]
+        )
+        moco.renderingControl.SetVolume.assert_any_call(
+            [('InstanceID', 0),
+             ('Channel', 'RF'),
+             ('DesiredVolume', 100)]
         )
 
 
