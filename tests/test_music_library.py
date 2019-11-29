@@ -211,3 +211,9 @@ class TestMusicLibrary:
         }
         results = moco.music_library.list_library_shares()
         assert len(results) == 0
+
+    def test_soco_delete_library_share(self, moco):
+        moco.music_library.delete_library_share('//host/share')
+        moco.contentDirectory.DestroyObject.assert_called_once_with([
+            ('ObjectID', 'S://host/share')
+        ])
