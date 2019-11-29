@@ -26,7 +26,7 @@ def moco():
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
-        'ContentDirectory', 'ZoneGroupTopology')
+        'ContentDirectory', 'ZoneGroupTopology', 'GroupRenderingControl')
     patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
@@ -48,7 +48,7 @@ def moco_only_on_master():
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
-        'ContentDirectory', 'ZoneGroupTopology')
+        'ContentDirectory', 'ZoneGroupTopology', 'GroupRenderingControl')
     patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
@@ -1149,7 +1149,7 @@ class TestZoneGroupTopology:
         assert isinstance(moco_zgs.group, ZoneGroup)
         assert moco_zgs in moco_zgs.group
 
-    def test_all_zones(selfself, moco_zgs):
+    def test_all_zones(self, moco_zgs):
         zones = moco_zgs.all_zones
         assert len(zones) == 4
         assert len(set(zones)) == 4
@@ -1157,7 +1157,7 @@ class TestZoneGroupTopology:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
-    def test_visible_zones(selfself, moco_zgs):
+    def test_visible_zones(self, moco_zgs):
         zones = moco_zgs.visible_zones
         assert len(zones) == 4
         assert len(set(zones)) == 4
@@ -1165,7 +1165,7 @@ class TestZoneGroupTopology:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
-    def test_group_label(selfself, moco_zgs):
+    def test_group_label(self, moco_zgs):
         g = moco_zgs.group
         # Have to mock out group members zone group state here since
         # g.members is parsed from the XML.
@@ -1175,7 +1175,7 @@ class TestZoneGroupTopology:
             }
         assert g.label == "Kitchen, Living Room"
 
-    def test_group_short_label(selfself, moco_zgs):
+    def test_group_short_label(self, moco_zgs):
         g = moco_zgs.group
         # Have to mock out group members zone group state here since
         # g.members is parsed from the XML.
@@ -1184,6 +1184,48 @@ class TestZoneGroupTopology:
                 'ZoneGroupState': ZGS
             }
         assert g.short_label == "Kitchen + 1"
+
+    def test_group_volume(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.GetGroupVolume.return_value = {
+            'CurrentVolume': 50
+        }
+        assert g.volume == 50
+        c.groupRenderingControl.GetGroupVolume.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        g.volume = 75
+        c.groupRenderingControl.SetGroupVolume.assert_called_once_with(
+            [('InstanceID', 0), ('DesiredVolume', 75)]
+        )
+
+    def test_group_mute(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.GetGroupMute.return_value = {
+            'CurrentMute': 0
+        }
+        assert g.mute is False
+        c.groupRenderingControl.GetGroupMute.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        g.mute = True
+        c.groupRenderingControl.SetGroupMute.assert_called_once_with(
+            [('InstanceID', 0), ('DesiredMute', '1')]
+        )
+
+    def test_set_relative_volume(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.SetRelativeGroupVolume.return_value = {
+            'NewVolume': '75'
+        }
+        new_volume = g.set_relative_volume(25)
+        c.groupRenderingControl.SetRelativeGroupVolume.assert_called_once_with(
+            [('InstanceID', 0), ('Adjustment', 25)]
+        )
+        assert new_volume == 75
 
 
 def test_only_on_master_true(moco_only_on_master):

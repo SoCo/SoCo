@@ -66,9 +66,15 @@ class ZoneGroup(object):
     relative adjustments to the group volume, e.g.:
 
         >>> device.group.volume = 25
-        >>> device.group.mute = False
+        >>> device.group.volume
+        25
         >>> device.group.set_relative_volume(-10)
         15
+        >>> device.group.mute
+        >>> False
+        >>> device.group.mute = True
+        >>> device.group.mute
+        True
     """
 
     def __init__(self, uid, coordinator, members=None):
@@ -172,10 +178,10 @@ class ZoneGroup(object):
         volume to undershoot the minimum value of 0, the volume will be set
         to 0.
 
-        This method is an alternative to using addition and subtraction
-        assignment operators (+=, -=) on the `volume` property of a
-        `ZoneGroup` instance. These operators perform the same function as
-        `set_relative_volume()` but require two network calls per
+        Note that this method is an alternative to using addition and
+        subtraction assignment operators (+=, -=) on the `volume` property
+        of a `ZoneGroup` instance. These operators perform the same function
+        as `set_relative_volume()` but require two network calls per
         operation instead of one.
 
         Args:
@@ -184,7 +190,12 @@ class ZoneGroup(object):
 
         Returns:
             int: The new group volume setting.
+
+        Raises:
+            ValueError: If `relative_group_volume` cannot be cast as an integer.
         """
+        relative_group_volume = int(relative_group_volume)
+        # Sonos automatically handles out-of-range values.
         resp = self.coordinator.groupRenderingControl.SetRelativeGroupVolume([
             ('InstanceID', 0),
             ('Adjustment', relative_group_volume)
