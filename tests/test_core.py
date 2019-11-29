@@ -1215,7 +1215,7 @@ class TestZoneGroupTopology:
             [('InstanceID', 0), ('DesiredMute', '1')]
         )
 
-    def test_set_relative_volume(self, moco_zgs):
+    def test_set_relative_group_volume(self, moco_zgs):
         g = moco_zgs.group
         c = moco_zgs.group.coordinator
         c.groupRenderingControl.SetRelativeGroupVolume.return_value = {
