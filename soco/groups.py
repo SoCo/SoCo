@@ -132,7 +132,7 @@ class ZoneGroup(object):
 
     @property
     def volume(self):
-        """The volume of the group.
+        """int: The volume of the group.
 
         An integer between 0 and 100.
         """
@@ -152,7 +152,7 @@ class ZoneGroup(object):
 
     @property
     def mute(self):
-        """The mute state for the group.
+        """bool: The mute state for the group.
 
         True or False.
         """
