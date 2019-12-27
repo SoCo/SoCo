@@ -15,10 +15,10 @@ sonos = SoCo(app.config['SPEAKER_IP'])
 
 
 def gen_sig():
-    return hashlib.md5(
+    return hashlib.md5((
         app.config['ROVI_API_KEY'] +
         app.config['ROVI_SHARED_SECRET'] +
-        repr(int(time.time()))).hexdigest()
+        repr(int(time.time()))).encode('utf-8')).hexdigest()
 
 
 def get_track_image(artist, album):
