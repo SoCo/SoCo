@@ -223,7 +223,11 @@ def by_name(name):
         :class:`~.SoCo`: The first device encountered among all zone with the
             given player name. If none are found `None` is returned.
     """
-    for device in discover():
+    devices = discover()
+    if devices is None:
+        return None
+
+    for device in devices:
         if device.player_name == name:
             return device
     return None
