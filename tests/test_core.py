@@ -1149,7 +1149,7 @@ class TestZoneGroupTopology:
         assert isinstance(moco_zgs.group, ZoneGroup)
         assert moco_zgs in moco_zgs.group
 
-    def test_all_zones(self, moco_zgs):
+    def test_all_zones(selfself, moco_zgs):
         zones = moco_zgs.all_zones
         assert len(zones) == 4
         assert len(set(zones)) == 4
@@ -1157,7 +1157,7 @@ class TestZoneGroupTopology:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
-    def test_visible_zones(self, moco_zgs):
+    def test_visible_zones(selfself, moco_zgs):
         zones = moco_zgs.visible_zones
         assert len(zones) == 4
         assert len(set(zones)) == 4
@@ -1165,7 +1165,7 @@ class TestZoneGroupTopology:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
 
-    def test_group_label(self, moco_zgs):
+    def test_group_label(selfself, moco_zgs):
         g = moco_zgs.group
         # Have to mock out group members zone group state here since
         # g.members is parsed from the XML.
@@ -1175,7 +1175,7 @@ class TestZoneGroupTopology:
             }
         assert g.label == "Kitchen, Living Room"
 
-    def test_group_short_label(self, moco_zgs):
+    def test_group_short_label(selfself, moco_zgs):
         g = moco_zgs.group
         # Have to mock out group members zone group state here since
         # g.members is parsed from the XML.
@@ -1204,7 +1204,7 @@ class TestZoneGroupTopology:
         g = moco_zgs.group
         c = moco_zgs.group.coordinator
         c.groupRenderingControl.GetGroupMute.return_value = {
-            'CurrentMute': 0
+            'CurrentMute': '0'
         }
         assert g.mute is False
         c.groupRenderingControl.GetGroupMute.assert_called_once_with(
