@@ -31,7 +31,7 @@ from .music_library import MusicLibrary
 from .services import (
     DeviceProperties, ContentDirectory, RenderingControl, AVTransport,
     ZoneGroupTopology, AlarmClock, SystemProperties, MusicServices,
-    zone_group_state_shared_cache,
+    zone_group_state_shared_cache, GroupRenderingControl
 )
 from .utils import (
     really_utf8, camel_to_underscore, deprecated
@@ -250,6 +250,7 @@ class SoCo(_SocoSingletonBase):
         self.contentDirectory = ContentDirectory(self)
         self.deviceProperties = DeviceProperties(self)
         self.renderingControl = RenderingControl(self)
+        self.groupRenderingControl = GroupRenderingControl(self)
         self.zoneGroupTopology = ZoneGroupTopology(self)
         self.alarmClock = AlarmClock(self)
         self.systemProperties = SystemProperties(self)

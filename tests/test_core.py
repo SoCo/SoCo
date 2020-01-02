@@ -26,7 +26,7 @@ def moco():
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
-        'ContentDirectory', 'ZoneGroupTopology')
+        'ContentDirectory', 'ZoneGroupTopology', 'GroupRenderingControl')
     patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
@@ -48,7 +48,7 @@ def moco_only_on_master():
     """
     services = (
         'AVTransport', 'RenderingControl', 'DeviceProperties',
-        'ContentDirectory', 'ZoneGroupTopology')
+        'ContentDirectory', 'ZoneGroupTopology', 'GroupRenderingControl')
     patchers = [mock.patch('soco.core.{}'.format(service))
                 for service in services]
     for patch in patchers:
@@ -1184,6 +1184,48 @@ class TestZoneGroupTopology:
                 'ZoneGroupState': ZGS
             }
         assert g.short_label == "Kitchen + 1"
+
+    def test_group_volume(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.GetGroupVolume.return_value = {
+            'CurrentVolume': 50
+        }
+        assert g.volume == 50
+        c.groupRenderingControl.GetGroupVolume.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        g.volume = 75
+        c.groupRenderingControl.SetGroupVolume.assert_called_once_with(
+            [('InstanceID', 0), ('DesiredVolume', 75)]
+        )
+
+    def test_group_mute(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.GetGroupMute.return_value = {
+            'CurrentMute': '0'
+        }
+        assert g.mute is False
+        c.groupRenderingControl.GetGroupMute.assert_called_once_with(
+            [('InstanceID', 0)]
+        )
+        g.mute = True
+        c.groupRenderingControl.SetGroupMute.assert_called_once_with(
+            [('InstanceID', 0), ('DesiredMute', '1')]
+        )
+
+    def test_set_relative_group_volume(self, moco_zgs):
+        g = moco_zgs.group
+        c = moco_zgs.group.coordinator
+        c.groupRenderingControl.SetRelativeGroupVolume.return_value = {
+            'NewVolume': '75'
+        }
+        new_volume = g.set_relative_volume(25)
+        c.groupRenderingControl.SetRelativeGroupVolume.assert_called_once_with(
+            [('InstanceID', 0), ('Adjustment', 25)]
+        )
+        assert new_volume == 75
 
 
 def test_only_on_master_true(moco_only_on_master):
