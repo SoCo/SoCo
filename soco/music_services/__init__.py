@@ -7,8 +7,4 @@ with Sonos."""
 from .music_service import MusicService, desc_from_uri
 from .accounts import Account
 
-__all__ = [
-    'MusicService',
-    'desc_from_uri',
-    'Account'
-]
+__all__ = ["MusicService", "desc_from_uri", "Account"]

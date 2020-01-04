@@ -2,13 +2,11 @@
 
 """Example implementation of a plugin."""
 
-from __future__ import (
-    print_function, unicode_literals
-)
+from __future__ import print_function, unicode_literals
 
 from ..plugins import SoCoPlugin
 
-__all__ = ['ExamplePlugin']
+__all__ = ["ExamplePlugin"]
 
 
 class ExamplePlugin(SoCoPlugin):
@@ -27,7 +25,7 @@ class ExamplePlugin(SoCoPlugin):
 
     @property
     def name(self):
-        return 'Example Plugin for {}'.format(self.username)
+        return "Example Plugin for {}".format(self.username)
 
     def music_plugin_play(self):
         """Play some music.
@@ -36,12 +34,9 @@ class ExamplePlugin(SoCoPlugin):
         to show how we can use the general upnp methods from soco
         """
 
-        print('Hi,', self.username)
+        print("Hi,", self.username)
 
-        self.soco.avTransport.Play([
-            ('InstanceID', 0),
-            ('Speed', 1)
-        ])
+        self.soco.avTransport.Play([("InstanceID", 0), ("Speed", 1)])
 
     def music_plugin_stop(self):
         """Stop the music.
@@ -50,5 +45,5 @@ class ExamplePlugin(SoCoPlugin):
         functionality from inside the plugins
         """
 
-        print('Bye,', self.username)
+        print("Bye,", self.username)
         self.soco.stop()

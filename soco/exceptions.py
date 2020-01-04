@@ -124,7 +124,7 @@ class SoCoFault(object):
         Args:
             exception (Exception): The exception which should be thrown on use
         """
-        self.__dict__['exception'] = exception
+        self.__dict__["exception"] = exception
 
     def __getattr__(self, name):
         raise self.exception
@@ -139,10 +139,9 @@ class SoCoFault(object):
         raise self.exception
 
     def __repr__(self):
-        return '<{0}: {1} at {2}>'.format(self.__class__.__name__,
-                                          repr(self.exception),
-                                          hex(id(self)))
+        return "<{0}: {1} at {2}>".format(
+            self.__class__.__name__, repr(self.exception), hex(id(self))
+        )
 
     def __str__(self):
-        return '<{0}: {1}>'.format(self.__class__.__name__,
-                                   repr(self.exception))
+        return "<{0}: {1}>".format(self.__class__.__name__, repr(self.exception))

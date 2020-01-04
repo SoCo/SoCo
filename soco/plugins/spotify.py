@@ -28,7 +28,7 @@ after 0.12.
 
 import sys
 import os
+
 # Only raise this import error if we are not building the docs
-if not (os.environ.get('READTHEDOCS', None) == 'True' or
-        'sphinx' in sys.modules):
+if not (os.environ.get("READTHEDOCS", None) == "True" or "sphinx" in sys.modules):
     raise RuntimeError(__doc__)

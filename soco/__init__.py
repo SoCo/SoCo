@@ -18,20 +18,20 @@ from .discovery import discover
 from .exceptions import SoCoException, UnknownSoCoException
 
 # Will be parsed by setup.py to determine package metadata
-__author__ = 'The SoCo-Team <python-soco@googlegroups.com>'
+__author__ = "The SoCo-Team <python-soco@googlegroups.com>"
 # Please add the suffix "+" to the version after release, to make it
 # possible infer whether in development code from the version string
-__version__ = '0.18+'
-__website__ = 'https://github.com/SoCo/SoCo'
-__license__ = 'MIT License'
+__version__ = "0.18+"
+__website__ = "https://github.com/SoCo/SoCo"
+__license__ = "MIT License"
 
 # You really should not `import *` - it is poor practice
 # but if you do, here is what you get:
 __all__ = [
-    'discover',
-    'SoCo',
-    'SoCoException',
-    'UnknownSoCoException',
+    "discover",
+    "SoCo",
+    "SoCoException",
+    "UnknownSoCoException",
 ]
 
 # http://docs.python.org/2/howto/logging.html#library-config
@@ -41,6 +41,5 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 if sys.version_info.major < 3:
     warnings.warn(
-        "Version 0.19 of SoCo is the last to support Python 2.7",
-        stacklevel=2,
+        "Version 0.19 of SoCo is the last to support Python 2.7", stacklevel=2,
     )
