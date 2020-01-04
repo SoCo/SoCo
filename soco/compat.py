@@ -15,6 +15,7 @@ try:  # python 3
     from urllib.parse import quote_plus  # noqa
     import socketserver  # noqa
     from queue import Queue  # noqa
+
     StringType = bytes  # noqa
     UnicodeType = str  # noqa
     from urllib.parse import quote as quote_url  # noqa
@@ -27,7 +28,7 @@ except ImportError:  # python 2.7
     import SocketServer as socketserver  # noqa
     from Queue import Queue  # noqa
     from types import StringType, UnicodeType  # noqa
-    from urllib import quote as quote_url   # noqa
+    from urllib import quote as quote_url  # noqa
     from urlparse import urlparse, parse_qs  # noqa
 
 try:  # python 2.7 - this has to be done the other way round
@@ -47,8 +48,10 @@ def with_metaclass(meta, *bases):
         class MyClass(with_metaclass(MyMetaClass, BaseClass)):
                 pass
     """
+
     class _Metaclass(meta):
         """Inner class"""
+
         __call__ = type.__call__
         __init__ = type.__init__
 
@@ -57,4 +60,4 @@ def with_metaclass(meta, *bases):
                 return type.__new__(cls, name, (), attrs)
             return meta(name, bases, attrs)
 
-    return _Metaclass(str('temporary_class'), None, {})
+    return _Metaclass(str("temporary_class"), None, {})
