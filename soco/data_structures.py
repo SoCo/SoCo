@@ -755,6 +755,25 @@ class DidlAudioItem(DidlItem):
         }
     )
 
+class DidlAudioItemLineIn(DidlItem):
+
+    """A line-in audio item."""
+
+    # the DIDL Lite class for this object.
+    item_class = 'object.item.audioItem.linein'
+    _translation = DidlItem._translation.copy()
+    _translation.update(
+        {
+            'genre': ('upnp', 'genre'),
+            'description': ('dc', 'description'),
+            'long_description': ('upnp', 'longDescription'),
+            'publisher': ('dc', 'publisher'),
+            'language': ('dc', 'language'),
+            'relation': ('dc', 'relation'),
+            'rights': ('dc', 'rights'),
+        }
+    )
+
 
 class DidlMusicTrack(DidlAudioItem):
 
