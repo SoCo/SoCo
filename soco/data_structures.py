@@ -755,6 +755,7 @@ class DidlAudioItem(DidlItem):
         }
     )
 
+
 class DidlAudioItemLineIn(DidlItem):
 
     """A line-in audio item."""
