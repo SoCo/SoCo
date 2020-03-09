@@ -1135,8 +1135,9 @@ class SoCo(_SocoSingletonBase):
         # become the master (the left-hand speaker of the pair).
         # Note that if either speaker is part of a group, the call will
         # succeed.
+        param = self.uid + ':LF,LF;' + rh_slave_speaker.uid + ':RF,RF'
         self.deviceProperties.AddBondedZones([
-            ('ChannelMapSet', f'{self.uid}:LF,LF;{rh_slave_speaker.uid}:RF,RF')
+            ('ChannelMapSet', param)
         ])
 
     def separate_stereo_pair(self):
