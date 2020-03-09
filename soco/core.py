@@ -205,6 +205,8 @@ class SoCo(_SocoSingletonBase):
         switch_to_tv
         set_sleep_timer
         get_sleep_timer
+        create_stereo_pair
+        separate_stereo_pair
 
     .. warning::
 
@@ -1144,6 +1146,42 @@ class SoCo(_SocoSingletonBase):
         ])
         zone_group_state_shared_cache.clear()
         self._parse_zone_group_state()
+
+    def create_stereo_pair(self, rh_slave_speaker):
+        """Create a stereo pair.
+        This speaker becomes the master, left-hand speaker of the stereo
+        pair. The `rh_slave_speaker` becomes the right-hand speaker.
+        Note that this operation will succeed on dissimilar speakers, unlike
+        when using the official Sonos apps.
+
+        Args:
+            rh_slave_speaker (SoCo): The speaker that will be added as
+                the right-hand, slave speaker of the stereo pair.
+
+        Raises:
+            SoCoUPnPException: if either speaker is already part of a
+                stereo pair.
+        """
+        # The pairing operation must be applied to the speaker that will
+        # become the master (the left-hand speaker of the pair).
+        # Note that if either speaker is part of a group, the call will
+        # succeed.
+        self.deviceProperties.AddBondedZones([
+            ('ChannelMapSet', f'{self.uid}:LF,LF;{rh_slave_speaker.uid}:RF,RF')
+        ])
+
+    def separate_stereo_pair(self):
+        """Separate a stereo pair.
+        This can be called on either the master (left-hand) speaker, or on the
+        slave (right-hand) speaker, to create two independent zones.
+
+        Raises:
+            SoCoUPnPException: if the speaker is not a member of a stereo pair.
+        """
+        self.deviceProperties.RemoveBondedZones([
+            ('ChannelMapSet', ''),
+            ('KeepGrouped', '0')
+        ])
 
     def switch_to_line_in(self, source=None):
         """ Switch the speaker's input to line-in.
