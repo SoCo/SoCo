@@ -1194,6 +1194,22 @@ class TestDeviceProperties:
             ]
         )
 
+    def test_create_stereo_pair(self, moco):
+        moco2 = mock.Mock()
+        moco2.uid = 'RINCON_000XXY1400'
+        moco.create_stereo_pair(moco2)
+        moco.deviceProperties.AddBondedZones.assert_called_once_with(
+            [('ChannelMapSet',
+              'RINCON_000XXX1400:LF,LF;RINCON_000XXY1400:RF,RF')]
+        )
+
+    def test_separate_stereo_pair(self, moco):
+        moco.separate_stereo_pair()
+        moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
+            [('ChannelMapSet', ''),
+             ('KeepGrouped', '0')]
+        )
+
 
 class TestZoneGroupTopology:
     def test_soco_uid(self, moco_zgs):
