@@ -84,7 +84,7 @@ def attempt_datastructure_upgrade(didl_item):
         _LOG.debug('Upgrade not possible, no resources')
         return didl_item
 
-    if resource.uri.startswith('x-sonos-http'):
+    if resource.uri and resource.uri.startswith('x-sonos-http'):
         # Get data
         uri = resource.uri
         # Now we need to create a DIDL item id. It seems to be based on the uri
