@@ -39,7 +39,8 @@ RESPONSES.append(
                                         (
                                             "albumArtURI",
                                             "http://resources.wimpmusic.com/images/"
-                                            "2238a5cd/ed4d/4ad0/848d/40356f11bda0/640x640.jpg",
+                                            "2238a5cd/ed4d/4ad0/848d/40356f11bda0/"
+                                            "640x640.jpg",
                                         ),
                                         ("canAddToFavorite", "true"),
                                     ]
@@ -57,7 +58,8 @@ RESPONSES.append(
                                         ("canSkip", "true"),
                                         (
                                             "albumArtURI",
-                                            "http://resources.wimpmusic.com/images/eefb1532/dfe9/"
+                                            "http://resources.wimpmusic.com/images/"
+                                            "eefb1532/dfe9/"
                                             "46bd/8775/c583844bc098/640x640.jpg",
                                         ),
                                         ("canAddToFavorite", "true"),
@@ -92,7 +94,8 @@ RESPONSES.append(
                                             [
                                                 (
                                                     "albumArtURI",
-                                                    "http://artwork.cdn.247e.com/covers/104655587/256x256",
+                                                    "http://artwork.cdn.247e.com/"
+                                                    "covers/104655587/256x256",
                                                 ),
                                                 (
                                                     "artistId",

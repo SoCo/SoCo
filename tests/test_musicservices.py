@@ -54,7 +54,8 @@ ACCOUNT_DATA = """<?xml version="1.0" ?>
 # available_services = device.musicServices.ListAvailableServices()
 # descriptor_list_xml = available_services['AvailableServiceDescriptorList']
 # The list has been edited to include services represented in ACCOUNT_DATA
-SERVICES_DESCRIPTOR_LIST = """<?xml version="1.0"?>
+SERVICES_DESCRIPTOR_LIST = (
+    """<?xml version="1.0"?>
 <Services
     SchemaVersion="1">
     <Service
@@ -168,12 +169,15 @@ SERVICES_DESCRIPTOR_LIST = """<?xml version="1.0"?>
             Auth="DeviceLink"
             PollInterval="30"/>
         <Presentation>
-            <Strings Version="11" Uri="http://soundcloud-static.ws.sonos.com/strings.xml"/>
-            <PresentationMap Version="11" Uri="http://soundcloud-static.ws.sonos.com/pmap.xml"/>
+            <Strings Version="11" Uri="http://"""
+    """soundcloud-static.ws.sonos.com/strings.xml"/>
+            <PresentationMap Version="11" Uri="http://"""
+    """soundcloud-static.ws.sonos.com/pmap.xml"/>
         </Presentation>
     </Service>
 </Services>
 """
+)
 
 
 @pytest.fixture(autouse=True)
