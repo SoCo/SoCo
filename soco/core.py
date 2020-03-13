@@ -1118,6 +1118,7 @@ class SoCo(_SocoSingletonBase):
 
     def create_stereo_pair(self, rh_slave_speaker):
         """Create a stereo pair.
+
         This speaker becomes the master, left-hand speaker of the stereo
         pair. The `rh_slave_speaker` becomes the right-hand speaker.
         Note that this operation will succeed on dissimilar speakers, unlike
@@ -1142,6 +1143,7 @@ class SoCo(_SocoSingletonBase):
 
     def separate_stereo_pair(self):
         """Separate a stereo pair.
+
         This can be called on either the master (left-hand) speaker, or on the
         slave (right-hand) speaker, to create two independent zones.
 
