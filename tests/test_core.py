@@ -63,7 +63,8 @@ def moco_only_on_master():
         patch.stop()
 
 
-ZGS = """<ZoneGroupState>
+ZGS = (
+    """<ZoneGroupState>
       <ZoneGroups>
         <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000E5876A0E801400:210">
           <ZoneGroupMember
@@ -119,7 +120,8 @@ ZGS = """<ZoneGroupState>
               IdleState="1"
               MoreInfo=""/>
         </ZoneGroup>
-        <ZoneGroup Coordinator="RINCON_000E58A53FAE01400" ID="RINCON_000E58A53FAE01400:107">
+        <ZoneGroup Coordinator="RINCON_000E58A53FAE01400" """
+    """ID="RINCON_000E58A53FAE01400:107">
           <ZoneGroupMember
               UUID="RINCON_000E58A53FAE01400"
               Location="http://192.168.1.173:1400/xml/device_description.xml"
@@ -147,7 +149,8 @@ ZGS = """<ZoneGroupState>
               IdleState="1"
               MoreInfo=""/>
         </ZoneGroup>
-        <ZoneGroup Coordinator="RINCON_000E5884455C01400" ID="RINCON_000E5884455C01400:114">
+        <ZoneGroup Coordinator="RINCON_000E5884455C01400" """
+    """ID="RINCON_000E5884455C01400:114">
           <ZoneGroupMember
               UUID="RINCON_000E5884455C01400"
               Location="http://192.168.1.197:1400/xml/device_description.xml"
@@ -178,6 +181,7 @@ ZGS = """<ZoneGroupState>
       </ZoneGroups>
       <VanishedDevices></VanishedDevices>
     </ZoneGroupState>"""
+)
 
 
 @pytest.yield_fixture
@@ -375,13 +379,16 @@ class TestSoco:
                 <SCPDURL>/xml/GroupRenderingControl1.xml</SCPDURL>
               </service>
                 </serviceList>
-                <X_Rhapsody-Extension xmlns="http://www.real.com/rhapsody/xmlns/upnp-1-0">
-                  <deviceID>urn:rhapsody-real-com:device-id-1-0:sonos_1:RINCON_000E5884455C01400</deviceID>
+                <X_Rhapsody-Extension """
+        """xmlns="http://www.real.com/rhapsody/xmlns/upnp-1-0">
+                  <deviceID>urn:rhapsody-real-com:device-id-1-0:"""
+        """sonos_1:RINCON_000E5884455C01400</deviceID>
                     <deviceCapabilities>
                       <interactionPattern type="real-rhapsody-upnp-1-0"/>
                     </deviceCapabilities>
                 </X_Rhapsody-Extension>
-                <qq:X_QPlay_SoftwareCapability xmlns:qq="http://www.tencent.com">QPlay:2</qq:X_QPlay_SoftwareCapability>
+                <qq:X_QPlay_SoftwareCapability xmlns:qq="http://www.tencent.com">"""
+        """QPlay:2</qq:X_QPlay_SoftwareCapability>
                 <iconList>
                   <icon>
                     <mimetype>image/png</mimetype>
@@ -494,7 +501,7 @@ class TestSoco:
 
     @mock.patch("soco.core.requests")
     @pytest.mark.parametrize("should", [{}, {"info": "yes"}])
-    def test_soco_get_speaker_info_speaker_set_no_refresh(self, mocr, moco_zgs, should):
+    def test_soco_get_speaker_info_speaker_set_refresh(self, mocr, moco_zgs, should):
         """Internal speaker_info not set/set; Refresh True.
 
         => should update
@@ -561,7 +568,7 @@ class TestAVTransport:
             [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
         )
 
-    def test_soco_cross_fade(self, moco):
+    def test_soco_cross_fade2(self, moco):
         moco.avTransport.GetCrossfadeMode.return_value = {"CrossfadeMode": "1"}
         assert moco.cross_fade
         moco.avTransport.GetCrossfadeMode.return_value = {"CrossfadeMode": "0"}
@@ -618,8 +625,11 @@ class TestAVTransport:
                 "x-rincon-mp3radio://archive.org/download/TenD2005-07-16t_64kb.mp3",
             ),
             (
-                "aac://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?amsparams=playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:false",
-                "x-rincon-mp3radio://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?amsparams=playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:false",
+                "aac://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?amsparams="
+                "playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:false",
+                "x-rincon-mp3radio://icy-e-bz-04-cr.sharp-stream.com/magic1054.aac?"
+                "amsparams=playerid:BMUK_tunein;skey:1483570441&awparams=loggedin:"
+                "false",
             ),
         ],
     )
@@ -631,13 +641,19 @@ class TestAVTransport:
         moco.avTransport.reset_mock()
 
     def test_soco_play_uri_calls_play(self, moco):
-        uri = "http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3"
+        uri = (
+            "http://archive.org/download/tend2005-07-16.flac16/"
+            "tend2005-07-16t10wonderboy_64kb.mp3"
+        )
         moco.play_uri(uri)
 
         moco.avTransport.Play.assert_called_with([("InstanceID", 0), ("Speed", 1)])
 
     def test_soco_play_uri_with_title(self, moco):
-        uri = "http://archive.org/download/tend2005-07-16.flac16/tend2005-07-16t10wonderboy_64kb.mp3"
+        uri = (
+            "http://archive.org/download/tend2005-07-16.flac16/"
+            "tend2005-07-16t10wonderboy_64kb.mp3"
+        )
         moco.play_uri(uri, title="<Fast & Loose>")
 
         moco.avTransport.SetAVTransportURI.assert_called_with(
@@ -646,7 +662,15 @@ class TestAVTransport:
                 ("CurrentURI", uri),
                 (
                     "CurrentURIMetaData",
-                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="R:0/0/0" parentID="R:0/0" restricted="true"><dc:title>&lt;Fast &amp; Loose&gt;</dc:title><upnp:class>object.item.audioItem.audioBroadcast</upnp:class><desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>',
+                    '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                    'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                    'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                    'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                    '<item id="R:0/0/0" parentID="R:0/0" restricted="true">'
+                    "<dc:title>&lt;Fast &amp; Loose&gt;</dc:title>"
+                    "<upnp:class>object.item.audioItem.audioBroadcast</upnp:class>"
+                    '<desc id="cdudn" nameSpace="urn:schemas-rinconnetworks-com:'
+                    'metadata-1-0/">SA_RINCON65031_</desc></item></DIDL-Lite>',
                 ),
             ]
         )
@@ -709,7 +733,20 @@ class TestAVTransport:
 
     def test_soco_get_queue(self, moco):
         moco.contentDirectory.Browse.return_value = {
-            "Result": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><item id="Q:0/1" parentID="Q:0" restricted="true"><res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" duration="0:02:32">radea:Tra.12345678.mp3</res><upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3</upnp:albumArtURI><dc:title>Item 1 Title</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Item 1 Creator</dc:creator><upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>',
+            "Result": (
+                '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                '<item id="Q:0/1" parentID="Q:0" restricted="true">'
+                '<res protocolInfo="fake.com-fake-direct:*:audio/mp3:*" '
+                'duration="0:02:32">radea:Tra.12345678.mp3</res>'
+                "<upnp:albumArtURI>/getaa?r=1&amp;u=radea%3aTra.12345678.mp3"
+                "</upnp:albumArtURI><dc:title>Item 1 Title</dc:title>"
+                "<upnp:class>object.item.audioItem.musicTrack</upnp:class>"
+                "<dc:creator>Item 1 Creator</dc:creator>"
+                "<upnp:album>Item 1 Album</upnp:album></item></DIDL-Lite>"
+            ),
             "NumberReturned": "1",
             "TotalMatches": "10",
             "UpdateID": "1",
@@ -732,7 +769,18 @@ class TestAVTransport:
     def test_soco_queue_size(self, moco):
         moco.contentDirectory.Browse.return_value = {
             "NumberReturned": "1",
-            "Result": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"><container id="Q:0" parentID="Q:" restricted="true" childCount="384"><dc:title>Queue Instance 0</dc:title><upnp:class>object.container.playlistContainer</upnp:class><res protocolInfo="x-rincon-queue:*:*:*">x-rincon-queue:RINCON_00012345678901400#0</res></container></DIDL-Lite>',
+            "Result": (
+                '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+                '<container id="Q:0" parentID="Q:" restricted="true" childCount="384">'
+                "<dc:title>Queue Instance 0</dc:title><upnp:class>"
+                "object.container.playlistContainer</upnp:class>"
+                '<res protocolInfo="x-rincon-queue:*:*:*">'
+                "x-rincon-queue:RINCON_00012345678901400#0</res>"
+                "</container></DIDL-Lite>"
+            ),
             "TotalMatches": "1",
             "UpdateID": "1",
         }
@@ -905,7 +953,12 @@ class TestAVTransport:
 
         moco.contentDirectory.Browse.return_value = {
             "NumberReturned": "0",
-            "Result": '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>',
+            "Result": (
+                '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
+                'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
+                'xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" '
+                'xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"></DIDL-Lite>'
+            ),
             "TotalMatches": "0",
             "UpdateID": update_id,
         }
@@ -986,7 +1039,7 @@ class TestAVTransport:
             "CurrentSleepTimerGeneration": "0",
         }
         result = moco.get_sleep_timer()
-        assert result == None
+        assert result is None
 
 
 class TestContentDirectory:

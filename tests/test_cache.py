@@ -80,6 +80,6 @@ def test_cache_disable():
     assert cache.enabled is True
     cache.enabled = False
     cache.put("item", "args", timeout=3)
-    assert cache.get("args") == None
+    assert cache.get("args") is None
     # Check it's there
     assert cache.get("some", kw="args") is None
