@@ -1136,10 +1136,8 @@ class SoCo(_SocoSingletonBase):
         # become the master (the left-hand speaker of the pair).
         # Note that if either speaker is part of a group, the call will
         # succeed.
-        param = self.uid + ':LF,LF;' + rh_slave_speaker.uid + ':RF,RF'
-        self.deviceProperties.AddBondedZones([
-            ('ChannelMapSet', param)
-        ])
+        param = self.uid + ":LF,LF;" + rh_slave_speaker.uid + ":RF,RF"
+        self.deviceProperties.AddBondedZones([("ChannelMapSet", param)])
 
     def separate_stereo_pair(self):
         """Separate a stereo pair.
@@ -1150,10 +1148,9 @@ class SoCo(_SocoSingletonBase):
         Raises:
             SoCoUPnPException: if the speaker is not a member of a stereo pair.
         """
-        self.deviceProperties.RemoveBondedZones([
-            ('ChannelMapSet', ''),
-            ('KeepGrouped', '0')
-        ])
+        self.deviceProperties.RemoveBondedZones(
+            [("ChannelMapSet", ""), ("KeepGrouped", "0")]
+        )
 
     def switch_to_line_in(self, source=None):
         """ Switch the speaker's input to line-in.

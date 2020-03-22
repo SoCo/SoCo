@@ -1195,26 +1195,24 @@ class TestDeviceProperties:
         )
 
     def test_create_stereo_pair(self, moco):
-        '''Tests for a well-formed call to create a stereo pair.
+        """Tests for a well-formed call to create a stereo pair.
 
         Creates a SoCo object for the slave (RH) speaker, and
         checks for the correct call with the correct parameters.
-        '''
+        """
         moco2 = mock.Mock()
-        moco2.uid = 'RINCON_000XXY1400'
+        moco2.uid = "RINCON_000XXY1400"
         moco.create_stereo_pair(moco2)
         moco.deviceProperties.AddBondedZones.assert_called_once_with(
-            [('ChannelMapSet',
-              'RINCON_000XXX1400:LF,LF;RINCON_000XXY1400:RF,RF')]
+            [("ChannelMapSet", "RINCON_000XXX1400:LF,LF;RINCON_000XXY1400:RF,RF")]
         )
 
     def test_separate_stereo_pair(self, moco):
-        '''Tests for a well-formed call to separate a stereo pair.
-        '''
+        """Tests for a well-formed call to separate a stereo pair.
+        """
         moco.separate_stereo_pair()
         moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
-            [('ChannelMapSet', ''),
-             ('KeepGrouped', '0')]
+            [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
 
 
