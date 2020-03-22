@@ -25,7 +25,7 @@ class PyTest(TestCommand):
 
 
 src = io.open('soco/__init__.py', encoding='utf-8').read()
-metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
+metadata = dict(re.findall("__([a-z]+)__ = \"([^\"]+)\"", src))
 docstrings = re.findall('"""(.*?)"""', src, re.MULTILINE | re.DOTALL)
 
 NAME = 'soco'

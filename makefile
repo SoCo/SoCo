@@ -1,6 +1,7 @@
 
 lint: soco
 	flake8 soco
+	flake8 --ignore=F401,F841 tests
 	pylint soco
 
 test:

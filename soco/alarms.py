@@ -52,7 +52,7 @@ def is_valid_recurrence(text):
     """
     if text in ("DAILY", "ONCE", "WEEKDAYS", "WEEKENDS"):
         return True
-    return re.search(r'^ON_[0-7]{1,7}$', text) is not None
+    return re.search(r"^ON_[0-7]{1,7}$", text) is not None
 
 
 class Alarm(object):
@@ -84,16 +84,25 @@ class Alarm(object):
         >>> print get_alarms()
         set([])
     """
+
     # pylint: disable=too-many-instance-attributes
 
     _all_alarms = weakref.WeakValueDictionary()
 
     # pylint: disable=too-many-arguments
     def __init__(
-            self, zone, start_time=None, duration=None,
-            recurrence='DAILY', enabled=True,
-            program_uri=None, program_metadata='',
-            play_mode='NORMAL', volume=20, include_linked_zones=False):
+        self,
+        zone,
+        start_time=None,
+        duration=None,
+        recurrence="DAILY",
+        enabled=True,
+        program_uri=None,
+        program_metadata="",
+        play_mode="NORMAL",
+        volume=20,
+        include_linked_zones=False,
+    ):
         """
         Args:
             zone (`SoCo`): The soco instance which will play the alarm.
@@ -150,7 +159,8 @@ class Alarm(object):
     def __repr__(self):
         middle = str(self.start_time.strftime(TIME_FORMAT))
         return "<{0} id:{1}@{2} at {3}>".format(
-            self.__class__.__name__, self._alarm_id, middle, hex(id(self)))
+            self.__class__.__name__, self._alarm_id, middle, hex(id(self))
+        )
 
     @property
     def play_mode(self):
@@ -211,26 +221,30 @@ class Alarm(object):
         """
         # pylint: disable=bad-continuation
         args = [
-            ('StartLocalTime', self.start_time.strftime(TIME_FORMAT)),
-            ('Duration', '' if self.duration is None else
-                self.duration.strftime(TIME_FORMAT)),
-            ('Recurrence', self.recurrence),
-            ('Enabled', '1' if self.enabled else '0'),
-            ('RoomUUID', self.zone.uid),
-            ('ProgramURI', "x-rincon-buzzer:0" if self.program_uri is None
-                else self.program_uri),
-            ('ProgramMetaData', self.program_metadata),
-            ('PlayMode', self.play_mode),
-            ('Volume', self.volume),
-            ('IncludeLinkedZones', '1' if self.include_linked_zones else '0')
+            ("StartLocalTime", self.start_time.strftime(TIME_FORMAT)),
+            (
+                "Duration",
+                "" if self.duration is None else self.duration.strftime(TIME_FORMAT),
+            ),
+            ("Recurrence", self.recurrence),
+            ("Enabled", "1" if self.enabled else "0"),
+            ("RoomUUID", self.zone.uid),
+            (
+                "ProgramURI",
+                "x-rincon-buzzer:0" if self.program_uri is None else self.program_uri,
+            ),
+            ("ProgramMetaData", self.program_metadata),
+            ("PlayMode", self.play_mode),
+            ("Volume", self.volume),
+            ("IncludeLinkedZones", "1" if self.include_linked_zones else "0"),
         ]
         if self._alarm_id is None:
             response = self.zone.alarmClock.CreateAlarm(args)
-            self._alarm_id = response['AssignedID']
+            self._alarm_id = response["AssignedID"]
             Alarm._all_alarms[self._alarm_id] = self
         else:
             # The alarm has been saved before. Update it instead.
-            args.insert(0, ('ID', self._alarm_id))
+            args.insert(0, ("ID", self._alarm_id))
             self.zone.alarmClock.UpdateAlarm(args)
 
     def remove(self):
@@ -239,9 +253,7 @@ class Alarm(object):
         There is no need to call `save`. The Python instance is not deleted,
         and can be saved back to Sonos again if desired.
         """
-        self.zone.alarmClock.DestroyAlarm([
-            ('ID', self._alarm_id)
-        ])
+        self.zone.alarmClock.DestroyAlarm([("ID", self._alarm_id)])
         alarm_id = self._alarm_id
         try:
             del Alarm._all_alarms[alarm_id]
@@ -268,8 +280,8 @@ def get_alarms(zone=None):
     if zone is None:
         zone = discovery.any_soco()
     response = zone.alarmClock.ListAlarms()
-    alarm_list = response['CurrentAlarmList']
-    tree = XML.fromstring(alarm_list.encode('utf-8'))
+    alarm_list = response["CurrentAlarmList"]
+    tree = XML.fromstring(alarm_list.encode("utf-8"))
 
     # An alarm list looks like this:
     # <Alarms>
@@ -288,11 +300,11 @@ def get_alarms(zone=None):
     # </Alarms>
 
     # pylint: disable=protected-access
-    alarms = tree.findall('Alarm')
+    alarms = tree.findall("Alarm")
     result = set()
     for alarm in alarms:
         values = alarm.attrib
-        alarm_id = values['ID']
+        alarm_id = values["ID"]
         # If an instance already exists for this ID, update and return it.
         # Otherwise, create a new one and populate its values
         if Alarm._all_alarms.get(alarm_id):
@@ -303,23 +315,31 @@ def get_alarms(zone=None):
             Alarm._all_alarms[instance._alarm_id] = instance
 
         instance.start_time = datetime.strptime(
-            values['StartTime'], "%H:%M:%S").time()  # NB StartTime, not
+            values["StartTime"], "%H:%M:%S"
+        ).time()  # NB StartTime, not
         # StartLocalTime, which is used by CreateAlarm
-        instance.duration = None if values['Duration'] == '' else\
-            datetime.strptime(values['Duration'], "%H:%M:%S").time()
-        instance.recurrence = values['Recurrence']
-        instance.enabled = values['Enabled'] == '1'
-        instance.zone = next((z for z in zone.all_zones
-                              if z.uid == values['RoomUUID']), None)
+        instance.duration = (
+            None
+            if values["Duration"] == ""
+            else datetime.strptime(values["Duration"], "%H:%M:%S").time()
+        )
+        instance.recurrence = values["Recurrence"]
+        instance.enabled = values["Enabled"] == "1"
+        instance.zone = next(
+            (z for z in zone.all_zones if z.uid == values["RoomUUID"]), None
+        )
         # some alarms are not associated to zones -> filter these out
         if instance.zone is None:
             continue
-        instance.program_uri = None if values['ProgramURI'] ==\
-            "x-rincon-buzzer:0" else values['ProgramURI']
-        instance.program_metadata = values['ProgramMetaData']
-        instance.play_mode = values['PlayMode']
-        instance.volume = values['Volume']
-        instance.include_linked_zones = values['IncludeLinkedZones'] == '1'
+        instance.program_uri = (
+            None
+            if values["ProgramURI"] == "x-rincon-buzzer:0"
+            else values["ProgramURI"]
+        )
+        instance.program_metadata = values["ProgramMetaData"]
+        instance.play_mode = values["PlayMode"]
+        instance.volume = values["Volume"]
+        instance.include_linked_zones = values["IncludeLinkedZones"] == "1"
 
         result.add(instance)
     return result

@@ -105,7 +105,8 @@ class ZoneGroup(object):
 
     def __repr__(self):
         return "{0}(uid='{1}', coordinator={2!r}, members={3!r})".format(
-            self.__class__.__name__, self.uid, self.coordinator, self.members)
+            self.__class__.__name__, self.uid, self.coordinator, self.members
+        )
 
     @property
     def label(self):
@@ -136,19 +137,18 @@ class ZoneGroup(object):
 
         An integer between 0 and 100.
         """
-        response = self.coordinator.groupRenderingControl.GetGroupVolume([
-            ('InstanceID', 0)
-        ])
-        return int(response['CurrentVolume'])
+        response = self.coordinator.groupRenderingControl.GetGroupVolume(
+            [("InstanceID", 0)]
+        )
+        return int(response["CurrentVolume"])
 
     @volume.setter
     def volume(self, group_volume):
         group_volume = int(group_volume)
         group_volume = max(0, min(group_volume, 100))  # Coerce in range
-        self.coordinator.groupRenderingControl.SetGroupVolume([
-            ('InstanceID', 0),
-            ('DesiredVolume', group_volume)
-        ])
+        self.coordinator.groupRenderingControl.SetGroupVolume(
+            [("InstanceID", 0), ("DesiredVolume", group_volume)]
+        )
 
     @property
     def mute(self):
@@ -156,19 +156,18 @@ class ZoneGroup(object):
 
         True or False.
         """
-        response = self.coordinator.groupRenderingControl.GetGroupMute([
-            ('InstanceID', 0)
-        ])
-        mute_state = response['CurrentMute']
+        response = self.coordinator.groupRenderingControl.GetGroupMute(
+            [("InstanceID", 0)]
+        )
+        mute_state = response["CurrentMute"]
         return bool(int(mute_state))
 
     @mute.setter
     def mute(self, group_mute):
-        mute_value = '1' if group_mute else '0'
-        self.coordinator.groupRenderingControl.SetGroupMute([
-            ('InstanceID', 0),
-            ('DesiredMute', mute_value)
-        ])
+        mute_value = "1" if group_mute else "0"
+        self.coordinator.groupRenderingControl.SetGroupMute(
+            [("InstanceID", 0), ("DesiredMute", mute_value)]
+        )
 
     def set_relative_volume(self, relative_group_volume):
         """Adjust the group volume up or down by a relative amount.
@@ -197,8 +196,7 @@ class ZoneGroup(object):
         """
         relative_group_volume = int(relative_group_volume)
         # Sonos automatically handles out-of-range values.
-        resp = self.coordinator.groupRenderingControl.SetRelativeGroupVolume([
-            ('InstanceID', 0),
-            ('Adjustment', relative_group_volume)
-        ])
-        return int(resp['NewVolume'])
+        resp = self.coordinator.groupRenderingControl.SetRelativeGroupVolume(
+            [("InstanceID", 0), ("Adjustment", relative_group_volume)]
+        )
+        return int(resp["NewVolume"])

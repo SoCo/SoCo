@@ -15,12 +15,7 @@ import logging
 import xmltodict
 
 from . import discovery
-from .data_structures import (
-    SearchResult,
-    DidlResource,
-    DidlObject,
-    DidlMusicAlbum
-)
+from .data_structures import SearchResult, DidlResource, DidlObject, DidlMusicAlbum
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
@@ -32,19 +27,21 @@ class MusicLibrary(object):
     """The Music Library."""
 
     # Key words used when performing searches
-    SEARCH_TRANSLATION = {'artists': 'A:ARTIST',
-                          'album_artists': 'A:ALBUMARTIST',
-                          'albums': 'A:ALBUM',
-                          'genres': 'A:GENRE',
-                          'composers': 'A:COMPOSER',
-                          'tracks': 'A:TRACKS',
-                          'playlists': 'A:PLAYLISTS',
-                          'share': 'S:',
-                          'sonos_playlists': 'SQ:',
-                          'categories': 'A:',
-                          'sonos_favorites': 'FV:2',
-                          'radio_stations': 'R:0/0',
-                          'radio_shows': 'R:0/1'}
+    SEARCH_TRANSLATION = {
+        "artists": "A:ARTIST",
+        "album_artists": "A:ALBUMARTIST",
+        "albums": "A:ALBUM",
+        "genres": "A:GENRE",
+        "composers": "A:COMPOSER",
+        "tracks": "A:TRACKS",
+        "playlists": "A:PLAYLISTS",
+        "share": "S:",
+        "sonos_playlists": "SQ:",
+        "categories": "A:",
+        "sonos_favorites": "FV:2",
+        "radio_stations": "R:0/0",
+        "radio_shows": "R:0/1",
+    }
 
     # pylint: disable=invalid-name, protected-access
     def __init__(self, soco=None):
@@ -68,8 +65,8 @@ class MusicLibrary(object):
         """
         # Add on the full album art link, as the URI version
         # does not include the ipaddress
-        if not url.startswith(('http:', 'https:')):
-            url = 'http://' + self.soco.ip_address + ':1400' + url
+        if not url.startswith(("http:", "https:")):
+            url = "http://" + self.soco.ip_address + ":1400" + url
         return url
 
     def _update_album_art_to_full_uri(self, item):
@@ -78,9 +75,8 @@ class MusicLibrary(object):
         Args:
             item: The item to update the URI for
         """
-        if getattr(item, 'album_art_uri', False):
-            item.album_art_uri = self.build_album_art_full_uri(
-                item.album_art_uri)
+        if getattr(item, "album_art_uri", False):
+            item.album_art_uri = self.build_album_art_full_uri(item.album_art_uri)
 
     def get_artists(self, *args, **kwargs):
         """Convenience method for `get_music_library_formation`
@@ -89,7 +85,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['artists'] + list(args))
+        args = tuple(["artists"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_album_artists(self, *args, **kwargs):
@@ -99,7 +95,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['album_artists'] + list(args))
+        args = tuple(["album_artists"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_albums(self, *args, **kwargs):
@@ -109,7 +105,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['albums'] + list(args))
+        args = tuple(["albums"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_genres(self, *args, **kwargs):
@@ -119,7 +115,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['genres'] + list(args))
+        args = tuple(["genres"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_composers(self, *args, **kwargs):
@@ -129,7 +125,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['composers'] + list(args))
+        args = tuple(["composers"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_tracks(self, *args, **kwargs):
@@ -139,7 +135,7 @@ class MusicLibrary(object):
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
 
         """
-        args = tuple(['tracks'] + list(args))
+        args = tuple(["tracks"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_playlists(self, *args, **kwargs):
@@ -153,7 +149,7 @@ class MusicLibrary(object):
             from the music library, they are not the Sonos playlists.
 
         """
-        args = tuple(['playlists'] + list(args))
+        args = tuple(["playlists"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_sonos_favorites(self, *args, **kwargs):
@@ -162,7 +158,7 @@ class MusicLibrary(object):
         see `that method
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
         """
-        args = tuple(['sonos_favorites'] + list(args))
+        args = tuple(["sonos_favorites"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_favorite_radio_stations(self, *args, **kwargs):
@@ -171,7 +167,7 @@ class MusicLibrary(object):
         see `that method
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
         """
-        args = tuple(['radio_stations'] + list(args))
+        args = tuple(["radio_stations"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
     def get_favorite_radio_shows(self, *args, **kwargs):
@@ -180,16 +176,22 @@ class MusicLibrary(object):
         see `that method
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
         """
-        args = tuple(['radio_shows'] + list(args))
+        args = tuple(["radio_shows"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
         # pylint: disable=too-many-locals, too-many-arguments,
         # too-many-branches
 
-    def get_music_library_information(self, search_type, start=0,
-                                      max_items=100, full_album_art_uri=False,
-                                      search_term=None, subcategories=None,
-                                      complete_result=False):
+    def get_music_library_information(
+        self,
+        search_type,
+        start=0,
+        max_items=100,
+        full_album_art_uri=False,
+        search_term=None,
+        subcategories=None,
+        complete_result=False,
+    ):
         """Retrieve music information objects from the music library.
 
         This method is the main method to get music information items, like
@@ -290,31 +292,30 @@ class MusicLibrary(object):
         # Add sub categories
         if subcategories is not None:
             for category in subcategories:
-                search += '/' + url_escape_path(really_unicode(category))
+                search += "/" + url_escape_path(really_unicode(category))
         # Add fuzzy search
         if search_term is not None:
-            search += ':' + url_escape_path(really_unicode(search_term))
+            search += ":" + url_escape_path(really_unicode(search_term))
 
         item_list = []
-        metadata = {'total_matches': 100000}
-        while len(item_list) < metadata['total_matches']:
+        metadata = {"total_matches": 100000}
+        while len(item_list) < metadata["total_matches"]:
             # Change start and max for complete searches
             if complete_result:
                 start, max_items = len(item_list), 100000
 
             # Try and get this batch of results
             try:
-                response, metadata = \
-                    self._music_lib_search(search, start, max_items)
+                response, metadata = self._music_lib_search(search, start, max_items)
             except SoCoUPnPException as exception:
                 # 'No such object' UPnP errors
-                if exception.error_code == '701':
+                if exception.error_code == "701":
                     return SearchResult([], search_type, 0, 0, None)
                 else:
                     raise exception
 
             # Parse the results
-            items = from_didl_string(response['Result'])
+            items = from_didl_string(response["Result"])
             for item in items:
                 # Check if the album art URI should be fully qualified
                 if full_album_art_uri:
@@ -327,15 +328,22 @@ class MusicLibrary(object):
             if not complete_result:
                 break
 
-        metadata['search_type'] = search_type
+        metadata["search_type"] = search_type
         if complete_result:
-            metadata['number_returned'] = len(item_list)
+            metadata["number_returned"] = len(item_list)
 
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
-    def browse(self, ml_item=None, start=0, max_items=100,
-               full_album_art_uri=False, search_term=None, subcategories=None):
+    def browse(
+        self,
+        ml_item=None,
+        start=0,
+        max_items=100,
+        full_album_art_uri=False,
+        search_term=None,
+        subcategories=None,
+    ):
         """Browse (get sub-elements from) a music library item.
 
         Args:
@@ -363,31 +371,30 @@ class MusicLibrary(object):
                 browsed.
         """
         if ml_item is None:
-            search = 'A:'
+            search = "A:"
         else:
             search = ml_item.item_id
 
         # Add sub categories
         if subcategories is not None:
             for category in subcategories:
-                search += '/' + url_escape_path(really_unicode(category))
+                search += "/" + url_escape_path(really_unicode(category))
         # Add fuzzy search
         if search_term is not None:
-            search += ':' + url_escape_path(really_unicode(search_term))
+            search += ":" + url_escape_path(really_unicode(search_term))
 
         try:
-            response, metadata = \
-                self._music_lib_search(search, start, max_items)
+            response, metadata = self._music_lib_search(search, start, max_items)
         except SoCoUPnPException as exception:
             # 'No such object' UPnP errors
-            if exception.error_code == '701':
-                return SearchResult([], 'browse', 0, 0, None)
+            if exception.error_code == "701":
+                return SearchResult([], "browse", 0, 0, None)
             else:
                 raise exception
-        metadata['search_type'] = 'browse'
+        metadata["search_type"] = "browse"
 
         # Parse the results
-        containers = from_didl_string(response['Result'])
+        containers = from_didl_string(response["Result"])
         item_list = []
         for container in containers:
             # Check if the album art URI should be fully qualified
@@ -398,8 +405,9 @@ class MusicLibrary(object):
         # pylint: disable=star-args
         return SearchResult(item_list, **metadata)
 
-    def browse_by_idstring(self, search_type, idstring, start=0,
-                           max_items=100, full_album_art_uri=False):
+    def browse_by_idstring(
+        self, search_type, idstring, start=0, max_items=100, full_album_art_uri=False
+    ):
         """Browse (get sub-elements from) a given music library item,
         specified by a string.
 
@@ -429,17 +437,16 @@ class MusicLibrary(object):
         # Check if the string ID already has the type, if so we do not want to
         # add one also Imported playlist have a full path to them, so they do
         # not require the A:PLAYLISTS part first
-        if idstring.startswith(search) or (search_type == 'playlists'):
+        if idstring.startswith(search) or (search_type == "playlists"):
             search = ""
 
         search_item_id = search + idstring
         search_uri = "#" + search_item_id
         # Not sure about the res protocol. But this seems to work
-        res = [DidlResource(
-            uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
+        res = [DidlResource(uri=search_uri, protocol_info="x-rincon-playlist:*:*:*")]
         search_item = DidlObject(
-            resources=res, title='', parent_id='',
-            item_id=search_item_id)
+            resources=res, title="", parent_id="", item_id=search_item_id
+        )
 
         # Call the base version
         return self.browse(search_item, start, max_items, full_album_art_uri)
@@ -471,18 +478,20 @@ class MusicLibrary(object):
                 and metadata is a dict with the 'number_returned',
                 'total_matches' and 'update_id' integers
         """
-        response = self.contentDirectory.Browse([
-            ('ObjectID', search),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', start),
-            ('RequestedCount', max_items),
-            ('SortCriteria', '')
-        ])
+        response = self.contentDirectory.Browse(
+            [
+                ("ObjectID", search),
+                ("BrowseFlag", "BrowseDirectChildren"),
+                ("Filter", "*"),
+                ("StartingIndex", start),
+                ("RequestedCount", max_items),
+                ("SortCriteria", ""),
+            ]
+        )
 
         # Get result information
         metadata = {}
-        for tag in ['NumberReturned', 'TotalMatches', 'UpdateID']:
+        for tag in ["NumberReturned", "TotalMatches", "UpdateID"]:
             metadata[camel_to_underscore(tag)] = int(response[tag])
         return response, metadata
 
@@ -491,21 +500,20 @@ class MusicLibrary(object):
         """bool: whether the music library is in the process of being updated.
         """
         result = self.contentDirectory.GetShareIndexInProgress()
-        return result['IsIndexing'] != '0'
+        return result["IsIndexing"] != "0"
 
-    def start_library_update(self, album_artist_display_option=''):
+    def start_library_update(self, album_artist_display_option=""):
         """Start an update of the music library.
 
         Args:
             album_artist_display_option (str): a value for the album artist
                 compilation setting (see `album_artist_display_option`).
         """
-        return self.contentDirectory.RefreshShareIndex([
-            ('AlbumArtistDisplayOption', album_artist_display_option),
-        ])
+        return self.contentDirectory.RefreshShareIndex(
+            [("AlbumArtistDisplayOption", album_artist_display_option),]
+        )
 
-    def search_track(self, artist, album=None, track=None,
-                     full_album_art_uri=False):
+    def search_track(self, artist, album=None, track=None, full_album_art_uri=False):
         """Search for an artist, an artist's albums, or specific track.
 
         Args:
@@ -519,14 +527,16 @@ class MusicLibrary(object):
             A `SearchResult` instance.
         """
         subcategories = [artist]
-        subcategories.append(album or '')
+        subcategories.append(album or "")
 
         # Perform the search
         result = self.get_album_artists(
             full_album_art_uri=full_album_art_uri,
-            subcategories=subcategories, search_term=track,
-            complete_result=True)
-        result._metadata['search_type'] = 'search_track'
+            subcategories=subcategories,
+            search_term=track,
+            complete_result=True,
+        )
+        result._metadata["search_type"] = "search_track"
         return result
 
     def get_albums_for_artist(self, artist, full_album_art_uri=False):
@@ -544,18 +554,21 @@ class MusicLibrary(object):
         result = self.get_album_artists(
             full_album_art_uri=full_album_art_uri,
             subcategories=subcategories,
-            complete_result=True)
+            complete_result=True,
+        )
 
         reduced = [item for item in result if item.__class__ == DidlMusicAlbum]
         # It is necessary to update the list of items in two places, due to
         # a bug in SearchResult
         result[:] = reduced
-        result._metadata.update({
-            'item_list': reduced,
-            'search_type': 'albums_for_artist',
-            'number_returned': len(reduced),
-            'total_matches': len(reduced)
-        })
+        result._metadata.update(
+            {
+                "item_list": reduced,
+                "search_type": "albums_for_artist",
+                "number_returned": len(reduced),
+                "total_matches": len(reduced),
+            }
+        )
         return result
 
     def get_tracks_for_album(self, artist, album, full_album_art_uri=False):
@@ -574,8 +587,9 @@ class MusicLibrary(object):
         result = self.get_album_artists(
             full_album_art_uri=full_album_art_uri,
             subcategories=subcategories,
-            complete_result=True)
-        result._metadata['search_type'] = 'tracks_for_album'
+            complete_result=True,
+        )
+        result._metadata["search_type"] = "tracks_for_album"
         return result
 
     @property
@@ -597,7 +611,7 @@ class MusicLibrary(object):
         pass the new setting.
         """
         result = self.contentDirectory.GetAlbumArtistDisplayOption()
-        return result['AlbumArtistDisplayOption']
+        return result["AlbumArtistDisplayOption"]
 
     def list_library_shares(self):
         """Return a list of the music library shares.
@@ -606,28 +620,30 @@ class MusicLibrary(object):
             list: The music library shares, which are strings of the form
                 ``'//hostname_or_IP/share_path'``.
         """
-        response = self.contentDirectory.Browse([
-            ('ObjectID', 'S:'),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', '*'),
-            ('StartingIndex', '0'),
-            ('RequestedCount', '100'),
-            ('SortCriteria', '')
-        ])
+        response = self.contentDirectory.Browse(
+            [
+                ("ObjectID", "S:"),
+                ("BrowseFlag", "BrowseDirectChildren"),
+                ("Filter", "*"),
+                ("StartingIndex", "0"),
+                ("RequestedCount", "100"),
+                ("SortCriteria", ""),
+            ]
+        )
         shares = []
-        matches = response['TotalMatches']
+        matches = response["TotalMatches"]
         # Zero matches
-        if matches == '0':
+        if matches == "0":
             return shares
-        xml_dict = xmltodict.parse(response['Result'])
-        unpacked = xml_dict['DIDL-Lite']['container']
+        xml_dict = xmltodict.parse(response["Result"])
+        unpacked = xml_dict["DIDL-Lite"]["container"]
         # One match
-        if matches == '1':
-            shares.append(unpacked['dc:title'])
+        if matches == "1":
+            shares.append(unpacked["dc:title"])
             return shares
         # Otherwise it's multiple matches
         for share in unpacked:
-            shares.append(share['dc:title'])
+            shares.append(share["dc:title"])
         return shares
 
     def delete_library_share(self, share_name):
@@ -640,6 +656,4 @@ class MusicLibrary(object):
         :raises: `SoCoUPnPException`
         """
         # share_name must be prefixed with 'S:'
-        self.contentDirectory.DestroyObject([
-            ('ObjectID', 'S:' + share_name)
-        ])
+        self.contentDirectory.DestroyObject([("ObjectID", "S:" + share_name)])
