@@ -64,17 +64,17 @@ import threading
 
 import requests
 
-from .compat import (
-    BaseHTTPRequestHandler, URLError, socketserver, urlopen
-)
+from .compat import BaseHTTPRequestHandler, URLError, socketserver, urlopen
 
 # Event is imported so that 'from events import Events' still works
 # pylint: disable=unused-import
 from .events_base import Event  # noqa: F401
 
 from .events_base import (
-    EventNotifyHandlerBase, EventListenerBase, SubscriptionBase,
-    SubscriptionsMap
+    EventNotifyHandlerBase,
+    EventListenerBase,
+    SubscriptionBase,
+    SubscriptionsMap,
 )
 
 from .exceptions import SoCoException
@@ -84,6 +84,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 class EventServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """A TCP server which handles each new request in a new thread."""
+
     allow_reuse_address = True
 
 
@@ -91,6 +92,7 @@ class EventNotifyHandler(BaseHTTPRequestHandler, EventNotifyHandlerBase):
     """Handles HTTP ``NOTIFY`` Verbs sent to the listener server.
     Inherits from `soco.events_base.EventNotifyHandlerBase`.
     """
+
     def __init__(self, *args, **kwargs):
         # The SubscriptionsMap instance created when this module is imported.
         # This is referenced by soco.events_base.EventNotifyHandlerBase.
@@ -104,7 +106,7 @@ class EventNotifyHandler(BaseHTTPRequestHandler, EventNotifyHandlerBase):
         with the headers and content.
         """
         headers = requests.structures.CaseInsensitiveDict(self.headers)
-        content_length = int(headers['content-length'])
+        content_length = int(headers["content-length"])
         content = self.rfile.read(content_length)
         self.handle_notification(headers, content)
         self.send_response(200)
@@ -113,8 +115,12 @@ class EventNotifyHandler(BaseHTTPRequestHandler, EventNotifyHandlerBase):
     # pylint: disable=no-self-use, missing-docstring
     def log_event(self, seq, service_id, timestamp):
         log.info(
-            "Event %s received for %s service on thread %s at %s", seq,
-            service_id, threading.current_thread(), timestamp)
+            "Event %s received for %s service on thread %s at %s",
+            seq,
+            service_id,
+            threading.current_thread(),
+            timestamp,
+        )
 
     def log_message(self, fmt, *args):  # pylint: disable=arguments-differ
         # Divert standard webserver logging to the debug log
@@ -198,8 +204,7 @@ class EventListener(EventListenerBase):
         self._listener_thread.stop()
         # Send a dummy request in case the http server is currently listening
         try:
-            urlopen(
-                'http://%s:%s/' % (address[0], address[1]))
+            urlopen("http://%s:%s/" % (address[0], address[1]))
         except URLError:
             # If the server is already shut down, we receive a socket error,
             # which we ignore.
@@ -209,13 +214,14 @@ class EventListener(EventListenerBase):
         self._listener_thread.join(1)
         # check if join timed out and issue a warning if it did
         if self._listener_thread.isAlive():
-            log.warning('Event Listener did not shutdown gracefully.')
+            log.warning("Event Listener did not shutdown gracefully.")
 
 
 class Subscription(SubscriptionBase):
     """A class representing the subscription to a UPnP event.
     Inherits from `soco.events_base.SubscriptionBase`.
     """
+
     def __init__(self, service, event_queue=None):
         """
         Args:
@@ -340,7 +346,8 @@ class Subscription(SubscriptionBase):
                     subscription.renew(is_autorenew=True, strict=False)
 
         auto_renew_thread = AutoRenewThread(
-            interval, self._auto_renew_thread_flag, self)
+            interval, self._auto_renew_thread_flag, self
+        )
         auto_renew_thread.start()
 
     def _auto_renew_cancel(self):
@@ -402,32 +409,35 @@ class Subscription(SubscriptionBase):
                 # If an Exception occurred during execution of subscribe,
                 # renew or unsubscribe, set the cancel flag to True unless
                 # the Exception was a SoCoException upon subscribe
-                cancel = action == 'renew' or not \
-                    isinstance(exc, SoCoException)
+                cancel = action == "renew" or not isinstance(exc, SoCoException)
 
                 if cancel:
                     # If the cancel flag was set to true, cancel the
                     # subscription with an explanation.
-                    msg = "An Exception occurred. Subscription to" +\
-                        " {}, sid: {} has been cancelled".format(
-                            self.service.base_url +
-                            self.service.event_subscription_url,
-                            self.sid)
+                    msg = (
+                        "An Exception occurred. Subscription to"
+                        + " {}, sid: {} has been cancelled".format(
+                            self.service.base_url + self.service.event_subscription_url,
+                            self.sid,
+                        )
+                    )
                     self._cancel_subscription(msg)
                 # If we're not being strict, log the Exception
                 if not strict:
-                    msg = "Exception received in Subscription." +\
-                        "{} for Subscription to:\n{}, sid: {}".format(
+                    msg = (
+                        "Exception received in Subscription."
+                        + "{} for Subscription to:\n{}, sid: {}".format(
                             action,
-                            self.service.base_url +
-                            self.service.event_subscription_url,
-                            self.sid)
+                            self.service.base_url + self.service.event_subscription_url,
+                            self.sid,
+                        )
+                    )
                     log.exception(msg)
                     # If we're not being strict upon a renewal
                     # (e.g. an autorenewal) call the optional
                     # self.auto_renew_fail method, if it has been set
-                    if action == 'renew' and self.auto_renew_fail is not None:
-                        if hasattr(self.auto_renew_fail, '__call__'):
+                    if action == "renew" and self.auto_renew_fail is not None:
+                        if hasattr(self.auto_renew_fail, "__call__"):
                             # pylint: disable=not-callable
                             self.auto_renew_fail(exc)
 

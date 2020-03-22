@@ -6,7 +6,8 @@
 # duplicate code check disabled whilst refactoring of wimp plugin is in
 # progress
 disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods,
-    bad-option-value,no-else-return,cyclic-import,too-many-public-methods
+    bad-option-value,no-else-return,cyclic-import,too-many-public-methods,
+    bad-continuation
 
 
 [REPORTS]
@@ -17,7 +18,7 @@ reports=no
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=79
+max-line-length=88
 
 [TYPECHECK]
 

@@ -39,7 +39,7 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(scope="session")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
@@ -50,16 +50,22 @@ def soco(request):
     soco_instance = soco_module.SoCo(ip)
     # Check the device is playing and has items in the queue
     if len(soco_instance.get_queue()) == 0:
-        pytest.fail('Integration tests on the SoCo class must be run '
-                    'with at least 1 item in the playlist.')
+        pytest.fail(
+            "Integration tests on the SoCo class must be run "
+            "with at least 1 item in the playlist."
+        )
 
     transport_info = soco_instance.get_current_transport_info()
-    if transport_info['current_transport_state'] != 'PLAYING':
-        pytest.fail('Integration tests on the SoCo class must be run '
-                    'with the Sonos unit playing.')
+    if transport_info["current_transport_state"] != "PLAYING":
+        pytest.fail(
+            "Integration tests on the SoCo class must be run "
+            "with the Sonos unit playing."
+        )
     # Save the device's state
-    state = {'queue': soco_instance.get_queue(0, 1000),
-             'current_track_info': soco_instance.get_current_track_info()}
+    state = {
+        "queue": soco_instance.get_queue(0, 1000),
+        "current_track_info": soco_instance.get_current_track_info(),
+    }
 
     # Yield the device to the test function
     yield soco_instance
@@ -67,11 +73,12 @@ def soco(request):
     # Tear down. Restore state
     soco_instance.stop()
     soco_instance.clear_queue()
-    for track in state['queue']:
+    for track in state["queue"]:
         soco_instance.add_to_queue(track)
     soco_instance.play_from_queue(
-        int(state['current_track_info']['playlist_position']) - 1)
-    soco_instance.seek(state['current_track_info']['position'])
+        int(state["current_track_info"]["playlist_position"]) - 1
+    )
+    soco_instance.seek(state["current_track_info"]["position"])
     soco_instance.play()
 
 
@@ -208,8 +215,9 @@ class TestMute(object):
     def test(self, soco):
         """Test if the mute method works."""
         old = soco.mute
-        assert old is False, ('The unit should not be muted when running '
-                              'the unit tests.')
+        assert old is False, (
+            "The unit should not be muted when running " "the unit tests."
+        )
         soco.mute = True
         wait()
         new = soco.mute
@@ -224,9 +232,13 @@ class TestGetCurrentTransportInfo(object):
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
-    transport_info_keys = sorted(['current_transport_status',
-                                  'current_transport_state',
-                                  'current_transport_speed'])
+    transport_info_keys = sorted(
+        [
+            "current_transport_status",
+            "current_transport_state",
+            "current_transport_speed",
+        ]
+    )
 
     def test(self, soco):
         """ Test if the return value is a dictionary that contains the keys:
@@ -248,45 +260,45 @@ class TestTransport(object):
         """Test if the pause and play methods work."""
         soco.pause()
         wait(1)
-        on_pause = soco.get_current_transport_info()['current_transport_state']
-        assert on_pause == 'PAUSED_PLAYBACK'
+        on_pause = soco.get_current_transport_info()["current_transport_state"]
+        assert on_pause == "PAUSED_PLAYBACK"
         soco.play()
         wait(1)
-        on_play = soco.get_current_transport_info()['current_transport_state']
-        assert on_play == 'PLAYING'
+        on_play = soco.get_current_transport_info()["current_transport_state"]
+        assert on_play == "PLAYING"
 
     def test_stop(self, soco):
         """Test if the stop method works."""
         soco.stop()
         wait(1)
-        new = soco.get_current_transport_info()['current_transport_state']
-        assert new == 'STOPPED'
+        new = soco.get_current_transport_info()["current_transport_state"]
+        assert new == "STOPPED"
         soco.play()
         wait(1)
-        on_play = soco.get_current_transport_info()['current_transport_state']
-        assert on_play == 'PLAYING'
+        on_play = soco.get_current_transport_info()["current_transport_state"]
+        assert on_play == "PLAYING"
 
     def test_seek_valid(self, soco):
         """Test if the seek method works with valid input."""
-        original_position = soco.get_current_track_info()['position']
+        original_position = soco.get_current_track_info()["position"]
         # Format 1
-        soco.seek('0:00:00')
+        soco.seek("0:00:00")
         wait()
-        position = soco.get_current_track_info()['position']
-        assert position in ['0:00:00', '0:00:01']
+        position = soco.get_current_track_info()["position"]
+        assert position in ["0:00:00", "0:00:01"]
         # Reset and format 2
         soco.seek(original_position)
-        soco.seek('00:00:00')
+        soco.seek("00:00:00")
         wait()
-        position = soco.get_current_track_info()['position']
-        assert position in ['0:00:00', '0:00:01']
+        position = soco.get_current_track_info()["position"]
+        assert position in ["0:00:00", "0:00:01"]
         # Clean up
         soco.seek(original_position)
         wait()
 
     def test_seek_invald(self, soco):
         """Test if the seek method properly fails with invalid input."""
-        for string in ['invalid_time_string', '5:12', '6', 'aa:aa:aa']:
+        for string in ["invalid_time_string", "5:12", "6", "aa:aa:aa"]:
             with pytest.raises(ValueError):
                 soco.seek(string)
 
@@ -294,9 +306,19 @@ class TestTransport(object):
 class TestGetCurrentTrackInfo(object):
     """Integration test for the get_current_track_info method."""
 
-    info_keys = sorted(['album', 'artist', 'title', 'uri', 'metadata',
-                        'playlist_position', 'duration', 'album_art',
-                        'position'])
+    info_keys = sorted(
+        [
+            "album",
+            "artist",
+            "title",
+            "uri",
+            "metadata",
+            "playlist_position",
+            "duration",
+            "album_art",
+            "position",
+        ]
+    )
 
     def test_get(self, soco):
         """ Test is the return value is a dictinary and contains the following
@@ -313,9 +335,17 @@ class TestGetSpeakerInfo(object):
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
-    info_keys = sorted(['zone_name', 'zone_icon', 'uid',
-                        'serial_number', 'software_version',
-                        'hardware_version', 'mac_address'])
+    info_keys = sorted(
+        [
+            "zone_name",
+            "zone_icon",
+            "uid",
+            "serial_number",
+            "software_version",
+            "hardware_version",
+            "mac_address",
+        ]
+    )
 
     def test(self, soco):
         """ Test if the return value is a dictionary that contains the keys:
@@ -328,6 +358,7 @@ class TestGetSpeakerInfo(object):
         for _, value in speaker_info.items():
             assert value is not None
 
+
 # TODO: test GetSpeakersIp
 
 
@@ -336,8 +367,9 @@ class TestGetQueue(object):
 
     # The values in this list must be kept up to date with the values in
     # the test doc string
-    queue_element_keys = sorted(['album', 'creator', 'resources',
-                                 'album_art_uri', 'title'])
+    queue_element_keys = sorted(
+        ["album", "creator", "resources", "album_art_uri", "title"]
+    )
 
     def test_get(self, soco):
         """ Test is return value is a list of DidlMusicTracks and if each of
@@ -379,8 +411,8 @@ class TestRemoveFromQueue(object):
         wait()
         new_queue = soco.get_queue()
         assert old_queue != new_queue, (
-            'No difference between '
-            'queues before and after removing the last item')
+            "No difference between " "queues before and after removing the last item"
+        )
         assert len(new_queue) == len(old_queue) - 1
 
 
@@ -388,16 +420,15 @@ class TestSonosPlaylist(object):
     """Integration tests for Sonos Playlist Management."""
 
     existing_playlists = None
-    playlist_name = 'zSocoTestPlayList42'
+    playlist_name = "zSocoTestPlayList42"
 
     @pytest.yield_fixture(autouse=True)
     def restore_sonos_playlists(self, soco):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
             self.existing_playlists = soco.get_sonos_playlists()
-            if self.playlist_name in [x.title
-                                      for x in self.existing_playlists]:
-                msg = '%s is an existing playlist.' % self.playlist_name
+            if self.playlist_name in [x.title for x in self.existing_playlists]:
+                msg = "%s is an existing playlist." % self.playlist_name
                 pytest.fail(msg)
 
         yield
@@ -451,12 +482,11 @@ class TestSonosPlaylist(object):
         """Test attempting to remove a Sonos playlist using a bad id."""
         # junky bad
         with pytest.raises(SoCoUPnPException):
-            soco.remove_sonos_playlist('SQ:-7')
+            soco.remove_sonos_playlist("SQ:-7")
         # realistic non-existing
-        hpl_i = max([int(x.item_id.split(':')[1])
-                     for x in soco.get_sonos_playlists()])
+        hpl_i = max([int(x.item_id.split(":")[1]) for x in soco.get_sonos_playlists()])
         with pytest.raises(SoCoUPnPException):
-            soco.remove_sonos_playlist('SQ:{}'.format(hpl_i + 1))
+            soco.remove_sonos_playlist("SQ:{}".format(hpl_i + 1))
 
 
 class TestTimer(object):
@@ -476,13 +506,18 @@ class TestTimer(object):
         """Test setting the timer"""
         assert soco.set_sleep_timer(7200) is None
         result = soco.get_sleep_timer()
-        if not any(result == s for s in [ 7200, 7199, 7198 ]):
-            pytest.fail("Set timer to 7200, but sonos reports back time as %s" % result['RemainingSleepTimerDuration'])
+        if not any(result == s for s in [7200, 7199, 7198]):
+            pytest.fail(
+                "Set timer to 7200, but sonos reports back time as %s"
+                % result["RemainingSleepTimerDuration"]
+            )
+
 
 class TestReorderSonosPlaylist(object):
     """Integration tests for Sonos Playlist Management."""
+
     existing_playlists = None
-    playlist_name = 'zSocoTestPlayList42'
+    playlist_name = "zSocoTestPlayList42"
     test_playlist = None
     queue_length = None
 
@@ -492,27 +527,23 @@ class TestReorderSonosPlaylist(object):
         if self.existing_playlists is None:
             self.existing_playlists = soco.get_sonos_playlists()
         if self.playlist_name in [x.title for x in self.existing_playlists]:
-            msg = '%s is an existing playlist.' % self.playlist_name
+            msg = "%s is an existing playlist." % self.playlist_name
             pytest.fail(msg)
 
         queue_list = soco.get_queue()
         if len(queue_list) < 2:
-            msg = 'You must have 3 or more items in your queue for testing.'
+            msg = "You must have 3 or more items in your queue for testing."
             pytest.fail(msg)
         playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
         self.__class__.queue_length = soco.queue_size
         self.__class__.test_playlist = playlist
         yield
 
-        soco.contentDirectory.DestroyObject(
-            [('ObjectID', self.test_playlist.item_id)]
-        )
+        soco.contentDirectory.DestroyObject([("ObjectID", self.test_playlist.item_id)])
 
     def _reset_spl_contents(self, soco):
         """Ensure test playlist matches queue for each test."""
-        soco.contentDirectory.DestroyObject(
-            [('ObjectID', self.test_playlist.item_id)]
-        )
+        soco.contentDirectory.DestroyObject([("ObjectID", self.test_playlist.item_id)])
         playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
         self.__class__.test_playlist = playlist
         return playlist, self.__class__.queue_length
@@ -520,15 +551,17 @@ class TestReorderSonosPlaylist(object):
     def test_reverse_track_order(self, soco):
         """Test reversing the tracks in the Sonos playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = ','.join([str(x) for x in reversed(range(num_tracks))])
-        new_pos = ','.join([str(x) for x in range(num_tracks)])
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        tracks = ",".join([str(x) for x in reversed(range(num_tracks))])
+        new_pos = ",".join([str(x) for x in range(num_tracks)])
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == 0
-        assert response['length'] == num_tracks
-        assert response['update_id'] != 0
+        assert response["change"] == 0
+        assert response["length"] == num_tracks
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         for s_item, q_item in zip(spl, reversed(soco.get_queue())):
             assert s_item.resources[0].uri == q_item.resources[0].uri
@@ -537,16 +570,22 @@ class TestReorderSonosPlaylist(object):
         """Test a use case in doc string. Swapping the positions of the first
             two tracks in the Sonos playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = [0, ]
-        new_pos = [1, ]
+        tracks = [
+            0,
+        ]
+        new_pos = [
+            1,
+        ]
 
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == 0
-        assert response['length'] == num_tracks
-        assert response['update_id'] != 0
+        assert response["change"] == 0
+        assert response["length"] == num_tracks
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
@@ -560,16 +599,22 @@ class TestReorderSonosPlaylist(object):
     def test_remove_first_track(self, soco):
         """Test removing first track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = [0, ]
-        new_pos = [None, ]
+        tracks = [
+            0,
+        ]
+        new_pos = [
+            None,
+        ]
 
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks - 1
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks - 1
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         # FIXME remove the list on queue() call, when the deprecated
         # __getitem__ on ListOfMusicInfoItems is removed
@@ -580,15 +625,17 @@ class TestReorderSonosPlaylist(object):
     def test_remove_first_track_full(self, soco):
         """Test removing first track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = [0] + list(range(num_tracks - 1))        # [0, 0, 1, ..., n-1]
-        new_pos = [None, ] + list(range(num_tracks - 1))  # [None, 0, ..., n-1]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        tracks = [0] + list(range(num_tracks - 1))  # [0, 0, 1, ..., n-1]
+        new_pos = [None,] + list(range(num_tracks - 1))  # [None, 0, ..., n-1]
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks - 1
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks - 1
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         # FIXME remove the list on queue() call, when the deprecated
         # __getitem__ on ListOfMusicInfoItems is removed
@@ -600,14 +647,18 @@ class TestReorderSonosPlaylist(object):
         """Test removing last track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = range(num_tracks)
-        new_pos = list(range(num_tracks - 1)) + [None, ]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        new_pos = list(range(num_tracks - 1)) + [
+            None,
+        ]
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks - 1
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks - 1
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         # FIXME remove the list on queue() call, when the deprecated
         # __getitem__ on ListOfMusicInfoItems is removed
@@ -621,33 +672,36 @@ class TestReorderSonosPlaylist(object):
         ndx = int(num_tracks / 2)
         tracks = [ndx]
         new_pos = [None]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks - 1
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks - 1
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         del que[ndx]
         for s_item, q_item in zip(spl, que):
             assert s_item.resources[0].uri == q_item.resources[0].uri
 
-    def test_remove_some_tracks(self, soco):    # pylint: disable=R0914
+    def test_remove_some_tracks(self, soco):  # pylint: disable=R0914
         """Test removing some tracks from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         # get rid of the even numbered tracks
-        tracks = sorted([x for x in range(num_tracks) if not x & 1],
-                        reverse=True)
+        tracks = sorted([x for x in range(num_tracks) if not x & 1], reverse=True)
         new_pos = [None for _ in tracks]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1 * len(new_pos)
-        assert response['length'] == num_tracks + response['change']
-        assert response['update_id'] != 0
+        assert response["change"] == -1 * len(new_pos)
+        assert response["length"] == num_tracks + response["change"]
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         for ndx in tracks:
@@ -661,14 +715,16 @@ class TestReorderSonosPlaylist(object):
         # get rid of the even numbered tracks
         tracks = sorted(range(num_tracks), reverse=True)
         new_pos = [None for _ in tracks]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1 * num_tracks
-        assert response['length'] == num_tracks + response['change']
-        assert response['length'] == 0
-        assert response['update_id'] != 0
+        assert response["change"] == -1 * num_tracks
+        assert response["length"] == num_tracks + response["change"]
+        assert response["length"] == 0
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         assert len(spl) == 0
 
@@ -677,13 +733,15 @@ class TestReorderSonosPlaylist(object):
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = [1, 2]
         new_pos = [0, None]
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks + response['change']
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks + response["change"]
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
@@ -693,14 +751,12 @@ class TestReorderSonosPlaylist(object):
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = sorted(range(num_tracks), reverse=True)
         new_pos = [None for _ in tracks]
-        args = {'sonos_playlist': test_playlist,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {"sonos_playlist": test_playlist, "tracks": tracks, "new_pos": new_pos}
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1 * num_tracks
-        assert response['length'] == num_tracks + response['change']
-        assert response['length'] == 0
-        assert response['update_id'] != 0
+        assert response["change"] == -1 * num_tracks
+        assert response["length"] == num_tracks + response["change"]
+        assert response["length"] == 0
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         assert len(spl) == 0
 
@@ -708,31 +764,27 @@ class TestReorderSonosPlaylist(object):
         """Remove all in one op by using strings."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         # we know what we are doing
-        tracks = ','.join([str(x) for x in range(num_tracks)])
-        new_pos = ''
-        args = {'sonos_playlist': test_playlist,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        tracks = ",".join([str(x) for x in range(num_tracks)])
+        new_pos = ""
+        args = {"sonos_playlist": test_playlist, "tracks": tracks, "new_pos": new_pos}
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1 * num_tracks
-        assert response['length'] == num_tracks + response['change']
-        assert response['length'] == 0
-        assert response['update_id'] != 0
+        assert response["change"] == -1 * num_tracks
+        assert response["length"] == num_tracks + response["change"]
+        assert response["length"] == 0
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         assert len(spl) == 0
 
     def test_remove_and_reorder_string(self, soco):
         """test remove then reorder using string arguments."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        tracks = '0,2'      # trackA, trackB, trackC, ...
-        new_pos = ',0'      # trackC, trackB, ...
-        args = {'sonos_playlist': test_playlist,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        tracks = "0,2"  # trackA, trackB, trackC, ...
+        new_pos = ",0"  # trackC, trackB, ...
+        args = {"sonos_playlist": test_playlist, "tracks": tracks, "new_pos": new_pos}
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks + response['change']
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks + response["change"]
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[2].resources[0].uri
@@ -743,13 +795,15 @@ class TestReorderSonosPlaylist(object):
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = "0"
         new_pos = "1"
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == 0
-        assert response['length'] == num_tracks
-        assert response['update_id'] != 0
+        assert response["change"] == 0
+        assert response["length"] == num_tracks
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
@@ -765,13 +819,15 @@ class TestReorderSonosPlaylist(object):
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = 1
         new_pos = 0
-        args = {'sonos_playlist': test_playlist.item_id,
-                'tracks': tracks,
-                'new_pos': new_pos}
+        args = {
+            "sonos_playlist": test_playlist.item_id,
+            "tracks": tracks,
+            "new_pos": new_pos,
+        }
         response = soco.reorder_sonos_playlist(**args)
-        assert response['change'] == 0
-        assert response['length'] == num_tracks
-        assert response['update_id'] != 0
+        assert response["change"] == 0
+        assert response["length"] == num_tracks
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
@@ -786,10 +842,10 @@ class TestReorderSonosPlaylist(object):
         """Test the clear_sonos_playlist helper function."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         response = soco.clear_sonos_playlist(test_playlist)
-        assert response['change'] == -1 * num_tracks
-        assert response['length'] == num_tracks + response['change']
-        assert response['length'] == 0
-        assert response['update_id'] != 0
+        assert response["change"] == -1 * num_tracks
+        assert response["length"] == num_tracks + response["change"]
+        assert response["length"] == 0
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         assert len(spl) == 0
 
@@ -797,24 +853,21 @@ class TestReorderSonosPlaylist(object):
         """Test clearing an already empty Sonos playlist."""
         test_playlist, _ = self._reset_spl_contents(soco)
         response = soco.clear_sonos_playlist(test_playlist)
-        assert response['length'] == 0
-        update_id = response['update_id']
-        new_response = soco.clear_sonos_playlist(test_playlist,
-                                                 update_id=update_id)
-        assert new_response['change'] == 0
-        assert new_response['length'] == 0
-        assert new_response['update_id'] == update_id
+        assert response["length"] == 0
+        update_id = response["update_id"]
+        new_response = soco.clear_sonos_playlist(test_playlist, update_id=update_id)
+        assert new_response["change"] == 0
+        assert new_response["length"] == 0
+        assert new_response["update_id"] == update_id
 
     def test_move_in_sonos_playlist(self, soco):
         """Test method move_in_sonos_playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        args = {'sonos_playlist': test_playlist.item_id,
-                'track': 0,
-                'new_pos': 1}
+        args = {"sonos_playlist": test_playlist.item_id, "track": 0, "new_pos": 1}
         response = soco.move_in_sonos_playlist(**args)
-        assert response['change'] == 0
-        assert response['length'] == num_tracks
-        assert response['update_id'] != 0
+        assert response["change"] == 0
+        assert response["length"] == num_tracks
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         que = soco.get_queue()
         assert spl[0].resources[0].uri == que[1].resources[0].uri
@@ -828,12 +881,11 @@ class TestReorderSonosPlaylist(object):
     def test_remove_from_sonos_playlist(self, soco):
         """Test remove_from_sonos_playlist method."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
-        args = {'sonos_playlist': test_playlist.item_id,
-                'track': 0}
+        args = {"sonos_playlist": test_playlist.item_id, "track": 0}
         response = soco.remove_from_sonos_playlist(**args)
-        assert response['change'] == -1
-        assert response['length'] == num_tracks - 1
-        assert response['update_id'] != 0
+        assert response["change"] == -1
+        assert response["length"] == num_tracks - 1
+        assert response["update_id"] != 0
         spl = soco.music_library.browse(ml_item=test_playlist)
         # FIXME remove the list on queue() call, when the deprecated
         # __getitem__ on ListOfMusicInfoItems is removed
@@ -844,16 +896,15 @@ class TestReorderSonosPlaylist(object):
     def test_get_sonos_playlist_by_attr(self, soco):
         """Test test_get_sonos_playlist_by_attr."""
         test_playlist, _ = self._reset_spl_contents(soco)
-        by_name = soco.get_sonos_playlist_by_attr('title', self.playlist_name)
+        by_name = soco.get_sonos_playlist_by_attr("title", self.playlist_name)
         assert test_playlist.item_id == by_name.item_id
-        by_id = soco.get_sonos_playlist_by_attr('item_id',
-                                                test_playlist.item_id)
+        by_id = soco.get_sonos_playlist_by_attr("item_id", test_playlist.item_id)
         assert test_playlist.item_id == by_id.item_id
         with pytest.raises(AttributeError):
-            soco.get_sonos_playlist_by_attr('fred', 'wilma')
+            soco.get_sonos_playlist_by_attr("fred", "wilma")
 
         with pytest.raises(ValueError):
-            soco.get_sonos_playlist_by_attr('item_id', 'wilma')
+            soco.get_sonos_playlist_by_attr("item_id", "wilma")
 
 
 class TestMusicLibrary(object):
@@ -861,8 +912,15 @@ class TestMusicLibrary(object):
 
     search_types = list(MusicLibrary.SEARCH_TRANSLATION.keys())
     specific_search_methods = (
-        "artists", "album_artists", "albums", "genres", "composers", "tracks",
-        "playlists", "sonos_favorites", "favorite_radio_stations",
+        "artists",
+        "album_artists",
+        "albums",
+        "genres",
+        "composers",
+        "tracks",
+        "playlists",
+        "sonos_favorites",
+        "favorite_radio_stations",
         "favorite_radio_shows",
     )
 

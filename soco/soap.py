@@ -27,9 +27,7 @@ services.
 # Some is the same as that in services.py.
 # TODO: refactor services.py to depend on this code
 
-from __future__ import (
-    absolute_import, unicode_literals
-)
+from __future__ import absolute_import, unicode_literals
 
 import logging
 from xml.sax.saxutils import escape
@@ -59,17 +57,15 @@ class SoapFault(SoCoException):
         self.faultcode = faultcode
         self.faultstring = faultstring
         self.detail = detail
-        self.detail_string = XML.tostring(detail) if detail is not None else ''
+        self.detail_string = XML.tostring(detail) if detail is not None else ""
         super(SoapFault, self).__init__(faultcode, faultstring)
 
     def __str__(self):
-        return '%s: %s' % (self.faultcode, self.faultstring)
+        return "%s: %s" % (self.faultcode, self.faultstring)
 
     def __repr__(self):
         return "SoapFault(faultcode={}, faultstring={}, detail={})".format(
-            repr(self.faultcode),
-            repr(self.faultstring),
-            repr(self.detail)
+            repr(self.faultcode), repr(self.faultstring), repr(self.detail)
         )
 
 
@@ -110,9 +106,17 @@ class SoapMessage(object):
     for communication with a SOAP server.
     """
 
-    def __init__(self, endpoint, method, parameters=None, http_headers=None,
-                 soap_action=None, soap_header=None, namespace=None,
-                 **request_args):
+    def __init__(
+        self,
+        endpoint,
+        method,
+        parameters=None,
+        http_headers=None,
+        soap_action=None,
+        soap_header=None,
+        namespace=None,
+        **request_args
+    ):
         """
         Args:
             endpoint (str): The SOAP endpoint URL for this client.
@@ -158,9 +162,9 @@ class SoapMessage(object):
             dict: headers including the SOAPACTION header.
         """
 
-        headers = {'Content-Type': 'text/xml; charset="utf-8"'}
+        headers = {"Content-Type": 'text/xml; charset="utf-8"'}
         if soap_action is not None:
-            headers.update({'SOAPACTION': '"{}"'.format(soap_action)})
+            headers.update({"SOAPACTION": '"{}"'.format(soap_action)})
         if http_headers is not None:
             headers.update(http_headers)
         return headers
@@ -179,9 +183,9 @@ class SoapMessage(object):
         """
 
         if soap_header is not None:
-            return '<s:Header>{}</s:Header>'.format(soap_header)
+            return "<s:Header>{}</s:Header>".format(soap_header)
         else:
-            return ''
+            return ""
 
     def prepare_soap_body(self, method, parameters, namespace):
         """Prepare the SOAP message body for sending.
@@ -199,7 +203,8 @@ class SoapMessage(object):
         tags = []
         for name, value in parameters:
             tag = "<{name}>{value}</{name}>".format(
-                name=name, value=escape("%s" % value, {'"': "&quot;"}))
+                name=name, value=escape("%s" % value, {'"': "&quot;"})
+            )
             # % converts to unicode because we are using unicode literals.
             # Avoids use of 'unicode' function which does not exist in python 3
             tags.append(tag)
@@ -209,18 +214,17 @@ class SoapMessage(object):
         if namespace is not None:
             soap_body = (
                 '<{method} xmlns="{namespace}">'
-                '{params}'
-                '</{method}>'.format(
-                    method=method, params=wrapped_params,
-                    namespace=namespace
-                ))
+                "{params}"
+                "</{method}>".format(
+                    method=method, params=wrapped_params, namespace=namespace
+                )
+            )
         else:
             soap_body = (
-                '<{method}>'
-                '{params}'
-                '</{method}>'.format(
-                    method=method, params=wrapped_params
-                ))
+                "<{method}>"
+                "{params}"
+                "</{method}>".format(method=method, params=wrapped_params)
+            )
 
         return soap_body
 
@@ -242,23 +246,22 @@ class SoapMessage(object):
             '<?xml version="1.0"?>'
             '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"'
             ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
-                '{soap_header}'
-                    '<s:Body>'
-                        '{soap_body}'
-                    '</s:Body>'
-            '</s:Envelope>')  # noqa PEP8
+            "{soap_header}"
+            "<s:Body>"
+            "{soap_body}"
+            "</s:Body>"
+            "</s:Envelope>"
+        )  # noqa PEP8
         return soap_env_template.format(
-            soap_header=prepared_soap_header,
-            soap_body=prepared_soap_body)
+            soap_header=prepared_soap_header, soap_body=prepared_soap_body
+        )
 
     def prepare(self):
         """Prepare the SOAP message for sending to the server."""
         headers = self.prepare_headers(self.http_headers, self.soap_action)
 
         soap_header = self.prepare_soap_header(self.soap_header)
-        soap_body = self.prepare_soap_body(
-            self.method, self.parameters, self.namespace
-        )
+        soap_body = self.prepare_soap_body(self.method, self.parameters, self.namespace)
         data = self.prepare_soap_envelope(soap_header, soap_body)
         return (headers, data)
 
@@ -285,7 +288,7 @@ class SoapMessage(object):
         response = requests.post(
             self.endpoint,
             headers=headers,
-            data=data.encode('utf-8'),
+            data=data.encode("utf-8"),
             **self.request_args
         )
         _LOG.debug("Received %s, %s", response.headers, response.text)
@@ -295,15 +298,12 @@ class SoapMessage(object):
             tree = XML.fromstring(response.content)
             # Get the first child of the <Body> tag. NB There should only be
             # one if the RPC standard is followed.
-            body = tree.find(
-                "{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
+            body = tree.find("{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
             return body
         elif status == 500:
             # We probably have a SOAP Fault
             tree = XML.fromstring(response.content)
-            fault = tree.find(
-                './/{http://schemas.xmlsoap.org/soap/envelope/}Fault'
-            )
+            fault = tree.find(".//{http://schemas.xmlsoap.org/soap/envelope/}Fault")
             if fault is None:
                 # Not a SOAP fault. Must be something else.
                 response.raise_for_status()

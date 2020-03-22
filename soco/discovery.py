@@ -66,25 +66,29 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         Create and return a socket with appropriate options set for multicast.
         """
 
-        _sock = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        _sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         # UPnP v1.0 requires a TTL of 4
-        _sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL,
-                         struct.pack("B", 4))
+        _sock.setsockopt(
+            socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack("B", 4)
+        )
         if interface_addr is not None:
             _sock.setsockopt(
-                socket.IPPROTO_IP, socket.IP_MULTICAST_IF,
-                socket.inet_aton(interface_addr))
+                socket.IPPROTO_IP,
+                socket.IP_MULTICAST_IF,
+                socket.inet_aton(interface_addr),
+            )
         return _sock
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent("""\
+    PLAYER_SEARCH = dedent(
+        """\
         M-SEARCH * HTTP/1.1
         HOST: 239.255.255.250:1900
         MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """).encode('utf-8')
+        """
+    ).encode("utf-8")
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
@@ -94,8 +98,9 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         try:
             address = socket.inet_aton(interface_addr)
         except socket.error:
-            raise ValueError("{0} is not a valid IP address string".format(
-                interface_addr))
+            raise ValueError(
+                "{0} is not a valid IP address string".format(interface_addr)
+            )
         _sockets.append(create_socket(interface_addr))
         _LOG.info("Sending discovery packets on default interface")
     else:
@@ -115,8 +120,12 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
             try:
                 _sockets.append(create_socket(address))
             except socket.error as e:
-                _LOG.warning("Can't make a discovery socket for %s: %s: %s",
-                             address, e.__class__.__name__, e)
+                _LOG.warning(
+                    "Can't make a discovery socket for %s: %s: %s",
+                    address,
+                    e.__class__.__name__,
+                    e,
+                )
         # Add a socket using the system default address
         _sockets.append(create_socket())
         # Used to be logged as:
@@ -169,9 +178,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
         if response:
             for _sock in response:
                 data, addr = _sock.recvfrom(1024)
-                _LOG.debug(
-                    'Received discovery response from %s: "%s"', addr, data
-                )
+                _LOG.debug('Received discovery response from %s: "%s"', addr, data)
                 if b"Sonos" in data:
                     # Now we have an IP, we can build a SoCo instance and query
                     # that player for the topology to find the other players.
@@ -204,8 +211,9 @@ def any_soco():
         # as long as it is visible (i.e. not a bridge etc). Otherwise,
         # perform discovery (again, excluding invisibles) and return one of
         # those
-        device = next(d for d in cls._instances[cls._class_group].values()
-                      if d.is_visible)
+        device = next(
+            d for d in cls._instances[cls._class_group].values() if d.is_visible
+        )
     except (KeyError, StopIteration):
         devices = discover()
         return None if devices is None else devices.pop()
