@@ -37,7 +37,7 @@ import warnings
 
 from .compat import with_metaclass
 from .exceptions import DIDLMetadataError
-from .utils import really_unicode
+from .utils import really_unicode, first_cap
 from .xml import XML, ns_tag
 from .data_structure_quirks import apply_resource_quirks
 
@@ -77,6 +77,87 @@ def to_didl_string(*args):
         return XML.tostring(didl)
     else:
         return XML.tostring(didl, encoding="unicode")
+
+
+def didl_class_to_soco_class(didl_class):
+    """Translate a DIDL-Lite class to the corresponding SoCo data structures class"""
+    # Certain music services has been observed to sub-class via a .# syntax
+    # instead of just . we simply replace it with the official syntax
+    didl_class = didl_class.replace(".#", ".")
+
+    try:
+        cls = _DIDL_CLASS_TO_CLASS[didl_class]
+    except KeyError:
+        # Unknown class, automatically create subclass
+        new_class_name = form_name(didl_class)
+        base_class = didl_class_to_soco_class(".".join(didl_class.split(".")[:-1]))
+        cls = type(
+            new_class_name,
+            (base_class,),
+            {
+                "item_class": didl_class,
+                __doc__: "Class that represents a {}".format(didl_class),
+            },
+        )
+        _DIDL_CLASS_TO_CLASS[didl_class] = cls
+
+    return cls
+
+
+_OFFICIAL_CLASSES = {
+    "object",
+    "object.item",
+    "object.item.audioItem",
+    "object.item.audioItem.musicTrack",
+    "object.item.audioItem.audioBroadcast",
+    "object.item.audioItem.audioBook",
+    "object.container",
+    "object.container.person",
+    "object.container.person.musicArtist",
+    "object.container.playlistContainer",
+    "object.container.album",
+    "object.container.musicAlbum",
+    "object.container.genre",
+    "object.container.musicGenre",
+}
+
+
+def form_name(didl_class):
+    """Return an improvised name for vendor extended classes"""
+    if not didl_class.startswith("object."):
+        raise DIDLMetadataError("Unknown UPnP class: %s" % didl_class)
+
+    # We know that the string starts with "object." so -1 indexing is safe
+    parts = didl_class.split(".")
+    # If it is a Sonos favorite, form the name as the class component
+    # before with "Favorite" added. So:
+    # object.item.audioItem.audioBroadcast.sonos-favorite
+    # turns into
+    # DidlAudioBroadcastFavorite
+    if parts[-1] == "sonos-favorite" and len(parts) >= 2:
+        return "Didl" + first_cap(parts[-2]) + "Favorite"
+
+    # For any other class, for the name as the concatenation of all
+    # the class components that are not UPnP core classes. So:
+    # object.container.playlistContainer.sameArtist
+    # Turns into:
+    # DidlSameArtist
+    search_parts = parts[:]
+    new_parts = []
+    # Strip the components one by one and check whether the base is known
+    while search_parts:
+        new_parts.append(search_parts[-1])
+        search_parts = search_parts[:-1]
+        search_class = ".".join(search_parts)
+        if search_class in _OFFICIAL_CLASSES:
+            break
+
+    # For class path last parts that contain the word list, capitalize it
+    if new_parts[0].endswith("list"):
+        new_parts[0] = new_parts[0].replace("list", "List")
+    new_parts = reversed(new_parts)
+
+    return "Didl" + "".join(first_cap(s) for s in new_parts)
 
 
 ###############################################################################
