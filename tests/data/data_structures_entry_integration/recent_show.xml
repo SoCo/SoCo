@@ -1,0 +1,11 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <item id="S://myweb/music/mp3/Den%20Sorte%20Skole%20-_Lektion%231/densorteskole_lektion%231/mp3/17%20-%20Track%2017.mp3" parentID="A:TRACKS" restricted="true">
+    <res protocolInfo="x-file-cifs:*:audio/mpeg:*">x-file-cifs://myweb/music/mp3/Den%20Sorte%20Skole%20-_Lektion%231/densorteskole_lektion%231/mp3/17%20-%20Track%2017.mp3</res>
+    <upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fmyweb%2fmusic%2fmp3%2fDen%2520Sorte%2520Skole%2520-_Lektion%25231%2fdensorteskole_lektion%25231%2fmp3%2f17%2520-%2520Track%252017.mp3&amp;v=15</upnp:albumArtURI>
+    <dc:title>17 - Track 17</dc:title>
+    <upnp:class>object.item.audioItem.musicTrack.recentShow</upnp:class>
+    <dc:creator>Den sorte skole</dc:creator>
+    <upnp:album>Lektion #1 (Mix tape)</upnp:album>
+    <r:episodeNumber>0</r:episodeNumber>
+  </item>
+</DIDL-Lite>
