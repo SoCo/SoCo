@@ -982,7 +982,7 @@ class DidlMusicAlbum(DidlAlbum):
     )
 
 
-class DidlMusicAlbumFavorite(DidlAlbum):
+class DidlMusicAlbumFavorite(DidlMusicAlbum):
 
     """Class that represents a Sonos favorite music library album.
 
@@ -997,7 +997,7 @@ class DidlMusicAlbumFavorite(DidlAlbum):
     tag = "item"
 
 
-class DidlMusicAlbumCompilation(DidlAlbum):
+class DidlMusicAlbumCompilation(DidlMusicAlbum):
 
     """Class that represents a Sonos favorite music library compilation.
 
