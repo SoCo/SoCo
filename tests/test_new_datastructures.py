@@ -374,3 +374,27 @@ class TestDidlObject:
             + "RINCON_AssociatedZPUDN</desc></item></dummy>"
         )[0]
         assert_xml_equal(elt2, elt)
+
+
+# There is an overview of all observed classes, whether they are in or
+# out of base DIDL in official_and_extended_didl_classes.txt
+
+
+def test_didl_object_inheritance():
+    """Test that DIDL object inheritance is as indicated by the didl class"""
+    class_dict = data_structures._DIDL_CLASS_TO_CLASS.copy()
+    class_dict["object"] = data_structures.DidlObject
+    for didl_class, soco_class in data_structures._DIDL_CLASS_TO_CLASS.items():
+        # Skip this one, because its DIDL class is expected to be an error
+        if didl_class == "object.itemobject.item.sonos-favorite":
+            continue
+        # object does not inherit
+        if didl_class == "object":
+            continue
+
+        # First make sure it is registered with the correct DIDL class
+        assert didl_class == soco_class.item_class
+
+        base_didl_class = ".".join(didl_class.split(".")[:-1])
+        base_class = data_structures._DIDL_CLASS_TO_CLASS[base_didl_class]
+        assert base_class == soco_class.__bases__[0]
