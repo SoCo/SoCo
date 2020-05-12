@@ -203,7 +203,7 @@ class MetadataDictBase(object):
         for key in metadata_dict:
             # Check for invalid fields
             if key not in self._valid_fields:
-                message = '%s instantiated with invalid field "%s" and ' "value: %s"
+                message = '%s instantiated with invalid field "%s" and value: "%s"'
                 # Really wanted to raise exceptions here, but as it
                 # turns out I have already encountered invalid fields
                 # from music services.
