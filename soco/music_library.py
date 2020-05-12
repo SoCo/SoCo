@@ -19,6 +19,7 @@ from .data_structures import SearchResult, DidlResource, DidlObject, DidlMusicAl
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
+from .compat import quote_url
 
 _LOG = logging.getLogger(__name__)
 
@@ -179,8 +180,7 @@ class MusicLibrary(object):
         args = tuple(["radio_shows"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
-        # pylint: disable=too-many-locals, too-many-arguments,
-        # too-many-branches
+        # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
 
     def get_music_library_information(
         self,
@@ -288,14 +288,20 @@ class MusicLibrary(object):
              `SoCoException` upon errors.
         """
         search = self.SEARCH_TRANSLATION[search_type]
+        share_translation = self.SEARCH_TRANSLATION["share"]
 
         # Add sub categories
-        if subcategories is not None:
+        # sub categories are not allowed when searching shares
+        if subcategories is not None and search_term != share_translation:
             for category in subcategories:
                 search += "/" + url_escape_path(really_unicode(category))
         # Add fuzzy search
         if search_term is not None:
-            search += ":" + url_escape_path(really_unicode(search_term))
+            if search == share_translation:
+                # Don't insert ":" and don't escape "/" (so can't use url_escape_path)
+                search += quote_url(really_unicode(search_term).encode("utf-8"))
+            else:
+                search += ":" + url_escape_path(really_unicode(search_term))
 
         item_list = []
         metadata = {"total_matches": 100000}
