@@ -59,6 +59,7 @@ Example:
 
 from __future__ import unicode_literals
 
+import errno
 import logging
 import threading
 
@@ -130,7 +131,7 @@ class EventNotifyHandler(BaseHTTPRequestHandler, EventNotifyHandlerBase):
 class EventServerThread(threading.Thread):
     """The thread in which the event listener server will run."""
 
-    def __init__(self, address):
+    def __init__(self, server):
         """
         Args:
             address (tuple): The (ip, port) address on which the server
@@ -141,18 +142,17 @@ class EventServerThread(threading.Thread):
         self.stop_flag = threading.Event()
         #: `tuple`: The (ip, port) address on which the server is
         #: configured to listen.
-        self.address = address
+        self.server = server
 
     def run(self):
         """Start the server on `address`.
         Handling of requests is delegated to an instance of the
         `EventNotifyHandler` class.
         """
-        server = EventServer(self.address, EventNotifyHandler)
-        log.info("Event listener running on %s", server.server_address)
+        log.info("Event listener running on %s", self.server.server_address)
         # Listen for events until told to stop
         while not self.stop_flag.is_set():
-            server.handle_request()
+            self.server.handle_request()
 
     def stop(self):
         """Stop the server.
@@ -175,7 +175,9 @@ class EventListener(EventListenerBase):
 
     def listen(self, ip_address):
         """Start the event listener listening on the local machine at
-        port 1400 (default).
+        port 1400 (default). If this port is unavailable, the
+        listener will attempt to listen on the next available port,
+        within a range of 100.
 
         Make sure that your firewall allows connections to this port.
 
@@ -192,11 +194,29 @@ class EventListener(EventListenerBase):
             The port on which the event listener listens is configurable.
             See `config.EVENT_LISTENER_PORT`
         """
-        address = (ip_address, self.requested_port_number)
-        self._listener_thread = EventServerThread(address)
+        for port_number in range(
+            self.requested_port_number, self.requested_port_number + 100
+        ):
+            address = (ip_address, port_number)
+            try:
+                server = EventServer(address, EventNotifyHandler)
+                break
+            except OSError as oserror:
+                if oserror.errno == errno.EADDRINUSE:
+                    log.debug("Port %s:%d is in use", ip_address, port_number)
+                else:
+                    raise
+
+        self._listener_thread = EventServerThread(server)
         self._listener_thread.daemon = True
         self._listener_thread.start()
-        return self.requested_port_number
+        if port_number != self.requested_port_number:
+            log.debug(
+                "The first available port %d was used instead of %d",
+                port_number,
+                self.requested_port_number,
+            )
+        return port_number
 
     def stop_listening(self, address):
         """Stop the listener."""
