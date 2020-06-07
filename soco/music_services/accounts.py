@@ -167,19 +167,19 @@ class Account(object):
             account.oa_device_id = xml_account.findtext("OADevID")
             account.key = xml_account.findtext("Key")
             result[serial_number] = account
-            # There is always a TuneIn account, but it is handled separately
-            #  by Sonos, and does not appear in the xml account data. We
-            # need to add it ourselves.
-            tunein = Account()
-            tunein.service_type = "65031"  # Is this always the case?
-            tunein.deleted = False
-            tunein.username = ""
-            tunein.metadata = ""
-            tunein.nickname = ""
-            tunein.oa_device_id = ""
-            tunein.key = ""
-            tunein.serial_number = "0"
-            result["0"] = tunein
+        # There is always a TuneIn account, but it is handled separately
+        #  by Sonos, and does not appear in the xml account data. We
+        # need to add it ourselves.
+        tunein = Account()
+        tunein.service_type = "65031"  # Is this always the case?
+        tunein.deleted = False
+        tunein.username = ""
+        tunein.metadata = ""
+        tunein.nickname = ""
+        tunein.oa_device_id = ""
+        tunein.key = ""
+        tunein.serial_number = "0"
+        result["0"] = tunein
 
         return result
 
