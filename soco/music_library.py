@@ -288,16 +288,15 @@ class MusicLibrary(object):
              `SoCoException` upon errors.
         """
         search = self.SEARCH_TRANSLATION[search_type]
-        share_translation = self.SEARCH_TRANSLATION["share"]
 
         # Add sub categories
         # sub categories are not allowed when searching shares
-        if subcategories is not None and search_term != share_translation:
+        if subcategories is not None and search_type != "share":
             for category in subcategories:
                 search += "/" + url_escape_path(really_unicode(category))
         # Add fuzzy search
         if search_term is not None:
-            if search == share_translation:
+            if search_type == "share":
                 # Don't insert ":" and don't escape "/" (so can't use url_escape_path)
                 search += quote_url(really_unicode(search_term).encode("utf-8"))
             else:
