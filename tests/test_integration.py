@@ -484,7 +484,12 @@ class TestSonosPlaylist(object):
         with pytest.raises(SoCoUPnPException):
             soco.remove_sonos_playlist("SQ:-7")
         # realistic non-existing
-        hpl_i = max([int(x.item_id.split(":")[1]) for x in soco.get_sonos_playlists()])
+        playlists = soco.get_sonos_playlists()
+        # Accommodate the case of no existing playlists
+        if len(playlists) == 0:
+            hpl_i = 0
+        else:
+            hpl_i = max([int(x.item_id.split(":")[1]) for x in playlists])
         with pytest.raises(SoCoUPnPException):
             soco.remove_sonos_playlist("SQ:{}".format(hpl_i + 1))
 
