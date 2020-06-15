@@ -2122,7 +2122,7 @@ PLAY_MODES = (
     "REPEAT_ONE",
 )
 # soundbar product names
-SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp")
+SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc")
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
