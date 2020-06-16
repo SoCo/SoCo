@@ -6,6 +6,6 @@ graphviz
 flake8
 pylint >= 1.4
 coveralls
-pytest-cov>=2.4.0
+pytest-cov>=2.6.0
 wheel
 black; python_version >= "3.6" and implementation_name == "cpython"
