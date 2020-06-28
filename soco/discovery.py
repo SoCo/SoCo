@@ -268,10 +268,10 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
         set: a set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def is_ipv4_address(ip_address):
+    def is_ipv4_address(_ip_address):
         """Helper function to test for an IPv4 address."""
         try:
-            ipaddress.IPv4Network(ip_address)
+            ipaddress.IPv4Network(_ip_address)
             return True
         except ValueError:
             return False
@@ -296,11 +296,11 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
                             ipv4_net_list.append(_network)
         return ipv4_net_list
 
-    def check_ip_and_port(ip_address, port, timeout):
+    def check_ip_and_port(_ip_address, port, _timeout):
         """Helper function to check if a port is open"""
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _socket.settimeout(timeout)
-        return not bool(_socket.connect_ex((ip_address, port)))
+        _socket.settimeout(_timeout)
+        return not bool(_socket.connect_ex((_ip_address, port)))
 
     def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
         """Helper function worker thread to take IP addresses off a list and
