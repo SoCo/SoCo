@@ -253,6 +253,10 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
     devices. Returns a set of `SoCo` instances, or `None` if no Sonos devices are
     discovered.
 
+    This function is intended for use when the usual discovery functions aren't
+    working, perhaps due to multicast problems on the network to which the SoCo
+    host is attached.
+
     Args:
         max_threads (int): The maximum number of threads to use when scanning the
             network.
