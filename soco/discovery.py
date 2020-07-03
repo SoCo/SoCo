@@ -244,7 +244,7 @@ def by_name(name):
     return None
 
 
-def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
+def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
     """Scan all attached networks for Sonos devices.
 
     Scans the IPv4 network attached to each interface to check for network devices
@@ -260,7 +260,8 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
     Args:
         max_threads (int): The maximum number of threads to use when scanning the
             network.
-        timeout (float): The network timeout to use when checking each IP address
+        timeout (float): The network timeout in seconds to use when checking
+            each IP address for a Sonos device
         include_invisible (bool): Whether to include invisible Sonos devices in
             the set of devices returned.
 
@@ -268,10 +269,10 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
         set: a set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def is_ipv4_address(_ip_address):
+    def is_ipv4_address(ip_address):
         """Helper function to test for an IPv4 address."""
         try:
-            ipaddress.IPv4Network(_ip_address)
+            ipaddress.IPv4Network(ip_address)
             return True
         except ValueError:
             return False
@@ -283,24 +284,26 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
         ipv4_net_list = []
         adapters = ifaddr.get_adapters()
         for adapter in adapters:
-            for _ip_address in adapter.ips:
-                if is_ipv4_address(_ip_address.ip):
-                    # Omit the loopback address
-                    if _ip_address.ip != "127.0.0.1":
-                        _network = ipaddress.ip_network(
-                            _ip_address.ip + "/" + str(_ip_address.network_prefix),
-                            False,
+            for ip in adapter.ips:
+                if is_ipv4_address(ip.ip):
+                    # Restrict to common domestic private IP ranges and sensible
+                    # netmasks. Experimental ... assumptions need to be tested.
+                    if (
+                            ip.ip.startswith("192.168") or ip.ip.startswith("10.")
+                    ) and ip.network_prefix <= 24:
+                        nw = ipaddress.ip_network(
+                            ip.ip + "/" + str(ip.network_prefix), False
                         )
                         # Avoid duplicate subnets
-                        if _network not in ipv4_net_list:
-                            ipv4_net_list.append(_network)
+                        if nw not in ipv4_net_list:
+                            ipv4_net_list.append(nw)
         return ipv4_net_list
 
-    def check_ip_and_port(_ip_address, port, _timeout):
+    def check_ip_and_port(ip_address, port, timeout):
         """Helper function to check if a port is open"""
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _socket.settimeout(_timeout)
-        return not bool(_socket.connect_ex((_ip_address, port)))
+        _socket.settimeout(timeout)
+        return not bool(_socket.connect_ex((ip_address, port)))
 
     def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
         """Helper function worker thread to take IP addresses off a list and
@@ -320,6 +323,7 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
     for network in find_ipv4_networks():
         for ip_address in network:
             ip_check_list.append(ip_address)
+
     # Find IP addresses with open port 1400
     # Use threading to scan the IP range efficiently
     sonos_ip_addresses = []
@@ -336,7 +340,9 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
     # Wait for all threads to finish
     for thread in thread_list:
         thread.join()
-    # Pick the first IP address in the list to create a SoCo instance
+
+    # Pick the first IP address in the list to create a SoCo instance, and
+    # use it to determine the remaining zones
     for ip_address in sonos_ip_addresses:
         try:
             zone = config.SOCO_CLASS(ip_address)
@@ -346,7 +352,8 @@ def scan_network(max_threads=256, timeout=1.0, include_invisible=False):
                 return zone.visible_zones
         # pylint: disable=bare-except
         except:  # noqa: E722
-            # Although port 1400 is open, this is probably not a Sonos device
-            # Catch all exceptions here and try the next address.
+            # Although port 1400 is open, this is probably not a Sonos device.
+            # I really do want to catch all exceptions here, then try the next
+            # address if there is one.
             continue
     return None
