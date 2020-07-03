@@ -284,19 +284,20 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
         ipv4_net_list = []
         adapters = ifaddr.get_adapters()
         for adapter in adapters:
-            for ip in adapter.ips:
-                if is_ipv4_address(ip.ip):
+            for ip_address in adapter.ips:
+                if is_ipv4_address(ip_address.ip):
                     # Restrict to common domestic private IP ranges and sensible
                     # netmasks. Experimental ... assumptions need to be tested.
                     if (
-                            ip.ip.startswith("192.168") or ip.ip.startswith("10.")
-                    ) and ip.network_prefix <= 24:
-                        nw = ipaddress.ip_network(
-                            ip.ip + "/" + str(ip.network_prefix), False
+                        ip_address.ip.startswith("192.168")
+                        or ip_address.ip.startswith("10.")
+                    ) and ip_address.network_prefix <= 24:
+                        network = ipaddress.ip_network(
+                            ip_address.ip + "/" + str(ip_address.network_prefix), False
                         )
                         # Avoid duplicate subnets
-                        if nw not in ipv4_net_list:
-                            ipv4_net_list.append(nw)
+                        if network not in ipv4_net_list:
+                            ipv4_net_list.append(network)
         return ipv4_net_list
 
     def check_ip_and_port(ip_address, port, timeout):
