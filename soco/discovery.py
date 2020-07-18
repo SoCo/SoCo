@@ -332,12 +332,18 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
     if max_threads > len(ip_check_list):
         max_threads = len(ip_check_list)
     for _ in range(max_threads):
-        thread = threading.Thread(
-            target=sonos_scan_worker_thread,
-            args=(ip_check_list, timeout, sonos_ip_addresses),
-        )
-        thread_list.append(thread)
-        thread.start()
+        try:
+            thread = threading.Thread(
+                target=sonos_scan_worker_thread,
+                args=(ip_check_list, timeout, sonos_ip_addresses),
+            )
+            thread_list.append(thread)
+            thread.start()
+        except RuntimeError:
+            # We probably can't crate any more threads. Continue without
+            # creating additional threads.
+            break
+
     # Wait for all threads to finish
     for thread in thread_list:
         thread.join()
