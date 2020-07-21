@@ -340,7 +340,7 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
             thread_list.append(thread)
             thread.start()
         except RuntimeError:
-            # We probably can't crate any more threads. Continue without
+            # We probably can't create any more threads. Continue without
             # creating additional threads.
             break
 
