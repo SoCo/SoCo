@@ -111,6 +111,8 @@ _OFFICIAL_CLASSES = {
     "object.item.audioItem.musicTrack",
     "object.item.audioItem.audioBroadcast",
     "object.item.audioItem.audioBook",
+    "object.item.audioItem.linein",
+    "object.item.audioItem.linein.airplay",
     "object.container",
     "object.container.person",
     "object.container.person.musicArtist",
@@ -940,6 +942,22 @@ class DidlRecentShow(DidlMusicTrack):
 
     # the DIDL Lite class for this object.
     item_class = "object.item.audioItem.musicTrack.recentShow"
+
+
+class DidlLineIn(DidlAudioItem):
+
+    """Class that represents audio from LineIn."""
+
+    # the DIDL Lite class for this object.
+    item_class = "object.item.audioItem.linein"
+
+
+class DidlAirPlayTrack(DidlLineIn):
+
+    """Class that represents audio from an AirPlay Stream."""
+
+    # the DIDL Lite class for this object.
+    item_class = "object.item.audioItem.linein.airplay"
 
 
 class DidlAudioBroadcastFavorite(DidlAudioBroadcast):

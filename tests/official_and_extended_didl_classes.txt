@@ -8,6 +8,7 @@
 # O object.item.audioItem.audioBook                         -> <class 'soco.data_structures.DidlAudioBook'>
 # O object.item.audioItem.audioBroadcast                    -> <class 'soco.data_structures.DidlAudioBroadcast'>
 # E object.item.audioItem.musicTrack.recentShow             -> <class 'soco.data_structures.DidlRecentShow'>
+# E object.item.audioItem.linein.airplay                    -> <class 'soco.data_structures.DidlAirPlayTrack'>
 # E object.item.audioItem.audioBroadcast.sonos-favorite     -> <class 'soco.data_structures.DidlAudioBroadcastFavorite'>
 # E object.itemobject.item.sonos-favorite                   -> <class 'soco.data_structures.DidlFavorite'>
 # O object.container                                        -> <class 'soco.data_structures.DidlContainer'>

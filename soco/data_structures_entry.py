@@ -54,9 +54,12 @@ def from_didl_string(string):
     return items
 
 
-# Obviously imcomplete, but missing entries will not result in error, but just
+# Obviously incomplete, but missing entries will not result in error, but just
 # a logged warning and no upgrade of the data structure
-DIDL_NAME_TO_QUALIFIED_MS_NAME = {"DidlMusicTrack": "MediaMetadataTrack"}
+DIDL_NAME_TO_QUALIFIED_MS_NAME = {
+    "DidlMusicTrack": "MediaMetadataTrack",
+    "DidlAirPlayTrack": "MediaMetadataTrack",
+}
 
 
 def attempt_datastructure_upgrade(didl_item):
