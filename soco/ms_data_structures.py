@@ -391,6 +391,9 @@ class MSTrack(MusicServiceItem):
         """Return the URI."""
         # x-sonos-http:trackid_19356232.mp4?sid=20&amp;flags=32
         return self.content["uri"]
+    
+    def to_dict(self):
+        return self.content
 
 
 class MSAlbum(MusicServiceItem):
