@@ -203,6 +203,13 @@ Related Projects
 Socos is a command line tool for controlling Sonos devices. It is developed
 in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_.
 
+SoCo-CLI (`soco-cli <https://github.com/avantrec/soco-cli>`_) is a powerful and
+fully-featured command line tool suitable for use in scripts, scheduled tasks, etc. It
+supports time-based and state-based actions, and repeated commands using loops. It also
+provides an alternative speaker discovery mechanism for situations where SoCo discovery
+does not work, and it functions with multiple Sonos systems on the same network as is the
+case with split S1/S2 systems.
+
 More of a Ruby fan? Not a problem, `Sam Soffes`_ is building out an
 awesome `Ruby gem`_.
 
