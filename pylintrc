@@ -7,7 +7,7 @@
 # progress
 disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods,
     bad-option-value,no-else-return,cyclic-import,too-many-public-methods,
-    bad-continuation
+    bad-continuation, super-with-arguments, raise-missing-from
 
 
 [REPORTS]
