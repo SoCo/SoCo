@@ -7,6 +7,7 @@ SoCo releases
 .. toctree::
    :maxdepth: 1
 
+   0.20
    0.19
    0.18
    0.17
