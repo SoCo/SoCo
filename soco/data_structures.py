@@ -713,12 +713,12 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
     def to_dict(self, remove_nones=False):
         """Return the dict representation of the instance.
 
-       Args:
-            remove_nones (bool, optional): Optionally remove dictionary
-                elements when their value is `None`.
+        Args:
+             remove_nones (bool, optional): Optionally remove dictionary
+                 elements when their value is `None`.
 
-        Returns:
-            dict: a dict representation of the `DidlObject`.
+         Returns:
+             dict: a dict representation of the `DidlObject`.
         """
         content = {}
         # Get the value of each attribute listed in _translation, and add it
@@ -1103,7 +1103,9 @@ class DidlPerson(DidlContainer):
     #: dfdf
     _translation = DidlContainer._translation.copy()
     _translation.update(
-        {"language": ("dc", "language"),}
+        {
+            "language": ("dc", "language"),
+        }
     )
 
 
@@ -1343,5 +1345,6 @@ class Queue(ListOfMusicInfoItems):
 
     def __repr__(self):
         return "{0}(items={1})".format(
-            self.__class__.__name__, super(Queue, self).__repr__(),
+            self.__class__.__name__,
+            super(Queue, self).__repr__(),
         )

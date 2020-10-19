@@ -155,8 +155,7 @@ class EventServerThread(threading.Thread):
             self.server.handle_request()
 
     def stop(self):
-        """Stop the server.
-        """
+        """Stop the server."""
         self.stop_flag.set()
 
 
