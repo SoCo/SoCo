@@ -1319,16 +1319,12 @@ class SearchResult(ListOfMusicInfoItems):
     """
 
     def __init__(self, items, search_type, number_returned, total_matches, update_id):
-        super().__init__(
-            items, number_returned, total_matches, update_id
-        )
+        super().__init__(items, number_returned, total_matches, update_id)
         self._metadata["search_type"] = search_type
 
     def __repr__(self):
         return "{0}(items={1}, search_type='{2}')".format(
-            self.__class__.__name__,
-            super().__repr__(),
-            self.search_type,
+            self.__class__.__name__, super().__repr__(), self.search_type,
         )
 
     @property
@@ -1342,6 +1338,4 @@ class Queue(ListOfMusicInfoItems):
     """Container class that represents a queue."""
 
     def __repr__(self):
-        return "{0}(items={1})".format(
-            self.__class__.__name__, super().__repr__(),
-        )
+        return "{0}(items={1})".format(self.__class__.__name__, super().__repr__(),)
