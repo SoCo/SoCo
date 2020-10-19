@@ -58,7 +58,7 @@ class SoapFault(SoCoException):
         self.faultstring = faultstring
         self.detail = detail
         self.detail_string = XML.tostring(detail) if detail is not None else ""
-        super(SoapFault, self).__init__(faultcode, faultstring)
+        super().__init__(faultcode, faultstring)
 
     def __str__(self):
         return "%s: %s" % (self.faultcode, self.faultstring)

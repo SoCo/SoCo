@@ -263,7 +263,7 @@ class MusicServiceItem(MetadataDictBase):
             uri,
             music_service,
         )
-        super(MusicServiceItem, self).__init__(metadata_dict)
+        super().__init__(metadata_dict)
         self.item_id = item_id
         self.desc = desc
         self.resources = resources

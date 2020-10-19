@@ -511,7 +511,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
         # does not use some of them.
 
         # pylint: disable=super-on-old-class
-        super(DidlObject, self).__init__()
+        super().__init__()
         self.title = title
         self.parent_id = parent_id
         self.item_id = item_id
@@ -1256,7 +1256,7 @@ class ListOfMusicInfoItems(list):
     """
 
     def __init__(self, items, number_returned, total_matches, update_id):
-        super(ListOfMusicInfoItems, self).__init__(items)
+        super().__init__(items)
         self._metadata = {
             "item_list": list(items),
             "number_returned": number_returned,
@@ -1293,7 +1293,7 @@ class ListOfMusicInfoItems(list):
             warnings.warn(message, stacklevel=2)
             return self._metadata[key]
         else:
-            return super(ListOfMusicInfoItems, self).__getitem__(key)
+            return super().__getitem__(key)
 
     @property
     def number_returned(self):
@@ -1319,7 +1319,7 @@ class SearchResult(ListOfMusicInfoItems):
     """
 
     def __init__(self, items, search_type, number_returned, total_matches, update_id):
-        super(SearchResult, self).__init__(
+        super().__init__(
             items, number_returned, total_matches, update_id
         )
         self._metadata["search_type"] = search_type
@@ -1327,7 +1327,7 @@ class SearchResult(ListOfMusicInfoItems):
     def __repr__(self):
         return "{0}(items={1}, search_type='{2}')".format(
             self.__class__.__name__,
-            super(SearchResult, self).__repr__(),
+            super().__repr__(),
             self.search_type,
         )
 
@@ -1343,5 +1343,5 @@ class Queue(ListOfMusicInfoItems):
 
     def __repr__(self):
         return "{0}(items={1})".format(
-            self.__class__.__name__, super(Queue, self).__repr__(),
+            self.__class__.__name__, super().__repr__(),
         )

@@ -109,7 +109,7 @@ class EventNotifyHandler(Resource, EventNotifyHandlerBase):
     isLeaf = True
 
     def __init__(self):
-        super(EventNotifyHandler, self).__init__()
+        super().__init__()
         # The SubscriptionsMapTwisted instance created when this module is
         # imported. This is referenced by
         # soco.events_base.EventNotifyHandlerBase.
@@ -142,7 +142,7 @@ class EventListener(EventListenerBase):
     """
 
     def __init__(self):
-        super(EventListener, self).__init__()
+        super().__init__()
         #:  :py:class:`twisted.internet.tcp.Port`: set at `listen`
         self.port = None
 
@@ -214,7 +214,7 @@ class Subscription(SubscriptionBase):
                 created and used.
 
         """
-        super(Subscription, self).__init__(service, event_queue)
+        super().__init__(service, event_queue)
         #: :py:obj:`function`: callback function to be called whenever an
         #: `Event` is received. If it is set and is callable, the callback
         #: function will be called with the `Event` as the only parameter and
@@ -266,7 +266,7 @@ class Subscription(SubscriptionBase):
                 will point to the Subscription instance.
 
         """
-        subscribe = super(Subscription, self).subscribe
+        subscribe = super().subscribe
         return self._wrap(subscribe, strict, requested_timeout, auto_renew)
 
     def renew(self, requested_timeout=None, is_autorenew=False, strict=True):
@@ -297,7 +297,7 @@ class Subscription(SubscriptionBase):
                 will point to the Subscription instance.
 
         """
-        renew = super(Subscription, self).renew
+        renew = super().renew
         return self._wrap(renew, strict, requested_timeout, is_autorenew)
 
     def unsubscribe(self, strict=True):
@@ -321,7 +321,7 @@ class Subscription(SubscriptionBase):
                 Subscription instance and the subscription property of which
                 will point to the Subscription instance.
         """
-        unsubscribe = super(Subscription, self).unsubscribe
+        unsubscribe = super().unsubscribe
         return self._wrap(unsubscribe, strict)
 
     def _auto_renew_start(self, interval):
@@ -519,7 +519,7 @@ class SubscriptionsMapTwisted(SubscriptionsMap):
     """
 
     def __init__(self):
-        super(SubscriptionsMapTwisted, self).__init__()
+        super().__init__()
         # A counter of calls to Subscription.subscribe
         # that have started but not completed. This is
         # to prevent the event listener from being stopped prematurely
