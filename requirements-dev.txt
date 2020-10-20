@@ -8,4 +8,4 @@ pylint
 coveralls
 pytest-cov<2.6.0
 wheel
-black==19.10b0; python_version >= "3.6" and implementation_name == "cpython"
+black >= 20.0b0; python_version >= "3.6" and implementation_name == "cpython"

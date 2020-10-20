@@ -263,15 +263,19 @@ class MusicServiceItem(object):
         if self.parent_id:
             item_attrib["parentID"] = self.parent_id
         item = XML.SubElement(
-            xml, "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item", item_attrib,
+            xml,
+            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item",
+            item_attrib,
         )
 
         # Add title and class
         XML.SubElement(
-            item, "{http://purl.org/dc/elements/1.1/}title",
+            item,
+            "{http://purl.org/dc/elements/1.1/}title",
         ).text = self.title
         XML.SubElement(
-            item, "{urn:schemas-upnp-org:metadata-1-0/upnp/}class",
+            item,
+            "{urn:schemas-upnp-org:metadata-1-0/upnp/}class",
         ).text = self.item_class
         # Add the desc element
         desc_attrib = {
@@ -279,7 +283,9 @@ class MusicServiceItem(object):
             "nameSpace": "urn:schemas-rinconnetworks-com:metadata-1-0/",
         }
         desc = XML.SubElement(
-            item, "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}desc", desc_attrib,
+            item,
+            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}desc",
+            desc_attrib,
         )
         desc.text = self.content["description"]
 

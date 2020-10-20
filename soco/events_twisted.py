@@ -416,8 +416,7 @@ class Subscription(SubscriptionBase):
 
         # pylint: disable=unused-argument
         def execute(result, method, *args, **kwargs):
-            """Execute method
-            """
+            """Execute method"""
             # Increment the counter of pending calls to Subscription.subscribe
             # if method is subscribe
             if method.__name__ == "subscribe":
@@ -427,8 +426,7 @@ class Subscription(SubscriptionBase):
             return method(*args, **kwargs)
 
         def callnext():
-            """Call the next deferred in the queue.
-            """
+            """Call the next deferred in the queue."""
             # If there is another deferred in the queue,
             # call it
             if self._queue:

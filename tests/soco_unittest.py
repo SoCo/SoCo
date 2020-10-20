@@ -137,7 +137,7 @@ class Volume(unittest.TestCase):
         wait()
 
     def test_set_0(self):
-        """ Tests whether the volume can be set to 0. Regression test for:
+        """Tests whether the volume can be set to 0. Regression test for:
         https://github.com/rahims/SoCo/issues/29
         """
         old = SOCO.volume
@@ -238,7 +238,7 @@ class GetCurrentTrackInfo(unittest.TestCase):
         )
 
     def test_get(self):
-        """ Test is the return value is a dictinary and contains the following
+        """Test is the return value is a dictinary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position
         """
@@ -283,7 +283,7 @@ class GetQueue(unittest.TestCase):
         )
 
     def test_get(self):
-        """ Tests is return value is a list of dictionaries and if each of
+        """Tests is return value is a list of dictionaries and if each of
         the dictionaries contain the keys: album, artist, uri, album_art and
         title
         """
@@ -314,7 +314,7 @@ class GetCurrentTransportInfo(unittest.TestCase):
         )
 
     def test(self):
-        """ Tests if the return value is a dictionary that contains the keys:
+        """Tests if the return value is a dictionary that contains the keys:
         current_transport_status, current_transport_state,
         current_transport_speed
         and that values have been found for all keys, i.e. they are not None
@@ -358,7 +358,7 @@ class GetSpeakerInfo(unittest.TestCase):
         )
 
     def test(self):
-        """ Tests if the return value is a dictionary that contains the keys:
+        """Tests if the return value is a dictionary that contains the keys:
         zone_name, player_icon, uid, serial_number, software_version,
         hardware_version, mac_address, model_name, model_number, display_version
         and that values have been found for all keys, i.e. they are not None
