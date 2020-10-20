@@ -251,7 +251,7 @@ class Service(object):
             >>> s = Service(device)
             >>> print(s.wrap_arguments([('InstanceID', 0), ('Speed', 1)]))
             <InstanceID>0</InstanceID><Speed>1</Speed>'
-            """
+        """
         if args is None:
             args = []
 
@@ -764,7 +764,9 @@ class AlarmClock(Service):
     def __init__(self, soco):
         super(AlarmClock, self).__init__(soco)
         self.UPNP_ERRORS.update(
-            {801: "Already an alarm for this time",}
+            {
+                801: "Already an alarm for this time",
+            }
         )
 
 

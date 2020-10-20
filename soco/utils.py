@@ -29,7 +29,7 @@ def really_unicode(in_string):
 
     Raises:
         ValueError
-        """
+    """
     if isinstance(in_string, StringType):
         for args in (("utf-8",), ("latin-1",), ("ascii", "replace")):
             try:
@@ -46,18 +46,18 @@ def really_unicode(in_string):
 def really_utf8(in_string):
     """Encode a string with utf-8. Really.
 
-    First decode ``in_string`` via `really_unicode` to ensure it can
-    successfully be encoded as utf-8. This is required since just calling
-    encode on a string will often cause Python 2 to perform a coerced strict
-    auto-decode as ascii first and will result in a `UnicodeDecodeError` being
-    raised. After `really_unicode` returns a safe unicode string, encode as
-    utf-8 and return the utf-8 encoded string.
+     First decode ``in_string`` via `really_unicode` to ensure it can
+     successfully be encoded as utf-8. This is required since just calling
+     encode on a string will often cause Python 2 to perform a coerced strict
+     auto-decode as ascii first and will result in a `UnicodeDecodeError` being
+     raised. After `really_unicode` returns a safe unicode string, encode as
+     utf-8 and return the utf-8 encoded string.
 
-   Args:
-        in_string (str): The string to convert.
+    Args:
+         in_string (str): The string to convert.
 
-    Returns:
-        str: utf-encoded data.
+     Returns:
+         str: utf-encoded data.
     """
     return really_unicode(in_string).encode("utf-8")
 

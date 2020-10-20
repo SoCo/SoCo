@@ -41,5 +41,6 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 if sys.version_info.major < 3:
     warnings.warn(
-        "Version 0.19 of SoCo is the last to support Python 2.7", stacklevel=2,
+        "Version 0.19 of SoCo is the last to support Python 2.7",
+        stacklevel=2,
     )

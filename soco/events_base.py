@@ -226,7 +226,7 @@ class EventNotifyHandlerBase(object):
 
             This method calls the log_event method, which must be overridden
             in the class that inherits from this class.
-         """
+        """
 
         timestamp = time.time()
         seq = headers["seq"]  # Event sequence number
@@ -312,8 +312,7 @@ class EventListenerBase(object):
                         log.info("Event Listener started")
 
     def stop(self):
-        """Stop the Event Listener.
-        """
+        """Stop the Event Listener."""
         if not self.is_running:
             return
         self.is_running = False
