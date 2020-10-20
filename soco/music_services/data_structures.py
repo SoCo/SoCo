@@ -221,9 +221,11 @@ class MetadataDictBase(object):
         """Return item from metadata in case of unknown attribute"""
         try:
             return self.metadata[key]
-        except KeyError:
+        except KeyError as error:
             message = 'Class {} has no attribute "{}"'
-            raise AttributeError(message.format(self.__class__.__name__, key))
+            raise AttributeError(
+                message.format(self.__class__.__name__, key)
+            ) from error
 
 
 class MusicServiceItem(MetadataDictBase):

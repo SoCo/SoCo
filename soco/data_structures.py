@@ -257,10 +257,10 @@ class DidlResource(object):
             if result is not None:
                 try:
                     return int(result)
-                except ValueError:
+                except ValueError as error:
                     raise DIDLMetadataError(
                         "Could not convert {0} to an integer".format(name)
-                    )
+                    ) from error
             else:
                 return None
 

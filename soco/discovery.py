@@ -97,10 +97,10 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
     if interface_addr is not None:
         try:
             address = socket.inet_aton(interface_addr)
-        except socket.error:
+        except socket.error as e:
             raise ValueError(
                 "{0} is not a valid IP address string".format(interface_addr)
-            )
+            ) from e
         _sockets.append(create_socket(interface_addr))
         _LOG.info("Sending discovery packets on default interface")
     else:

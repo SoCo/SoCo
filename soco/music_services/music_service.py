@@ -188,7 +188,7 @@ class MusicServiceSoapClient(object):
                 result_elt = message.call()
 
             else:
-                raise MusicServiceException(exc.faultstring, exc.faultcode)
+                raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
