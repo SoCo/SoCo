@@ -704,7 +704,7 @@ class SubscriptionsMap(object):
     """
 
     def __init__(self):
-        super(SubscriptionsMap, self).__init__()
+        super().__init__()
         #: `weakref.WeakValueDictionary`: Thread safe mapping.
         #: Used to store a mapping of sid to subscription
         self.subscriptions = weakref.WeakValueDictionary()

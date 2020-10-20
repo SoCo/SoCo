@@ -52,7 +52,7 @@ class MusicServiceItem(object):
     required_fields = None
 
     def __init__(self, **kwargs):
-        super(MusicServiceItem, self).__init__()
+        super().__init__()
         self.content = kwargs
 
     @classmethod
@@ -375,7 +375,7 @@ class MSTrack(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSTrack, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def album(self):
@@ -441,7 +441,7 @@ class MSAlbum(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSAlbum, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def artist(self):
@@ -494,7 +494,7 @@ class MSAlbumList(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSAlbumList, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -543,7 +543,7 @@ class MSPlaylist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSPlaylist, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -581,7 +581,7 @@ class MSArtistTracklist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSArtistTracklist, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -620,7 +620,7 @@ class MSArtist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSArtist, self).__init__(**content)
+        super().__init__(**content)
 
 
 class MSFavorites(MusicServiceItem):
@@ -649,7 +649,7 @@ class MSFavorites(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSFavorites, self).__init__(**content)
+        super().__init__(**content)
 
 
 class MSCollection(MusicServiceItem):
@@ -678,7 +678,7 @@ class MSCollection(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSCollection, self).__init__(**content)
+        super().__init__(**content)
 
 
 MS_TYPE_TO_CLASS = {

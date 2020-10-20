@@ -134,7 +134,7 @@ class Alarm(object):
                 otherwise. Defaults to `False`.
         """
 
-        super(Alarm, self).__init__()
+        super().__init__()
         self.zone = zone
         if start_time is None:
             start_time = datetime.now().time()

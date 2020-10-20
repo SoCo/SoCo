@@ -4,7 +4,7 @@ pytest >= 2.5
 mock >= 1.0.1
 graphviz
 flake8
-pylint == 2.5
+pylint
 coveralls
 pytest-cov<2.6.0
 wheel

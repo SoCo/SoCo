@@ -221,9 +221,11 @@ class MetadataDictBase(object):
         """Return item from metadata in case of unknown attribute"""
         try:
             return self.metadata[key]
-        except KeyError:
+        except KeyError as error:
             message = 'Class {} has no attribute "{}"'
-            raise AttributeError(message.format(self.__class__.__name__, key))
+            raise AttributeError(
+                message.format(self.__class__.__name__, key)
+            ) from error
 
 
 class MusicServiceItem(MetadataDictBase):
@@ -263,7 +265,7 @@ class MusicServiceItem(MetadataDictBase):
             uri,
             music_service,
         )
-        super(MusicServiceItem, self).__init__(metadata_dict)
+        super().__init__(metadata_dict)
         self.item_id = item_id
         self.desc = desc
         self.resources = resources

@@ -252,13 +252,13 @@ class SoCo(_SocoSingletonBase):
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
-        super(SoCo, self).__init__()
+        super().__init__()
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
         try:
             socket.inet_aton(ip_address)
-        except socket.error:
-            raise ValueError("Not a valid IP address string")
+        except socket.error as error:
+            raise ValueError("Not a valid IP address string") from error
         #: The speaker's ip address
         self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
@@ -1872,13 +1872,13 @@ class SoCo(_SocoSingletonBase):
                 raise ValueError(
                     "invalid sleep_time_seconds, must be integer \
                     value between 0 and 86399 inclusive or None"
-                )
+                ) from err
             raise
-        except ValueError:
+        except ValueError as error:
             raise ValueError(
                 "invalid sleep_time_seconds, must be integer \
                 value between 0 and 86399 inclusive or None"
-            )
+            ) from error
 
     @only_on_master
     def get_sleep_timer(self):

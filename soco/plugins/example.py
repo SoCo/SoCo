@@ -20,7 +20,7 @@ class ExamplePlugin(SoCoPlugin):
         least accept a soco instance which it passes on to the base
         class when calling super's __init__.
         """
-        super(ExamplePlugin, self).__init__(soco)
+        super().__init__(soco)
         self.username = username
 
     @property
