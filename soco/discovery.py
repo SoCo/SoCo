@@ -23,7 +23,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def discover(timeout=5, include_invisible=False, interface_addr=None):
-    """ Discover Sonos zones on the local network.
+    """Discover Sonos zones on the local network.
 
     Return a set of `SoCo` instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
@@ -64,7 +64,7 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
     """
 
     def create_socket(interface_addr=None):
-        """ A helper function for creating a socket for discover purposes.
+        """A helper function for creating a socket for discover purposes.
 
         Create and return a socket with appropriate options set for multicast.
         """
@@ -100,10 +100,10 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
     if interface_addr is not None:
         try:
             address = socket.inet_aton(interface_addr)
-        except socket.error:
+        except socket.error as e:
             raise ValueError(
                 "{0} is not a valid IP address string".format(interface_addr)
-            )
+            ) from e
         _sockets.append(create_socket(interface_addr))
         _LOG.info("Sending discovery packets on default interface")
     else:

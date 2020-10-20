@@ -124,7 +124,7 @@ class TestVolume(object):
         assert soco.volume == 0
 
     def test_set_0(self):
-        """ Test whether the volume can be set to 0. Regression test for:
+        """Test whether the volume can be set to 0. Regression test for:
         https://github.com/rahims/soco/issues/29
         """
 
@@ -241,7 +241,7 @@ class TestGetCurrentTransportInfo(object):
     )
 
     def test(self, soco):
-        """ Test if the return value is a dictionary that contains the keys:
+        """Test if the return value is a dictionary that contains the keys:
         current_transport_status, current_transport_state,
         current_transport_speed and that values have been found for all keys,
         i.e. they are not None.
@@ -321,7 +321,7 @@ class TestGetCurrentTrackInfo(object):
     )
 
     def test_get(self, soco):
-        """ Test is the return value is a dictinary and contains the following
+        """Test is the return value is a dictinary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position.
         """
@@ -348,7 +348,7 @@ class TestGetSpeakerInfo(object):
     )
 
     def test(self, soco):
-        """ Test if the return value is a dictionary that contains the keys:
+        """Test if the return value is a dictionary that contains the keys:
         zone_name, zone_icon, uid, serial_number, software_version,
         hardware_version, mac_address
         and that values have been found for all keys, i.e. they are not None.
@@ -372,7 +372,7 @@ class TestGetQueue(object):
     )
 
     def test_get(self, soco):
-        """ Test is return value is a list of DidlMusicTracks and if each of
+        """Test is return value is a list of DidlMusicTracks and if each of
         the objects contain the attributes: album, creator, resources,
         album_art_uri and title.
         """
@@ -573,7 +573,7 @@ class TestReorderSonosPlaylist(object):
 
     def test_swap_first_two_items(self, soco):
         """Test a use case in doc string. Swapping the positions of the first
-            two tracks in the Sonos playlist."""
+        two tracks in the Sonos playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = [
             0,
@@ -631,7 +631,9 @@ class TestReorderSonosPlaylist(object):
         """Test removing first track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = [0] + list(range(num_tracks - 1))  # [0, 0, 1, ..., n-1]
-        new_pos = [None,] + list(range(num_tracks - 1))  # [None, 0, ..., n-1]
+        new_pos = [None,] + list(
+            range(num_tracks - 1)
+        )  # [None, 0, ..., n-1]
         args = {
             "sonos_playlist": test_playlist.item_id,
             "tracks": tracks,

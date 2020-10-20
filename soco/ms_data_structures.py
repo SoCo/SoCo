@@ -52,7 +52,7 @@ class MusicServiceItem(object):
     required_fields = None
 
     def __init__(self, **kwargs):
-        super(MusicServiceItem, self).__init__()
+        super().__init__()
         self.content = kwargs
 
     @classmethod
@@ -263,15 +263,19 @@ class MusicServiceItem(object):
         if self.parent_id:
             item_attrib["parentID"] = self.parent_id
         item = XML.SubElement(
-            xml, "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item", item_attrib,
+            xml,
+            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}item",
+            item_attrib,
         )
 
         # Add title and class
         XML.SubElement(
-            item, "{http://purl.org/dc/elements/1.1/}title",
+            item,
+            "{http://purl.org/dc/elements/1.1/}title",
         ).text = self.title
         XML.SubElement(
-            item, "{urn:schemas-upnp-org:metadata-1-0/upnp/}class",
+            item,
+            "{urn:schemas-upnp-org:metadata-1-0/upnp/}class",
         ).text = self.item_class
         # Add the desc element
         desc_attrib = {
@@ -279,7 +283,9 @@ class MusicServiceItem(object):
             "nameSpace": "urn:schemas-rinconnetworks-com:metadata-1-0/",
         }
         desc = XML.SubElement(
-            item, "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}desc", desc_attrib,
+            item,
+            "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}desc",
+            desc_attrib,
         )
         desc.text = self.content["description"]
 
@@ -369,7 +375,7 @@ class MSTrack(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSTrack, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def album(self):
@@ -435,7 +441,7 @@ class MSAlbum(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSAlbum, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def artist(self):
@@ -488,7 +494,7 @@ class MSAlbumList(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSAlbumList, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -537,7 +543,7 @@ class MSPlaylist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSPlaylist, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -575,7 +581,7 @@ class MSArtistTracklist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSArtistTracklist, self).__init__(**content)
+        super().__init__(**content)
 
     @property
     def uri(self):
@@ -614,7 +620,7 @@ class MSArtist(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSArtist, self).__init__(**content)
+        super().__init__(**content)
 
 
 class MSFavorites(MusicServiceItem):
@@ -643,7 +649,7 @@ class MSFavorites(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSFavorites, self).__init__(**content)
+        super().__init__(**content)
 
 
 class MSCollection(MusicServiceItem):
@@ -672,7 +678,7 @@ class MSCollection(MusicServiceItem):
             "service_id": service_id,
         }
         content.update(kwargs)
-        super(MSCollection, self).__init__(**content)
+        super().__init__(**content)
 
 
 MS_TYPE_TO_CLASS = {

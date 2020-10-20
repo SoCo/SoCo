@@ -155,7 +155,7 @@ class Wimp(SoCoPlugin):
             -jeg-ikke-logge-p%C3%A5-WiMP-med-min-Sonos-n%C3%A5r-jeg-har-et
             -gyldigt-abonnement->`_ (In Danish)
         """
-        super(Wimp, self).__init__(soco)
+        super().__init__(soco)
 
         # Instantiate variables
         self._url = "http://client.wimpmusic.com/sonos/services/Sonos"

@@ -30,7 +30,7 @@ class Account(object):
     _all_accounts = weakref.WeakValueDictionary()
 
     def __init__(self):
-        super(Account, self).__init__()
+        super().__init__()
         #: str: A unique identifier for the music service to which this
         #: account relates, eg ``'2311'`` for Spotify.
         self.service_type = ""

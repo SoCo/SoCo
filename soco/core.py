@@ -252,13 +252,13 @@ class SoCo(_SocoSingletonBase):
     def __init__(self, ip_address):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
-        super(SoCo, self).__init__()
+        super().__init__()
         # Check if ip_address is a valid IPv4 representation.
         # Sonos does not (yet) support IPv6
         try:
             socket.inet_aton(ip_address)
-        except socket.error:
-            raise ValueError("Not a valid IP address string")
+        except socket.error as error:
+            raise ValueError("Not a valid IP address string") from error
         #: The speaker's ip address
         self.ip_address = ip_address
         self.speaker_info = {}  # Stores information about the current speaker
@@ -422,7 +422,11 @@ class SoCo(_SocoSingletonBase):
             repeat.
 
         """
-        result = self.avTransport.GetTransportSettings([("InstanceID", 0),])
+        result = self.avTransport.GetTransportSettings(
+            [
+                ("InstanceID", 0),
+            ]
+        )
         return result["PlayMode"]
 
     @play_mode.setter
@@ -442,7 +446,11 @@ class SoCo(_SocoSingletonBase):
         True if enabled, False otherwise
         """
 
-        response = self.avTransport.GetCrossfadeMode([("InstanceID", 0),])
+        response = self.avTransport.GetCrossfadeMode(
+            [
+                ("InstanceID", 0),
+            ]
+        )
         cross_fade_state = response["CrossfadeMode"]
         return bool(int(cross_fade_state))
 
@@ -724,7 +732,10 @@ class SoCo(_SocoSingletonBase):
         """
 
         response = self.renderingControl.GetVolume(
-            [("InstanceID", 0), ("Channel", "Master"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "Master"),
+            ]
         )
         volume = response["CurrentVolume"]
         return int(volume)
@@ -746,7 +757,10 @@ class SoCo(_SocoSingletonBase):
         """
 
         response = self.renderingControl.GetBass(
-            [("InstanceID", 0), ("Channel", "Master"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "Master"),
+            ]
         )
         bass = response["CurrentBass"]
         return int(bass)
@@ -766,7 +780,10 @@ class SoCo(_SocoSingletonBase):
         """
 
         response = self.renderingControl.GetTreble(
-            [("InstanceID", 0), ("Channel", "Master"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "Master"),
+            ]
         )
         treble = response["CurrentTreble"]
         return int(treble)
@@ -789,7 +806,10 @@ class SoCo(_SocoSingletonBase):
 
         """
         response = self.renderingControl.GetLoudness(
-            [("InstanceID", 0), ("Channel", "Master"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "Master"),
+            ]
         )
         loudness = response["CurrentLoudness"]
         return bool(int(loudness))
@@ -819,10 +839,16 @@ class SoCo(_SocoSingletonBase):
         """
 
         response_lf = self.renderingControl.GetVolume(
-            [("InstanceID", 0), ("Channel", "LF"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "LF"),
+            ]
         )
         response_rf = self.renderingControl.GetVolume(
-            [("InstanceID", 0), ("Channel", "RF"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "RF"),
+            ]
         )
         volume_lf = response_lf["CurrentVolume"]
         volume_rf = response_rf["CurrentVolume"]
@@ -1153,7 +1179,7 @@ class SoCo(_SocoSingletonBase):
         )
 
     def switch_to_line_in(self, source=None):
-        """ Switch the speaker's input to line-in.
+        """Switch the speaker's input to line-in.
 
         Args:
             source (SoCo): The speaker whose line-in should be played.
@@ -1226,7 +1252,9 @@ class SoCo(_SocoSingletonBase):
         """Switch on/off the speaker's status light."""
         led_state = "On" if led_on else "Off"
         self.deviceProperties.SetLEDState(
-            [("DesiredLEDState", led_state),]
+            [
+                ("DesiredLEDState", led_state),
+            ]
         )
 
     def get_current_track_info(self):
@@ -1402,7 +1430,11 @@ class SoCo(_SocoSingletonBase):
         This allows us to know if speaker is playing or not. Don't know other
         states of CurrentTransportStatus and CurrentSpeed.
         """
-        response = self.avTransport.GetTransportInfo([("InstanceID", 0),])
+        response = self.avTransport.GetTransportInfo(
+            [
+                ("InstanceID", 0),
+            ]
+        )
 
         playstate = {
             "current_transport_status": "",
@@ -1582,14 +1614,20 @@ class SoCo(_SocoSingletonBase):
         updid = "0"
         objid = "Q:0/" + str(index + 1)
         self.avTransport.RemoveTrackFromQueue(
-            [("InstanceID", 0), ("ObjectID", objid), ("UpdateID", updid),]
+            [
+                ("InstanceID", 0),
+                ("ObjectID", objid),
+                ("UpdateID", updid),
+            ]
         )
 
     @only_on_master
     def clear_queue(self):
         """Remove all tracks from the queue."""
         self.avTransport.RemoveAllTracksFromQueue(
-            [("InstanceID", 0),]
+            [
+                ("InstanceID", 0),
+            ]
         )
 
     @deprecated("0.13", "soco.music_library.get_favorite_radio_shows", "0.15")
@@ -1640,7 +1678,7 @@ class SoCo(_SocoSingletonBase):
         return self.__get_favorites(SONOS_FAVORITES, start, max_items)
 
     def __get_favorites(self, favorite_type, start=0, max_items=100):
-        """ Helper method for `get_favorite_radio_*` methods.
+        """Helper method for `get_favorite_radio_*` methods.
 
         Args:
             favorite_type (str): Specify either `RADIO_STATIONS` or
@@ -1824,20 +1862,23 @@ class SoCo(_SocoSingletonBase):
             else:
                 sleep_time = format(datetime.timedelta(seconds=int(sleep_time_seconds)))
             self.avTransport.ConfigureSleepTimer(
-                [("InstanceID", 0), ("NewSleepTimerDuration", sleep_time),]
+                [
+                    ("InstanceID", 0),
+                    ("NewSleepTimerDuration", sleep_time),
+                ]
             )
         except SoCoUPnPException as err:
             if "Error 402 received" in str(err):
                 raise ValueError(
                     "invalid sleep_time_seconds, must be integer \
                     value between 0 and 86399 inclusive or None"
-                )
+                ) from err
             raise
-        except ValueError:
+        except ValueError as error:
             raise ValueError(
                 "invalid sleep_time_seconds, must be integer \
                 value between 0 and 86399 inclusive or None"
-            )
+            ) from error
 
     @only_on_master
     def get_sleep_timer(self):
@@ -1847,7 +1888,11 @@ class SoCo(_SocoSingletonBase):
             int or NoneType: Number of seconds left in timer. If there is no
                 sleep timer currently set it will return None.
         """
-        resp = self.avTransport.GetRemainingSleepTimerDuration([("InstanceID", 0),])
+        resp = self.avTransport.GetRemainingSleepTimerDuration(
+            [
+                ("InstanceID", 0),
+            ]
+        )
         if resp["RemainingSleepTimerDuration"]:
             times = resp["RemainingSleepTimerDuration"].split(":")
             return int(times[0]) * 3600 + int(times[1]) * 60 + int(times[2])
