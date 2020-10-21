@@ -22,7 +22,13 @@ _LOG = logging.getLogger(__name__)
 # pylint: disable=too-many-locals, too-many-branches
 
 
-def discover(timeout=5, include_invisible=False, interface_addr=None):
+def discover(
+    timeout=5,
+    include_invisible=False,
+    interface_addr=None,
+    allow_network_scan=False,
+    min_netmask=24,
+):
     """Discover Sonos zones on the local network.
 
     Return a set of `SoCo` instances for each zone found.
@@ -43,6 +49,12 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
             the system default interface for UDP multicast messages will be
             used. This is probably what you want to happen. Defaults to
             `None`.
+        allow_network_scan (bool, optional): If normal discovery fails, fall
+            back to a scan of the attached network(s) to detect Sonos
+            devices.
+        min_netmask (int): The minimum number of netmask bits. Used to
+            constrain the network search space when network scanning is
+            used.
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
             `None`.
@@ -193,14 +205,27 @@ def discover(timeout=5, include_invisible=False, interface_addr=None):
                         return zone.all_zones
                     else:
                         return zone.visible_zones
+        elif allow_network_scan:
+            _LOG.info("Falling back to network scan discovery")
+            return scan_network(
+                min_netmask=min_netmask, include_invisible=include_invisible
+            )
 
 
-def any_soco():
+def any_soco(allow_network_scan=False, min_netmask=24):
     """Return any visible soco device, for when it doesn't matter which.
 
     Try to obtain an existing instance, or use `discover` if necessary.
     Note that this assumes that the existing instance has not left
     the network.
+
+    Args:
+        allow_network_scan (bool, optional): If normal discovery fails, fall
+            back to a scan of the attached network(s) to detect Sonos
+            devices.
+        min_netmask (int): The minimum number of netmask bits. Used to
+            constrain the network search space when network scanning is
+            used.
 
     Returns:
         SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set,
@@ -218,23 +243,31 @@ def any_soco():
             d for d in cls._instances[cls._class_group].values() if d.is_visible
         )
     except (KeyError, StopIteration):
-        devices = discover()
+        devices = discover(
+            allow_network_scan=allow_network_scan, min_netmask=min_netmask
+        )
         return None if devices is None else devices.pop()
 
     return device
 
 
-def by_name(name):
+def by_name(name, allow_network_scan=False, min_netmask=24):
     """Return a device by name.
 
     Args:
         name (str): The name of the device to return.
+        allow_network_scan (bool, optional): If normal discovery fails, fall
+            back to a scan of the attached network(s) to detect Sonos
+            devices.
+        min_netmask (int): The minimum number of netmask bits. Used to
+            constrain the network search space when network scanning is
+            used.
 
     Returns:
         :class:`~.SoCo`: The first device encountered among all zone with the
             given player name. If none are found `None` is returned.
     """
-    devices = discover()
+    devices = discover(allow_network_scan=allow_network_scan, min_netmask=min_netmask)
     if devices is None:
         return None
 
@@ -244,7 +277,7 @@ def by_name(name):
     return None
 
 
-def scan_network(max_threads=256, timeout=3.0, min_netmask=22, include_invisible=False):
+def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible=False):
     """Scan all attached networks for Sonos devices.
 
     Scans the IPv4 network attached to each interface to check for network devices
@@ -279,7 +312,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=22, include_invisible
         except ValueError:
             return False
 
-    def find_ipv4_networks(min_netmask=22):
+    def find_ipv4_networks(min_netmask=24):
         """Helper function to return a set of IPv4 networks to which
         this node is attached.
 
