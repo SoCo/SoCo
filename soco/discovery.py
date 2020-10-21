@@ -347,19 +347,34 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         _socket.settimeout(timeout)
         return not bool(_socket.connect_ex((ip_address, port)))
 
+    def is_sonos(ip_address):
+        """Helper function to check if this is a Sonos device"""
+        try:
+            # Try getting a device property
+            _ = config.SOCO_CLASS(ip_address).is_visible
+            return True
+        # The exception is unimportant
+        # pylint: disable=bare-except
+        except:  # noqa: E722
+            return False
+
     def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
         """Helper function worker thread to take IP addresses off a list and
-        test whether there is a device with port 1400 open at that IP address.
+        test whether there is (1) a device with port 1400 open at that IP
+        address, then (2) check the device is a Sonos device.
         Once a there is a hit, the list is cleared to prevent any further
         checking of addresses by any thread.
         """
         while len(ip_list) > 0:
-            ip_addr = ip_list.pop()
-            if check_ip_and_port(str(ip_addr), 1400, socket_timeout):
-                _LOG.info("Found open port 1400 at IP '%s'", str(ip_addr))
-                sonos_ip_addresses.append(str(ip_addr))
-                # Clearing the list will eliminate further work by all threads
-                ip_list.clear()
+            ip_address = str(ip_list.pop())
+            if check_ip_and_port(ip_address, 1400, socket_timeout):
+                _LOG.info("Found open port 1400 at IP '%s'", ip_address)
+                if is_sonos(ip_address):
+                    _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
+                    sonos_ip_addresses.append(ip_address)
+                    # Clear the list to eliminate further searching by
+                    # all threads
+                    ip_list.clear()
 
     # Generate the set of IPs to check
     ip_set = set()
@@ -382,30 +397,26 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
             thread_list.append(thread)
             thread.start()
         except RuntimeError:
-            # We probably can't create any more threads. Continue without
-            # creating additional threads.
-            _LOG.info("Runtime error creating threads. Continuing")
+            # We probably can't create any more threads
+            # Cease thread creation and continue
+            _LOG.info("Runtime error creating threads ... continue")
             break
 
     # Wait for all threads to finish
     for thread in thread_list:
         thread.join()
+    _LOG.info("All %d scanner threads terminated", len(thread_list))
 
-    # Pick the first IP address in the list to create a SoCo instance, and
-    # use it to find the remaining zones
-    for ip_address in sonos_ip_addresses:
-        try:
-            zone = config.SOCO_CLASS(ip_address)
-            _LOG.info("Found Sonos device at IP '%s'", ip_address)
-            if include_invisible:
-                return zone.all_zones
-            else:
-                return zone.visible_zones
-        # pylint: disable=bare-except
-        except:  # noqa: E722
-            # Although port 1400 is open, this is probably not a Sonos device.
-            # I really do want to catch all exceptions here, then try the next
-            # address if there is one.
-            _LOG.info("No Sonos device at IP '%s'", ip_address)
-            continue
-    return None
+    # No Sonos devices found
+    if len(sonos_ip_addresses) == 0:
+        return None
+
+    # Use the first IP address in the list to create a SoCo instance, and
+    # find the remaining zones
+    zone = config.SOCO_CLASS(sonos_ip_addresses[0])
+    if include_invisible:
+        _LOG.info("Returning all Sonos zones: %s", str(zone.all_zones))
+        return zone.all_zones
+    else:
+        _LOG.info("Returning visible Sonos zones: %s", str(zone.visible_zones))
+        return zone.visible_zones
