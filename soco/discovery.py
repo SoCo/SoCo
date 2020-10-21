@@ -52,7 +52,7 @@ def discover(
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        min_netmask (int): The minimum number of netmask bits. Used to
+        min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
     Returns:
@@ -223,7 +223,7 @@ def any_soco(allow_network_scan=False, min_netmask=24):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        min_netmask (int): The minimum number of netmask bits. Used to
+        min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
 
@@ -259,7 +259,7 @@ def by_name(name, allow_network_scan=False, min_netmask=24):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        min_netmask (int): The minimum number of netmask bits. Used to
+        min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
 
@@ -291,13 +291,13 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
     host is attached.
 
     Args:
-        max_threads (int): The maximum number of threads to use when scanning the
+        max_threads (int, optional): The maximum number of threads to use when scanning the
             network.
-        timeout (float): The network timeout in seconds to use when checking
+        timeout (float, optional): The network timeout in seconds to use when checking
             each IP address for a Sonos device
-        min_netmask (int): The minimum number of netmask bits. Used to
+        min_netmask (int, optional): The minimum number of netmask bits. Used to
                 constrain the network search space.
-        include_invisible (bool): Whether to include invisible Sonos devices in
+        include_invisible (bool, optional): Whether to include invisible Sonos devices in
             the set of devices returned.
 
     Returns:
@@ -312,7 +312,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         except ValueError:
             return False
 
-    def find_ipv4_networks(min_netmask=24):
+    def find_ipv4_networks(min_netmask):
         """Helper function to return a set of IPv4 networks to which
         this node is attached.
 
@@ -363,7 +363,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
 
     # Generate the set of IPs to check
     ip_set = set()
-    for network in find_ipv4_networks(min_netmask=min_netmask):
+    for network in find_ipv4_networks(min_netmask):
         for ip_address in network:
             ip_set.add(ip_address)
 
