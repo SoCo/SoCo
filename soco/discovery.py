@@ -277,27 +277,32 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
         except ValueError:
             return False
 
-    def find_ipv4_networks():
-        """Helper function to return a list of unique IPv4 networks to which
+    def find_ipv4_networks(min_netmask=22):
+        """Helper function to return a set of IPv4 networks to which
         this node is attached.
+
+        Args:
+            min_netmask (int): The minimum number of netmask bits. Used to
+                constrain the network search space.
+
+        Returns:
+            set: a set of attached networks.
         """
-        ipv4_net_list = []
+        ipv4_net_list = set()
         adapters = ifaddr.get_adapters()
         for adapter in adapters:
             for ip_address in adapter.ips:
                 if is_ipv4_address(ip_address.ip):
-                    # Restrict to common domestic private IP ranges and sensible
-                    # netmasks. Experimental ... assumptions need to be tested.
-                    if (
-                        ip_address.ip.startswith("192.168")
-                        or ip_address.ip.startswith("10.")
-                    ) and ip_address.network_prefix <= 24:
+                    network_ip = ipaddress.ip_network(ip_address.ip)
+                    # Restrict to private networks and exclude loopback
+                    if network_ip.is_private and not network_ip.is_loopback:
+                        # Constrain the size of network that will be searched
+                        if ip_address.network_prefix < min_netmask:
+                            ip_address.network_prefix = min_netmask
                         network = ipaddress.ip_network(
                             ip_address.ip + "/" + str(ip_address.network_prefix), False
                         )
-                        # Avoid duplicate subnets
-                        if network not in ipv4_net_list:
-                            ipv4_net_list.append(network)
+                        ipv4_net_list.add(network)
         return ipv4_net_list
 
     def check_ip_and_port(ip_address, port, timeout):
