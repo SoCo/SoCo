@@ -338,6 +338,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
                             ip_address.ip + "/" + str(ip_address.network_prefix), False
                         )
                         ipv4_net_list.add(network)
+        _LOG.info("List of networks to search: {}".format(ipv4_net_list))
         return ipv4_net_list
 
     def check_ip_and_port(ip_address, port, timeout):
@@ -355,6 +356,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         while len(ip_list) > 0:
             ip_addr = ip_list.pop()
             if check_ip_and_port(str(ip_addr), 1400, socket_timeout):
+                _LOG.info("Found open port 1400 at IP '{}'".format(str(ip_addr)))
                 sonos_ip_addresses.append(str(ip_addr))
                 # Clearing the list will eliminate further work by all threads
                 ip_list.clear()
@@ -382,6 +384,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         except RuntimeError:
             # We probably can't create any more threads. Continue without
             # creating additional threads.
+            _LOG.info("Runtime error creating threads. Continuing")
             break
 
     # Wait for all threads to finish
@@ -389,10 +392,11 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         thread.join()
 
     # Pick the first IP address in the list to create a SoCo instance, and
-    # use it to determine the remaining zones
+    # use it to find the remaining zones
     for ip_address in sonos_ip_addresses:
         try:
             zone = config.SOCO_CLASS(ip_address)
+            _LOG.info("Found Sonos device at IP '{}'".format(ip_address))
             if include_invisible:
                 return zone.all_zones
             else:
@@ -402,5 +406,6 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
             # Although port 1400 is open, this is probably not a Sonos device.
             # I really do want to catch all exceptions here, then try the next
             # address if there is one.
+            _LOG.info("No Sonos device at IP '{}'".format(ip_address))
             continue
     return None
