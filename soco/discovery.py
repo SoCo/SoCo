@@ -244,7 +244,7 @@ def by_name(name):
     return None
 
 
-def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
+def scan_network(max_threads=256, timeout=3.0, min_netmask=22, include_invisible=False):
     """Scan all attached networks for Sonos devices.
 
     Scans the IPv4 network attached to each interface to check for network devices
@@ -262,11 +262,13 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
             network.
         timeout (float): The network timeout in seconds to use when checking
             each IP address for a Sonos device
+        min_netmask (int): The minimum number of netmask bits. Used to
+                constrain the network search space.
         include_invisible (bool): Whether to include invisible Sonos devices in
             the set of devices returned.
 
     Returns:
-        set: a set of `SoCo` instances, one for each zone found, or else `None`.
+        set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
     def is_ipv4_address(ip_address):
@@ -286,7 +288,7 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
                 constrain the network search space.
 
         Returns:
-            set: a set of attached networks.
+            set: A set of attached networks.
         """
         ipv4_net_list = set()
         adapters = ifaddr.get_adapters()
@@ -314,33 +316,33 @@ def scan_network(max_threads=256, timeout=3.0, include_invisible=False):
     def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
         """Helper function worker thread to take IP addresses off a list and
         test whether there is a device with port 1400 open at that IP address.
-        Once a there is a hit, the list is cleared to eliminate any further
-        checking of addresses.
+        Once a there is a hit, the list is cleared to prevent any further
+        checking of addresses by any thread.
         """
         while len(ip_list) > 0:
-            ip_addr = ip_list.pop(0)
+            ip_addr = ip_list.pop()
             if check_ip_and_port(str(ip_addr), 1400, socket_timeout):
                 sonos_ip_addresses.append(str(ip_addr))
                 # Clearing the list will eliminate further work by all threads
                 ip_list.clear()
 
-    # Generate the list of IPs to check
-    ip_check_list = []
-    for network in find_ipv4_networks():
+    # Generate the set of IPs to check
+    ip_set = set()
+    for network in find_ipv4_networks(min_netmask=min_netmask):
         for ip_address in network:
-            ip_check_list.append(ip_address)
+            ip_set.add(ip_address)
 
     # Find IP addresses with open port 1400
     # Use threading to scan the IP range efficiently
     sonos_ip_addresses = []
     thread_list = []
-    if max_threads > len(ip_check_list):
-        max_threads = len(ip_check_list)
+    if max_threads > len(ip_set):
+        max_threads = len(ip_set)
     for _ in range(max_threads):
         try:
             thread = threading.Thread(
                 target=sonos_scan_worker_thread,
-                args=(ip_check_list, timeout, sonos_ip_addresses),
+                args=(ip_set, timeout, sonos_ip_addresses),
             )
             thread_list.append(thread)
             thread.start()
