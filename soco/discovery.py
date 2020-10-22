@@ -23,10 +23,7 @@ _LOG = logging.getLogger(__name__)
 
 
 def discover(
-    timeout=5,
-    include_invisible=False,
-    interface_addr=None,
-    **network_scan_kwargs,
+    timeout=5, include_invisible=False, interface_addr=None, **network_scan_kwargs
 ):
     """Discover Sonos zones on the local network.
 
