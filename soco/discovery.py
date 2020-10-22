@@ -277,7 +277,7 @@ def by_name(name, allow_network_scan=False, min_netmask=24):
     return None
 
 
-def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible=False):
+def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible=False):
     """Scan all attached networks for Sonos devices.
 
     Scans the IPv4 network attached to each interface to check for network devices
