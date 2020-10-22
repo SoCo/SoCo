@@ -382,8 +382,7 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
     # Generate the set of IPs to check
     ip_set = set()
     for network in find_ipv4_networks(min_netmask):
-        for ip_address in network:
-            ip_set.add(ip_address)
+        ip_set.update(network)
 
     # Find Sonos devices on the list of IPs
     # Use threading to scan the list efficiently
