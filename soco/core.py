@@ -420,6 +420,9 @@ class SoCo(_SocoSingletonBase):
             strange, I know.)
         *   ``'SHUFFLE_NOREPEAT'`` -- Turns on shuffle and turns off
             repeat.
+        *   ``'REPEAT_ONE'`` -- Turns on repeat one and turns off shuffle.
+        *   ``'SHUFFLE_REPEAT_ONE'`` -- Turns on shuffle *and* repeat one. (It's
+            strange, I know.)
 
         """
         result = self.avTransport.GetTransportSettings(
