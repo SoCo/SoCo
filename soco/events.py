@@ -232,7 +232,7 @@ class EventListener(EventListenerBase):
         # to ensure the main thread does not hang
         self._listener_thread.join(1)
         # check if join timed out and issue a warning if it did
-        if self._listener_thread.isAlive():
+        if self._listener_thread.is_alive():
             log.warning("Event Listener did not shutdown gracefully.")
 
 
