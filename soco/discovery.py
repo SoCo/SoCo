@@ -365,8 +365,11 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         Once a there is a hit, the list is cleared to prevent any further
         checking of addresses by any thread.
         """
-        while len(ip_list) > 0:
-            ip_address = str(ip_list.pop())
+        while True:
+            try:
+                ip_address = str(ip_list.pop())
+            except KeyError:
+                break
             if check_ip_and_port(ip_address, 1400, socket_timeout):
                 _LOG.info("Found open port 1400 at IP '%s'", ip_address)
                 if is_sonos(ip_address):
@@ -382,8 +385,8 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         for ip_address in network:
             ip_set.add(ip_address)
 
-    # Find IP addresses with open port 1400
-    # Use threading to scan the IP range efficiently
+    # Find Sonos devices on the list of IPs
+    # Use threading to scan the list efficiently
     sonos_ip_addresses = []
     thread_list = []
     if max_threads > len(ip_set):
@@ -414,6 +417,9 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
     # Use the first IP address in the list to create a SoCo instance, and
     # find the remaining zones
     zone = config.SOCO_CLASS(sonos_ip_addresses[0])
+    _LOG.info(
+        "Using zone '%s' (%s) to find other zones", zone.player_name, zone.ip_address
+    )
     if include_invisible:
         _LOG.info("Returning all Sonos zones: %s", str(zone.all_zones))
         return zone.all_zones
