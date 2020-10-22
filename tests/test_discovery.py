@@ -79,9 +79,11 @@ def test_by_name():
         # Test not found
         device = by_name("Living Room")
         assert device is None
-        discover_.assert_called_once_with()
+        discover_.assert_called_once_with(allow_network_scan=False)
 
         # Test found
         device = by_name("Kitchen")
         assert device is mock_to_be_found
-        discover_.assert_has_calls([call(), call()])
+        discover_.assert_has_calls(
+            [call(allow_network_scan=False), call(allow_network_scan=False)]
+        )
