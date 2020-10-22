@@ -209,11 +209,11 @@ def discover(
                     else:
                         return zone.visible_zones
         elif network_scan_kwargs.get("allow_network_scan", False):
-                _LOG.info("Falling back to network scan discovery")
-                return scan_network(
-                    include_invisible=include_invisible,
-                    **network_scan_kwargs,
-                )
+            _LOG.info("Falling back to network scan discovery")
+            return scan_network(
+                include_invisible=include_invisible,
+                **network_scan_kwargs,
+            )
 
 
 def any_soco(**network_scan_kwargs):
