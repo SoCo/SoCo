@@ -26,8 +26,7 @@ def discover(
     timeout=5,
     include_invisible=False,
     interface_addr=None,
-    allow_network_scan=False,
-    min_netmask=24,
+    **network_scan_kwargs,
 ):
     """Discover Sonos zones on the local network.
 
@@ -52,6 +51,10 @@ def discover(
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
+        max_threads (int, optional): The maximum number of threads to use for
+            a network scan.
+        scan_timeout (float, optional): The timeout to use when checking each
+            IP address.
         min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
@@ -205,14 +208,15 @@ def discover(
                         return zone.all_zones
                     else:
                         return zone.visible_zones
-        elif allow_network_scan:
-            _LOG.info("Falling back to network scan discovery")
-            return scan_network(
-                min_netmask=min_netmask, include_invisible=include_invisible
-            )
+        elif network_scan_kwargs.get("allow_network_scan", False):
+                _LOG.info("Falling back to network scan discovery")
+                return scan_network(
+                    include_invisible=include_invisible,
+                    **network_scan_kwargs,
+                )
 
 
-def any_soco(allow_network_scan=False, min_netmask=24):
+def any_soco(**network_scan_kwargs):
     """Return any visible soco device, for when it doesn't matter which.
 
     Try to obtain an existing instance, or use `discover` if necessary.
@@ -223,6 +227,10 @@ def any_soco(allow_network_scan=False, min_netmask=24):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
+        max_threads (int, optional): The maximum number of threads to use for
+            a network scan.
+        scan_timeout (float, optional): The timeout to use when checking each
+            IP address.
         min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
@@ -243,15 +251,13 @@ def any_soco(allow_network_scan=False, min_netmask=24):
             d for d in cls._instances[cls._class_group].values() if d.is_visible
         )
     except (KeyError, StopIteration):
-        devices = discover(
-            allow_network_scan=allow_network_scan, min_netmask=min_netmask
-        )
+        devices = discover(**network_scan_kwargs)
         return None if devices is None else devices.pop()
 
     return device
 
 
-def by_name(name, allow_network_scan=False, min_netmask=24):
+def by_name(name, **network_scan_kwargs):
     """Return a device by name.
 
     Args:
@@ -259,6 +265,10 @@ def by_name(name, allow_network_scan=False, min_netmask=24):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
+        max_threads (int, optional): The maximum number of threads to use for
+            a network scan.
+        scan_timeout (float, optional): The timeout to use when checking each
+            IP address.
         min_netmask (int, optional): The minimum number of netmask bits. Used to
             constrain the network search space when network scanning is
             used.
@@ -267,7 +277,7 @@ def by_name(name, allow_network_scan=False, min_netmask=24):
         :class:`~.SoCo`: The first device encountered among all zone with the
             given player name. If none are found `None` is returned.
     """
-    devices = discover(allow_network_scan=allow_network_scan, min_netmask=min_netmask)
+    devices = discover(**network_scan_kwargs)
     if devices is None:
         return None
 
@@ -277,7 +287,8 @@ def by_name(name, allow_network_scan=False, min_netmask=24):
     return None
 
 
-def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible=False):
+# pylint: disable=too-many-statements
+def scan_network(include_invisible=False, **network_scan_kwargs):
     """Scan all attached networks for Sonos devices.
 
     Scans the IPv4 network attached to each interface to check for network devices
@@ -293,8 +304,8 @@ def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible
     Args:
         max_threads (int, optional): The maximum number of threads to use when
             scanning the network.
-        timeout (float, optional): The network timeout in seconds to use when checking
-            each IP address for a Sonos device
+        scan_timeout (float, optional): The network timeout in seconds to use when
+            checking each IP address for a Sonos device
         min_netmask (int, optional): The minimum number of netmask bits. Used to
                 constrain the network search space.
         include_invisible (bool, optional): Whether to include invisible Sonos devices
@@ -335,7 +346,10 @@ def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible
                         if ifaddr_network.network_prefix < min_netmask:
                             ifaddr_network.network_prefix = min_netmask
                         network = ipaddress.ip_network(
-                            ifaddr_network.ip + "/" + str(ifaddr_network.network_prefix), False
+                            ifaddr_network.ip
+                            + "/"
+                            + str(ifaddr_network.network_prefix),
+                            False,
                         )
                         ipv4_net_list.add(network)
         _LOG.info("List of networks to search: %s", str(ipv4_net_list))
@@ -379,6 +393,11 @@ def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible
                     # all threads
                     ip_list.clear()
 
+    # Unpack network_scan_kwargs and apply defaults
+    max_threads = network_scan_kwargs.get("max_threads", 256)
+    scan_timeout = network_scan_kwargs.get("scan_timeout", 0.1)
+    min_netmask = network_scan_kwargs.get("min_netmask", 24)
+
     # Generate the set of IPs to check
     ip_set = set()
     for network in find_ipv4_networks(min_netmask):
@@ -394,7 +413,7 @@ def scan_network(max_threads=256, timeout=0.1, min_netmask=24, include_invisible
         try:
             thread = threading.Thread(
                 target=sonos_scan_worker_thread,
-                args=(ip_set, timeout, sonos_ip_addresses),
+                args=(ip_set, scan_timeout, sonos_ip_addresses),
             )
             thread_list.append(thread)
             thread.start()
