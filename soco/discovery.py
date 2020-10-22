@@ -427,6 +427,7 @@ def scan_network(include_invisible=False, **network_scan_kwargs):
 
     # No Sonos devices found
     if len(sonos_ip_addresses) == 0:
+        _LOG.info("No Sonos zones discovered")
         return None
 
     # Use the first IP address in the list to create a SoCo instance, and
@@ -436,8 +437,9 @@ def scan_network(include_invisible=False, **network_scan_kwargs):
         "Using zone '%s' (%s) to find other zones", zone.player_name, zone.ip_address
     )
     if include_invisible:
-        _LOG.info("Returning all Sonos zones: %s", str(zone.all_zones))
-        return zone.all_zones
+        zones = zone.all_zones
+        _LOG.info("Returning all Sonos zones: %s", str(zones))
     else:
-        _LOG.info("Returning visible Sonos zones: %s", str(zone.visible_zones))
-        return zone.visible_zones
+        zones = zone.visible_zones
+        _LOG.info("Returning visible Sonos zones: %s", str(zones))
+    return zones
