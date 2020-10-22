@@ -326,16 +326,16 @@ def scan_network(max_threads=256, timeout=3.0, min_netmask=24, include_invisible
         ipv4_net_list = set()
         adapters = ifaddr.get_adapters()
         for adapter in adapters:
-            for ip_address in adapter.ips:
-                if is_ipv4_address(ip_address.ip):
-                    network_ip = ipaddress.ip_network(ip_address.ip)
+            for ifaddr_network in adapter.ips:
+                if is_ipv4_address(ifaddr_network.ip):
+                    ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
                     # Restrict to private networks and exclude loopback
-                    if network_ip.is_private and not network_ip.is_loopback:
+                    if ipv4_network.is_private and not ipv4_network.is_loopback:
                         # Constrain the size of network that will be searched
-                        if ip_address.network_prefix < min_netmask:
-                            ip_address.network_prefix = min_netmask
+                        if ifaddr_network.network_prefix < min_netmask:
+                            ifaddr_network.network_prefix = min_netmask
                         network = ipaddress.ip_network(
-                            ip_address.ip + "/" + str(ip_address.network_prefix), False
+                            ifaddr_network.ip + "/" + str(ifaddr_network.network_prefix), False
                         )
                         ipv4_net_list.add(network)
         _LOG.info("List of networks to search: %s", str(ipv4_net_list))
