@@ -3,12 +3,21 @@ from __future__ import unicode_literals
 
 import socket
 import select
+import ipaddress
+import ifaddr
+
+from collections import OrderedDict
 
 from mock import patch, MagicMock as Mock, PropertyMock, call
 
 from soco import discover
 from soco import config
-from soco.discovery import any_soco, by_name
+from soco.discovery import (
+    any_soco,
+    by_name,
+    _is_ipv4_address,
+    _find_ipv4_networks,
+)
 
 IP_ADDR = "192.168.1.101"
 TIMEOUT = 5
@@ -87,3 +96,40 @@ def test_by_name():
         discover_.assert_has_calls(
             [call(allow_network_scan=False), call(allow_network_scan=False)]
         )
+
+
+def test__is_ipv4_address():
+    assert _is_ipv4_address("192.168.0.1") is True
+    assert _is_ipv4_address("192.168.0") is False
+    assert _is_ipv4_address("2001:db8:0:1:1:1:1:1") is False
+
+
+def test__find_ipv4_networks(monkeypatch):
+    # Set up the response from ifaddr.get_adapters()
+    adapters = OrderedDict()
+    ips = []
+    # Create a variety of networks
+    # Private IP range
+    ips.append(ifaddr.IP("192.168.0.1", 24, "private-24"))
+    # Private IP range: test constraints
+    ips.append(ifaddr.IP("192.168.1.1", 16, "private-16"))
+    # Public IP range
+    ips.append(ifaddr.IP("15.100.100.100", 8, "public"))
+    # Loopback range
+    ips.append(ifaddr.IP("127.0.0.1", 24, "loopback"))
+    index = 1
+    for ip in ips:
+        adapters[ip.nice_name] = ifaddr._shared.Adapter(
+            ip.nice_name, ip.nice_name, [ip], index=index
+        )
+        index += 1
+    monkeypatch.setattr("ifaddr.get_adapters", Mock(return_value=adapters.values()))
+
+    # Check that we get the networks we expect; test different min_netmask values
+    assert ipaddress.ip_network("192.168.0.55/24", False) in _find_ipv4_networks(24)
+    assert ipaddress.ip_network("192.168.1.1/24", False) in _find_ipv4_networks(24)
+    assert ipaddress.ip_network("192.168.1.1/16", False) not in _find_ipv4_networks(24)
+    assert ipaddress.ip_network("192.168.1.1/16", False) in _find_ipv4_networks(16)
+    assert ipaddress.ip_network("192.168.1.1/16", False) in _find_ipv4_networks(0)
+    assert ipaddress.ip_network("15.100.100.100/8", False) not in _find_ipv4_networks(8)
+    assert ipaddress.ip_network("127.0.0.1/24", False) not in _find_ipv4_networks(24)

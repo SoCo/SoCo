@@ -54,7 +54,7 @@ def discover(
             devices.
         **network_scan_kwargs: Arguments for the
             :function:`scan_network` function. See its docstring for
-            documentation.
+            details.
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
             `None`.
@@ -276,6 +276,64 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
+def _is_ipv4_address(ip_address):
+    """Helper function to test for an IPv4 address.
+
+    Args:
+        ip_address (str): The IP address to be tested, e.g.,
+            "192.168.1.35".
+
+    Returns:
+        bool: True if this is a well-formed IP address.
+    """
+    try:
+        ipaddress.IPv4Network(ip_address)
+        return True
+    except ValueError:
+        return False
+
+
+def _find_ipv4_networks(min_netmask):
+    """Discover attached IP networks.
+
+    Helper function to return a set of IPv4 networks to which
+    this node is attached. Excludes non-private and loopback
+    networks.
+
+    Args:
+        min_netmask(int): The minimum netmask to be used.
+
+    Returns:
+        set: A set of `ipaddress.ip_network` instances.
+    """
+
+    ipv4_net_list = set()
+    adapters = ifaddr.get_adapters()
+    for adapter in adapters:
+        for ifaddr_network in adapter.ips:
+            if _is_ipv4_address(ifaddr_network.ip):
+                ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
+                # Restrict to private networks and exclude loopback
+                if ipv4_network.is_private and not ipv4_network.is_loopback:
+                    # Constrain the size of network that will be searched
+                    netmask = ifaddr_network.network_prefix
+                    if netmask < min_netmask:
+                        _LOG.debug(
+                            "%s: Constraining netmask from %d to %d",
+                            ifaddr_network.ip,
+                            ifaddr_network.network_prefix,
+                            min_netmask,
+                        )
+                        netmask = min_netmask
+                    network = ipaddress.ip_network(
+                        ifaddr_network.ip + "/" + str(netmask),
+                        False,
+                    )
+                    ipv4_net_list.add(network)
+    _LOG.info("Set of networks to search: %s", str(ipv4_net_list))
+    return ipv4_net_list
+
+
 # pylint: disable=too-many-statements
 def scan_network(
     include_invisible=False, max_threads=256, scan_timeout=0.1, min_netmask=24
@@ -298,7 +356,7 @@ def scan_network(
         max_threads (int, optional): The maximum number of threads to use when
             scanning the network.
         scan_timeout (float, optional): The network timeout in seconds to use when
-            checking each IP address for a Sonos device
+            checking each IP address for a Sonos device.
         min_netmask (int, optional): The minimum number of netmask bits. Used to
                 constrain the network search space.
 
@@ -306,54 +364,16 @@ def scan_network(
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def is_ipv4_address(ip_address):
-        """Helper function to test for an IPv4 address."""
-        try:
-            ipaddress.IPv4Network(ip_address)
-            return True
-        except ValueError:
-            return False
-
-    def find_ipv4_networks(min_netmask):
-        """Helper function to return a set of IPv4 networks to which
-        this node is attached.
-
-        Args:
-            min_netmask (int): The minimum number of netmask bits. Used to
-                constrain the network search space.
-
-        Returns:
-            set: A set of attached networks.
-        """
-        ipv4_net_list = set()
-        adapters = ifaddr.get_adapters()
-        for adapter in adapters:
-            for ifaddr_network in adapter.ips:
-                if is_ipv4_address(ifaddr_network.ip):
-                    ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
-                    # Restrict to private networks and exclude loopback
-                    if ipv4_network.is_private and not ipv4_network.is_loopback:
-                        # Constrain the size of network that will be searched
-                        if ifaddr_network.network_prefix < min_netmask:
-                            ifaddr_network.network_prefix = min_netmask
-                        network = ipaddress.ip_network(
-                            ifaddr_network.ip
-                            + "/"
-                            + str(ifaddr_network.network_prefix),
-                            False,
-                        )
-                        ipv4_net_list.add(network)
-        _LOG.info("List of networks to search: %s", str(ipv4_net_list))
-        return ipv4_net_list
-
     def check_ip_and_port(ip_address, port, timeout):
         """Helper function to check if a port is open"""
+
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.settimeout(timeout)
         return not bool(_socket.connect_ex((ip_address, port)))
 
     def is_sonos(ip_address):
         """Helper function to check if this is a Sonos device"""
+
         try:
             # Try getting a device property
             _ = config.SOCO_CLASS(ip_address).is_visible
@@ -370,6 +390,7 @@ def scan_network(
         Once a there is a hit, the list is cleared to prevent any further
         checking of addresses by any thread.
         """
+
         while True:
             try:
                 ip_address = str(ip_list.pop())
@@ -386,8 +407,8 @@ def scan_network(
 
     # Generate the set of IPs to check
     ip_set = set()
-    for network in find_ipv4_networks(min_netmask):
-        ip_set.update(network)
+    for network in _find_ipv4_networks(min_netmask):
+        ip_set.update(set(network))
 
     # Find Sonos devices on the list of IPs
     # Use threading to scan the list efficiently
@@ -396,18 +417,22 @@ def scan_network(
     if max_threads > len(ip_set):
         max_threads = len(ip_set)
     for _ in range(max_threads):
+        thread = threading.Thread(
+            target=sonos_scan_worker_thread,
+            args=(ip_set, scan_timeout, sonos_ip_addresses),
+        )
         try:
-            thread = threading.Thread(
-                target=sonos_scan_worker_thread,
-                args=(ip_set, scan_timeout, sonos_ip_addresses),
-            )
-            thread_list.append(thread)
             thread.start()
         except RuntimeError:
-            # We probably can't create any more threads
+            # We probably can't start any more threads
             # Cease thread creation and continue
-            _LOG.info("Runtime error creating threads ... continue")
+            _LOG.info(
+                "Runtime error starting thread number %d ... continue",
+                len(thread_list) + 1,
+            )
             break
+        thread_list.append(thread)
+    _LOG.info("Created %d scanner threads", len(thread_list))
 
     # Wait for all threads to finish
     for thread in thread_list:
