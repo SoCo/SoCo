@@ -112,8 +112,8 @@ class ZoneGroup(object):
     def label(self):
         """str: A description of the group.
 
-            >>> device.group.label
-            'Kitchen, Living Room'
+        >>> device.group.label
+        'Kitchen, Living Room'
         """
         group_names = sorted([m.player_name for m in self.members])
         return ", ".join(group_names)

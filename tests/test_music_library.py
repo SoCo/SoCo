@@ -266,7 +266,9 @@ class TestMusicLibrary:
         moco.contentDirectory.RefreshShareIndex.return_value = True
         assert moco.music_library.start_library_update()
         moco.contentDirectory.RefreshShareIndex.assert_called_with(
-            [("AlbumArtistDisplayOption", ""),]
+            [
+                ("AlbumArtistDisplayOption", ""),
+            ]
         )
 
     def test_soco_list_library_shares(self, moco):

@@ -251,7 +251,7 @@ class Service(object):
             >>> s = Service(device)
             >>> print(s.wrap_arguments([('InstanceID', 0), ('Speed', 1)]))
             <InstanceID>0</InstanceID><Speed>1</Speed>'
-            """
+        """
         if args is None:
             args = []
 
@@ -762,9 +762,11 @@ class AlarmClock(Service):
     """Sonos alarm service, for setting and getting time and alarms."""
 
     def __init__(self, soco):
-        super(AlarmClock, self).__init__(soco)
+        super().__init__(soco)
         self.UPNP_ERRORS.update(
-            {801: "Already an alarm for this time",}
+            {
+                801: "Already an alarm for this time",
+            }
         )
 
 
@@ -814,7 +816,7 @@ class ContentDirectory(Service):
     browsing, searching and listing available music."""
 
     def __init__(self, soco):
-        super(ContentDirectory, self).__init__(soco)
+        super().__init__(soco)
         self.control_url = "/MediaServer/ContentDirectory/Control"
         self.event_subscription_url = "/MediaServer/ContentDirectory/Event"
         # For error codes, see table 2.7.16 in
@@ -849,7 +851,7 @@ class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
     """UPnP standard connection manager service for the media server."""
 
     def __init__(self, soco):
-        super(MS_ConnectionManager, self).__init__(soco)
+        super().__init__(soco)
         self.service_type = "ConnectionManager"
         self.control_url = "/MediaServer/ConnectionManager/Control"
         self.event_subscription_url = "/MediaServer/ConnectionManager/Event"
@@ -861,7 +863,7 @@ class RenderingControl(Service):
     playback rendering, eg bass, treble, volume and EQ."""
 
     def __init__(self, soco):
-        super(RenderingControl, self).__init__(soco)
+        super().__init__(soco)
         self.control_url = "/MediaRenderer/RenderingControl/Control"
         self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
         self.DEFAULT_ARGS.update({"InstanceID": 0})
@@ -872,7 +874,7 @@ class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
     """UPnP standard connection manager service for the media renderer."""
 
     def __init__(self, soco):
-        super(MR_ConnectionManager, self).__init__(soco)
+        super().__init__(soco)
         self.service_type = "ConnectionManager"
         self.control_url = "/MediaRenderer/ConnectionManager/Control"
         self.event_subscription_url = "/MediaRenderer/ConnectionManager/Event"
@@ -884,7 +886,7 @@ class AVTransport(Service):
     management, eg play, stop, seek, playlists etc."""
 
     def __init__(self, soco):
-        super(AVTransport, self).__init__(soco)
+        super().__init__(soco)
         self.control_url = "/MediaRenderer/AVTransport/Control"
         self.event_subscription_url = "/MediaRenderer/AVTransport/Event"
         # For error codes, see
@@ -923,7 +925,7 @@ class Queue(Service):
     queues etc."""
 
     def __init__(self, soco):
-        super(Queue, self).__init__(soco)
+        super().__init__(soco)
         self.control_url = "/MediaRenderer/Queue/Control"
         self.event_subscription_url = "/MediaRenderer/Queue/Event"
 
@@ -934,7 +936,7 @@ class GroupRenderingControl(Service):
     volume etc."""
 
     def __init__(self, soco):
-        super(GroupRenderingControl, self).__init__(soco)
+        super().__init__(soco)
         self.control_url = "/MediaRenderer/GroupRenderingControl/Control"
         self.event_subscription_url = "/MediaRenderer/GroupRenderingControl/Event"
         self.DEFAULT_ARGS.update({"InstanceID": 0})

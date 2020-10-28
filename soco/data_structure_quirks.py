@@ -40,4 +40,6 @@ def apply_resource_quirks(resource):
         )
         resource.set("protocolInfo", protocol_info)
 
+        if not resource.text:
+            resource.text = ""
     return resource

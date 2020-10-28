@@ -459,7 +459,8 @@ class TestSoco:
         # restore original value
         moco_zgs.speaker_info = old
         mocr.get.assert_called_once_with(
-            "http://" + IP_ADDR + ":1400/xml/device_description.xml", timeout=None,
+            "http://" + IP_ADDR + ":1400/xml/device_description.xml",
+            timeout=None,
         )
         should = {
             "zone_name": "Room",
@@ -516,7 +517,8 @@ class TestSoco:
         # restore original value
         moco_zgs.speaker_info = old
         mocr.get.assert_called_once_with(
-            "http://" + IP_ADDR + ":1400/xml/device_description.xml", timeout=None,
+            "http://" + IP_ADDR + ":1400/xml/device_description.xml",
+            timeout=None,
         )
         # get_speaker_info only updates internal speaker_info and does not
         # replace it
@@ -1155,7 +1157,10 @@ class TestRenderingControl:
             [("InstanceID", 0), ("Channel", "LF")]
         )
         moco.renderingControl.GetVolume.assert_any_call(
-            [("InstanceID", 0), ("Channel", "RF"),]
+            [
+                ("InstanceID", 0),
+                ("Channel", "RF"),
+            ]
         )
         # SetVolume is called twice, once for each of the left
         # and right channels
@@ -1208,8 +1213,7 @@ class TestDeviceProperties:
         )
 
     def test_separate_stereo_pair(self, moco):
-        """Tests for a well-formed call to separate a stereo pair.
-        """
+        """Tests for a well-formed call to separate a stereo pair."""
         moco.separate_stereo_pair()
         moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
