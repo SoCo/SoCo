@@ -40,15 +40,15 @@ def parse_event_xml(xml_event):
 
     Returns:
         dict: A dict with keys representing the evented variables. The
-            relevant value will usually be a string representation of the
-            variable's value, but may on occasion be:
+        relevant value will usually be a string representation of the
+        variable's value, but may on occasion be:
 
-            * a dict (eg when the volume changes, the value will itself be a
-              dict containing the volume for each channel:
-              :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
-            * an instance of a `DidlObject` subclass (eg if it represents
-              track metadata).
-            * a `SoCoFault` (if a variable contains illegal metadata)
+        * a dict (eg when the volume changes, the value will itself be a
+          dict containing the volume for each channel:
+          :code:`{'Volume': {'LF': '100', 'RF': '100', 'Master': '36'}}`)
+        * an instance of a `DidlObject` subclass (eg if it represents
+          track metadata).
+        * a `SoCoFault` (if a variable contains illegal metadata)
     """
 
     result = {}
@@ -761,7 +761,7 @@ class SubscriptionsMap(object):
 
             Returns:
                 `soco.events.Subscription`: The subscription relating
-                    to that sid.
+                to that sid.
 
         When using :py:mod:`soco.events_twisted`, an instance of
         `soco.events_twisted.Subscription` will be returned.

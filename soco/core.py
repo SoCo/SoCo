@@ -519,7 +519,7 @@ class SoCo(_SocoSingletonBase):
         Note that this method is an alternative to using addition and
         subtraction assignment operators (+=, -=) on the `volume` property
         of a `SoCo` instance. These operators perform the same function as
-        `set_relative_volume()` but require two network calls per operation
+        `set_relative_volume` but require two network calls per operation
         instead of one.
 
         Args:
@@ -530,7 +530,7 @@ class SoCo(_SocoSingletonBase):
             int: The new volume setting.
 
         Raises:
-            ValueError: If `relative_volume` cannot be cast as an integer.
+            ValueError: If ``relative_volume`` cannot be cast as an integer.
         """
         relative_volume = int(relative_volume)
         # Sonos will automatically handle out-of-range adjustments
@@ -580,11 +580,12 @@ class SoCo(_SocoSingletonBase):
     def play_uri(self, uri="", meta="", title="", start=True, force_radio=False):
         """Play a URI.
 
-        Playing a URI will replace what was playing with the stream given by
-        the URI. For some streams at least a title is required as metadata.
-        This can be provided using the `meta` argument or the `title` argument.
-        If the `title` argument is provided minimal metadata will be generated.
-        If `meta` argument is provided the `title` argument is ignored.
+        Playing a URI will replace what was playing with the stream
+        given by the URI. For some streams at least a title is
+        required as metadata.  This can be provided using the ``meta``
+        argument or the ``title`` argument.  If the ``title`` argument
+        is provided minimal metadata will be generated.  If ``meta``
+        argument is provided the ``title`` argument is ignored.
 
         Args:
             uri (str): URI of the stream to be played.
@@ -607,26 +608,29 @@ class SoCo(_SocoSingletonBase):
           Examples: Spotify, Napster, Rhapsody.
 
         How it is displayed is determined by the URI prefix:
-        `x-sonosapi-stream:`, `x-sonosapi-radio:`, `x-rincon-mp3radio:`,
-        `hls-radio:` default to radio or smart radio format depending on the
-        stream. Others default to track format: `x-file-cifs:`, `aac:`,
-        `http:`, `https:`, `x-sonos-spotify:` (used by Spotify),
-        `x-sonosapi-hls-static:` (Amazon Prime),
-        `x-sonos-http:` (Google Play & Napster).
+        ``x-sonosapi-stream:``, ``x-sonosapi-radio:``,
+        ``x-rincon-mp3radio:``, ``hls-radio:`` default to radio or
+        smart radio format depending on the stream. Others default to
+        track format: ``x-file-cifs:``, ``aac:``, ``http:``,
+        ``https:``, ``x-sonos-spotify:`` (used by Spotify),
+        ``x-sonosapi-hls-static:`` (Amazon Prime), ``x-sonos-http:``
+        (Google Play & Napster).
 
         Some URIs that default to track format could be radio streams,
-        typically `http:`, `https:` or `aac:`.
-        To force display and controls to Radio format set `force_radio=True`
+        typically ``http:``, ``https:`` or ``aac:``.  To force display
+        and controls to Radio format set ``force_radio=True``
 
         .. note:: Other URI prefixes exist but are less common.
            If you have information on these please add to this doc string.
 
-        .. note:: A change in Sonos® (as of at least version 6.4.2) means that
-           the devices no longer accepts ordinary `http:` and `https:` URIs for
-           radio stations. This method has the option to replaces these
-           prefixes with the one that Sonos® expects: `x-rincon-mp3radio:` by
-           using the "force_radio=True" parameter.
-           A few streams may fail if not forced to to Radio format.
+        .. note:: A change in Sonos® (as of at least version 6.4.2)
+           means that the devices no longer accepts ordinary ``http:``
+           and ``https:`` URIs for radio stations. This method has the
+           option to replaces these prefixes with the one that Sonos®
+           expects: ``x-rincon-mp3radio:`` by using the
+           "force_radio=True" parameter.  A few streams may fail if
+           not forced to to Radio format.
+
         """
         if meta == "" and title != "":
             meta_template = (
@@ -1149,7 +1153,7 @@ class SoCo(_SocoSingletonBase):
         """Create a stereo pair.
 
         This speaker becomes the master, left-hand speaker of the stereo
-        pair. The `rh_slave_speaker` becomes the right-hand speaker.
+        pair. The ``rh_slave_speaker`` becomes the right-hand speaker.
         Note that this operation will succeed on dissimilar speakers, unlike
         when using the official Sonos apps.
 
@@ -1362,7 +1366,7 @@ class SoCo(_SocoSingletonBase):
             refresh(bool): Refresh the speaker info cache.
             timeout: How long to wait for the server to send
                 data before giving up, as a float, or a
-                `(connect timeout, read timeout)` tuple
+                ``(connect timeout, read timeout)`` tuple
                 e.g. (3, 5). Default is no timeout.
 
         Returns:
@@ -1521,10 +1525,10 @@ class SoCo(_SocoSingletonBase):
         return queue_size
 
     def get_sonos_playlists(self, *args, **kwargs):
-        """Convenience method for
-        `get_music_library_information('sonos_playlists')`.
+        """Convenience method for calling
+        ``soco.music_library.get_music_library_information('sonos_playlists')``
 
-        Refer to the docstring for that method
+        Refer to the docstring for that method: `get_music_library_information`
 
         """
         args = tuple(["sonos_playlists"] + list(args))
@@ -1552,7 +1556,7 @@ class SoCo(_SocoSingletonBase):
             position (int): The index (1-based) at which the URI should be
                 added. Default is 0 (add URI at the end of the queue).
             as_next (bool): Whether this URI should be played as the next
-                track in shuffle mode. This only works if `play_mode=SHUFFLE`.
+                track in shuffle mode. This only works if ``play_mode=SHUFFLE``.
 
         Returns:
             int: The index of the new item in the queue.
@@ -1633,18 +1637,19 @@ class SoCo(_SocoSingletonBase):
             ]
         )
 
-    @deprecated("0.13", "soco.music_library.get_favorite_radio_shows", "0.15")
+    @deprecated("0.13", "soco.music_library.get_favorite_radio_shows", "0.15", True)
     def get_favorite_radio_shows(self, start=0, max_items=100):
         """Get favorite radio shows from Sonos' Radio app.
 
         Returns:
             dict: A dictionary containing the total number of favorites, the
             number of favorites returned, and the actual list of favorite radio
-            shows, represented as a dictionary with `title` and `uri` keys.
+            shows, represented as a dictionary with ``'title'`` and ``'uri'``
+            keys.
 
         Depending on what you're building, you'll want to check to see if the
         total number of favorites is greater than the amount you
-        requested (`max_items`), if it is, use `start` to page through and
+        requested (``max_items``), if it is, use ``start`` to page through and
         get the entire list of favorites.
         """
         message = (
@@ -1654,7 +1659,7 @@ class SoCo(_SocoSingletonBase):
         warnings.warn(message, stacklevel=2)
         return self.__get_favorites(RADIO_SHOWS, start, max_items)
 
-    @deprecated("0.13", "soco.music_library.get_favorite_radio_stations", "0.15")
+    @deprecated("0.13", "soco.music_library.get_favorite_radio_stations", "0.15", True)
     def get_favorite_radio_stations(self, start=0, max_items=100):
         """Get favorite radio stations from Sonos' Radio app.
 
@@ -1667,7 +1672,7 @@ class SoCo(_SocoSingletonBase):
         warnings.warn(message, stacklevel=2)
         return self.__get_favorites(RADIO_STATIONS, start, max_items)
 
-    @deprecated("0.13", "soco.music_library.get_sonos_favorites", "0.15")
+    @deprecated("0.13", "soco.music_library.get_sonos_favorites", "0.15", True)
     def get_sonos_favorites(self, start=0, max_items=100):
         """Get Sonos favorites.
 
@@ -1972,9 +1977,9 @@ class SoCo(_SocoSingletonBase):
 
         Returns:
             dict: Which contains 3 elements: change, length and update_id.
-                Change in size between original playlist and the resulting
-                playlist, the length of resulting playlist, and the new
-                update_id.
+            Change in size between original playlist and the resulting
+            playlist, the length of resulting playlist, and the new
+            update_id.
 
         Raises:
             SoCoUPnPException: If playlist does not exist or if your tracks

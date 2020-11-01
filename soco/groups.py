@@ -191,7 +191,7 @@ class ZoneGroup(object):
             int: The new group volume setting.
 
         Raises:
-            ValueError: If `relative_group_volume` cannot be cast as
+            ValueError: If ``relative_group_volume`` cannot be cast as
                 an integer.
         """
         relative_group_volume = int(relative_group_volume)

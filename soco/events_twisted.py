@@ -11,7 +11,7 @@
 """Classes to handle Sonos UPnP Events and Subscriptions.
 
 The `Subscription` class from this module will be used in
-:py:mod:`soco.services` if config.EVENTS_MODULE is set
+:py:mod:`soco.services` if `config.EVENTS_MODULE` is set
 to point to this module.
 
 Example:
@@ -262,8 +262,8 @@ class Subscription(SubscriptionBase):
 
         Returns:
             Deferred_: A Deferred_ the result of which will be the
-                Subscription instance and the subscription property of which
-                will point to the Subscription instance.
+            Subscription instance and the subscription property of which
+            will point to the Subscription instance.
 
         """
         subscribe = super().subscribe
@@ -282,7 +282,7 @@ class Subscription(SubscriptionBase):
                 request should be made. If None (the default), use the timeout
                 requested on subscription.
             is_autorenew (bool, optional): Whether this is an autorenewal.
-                Default 'False'.
+                Default `False`.
             strict (bool, optional): If True and an Exception occurs during
                 execution, the returned Deferred_ will fail with a Failure_
                 which will be passed to the applicable errback (if any has
@@ -293,8 +293,8 @@ class Subscription(SubscriptionBase):
 
         Returns:
             Deferred_: A Deferred_ the result of which will be the
-                Subscription instance and the subscription property of which
-                will point to the Subscription instance.
+            Subscription instance and the subscription property of which
+            will point to the Subscription instance.
 
         """
         renew = super().renew
@@ -318,8 +318,8 @@ class Subscription(SubscriptionBase):
 
         Returns:
             Deferred_: A Deferred_ the result of which will be the
-                Subscription instance and the subscription property of which
-                will point to the Subscription instance.
+            Subscription instance and the subscription property of which
+            will point to the Subscription instance.
         """
         unsubscribe = super().unsubscribe
         return self._wrap(unsubscribe, strict)
