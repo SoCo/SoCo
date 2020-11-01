@@ -119,7 +119,7 @@ todo_include_todos = True
 # Allow auto links into the Python and Requests docs
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'requests': ('http://www.python-requests.org/en/latest/', None)
+    'requests': ('https://requests.readthedocs.io/en/master/', None)
 }
 
 # Shortcuts to Github Issues etc. Use them like this:

@@ -123,12 +123,12 @@ class SoapMessage(object):
             method (str): The name of the method to call.
             parameters (list): A list of (name, value) tuples containing
                 the parameters to pass to the method. Default `None`.
-            http_headers (dict): A dict in the form {'Header': 'Value,..}
+            http_headers (dict): A dict in the form ``{'Header': 'Value,..}``
                 containing http headers to use for the http request.
-                Content-type and SOAPACTION headers will be created
+                ``Content-type`` and ``SOAPACTION`` headers will be created
                 automatically, so do not include them here. Use this, for
                 example, to set a user-agent.
-            soap_action (str): The value of the SOAPACTION header.
+            soap_action (str): The value of the ``SOAPACTION`` header.
                 Default 'None`.
             soap_header (str): A string representation of the XML to be
                 used for the SOAP Header. Default `None`.
@@ -151,15 +151,15 @@ class SoapMessage(object):
     def prepare_headers(self, http_headers, soap_action):
         """Prepare the http headers for sending.
 
-        Add the SOAPACTION header to the others.
+        Add the ``SOAPACTION`` header to the others.
 
         Args:
-            http_headers (dict): A dict in the form {'Header': 'Value,..}
+            http_headers (dict): A dict in the form ``{'Header': 'Value,..}``
                 containing http headers to use for the http request.
-            soap_action (str): The value of the SOAPACTION header.
+            soap_action (str): The value of the ``SOAPACTION`` header.
 
         Returns:
-            dict: headers including the SOAPACTION header.
+            dict: headers including the ``SOAPACTION`` header.
         """
 
         headers = {"Content-Type": 'text/xml; charset="utf-8"'}
@@ -194,7 +194,7 @@ class SoapMessage(object):
             method (str): The name of the method to call.
             parameters (list): A list of (name, value) tuples containing
                 the parameters to pass to the method.
-            namespace (str): tThe XML namespace to use for the method.
+            namespace (str): The XML namespace to use for the method.
 
         Returns:
             str: A properly formatted SOAP Body.
@@ -270,7 +270,7 @@ class SoapMessage(object):
 
         Returns:
             str: the decapusulated SOAP response from the server,
-                still encoded as utf-8.
+            still encoded as utf-8.
 
         Raises:
              SoapFault: if a SOAP error occurs.

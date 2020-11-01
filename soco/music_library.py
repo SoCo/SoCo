@@ -80,7 +80,7 @@ class MusicLibrary(object):
             item.album_art_uri = self.build_album_art_full_uri(item.album_art_uri)
 
     def get_artists(self, *args, **kwargs):
-        """Convenience method for `get_music_library_formation`
+        """Convenience method for `get_music_library_information`
         with ``search_type='artists'``. For details of other arguments,
         see `that method
         <#soco.music_library.MusicLibrary.get_music_library_information>`_.
@@ -624,7 +624,7 @@ class MusicLibrary(object):
 
         Returns:
             list: The music library shares, which are strings of the form
-                ``'//hostname_or_IP/share_path'``.
+            ``'//hostname_or_IP/share_path'``.
         """
         response = self.contentDirectory.Browse(
             [

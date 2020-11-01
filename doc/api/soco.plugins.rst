@@ -14,3 +14,5 @@ Module contents
 ---------------
 
 .. automodule:: soco.plugins
+    :member-order: bysource
+    :members:
