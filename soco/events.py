@@ -11,10 +11,10 @@
 """Classes to handle Sonos UPnP Events and Subscriptions.
 
 The `Subscription` class from this module will be used in
-:py:mod:`soco.services` unless config.EVENTS_MODULE is set
-to point to :py:mod:`soco.events_twisted`, in which case
-:py:mod:`soco.events_twisted.Subscription` will be used.
-See the Example in :py:mod:`soco.events_twisted`.
+:py:mod:`soco.services` unless `config.EVENTS_MODULE` is set to
+point to :py:mod:`soco.events_twisted`, in which case
+:py:mod:`soco.events_twisted.Subscription` will be used.  See the
+Example in :py:mod:`soco.events_twisted`.
 
 Example:
 
@@ -55,6 +55,7 @@ Example:
                 sub2.unsubscribe()
                 event_listener.stop()
                 break
+
 """
 
 from __future__ import unicode_literals
@@ -145,7 +146,8 @@ class EventServerThread(threading.Thread):
         self.server = server
 
     def run(self):
-        """Start the server on `address`.
+        """Start the server
+
         Handling of requests is delegated to an instance of the
         `EventNotifyHandler` class.
         """
@@ -187,7 +189,7 @@ class EventListener(EventListenerBase):
                 should start listening.
         Returns:
             int: `requested_port_number`. Included for
-                compatibility with `soco.events_twisted.EventListener.listen`
+            compatibility with `soco.events_twisted.EventListener.listen`
 
         Note:
             The port on which the event listener listens is configurable.

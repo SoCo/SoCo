@@ -13,7 +13,8 @@ New Features and Improvements
 =============================
 
 * Allow the user to choose how the event listener is implemented and a
-  lot of other event code improvements as outlined below. (Pull
+  lot of other event code improvemendA2ehesw
+  ts as outlined below. (Pull
   request `#602 <https://github.com/SoCo/SoCo/pull/602>`_).
 
   * A major feature addition is to allow the user to choose how the
@@ -48,14 +49,14 @@ New Features and Improvements
     callback will be called with the Exception as the sole parameter.
 
   * If an Exception occurs upon
-    :meth:`~.Subscription.subscribe` or
-    :meth:`~.Subscription.renew`, cancel the subscription,
+    :meth:`~events.Subscription.subscribe` or
+    :meth:`~events.Subscription.renew`, cancel the subscription,
     unless the Exception was a SoCoException on
-    :meth:`~.Subscription.subscribe`. For example, if an Exception occurs
+    :meth:`~event.Subscription.subscribe`. For example, if an Exception occurs
     because the network went down, the subscription will be canceled.
 
-  * Use a threading lock with :meth:`~.Subscription.subscribe`,
-    :meth:`~.Subscription.renew` and :meth:`~.Subscription.unsubscribe`, because
+  * Use a threading lock with :meth:`~events.Subscription.subscribe`,
+    :meth:`~events.Subscription.renew` and :meth:`~events.Subscription.unsubscribe`, because
     autorenewal occurs from a thread.
 
 * Add a simple

@@ -34,7 +34,7 @@ def discover(
     Return a set of `SoCo` instances for each zone found.
     Include invisible zones (bridges and slave zones in stereo pairs if
     ``include_invisible`` is `True`. Will block for up to ``timeout`` seconds,
-     after which return `None` if no zones found.
+    after which return `None` if no zones found.
 
     Args:
         timeout (int, optional): block for this many seconds, at most.
@@ -57,7 +57,7 @@ def discover(
             details.
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
-            `None`.
+        `None`.
 
     Note:
         There is no easy cross-platform way to find out the addresses of the
@@ -230,7 +230,7 @@ def any_soco(allow_network_scan=False, **network_scan_kwargs):
 
     Returns:
         SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set,
-            or `None` if no instances are found
+        or `None` if no instances are found
     """
 
     cls = config.SOCO_CLASS
@@ -263,8 +263,8 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
             details.
 
     Returns:
-        :class:`~.SoCo`: The first device encountered among all zones with the
-            given player name. If none are found `None` is returned.
+        :class:`~.SoCo`: The first device encountered among all zone with the
+        given player name. If none are found `None` is returned.
     """
     devices = discover(allow_network_scan=allow_network_scan, **network_scan_kwargs)
     if devices is None:

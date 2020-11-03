@@ -127,6 +127,8 @@ class deprecated(object):
         alternative (str, optional): The name of an alternative object to use
         will_be_removed_in (str, optional): The version in which the object is
             likely to be removed.
+        alternative_not_referable (bool): (optional) Indicate that
+            ``alternative`` cannot be used as a sphinx reference
 
     Example:
         ..  code-block:: python
@@ -140,10 +142,17 @@ class deprecated(object):
     # pylint: disable=invalid-name, too-few-public-methods
     # pylint: disable=missing-docstring
 
-    def __init__(self, since, alternative=None, will_be_removed_in=None):
+    def __init__(
+        self,
+        since,
+        alternative=None,
+        will_be_removed_in=None,
+        alternative_not_referable=False,
+    ):
         self.since_version = since
         self.alternative = alternative
         self.will_be_removed_in = will_be_removed_in
+        self.alternative_not_referable = alternative_not_referable
 
     def __call__(self, deprecated_fn):
         @functools.wraps(deprecated_fn)
@@ -166,7 +175,10 @@ class deprecated(object):
                 self.will_be_removed_in
             )
         if self.alternative is not None:
-            docs += "\n     Use `{}` instead.".format(self.alternative)
+            if self.alternative_not_referable:
+                docs += "\n     Use ``{}`` instead.".format(self.alternative)
+            else:
+                docs += "\n     Use `{}` instead.".format(self.alternative)
         if decorated.__doc__ is None:
             decorated.__doc__ = ""
         decorated.__doc__ += docs

@@ -41,6 +41,7 @@ Developer improvements
 * Format all soco main, test and example code with the black code formatter
   (https://github.com/psf/black) and make it mandatory going forward including a
   TravisCI check. Pull request `#706 <https://github.com/SoCo/SoCo/pull/706>`_.
-* Improve `test_remove_playlist_bad_id()` to handle the case of no existing
-  playlists. Pull request `#726 <https://github.com/SoCo/SoCo/pull/726>`_, fixes
-  issue `#725 <https://github.com/SoCo/SoCo/issues/725>`_.
+* Improve ``test_remove_playlist_bad_id()`` to handle the case of no
+  existing playlists. Pull request `#726
+  <https://github.com/SoCo/SoCo/pull/726>`_, fixes issue `#725
+  <https://github.com/SoCo/SoCo/issues/725>`_.

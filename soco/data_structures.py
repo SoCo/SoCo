@@ -821,7 +821,7 @@ class DidlObject(with_metaclass(DidlMetaClass, object)):
                 used for playing the item.
             protocol_info (str): Protocol info for the resource. If none is
                 given and the resource does not exist yet, a default protocol
-                info is constructed as '[uri prefix]:*:*:*'.
+                info is constructed as ``'[uri prefix]:*:*:*'``.
         """
         try:
             self.resources[resource_nr].uri = uri
@@ -959,7 +959,7 @@ class DidlFavorite(DidlItem):
     """Class that represents a Sonos favorite.
 
     Note that the favorite itself isn't playable in all cases, please use the
-    object returned by `favorite.reference` instead."""
+    object returned by :attr:`favorite.reference` instead."""
 
     # the DIDL Lite class for this object.
     item_class = "object.itemobject.item.sonos-favorite"
@@ -1149,7 +1149,7 @@ class DidlPlaylistContainer(DidlContainer):
 
     """Class that represents a music library play list."""
 
-    #:
+    # (str) The DIDL Lite class for this object
     item_class = "object.container.playlistContainer"
     # Yes, really. Sonos uses the item tag, not the container tag. But
     # sometimes it uses the container tag, eg:

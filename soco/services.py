@@ -106,7 +106,6 @@ zone_group_state_shared_cache = Cache()
 
 # pylint: disable=too-many-instance-attributes
 class Service(object):
-
     """A class representing a UPnP service.
 
     This is the base class for all Sonos Service classes. This class has a
@@ -133,7 +132,7 @@ class Service(object):
         """
         Args:
             soco (SoCo): A `SoCo` instance to which the UPnP Actions will be
-                sent
+            sent
         """
 
         #: `SoCo`: The `SoCo` instance to which UPnP Actions are sent
@@ -328,16 +327,16 @@ class Service(object):
 
         Args:
             action_name (str): The name of the action to be performed.
-            in_argdict (dict): Arguments as a dict, eg
-                ``{'InstanceID': 0, 'Speed': 1}. The values
+            in_argdict (dict): Arguments as a dict, e.g.
+                ``{'InstanceID': 0, 'Speed': 1}``. The values
                 can be a string or something with a string representation.
 
         Returns:
             list: a list of ``(name, value)`` tuples.
 
         Raises:
-            `AttributeError`: If this service does not support the action.
-            `ValueError`: If the argument lists do not match the action
+            AttributeError: If this service does not support the action.
+            ValueError: If the argument lists do not match the action
                 signature.
         """
 
@@ -389,9 +388,9 @@ class Service(object):
 
         Returns:
             tuple: a tuple containing the POST headers (as a dict) and a
-                string containing the relevant SOAP body. Does not set
-                content-length, or host headers, which are completed upon
-                sending.
+            string containing the relevant SOAP body. Does not set
+            content-length, or host headers, which are completed upon
+            sending.
         """
 
         # A complete request should look something like this:
@@ -453,18 +452,20 @@ class Service(object):
                 (for example if a UPnP event is received to indicate that
                 the state of the Sonos device has changed). If
                 ``cache_timeout`` is missing or `None`, the cache will use a
-                default value (which may be 0 - see `cache`). By default,
-                the cache identified by the service's `cache` attribute will
+                default value (which may be 0 - see
+                :attr:`~soco.services.Service.cache`). By default, the cache
+                identified by the service's
+                :attr:`~soco.services.Service.cache` attribute will
                 be used, but a different cache object may be specified in
-                the `cache` parameter.
+                the ``cache`` parameter.
             kwargs: Relevant arguments for the command.
 
         Returns:
              dict: a dict of ``{argument_name, value}`` items.
 
         Raises:
-            `AttributeError`: If this service does not support the action.
-            `ValueError`: If the argument lists do not match the action
+            AttributeError: If this service does not support the action.
+            ValueError: If the argument lists do not match the action
                 signature.
             `SoCoUPnPException`: if a SOAP error occurs.
             `UnknownSoCoException`: if an unknonwn UPnP error occurs.
@@ -579,8 +580,8 @@ class Service(object):
             requested_timeout (int, optional): If requested_timeout is
                 provided, a subscription valid for that
                 number of seconds will be requested, but not guaranteed. Check
-                `Subscription.timeout` on return to find out what period of
-                validity is actually allocated.
+                :attr:`~soco.events.Subscription.timeout` on return to find out
+                what period of validity is actually allocated.
             auto_renew (bool): If auto_renew is `True`, the subscription will
                 automatically be renewed just before it expires, if possible.
                 Default is `False`.
@@ -593,13 +594,15 @@ class Service(object):
                 returned. Default `True`.
 
         Returns:
-            `Subscription`: an instance of :class:`~soco.events.Subscription`,
-                representing the new subscription. If config.EVENTS_MODULE has
-                been set to refer to :py:mod:`events_twisted`, a deferred will
-                be returned with the Subscription as its result and
-                deferred.subscription will be set to refer to the Subscription.
+            :class:`~soco.events.Subscription`: an instance of
+            :class:`~soco.events.Subscription`, representing the new
+            subscription. If config.EVENTS_MODULE has
+            been set to refer to :py:mod:`events_twisted`, a deferred will
+            be returned with the Subscription as its result and
+            deferred.subscription will be set to refer to the Subscription.
 
-        To unsubscribe, call the `unsubscribe` method on the returned object.
+        To unsubscribe, call the :meth:`~soco.events.Subscription.unsubscribe`
+        method on the returned object.
         """
         subscription = config.EVENTS_MODULE.Subscription(self, event_queue)
         return subscription.subscribe(
@@ -632,29 +635,35 @@ class Service(object):
             action_name (str), in_args (list of Argument namedtuples,
             consisting of name and argtype), and out_args (ditto).
 
-        The return value looks like this::
-            [
-                Action(
-                    name='GetMute',
-                    in_args=[
-                        Argument(name='InstanceID', ...),
-                        Argument(
-                            name='Channel',
-                            vartype='string',
-                            list=['Master', 'LF', 'RF', 'SpeakerOnly'],
-                            range=None
-                        )
-                    ],
-                    out_args=[
-                        Argument(name='CurrentMute, ...)
-                    ]
-                )
-                Action(...)
-            ]
+        The return value looks like this:
 
-        Its string representation will look like this::
-            GetMute(InstanceID: ui4, Channel: [Master, LF, RF, SpeakerOnly]) \
-            -> {CurrentMute: boolean}
+        .. code-block:: python
+
+           [
+               Action(
+                   name='GetMute',
+                   in_args=[
+                       Argument(name='InstanceID', ...),
+                       Argument(
+                           name='Channel',
+                           vartype='string',
+                           list=['Master', 'LF', 'RF', 'SpeakerOnly'],
+                           range=None
+                       )
+                   ],
+                   out_args=[
+                       Argument(name='CurrentMute, ...)
+                   ]
+               )
+               Action(...)
+           ]
+
+        Its string representation will look like this:
+
+        .. code-block:: text
+
+           GetMute(InstanceID: ui4, Channel: [Master, LF, RF, SpeakerOnly])\n
+           -> {CurrentMute: boolean}
         """
         if self._actions is None:
             self._actions = list(self.iter_actions())
@@ -758,7 +767,6 @@ class Service(object):
 
 
 class AlarmClock(Service):
-
     """Sonos alarm service, for setting and getting time and alarms."""
 
     def __init__(self, soco):
@@ -771,25 +779,21 @@ class AlarmClock(Service):
 
 
 class MusicServices(Service):
-
     """Sonos music services service, for functions related to 3rd party music
     services."""
 
 
 class DeviceProperties(Service):
-
     """Sonos device properties service, for functions relating to zones, LED
     state, stereo pairs etc."""
 
 
 class SystemProperties(Service):
-
     """Sonos system properties service, for functions relating to
     authentication etc."""
 
 
 class ZoneGroupTopology(Service):
-
     """Sonos zone group topology service, for functions relating to network
     topology, diagnostics and updates."""
 
@@ -801,17 +805,14 @@ class ZoneGroupTopology(Service):
 
 
 class GroupManagement(Service):
-
     """Sonos group management service, for services relating to groups."""
 
 
 class QPlay(Service):
-
     """Sonos Tencent QPlay service (a Chinese music service)"""
 
 
 class ContentDirectory(Service):
-
     """UPnP standard Content Directory service, for functions relating to
     browsing, searching and listing available music."""
 
@@ -847,7 +848,6 @@ class ContentDirectory(Service):
 
 
 class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
-
     """UPnP standard connection manager service for the media server."""
 
     def __init__(self, soco):
@@ -858,7 +858,6 @@ class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 
 class RenderingControl(Service):
-
     """UPnP standard rendering control service, for functions relating to
     playback rendering, eg bass, treble, volume and EQ."""
 
@@ -870,7 +869,6 @@ class RenderingControl(Service):
 
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
-
     """UPnP standard connection manager service for the media renderer."""
 
     def __init__(self, soco):
@@ -881,7 +879,6 @@ class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
 
 
 class AVTransport(Service):
-
     """UPnP standard AV Transport service, for functions relating to transport
     management, eg play, stop, seek, playlists etc."""
 
@@ -920,7 +917,6 @@ class AVTransport(Service):
 
 
 class Queue(Service):
-
     """Sonos queue service, for functions relating to queue management, saving
     queues etc."""
 
@@ -931,7 +927,6 @@ class Queue(Service):
 
 
 class GroupRenderingControl(Service):
-
     """Sonos group rendering control service, for functions relating to group
     volume etc."""
 
