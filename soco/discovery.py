@@ -445,7 +445,7 @@ def scan_network(
         )
         try:
             thread.start()
-        except RuntimeError:
+        except (RuntimeError, OSError):
             # We probably can't start any more threads
             # Cease thread creation and continue
             _LOG.info(
