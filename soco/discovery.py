@@ -405,8 +405,8 @@ def scan_network(
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
-        """Helper function worker thread to take IP addresses off a list and
+    def sonos_scan_worker_thread(ip_set, socket_timeout, sonos_ip_addresses):
+        """Helper function worker thread to take IP addresses from a set and
         test whether there is (1) a device with port 1400 open at that IP
         address, then (2) check the device is a Sonos device.
         Once a there is a hit, the list is cleared to prevent any further
@@ -415,17 +415,27 @@ def scan_network(
 
         while True:
             try:
-                ip_address = str(ip_list.pop())
+                ip = ip_set.pop()
             except KeyError:
                 break
-            if _check_ip_and_port(ip_address, 1400, socket_timeout):
+
+            ip_address = str(ip)
+            try:
+                check = _check_ip_and_port(ip_address, 1400, socket_timeout)
+            except OSError:
+                # With large numbers of threads, we can exceed the file handle limit.
+                # Put the address back on the list and drop out of this thread.
+                ip_set.add(ip)
+                break
+
+            if check:
                 _LOG.info("Found open port 1400 at IP '%s'", ip_address)
                 if _is_sonos(ip_address):
                     _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
                     sonos_ip_addresses.append(ip_address)
                     # Clear the list to eliminate further searching by
                     # all threads
-                    ip_list.clear()
+                    ip_set.clear()
 
     # Generate the set of IPs to check
     ip_set = set()
@@ -445,7 +455,7 @@ def scan_network(
         )
         try:
             thread.start()
-        except (RuntimeError, OSError):
+        except RuntimeError:
             # We probably can't start any more threads
             # Cease thread creation and continue
             _LOG.info(
