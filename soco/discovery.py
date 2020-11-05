@@ -273,23 +273,6 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
-def _is_ipv4_address(ip_address):
-    """Helper function to test for an IPv4 address.
-
-    Args:
-        ip_address (str): The IP address to be tested, e.g.,
-            "192.168.1.35".
-
-    Returns:
-        bool: True if this is a well-formed IPv4 address.
-    """
-    try:
-        ipaddress.IPv4Network(ip_address)
-        return True
-    except ValueError:
-        return False
-
-
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
@@ -308,25 +291,31 @@ def _find_ipv4_networks(min_netmask):
     adapters = ifaddr.get_adapters()
     for adapter in adapters:
         for ifaddr_network in adapter.ips:
-            if _is_ipv4_address(ifaddr_network.ip):
-                ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
-                # Restrict to private networks and exclude loopback
-                if ipv4_network.is_private and not ipv4_network.is_loopback:
-                    # Constrain the size of network that will be searched
-                    netmask = ifaddr_network.network_prefix
-                    if netmask < min_netmask:
-                        _LOG.debug(
-                            "%s: Constraining netmask from %d to %d",
-                            ifaddr_network.ip,
-                            ifaddr_network.network_prefix,
-                            min_netmask,
-                        )
-                        netmask = min_netmask
-                    network = ipaddress.ip_network(
-                        ifaddr_network.ip + "/" + str(netmask),
-                        False,
+            try:
+                ipaddress.IPv4Network(ifaddr_network.ip)
+            except ValueError:
+                # Not an IPv4 address
+                continue
+
+            ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
+            # Restrict to private networks and exclude loopback
+            if ipv4_network.is_private and not ipv4_network.is_loopback:
+                # Constrain the size of network that will be searched
+                netmask = ifaddr_network.network_prefix
+                if netmask < min_netmask:
+                    _LOG.debug(
+                        "%s: Constraining netmask from %d to %d",
+                        ifaddr_network.ip,
+                        ifaddr_network.network_prefix,
+                        min_netmask,
                     )
-                    ipv4_net_list.add(network)
+                    netmask = min_netmask
+                network = ipaddress.ip_network(
+                    ifaddr_network.ip + "/" + str(netmask),
+                    False,
+                )
+                ipv4_net_list.add(network)
+
     _LOG.info("Set of networks to search: %s", str(ipv4_net_list))
     return ipv4_net_list
 
