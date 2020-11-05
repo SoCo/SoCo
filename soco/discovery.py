@@ -415,17 +415,17 @@ def scan_network(
 
         while True:
             try:
-                ip = ip_set.pop()
+                ip_addr = ip_set.pop()
             except KeyError:
                 break
 
-            ip_address = str(ip)
+            ip_address = str(ip_addr)
             try:
                 check = _check_ip_and_port(ip_address, 1400, socket_timeout)
             except OSError:
                 # With large numbers of threads, we can exceed the file handle limit.
                 # Put the address back on the list and drop out of this thread.
-                ip_set.add(ip)
+                ip_set.add(ip_addr)
                 break
 
             if check:
