@@ -17,6 +17,9 @@ from soco.discovery import (
     by_name,
     _is_ipv4_address,
     _find_ipv4_networks,
+    _check_ip_and_port,
+    _is_sonos,
+    scan_network,
 )
 
 IP_ADDR = "192.168.1.101"
@@ -98,34 +101,19 @@ def test_by_name():
         )
 
 
+# Tests for scan_network()
+
+
 def test__is_ipv4_address():
     assert _is_ipv4_address("192.168.0.1") is True
+    assert _is_ipv4_address("192.168.0.256") is False
     assert _is_ipv4_address("192.168.0") is False
     assert _is_ipv4_address("2001:db8:0:1:1:1:1:1") is False
 
 
 def test__find_ipv4_networks(monkeypatch):
-    # Set up the response from ifaddr.get_adapters()
-    adapters = OrderedDict()
-    ips = []
-    # Create a variety of networks
-    # Private IP range
-    ips.append(ifaddr.IP("192.168.0.1", 24, "private-24"))
-    # Private IP range: test constraints
-    ips.append(ifaddr.IP("192.168.1.1", 16, "private-16"))
-    # Public IP range
-    ips.append(ifaddr.IP("15.100.100.100", 8, "public"))
-    # Loopback range
-    ips.append(ifaddr.IP("127.0.0.1", 24, "loopback"))
-    index = 1
-    for ip in ips:
-        adapters[ip.nice_name] = ifaddr._shared.Adapter(
-            ip.nice_name, ip.nice_name, [ip], index=index
-        )
-        index += 1
-    monkeypatch.setattr("ifaddr.get_adapters", Mock(return_value=adapters.values()))
-
-    # Check that we get the networks we expect; test different min_netmask values
+    _set_up_adapters(monkeypatch)
+    # Check that we get the expected networks; test different min_netmask values
     assert ipaddress.ip_network("192.168.0.55/24", False) in _find_ipv4_networks(24)
     assert ipaddress.ip_network("192.168.1.1/24", False) in _find_ipv4_networks(24)
     assert ipaddress.ip_network("192.168.1.1/16", False) not in _find_ipv4_networks(24)
@@ -133,3 +121,79 @@ def test__find_ipv4_networks(monkeypatch):
     assert ipaddress.ip_network("192.168.1.1/16", False) in _find_ipv4_networks(0)
     assert ipaddress.ip_network("15.100.100.100/8", False) not in _find_ipv4_networks(8)
     assert ipaddress.ip_network("127.0.0.1/24", False) not in _find_ipv4_networks(24)
+
+
+def test__check_ip_and_port(monkeypatch):
+    _setup_sockets(monkeypatch)
+    assert _check_ip_and_port("192.168.0.1", 1400, 0.1) is True
+    assert _check_ip_and_port("192.168.0.1", 1401, 0.1) is False
+    assert _check_ip_and_port("192.168.0.3", 1400, 0.1) is False
+
+
+def test__is_sonos(monkeypatch):
+    with patch("soco.config.SOCO_CLASS", new=_mock_soco_new):
+        assert _is_sonos("192.168.0.1") is True
+        assert _is_sonos("192.168.0.2") is True
+        assert _is_sonos("192.168.0.3") is False
+
+
+def test_scan_network(monkeypatch):
+    _setup_sockets(monkeypatch)
+    _set_up_adapters(monkeypatch)
+    with patch("soco.config.SOCO_CLASS", new=_mock_soco_new):
+        assert "192.168.0.1" in scan_network(include_invisible=False)
+        assert "192.168.0.2" not in scan_network(include_invisible=False)
+        assert "192.168.0.2" in scan_network(include_invisible=True)
+        assert "192.168.0.1" in scan_network(
+            include_invisible=False, max_threads=5000, min_netmask=16
+        )
+
+
+# Helper functions for scan_network() tests
+
+
+def _set_up_adapters(monkeypatch):
+    """Helper function that creates a number of mock network adapters to be
+    returned by ifaddr.get_adapters()."""
+
+    private_24 = ifaddr.IP("192.168.0.1", 24, "private-24")
+    private_16 = ifaddr.IP("192.168.1.1", 16, "private-16")
+    public = ifaddr.IP("15.100.100.100", 8, "public")
+    loopback = ifaddr.IP("127.0.0.1", 24, "loopback")
+    ips = [private_24, private_16, public, loopback]
+
+    # Set up mock adapters
+    adapters = OrderedDict()
+    for index in range(len(ips)):
+        ip = ips[index]
+        adapters[ip.nice_name] = ifaddr._shared.Adapter(
+            ip.nice_name, ip.nice_name, [ip], index=index + 1
+        )
+
+    # Patch the response from ifaddr.get_adapters()
+    monkeypatch.setattr("ifaddr.get_adapters", Mock(return_value=adapters.values()))
+
+
+def _mock_soco_new(ip_address):
+    """Helper function that replaces the SoCo constructor. Returns Mock objects for
+    Sonos devices at two specific IP addresses."""
+
+    if ip_address in ["192.168.0.1", "192.168.0.2"]:
+        return Mock(
+            visible_zones=["192.168.0.1"], all_zones=["192.168.0.1", "192.168.0.2"]
+        )
+    else:
+        raise ValueError
+
+
+def _setup_sockets(monkeypatch):
+    """Helper function to create fake socket connection responses corresponding to
+    Sonos speakers on specific IP address / port combinations only."""
+
+    def mock_socket_connect_ex_return(_, address_port):
+        if address_port in [("192.168.0.1", 1400), ("192.168.0.2", 1400)]:
+            return 0
+        else:
+            return 1
+
+    monkeypatch.setattr("socket.socket.connect_ex", mock_socket_connect_ex_return)

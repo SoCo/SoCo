@@ -52,9 +52,8 @@ def discover(
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        **network_scan_kwargs: Arguments for the
-            :function:`scan_network` function. See its docstring for
-            details.
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details.
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
         `None`.
@@ -224,9 +223,8 @@ def any_soco(allow_network_scan=False, **network_scan_kwargs):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        **network_scan_kwargs: Arguments for the
-            :function:`scan_network` function. See its docstring for
-            details.
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details.
 
     Returns:
         SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set,
@@ -258,12 +256,11 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
-        **network_scan_kwargs: Arguments for the
-            :function:`scan_network` function. See its docstring for
-            details.
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details.
 
     Returns:
-        :class:`~.SoCo`: The first device encountered among all zone with the
+        :class:`~.SoCo`: The first device encountered among all zones with the
         given player name. If none are found `None` is returned.
     """
     devices = discover(allow_network_scan=allow_network_scan, **network_scan_kwargs)
@@ -284,7 +281,7 @@ def _is_ipv4_address(ip_address):
             "192.168.1.35".
 
     Returns:
-        bool: True if this is a well-formed IP address.
+        bool: True if this is a well-formed IPv4 address.
     """
     try:
         ipaddress.IPv4Network(ip_address)
@@ -297,8 +294,8 @@ def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
     Helper function to return a set of IPv4 networks to which
-    this node is attached. Excludes non-private and loopback
-    networks.
+    the network interfaces on this node are attached.
+    Excludes public and loopback network ranges.
 
     Args:
         min_netmask(int): The minimum netmask to be used.
@@ -334,21 +331,65 @@ def _find_ipv4_networks(min_netmask):
     return ipv4_net_list
 
 
-# pylint: disable=too-many-statements
+def _check_ip_and_port(ip_address, port, timeout):
+    """Helper function to check if a port is open.
+
+    Args:
+        ip_address(str): The IP address to be checked.
+        port(int): The port to be checked.
+        timeout(float): The timeout to use.
+
+    Returns:
+        bool: True if a connection can be made.
+    """
+
+    _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    _socket.settimeout(timeout)
+    return not bool(_socket.connect_ex((ip_address, port)))
+
+
+def _is_sonos(ip_address):
+    """Helper function to check if this is a Sonos device.
+
+    Args:
+        ip_address(str): The IP address to be checked.
+
+    Returns:
+        bool: True if there is a Sonos device at the address.
+    """
+
+    try:
+        # Try getting a device property
+        _ = config.SOCO_CLASS(ip_address).is_visible
+        return True
+    # The exception is unimportant
+    # pylint: disable=bare-except
+    except:  # noqa: E722
+        return False
+
+
 def scan_network(
     include_invisible=False, max_threads=256, scan_timeout=0.1, min_netmask=24
 ):
     """Scan all attached networks for Sonos devices.
 
-    Scans the IPv4 network attached to each interface to check for network devices
-    with port 1400 open. Check IPs in parallel threads for efficiency. Once the first
-    Sonos device is found, stop checking and use that device to find the other
-    devices. Returns a set of `SoCo` instances, or `None` if no Sonos devices are
-    discovered.
+    This function scans the IPv4 networks to which this node is attached,
+    searching for Sonos devices. Multiple parallel threads are used to
+    scan IP addresses in parallel. Once any Sonos is device is found, scanning
+    stops and the discovered device is used to obtain details of the Sonos
+    system and all of its speakers.
 
-    This function is intended for use when the usual discovery functions aren't
+    Public and loopback IP ranges are excluded from the scan. The scope of search
+    can be controlled by setting a minimum netmask.
+
+    This function is intended for use when the usual discovery function is not
     working, perhaps due to multicast problems on the network to which the SoCo
     host is attached.
+
+    Note that this call may fail to find speakers present on the network, and
+    this can be due to ARP cache misses and ARP requests that don't
+    complete within the timeout. The call can be retried with longer values for
+    scan_timeout if necessary.
 
     Args:
         include_invisible (bool, optional): Whether to include invisible Sonos devices
@@ -364,25 +405,6 @@ def scan_network(
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def check_ip_and_port(ip_address, port, timeout):
-        """Helper function to check if a port is open"""
-
-        _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _socket.settimeout(timeout)
-        return not bool(_socket.connect_ex((ip_address, port)))
-
-    def is_sonos(ip_address):
-        """Helper function to check if this is a Sonos device"""
-
-        try:
-            # Try getting a device property
-            _ = config.SOCO_CLASS(ip_address).is_visible
-            return True
-        # The exception is unimportant
-        # pylint: disable=bare-except
-        except:  # noqa: E722
-            return False
-
     def sonos_scan_worker_thread(ip_list, socket_timeout, sonos_ip_addresses):
         """Helper function worker thread to take IP addresses off a list and
         test whether there is (1) a device with port 1400 open at that IP
@@ -396,9 +418,9 @@ def scan_network(
                 ip_address = str(ip_list.pop())
             except KeyError:
                 break
-            if check_ip_and_port(ip_address, 1400, socket_timeout):
+            if _check_ip_and_port(ip_address, 1400, socket_timeout):
                 _LOG.info("Found open port 1400 at IP '%s'", ip_address)
-                if is_sonos(ip_address):
+                if _is_sonos(ip_address):
                     _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
                     sonos_ip_addresses.append(ip_address)
                     # Clear the list to eliminate further searching by
