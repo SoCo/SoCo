@@ -135,9 +135,24 @@ def test_scan_network(monkeypatch):
     with patch("soco.config.SOCO_CLASS", new=_mock_soco_new):
         assert "192.168.0.1" in scan_network(include_invisible=False)
         assert "192.168.0.2" not in scan_network(include_invisible=False)
-        assert "192.168.0.2" in scan_network(include_invisible=True)
         assert "192.168.0.1" in scan_network(
-            include_invisible=False, max_threads=5000, min_netmask=16
+            include_invisible=False, multi_household=True
+        )
+        assert "192.168.0.2" not in scan_network(
+            include_invisible=False, multi_household=True
+        )
+        assert "192.168.0.1" in scan_network(
+            include_invisible=True, multi_household=True
+        )
+        assert "192.168.0.2" in scan_network(include_invisible=True)
+        assert "192.168.0.2" in scan_network(
+            include_invisible=True, multi_household=True
+        )
+        assert "192.168.0.1" in scan_network(
+            include_invisible=False,
+            multi_household=True,
+            max_threads=5000,
+            min_netmask=16,
         )
 
 

@@ -16,6 +16,7 @@ import ifaddr
 
 from . import config
 from .utils import really_utf8
+from . import core
 
 _LOG = logging.getLogger(__name__)
 
@@ -363,22 +364,26 @@ def _is_sonos(ip_address):
 
 
 def scan_network(
-    include_invisible=False, max_threads=256, scan_timeout=0.1, min_netmask=24
+    include_invisible=False,
+    multi_household=False,
+    max_threads=256,
+    scan_timeout=0.1,
+    min_netmask=24,
 ):
     """Scan all attached networks for Sonos devices.
 
     This function scans the IPv4 networks to which this node is attached,
     searching for Sonos devices. Multiple parallel threads are used to
-    scan IP addresses in parallel. Once any Sonos is device is found, scanning
-    stops and the discovered device is used to obtain details of the Sonos
-    system and all of its speakers.
+    scan IP addresses in parallel for faster discovery.
 
-    Public and loopback IP ranges are excluded from the scan. The scope of search
-    can be controlled by setting a minimum netmask.
+    Public and loopback IP ranges are excluded from the scan, and the scope of
+    the search can be controlled by setting a minimum netmask.
 
     This function is intended for use when the usual discovery function is not
     working, perhaps due to multicast problems on the network to which the SoCo
-    host is attached.
+    host is attached. The function can also be used to find a complete list of
+    speakers across multiple Sonos Households. For example, this is the case
+    where there are 'split' S1/S2 Sonos systems on the network.
 
     Note that this call may fail to find speakers present on the network, and
     this can be due to ARP cache misses and ARP requests that don't
@@ -388,6 +393,14 @@ def scan_network(
     Args:
         include_invisible (bool, optional): Whether to include invisible Sonos devices
             in the set of devices returned.
+        multi_household (bool, optional): Whether to find all the speakers on the
+            network exhaustively.
+            If set to `False`, discovery will stop as soon as at least one speaker is
+            found. In the case of multiple households on the attached networks, this
+            means that only the speakers from the first-discovered household will be
+            returned.
+            If set to `True`, discovery will proceed until all speakers, from all
+            households, have been found.
         max_threads (int, optional): The maximum number of threads to use when
             scanning the network.
         scan_timeout (float, optional): The network timeout in seconds to use when
@@ -399,7 +412,9 @@ def scan_network(
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    def sonos_scan_worker_thread(ip_set, socket_timeout, sonos_ip_addresses):
+    def sonos_scan_worker_thread(
+        ip_set, socket_timeout, sonos_ip_addresses, multi_household
+    ):
         """Helper function worker thread to take IP addresses from a set and
         test whether there is (1) a device with port 1400 open at that IP
         address, then (2) check the device is a Sonos device.
@@ -428,8 +443,9 @@ def scan_network(
                     _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
                     sonos_ip_addresses.append(ip_address)
                     # Clear the list to eliminate further searching by
-                    # all threads
-                    ip_set.clear()
+                    # all threads, if we're not doing an exhaustive search
+                    if not multi_household:
+                        ip_set.clear()
 
     # Generate the set of IPs to check
     ip_set = set()
@@ -445,7 +461,7 @@ def scan_network(
     for _ in range(max_threads):
         thread = threading.Thread(
             target=sonos_scan_worker_thread,
-            args=(ip_set, scan_timeout, sonos_ip_addresses),
+            args=(ip_set, scan_timeout, sonos_ip_addresses, multi_household),
         )
         try:
             thread.start()
@@ -470,16 +486,29 @@ def scan_network(
         _LOG.info("No Sonos zones discovered")
         return None
 
-    # Use the first IP address in the list to create a SoCo instance, and
-    # find the remaining zones
-    zone = config.SOCO_CLASS(sonos_ip_addresses[0])
-    _LOG.info(
-        "Using zone '%s' (%s) to find other zones", zone.player_name, zone.ip_address
-    )
-    if include_invisible:
-        zones = zone.all_zones
-        _LOG.info("Returning all Sonos zones: %s", str(zones))
-    else:
-        zones = zone.visible_zones
-        _LOG.info("Returning visible Sonos zones: %s", str(zones))
-    return zones
+    # Disable caching to prevent problems with the list of zones
+    # if there are multiple households
+    if multi_household:
+        original_cache_state = core.zone_group_state_shared_cache.enabled
+        if original_cache_state:
+            core.zone_group_state_shared_cache.enabled = False
+
+    # Collect SoCo objects
+    zones = set()
+    for ip_address in sonos_ip_addresses:
+        if include_invisible:
+            for zone in config.SOCO_CLASS(ip_address).all_zones:
+                zones.add(zone)
+        else:
+            for zone in config.SOCO_CLASS(ip_address).visible_zones:
+                zones.add(zone)
+        # Stop here unless we want exhaustively to find all speakers
+        # across all households
+        if not multi_household:
+            break
+
+    # Restore the original cache state if required
+    if multi_household and original_cache_state:
+        core.zone_group_state_shared_cache.enabled = True
+
+    return list(zones)
