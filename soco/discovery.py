@@ -332,12 +332,14 @@ def _check_ip_and_port(ip_address, port, timeout):
         bool: True if a connection can be made.
     """
 
+    _socket = None
     try:
         _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         _socket.settimeout(timeout)
         return not bool(_socket.connect_ex((ip_address, port)))
     finally:
-        _socket.close()
+        if _socket:
+            _socket.close()
 
 
 def _is_sonos(ip_address):
