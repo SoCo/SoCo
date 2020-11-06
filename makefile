@@ -9,7 +9,7 @@ test:
 
 docs:
 	$(MAKE) -C doc html
-	@echo "\033[95m\n\nBuild successful! View the docs at docs/_build/html/index.html.\n\033[0m"
+	@echo "\033[95m\n\nBuild successful! View the docs at doc/_build/html/index.html.\n\033[0m"
 
 clean:
 	find . -name '*.py[co]' -delete

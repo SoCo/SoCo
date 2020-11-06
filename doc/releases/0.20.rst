@@ -1,7 +1,7 @@
 SoCo 0.20 release notes
 ***********************
 
-**SoCo 0.20** is the lastes increment to the SoCo module. Among the additions
+**SoCo 0.20** is the latest increment to the SoCo module. Among the additions
 this time are support for adding stereo pairs, proper categorization of Sonos
 Amp as a playbar to add proper support for 'night sound' and 'speech
 enhancement' and finally a fix for a long running issue where vendor extended
