@@ -1,7 +1,7 @@
 SoCo 0.19 release notes
 ***********************
 
-**SoCo 0.19** is the lastes increment to the SoCo module. Among the
+**SoCo 0.19** is the latest increment to the SoCo module. Among the
 additions this time are added methods for library share handling, new
 methods for relative and group volume handling and a new DIDL-Lite
 class used for certain podcasts. See the full list of additions and

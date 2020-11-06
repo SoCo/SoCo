@@ -13,8 +13,7 @@ New Features and Improvements
 =============================
 
 * Allow the user to choose how the event listener is implemented and a
-  lot of other event code improvemendA2ehesw
-  ts as outlined below. (Pull
+  lot of other event code improvements as outlined below. (Pull
   request `#602 <https://github.com/SoCo/SoCo/pull/602>`_).
 
   * A major feature addition is to allow the user to choose how the
