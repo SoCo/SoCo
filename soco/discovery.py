@@ -363,6 +363,7 @@ def _is_sonos(ip_address):
         return False
 
 
+# pylint: disable=too-many-statements
 def scan_network(
     include_invisible=False,
     multi_household=False,
@@ -492,6 +493,7 @@ def scan_network(
         original_cache_state = core.zone_group_state_shared_cache.enabled
         if original_cache_state:
             core.zone_group_state_shared_cache.enabled = False
+            _LOG.info("Disabled SoCo caching")
 
     # Collect SoCo objects
     zones = set()
@@ -510,5 +512,10 @@ def scan_network(
     # Restore the original cache state if required
     if multi_household and original_cache_state:
         core.zone_group_state_shared_cache.enabled = True
+        _LOG.info("Re-enabled SoCo caching")
+
+    _LOG.info(
+        "Include invisible: %s | %d Zones: %s", include_invisible, len(zones), zones
+    )
 
     return list(zones)
