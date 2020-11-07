@@ -228,7 +228,7 @@ def any_soco(allow_network_scan=False, **network_scan_kwargs):
             See its docstring for details.
 
     Returns:
-        SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set,
+        SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set),
         or `None` if no instances are found
     """
 
@@ -261,8 +261,8 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
             See its docstring for details.
 
     Returns:
-        :class:`~.SoCo`: The first device encountered among all zones with the
-        given player name. If none are found `None` is returned.
+        SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set),
+        or `None` if no instances are found
     """
     devices = discover(allow_network_scan=allow_network_scan, **network_scan_kwargs)
     if devices is None:
@@ -432,6 +432,71 @@ def scan_network_by_household_id(
     return zones
 
 
+def scan_network_get_household_ids(**network_scan_kwargs):
+    """Convenience function to find the all Sonos households on the attached
+    networks.
+
+    Args:
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details. (Note that the argument
+            'multi_household' is forced to `True` when this function is
+            called.)
+
+    Returns:
+        list: A list of Sonos Household IDs, each in the form of a `str`
+        like 'Sonos_XXXXXXXXXXXXXXXXXXXXXXXXXX'.
+    """
+
+    # Take a copy to avoid creating side effects
+    new_kwargs = network_scan_kwargs.copy()
+    # multi_household must be set to True
+    new_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=True, **new_kwargs)
+    household_ids = set()
+    if zones:
+        for zone in zones:
+            household_ids.add(zone.household_id)
+
+    _LOG.info("Returning household IDs: %s", household_ids)
+    return list(household_ids)
+
+
+def scan_network_get_by_name(name, **network_scan_kwargs):
+    """Convenience function to use `scan_network` to find a zone
+    by its name.
+
+    Note that if there are multiple zones with the same name,
+    perhaps in different households, then only one of the zones
+    will be returned.
+
+    Args:
+        name (str): The name of the zone to find.
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details. (Note that the argument
+            'multi_household' is forced to `True` when this function is
+            called.)
+
+    Returns:
+        SoCo: A `SoCo` instance representing the zone, or `None` if no
+        matching zone is found. Only returns visible zones.
+    """
+
+    # Take a copy to avoid creating side effects
+    new_kwargs = network_scan_kwargs.copy()
+    # multi_household must be set to True
+    new_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=False, **new_kwargs)
+    matching_zone = None
+    if zones:
+        for zone in zones:
+            if zone.player_name == name:
+                matching_zone = zone
+                break
+
+    _LOG.info("Returning zone: %s", matching_zone)
+    return matching_zone
+
+
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
@@ -524,8 +589,8 @@ def _sonos_scan_worker_thread(
     address, then (2) check the device is a Sonos device.
 
     Once a there is a hit, the set is cleared to prevent any further
-    checking of addresses by any thread, unless 'multi_household is
-    set, in which case all IP addresses will be checked.
+    checking of addresses by any thread, unless 'multi_household' is
+    `True`, in which case all IP addresses will be checked.
     """
 
     while True:
