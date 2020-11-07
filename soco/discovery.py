@@ -422,7 +422,7 @@ def scan_network_by_household_id(
     """
 
     # Take a copy to avoid creating side effects
-    new_kwargs = network_scan_kwargs
+    new_kwargs = network_scan_kwargs.copy()
     # multi_household must be set to True
     new_kwargs["multi_household"] = True
     zones = scan_network(include_invisible=include_invisible, **new_kwargs)
