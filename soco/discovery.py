@@ -274,12 +274,139 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
+def scan_network(
+    include_invisible=False,
+    multi_household=False,
+    max_threads=256,
+    scan_timeout=0.1,
+    min_netmask=24,
+):
+    """Scan all attached networks for Sonos devices.
+
+    This function scans the IPv4 networks to which this node is attached,
+    searching for Sonos devices. Multiple parallel threads are used to
+    scan IP addresses in parallel for faster discovery.
+
+    Public and loopback IP ranges are excluded from the scan, and the scope of
+    the search can be controlled by setting a minimum netmask.
+
+    This function is intended for use when the usual discovery function is not
+    working, perhaps due to multicast problems on the network to which the SoCo
+    host is attached. The function can also be used to find a complete list of
+    speakers across multiple Sonos Households. For example, this is the case
+    where there are 'split' S1/S2 Sonos systems on the network.
+
+    Note that this call may fail to find speakers present on the network, and
+    this can be due to ARP cache misses and ARP requests that don't
+    complete within the timeout. The call can be retried with longer values for
+    scan_timeout if necessary.
+
+    Args:
+        include_invisible (bool, optional): Whether to include invisible Sonos devices
+            in the set of devices returned.
+        multi_household (bool, optional): Whether to find all the speakers on the
+            network exhaustively.
+            If set to `False`, discovery will stop as soon as at least one speaker is
+            found. In the case of multiple households on the attached networks, this
+            means that only the speakers from the first-discovered household will be
+            returned.
+            If set to `True`, discovery will proceed until all speakers, from all
+            households, have been found.
+        max_threads (int, optional): The maximum number of threads to use when
+            scanning the network.
+        scan_timeout (float, optional): The network timeout in seconds to use when
+            checking each IP address for a Sonos device.
+        min_netmask (int, optional): The minimum number of netmask bits. Used to
+                constrain the network search space.
+
+    Returns:
+        set: A set of `SoCo` instances, one for each zone found, or else `None`.
+    """
+
+    # Generate the set of IPs to check
+    ip_set = set()
+    for network in _find_ipv4_networks(min_netmask):
+        ip_set.update(set(network))
+
+    # Find Sonos devices on the list of IPs
+    # Use threading to scan the list efficiently
+    sonos_ip_addresses = []
+    thread_list = []
+    if max_threads > len(ip_set):
+        max_threads = len(ip_set)
+    for _ in range(max_threads):
+        thread = threading.Thread(
+            target=_sonos_scan_worker_thread,
+            args=(ip_set, scan_timeout, sonos_ip_addresses, multi_household),
+        )
+        try:
+            thread.start()
+        except RuntimeError:
+            # We probably can't start any more threads
+            # Cease thread creation and continue
+            _LOG.info(
+                "Runtime error starting thread number %d ... continue",
+                len(thread_list) + 1,
+            )
+            break
+        thread_list.append(thread)
+    _LOG.info("Created %d scanner threads", len(thread_list))
+
+    # Wait for all threads to finish
+    for thread in thread_list:
+        thread.join()
+    _LOG.info("All %d scanner threads terminated", len(thread_list))
+
+    # No Sonos devices found
+    if len(sonos_ip_addresses) == 0:
+        _LOG.info("No Sonos zones discovered")
+        return None
+
+    # Disable caching to prevent problems with the list of zones
+    # if there are multiple households
+    if multi_household:
+        original_cache_state = core.zone_group_state_shared_cache.enabled
+        if original_cache_state:
+            core.zone_group_state_shared_cache.enabled = False
+            _LOG.info("Disabled SoCo caching")
+
+    # Collect SoCo instances
+    zones = set()
+    for ip_address in sonos_ip_addresses:
+        if include_invisible:
+            for zone in config.SOCO_CLASS(ip_address).all_zones:
+                zones.add(zone)
+        else:
+            for zone in config.SOCO_CLASS(ip_address).visible_zones:
+                zones.add(zone)
+        # Stop after first zone unless we want exhaustively to find
+        # all zones across all households
+        if not multi_household:
+            break
+
+    # Restore the original cache state if required
+    if multi_household:
+        if original_cache_state:
+            core.zone_group_state_shared_cache.enabled = True
+            _LOG.info("Re-enabled SoCo caching")
+
+    _LOG.info(
+        "Include_invisible: %s | multi_household: %s | %d Zones: %s",
+        include_invisible,
+        multi_household,
+        len(zones),
+        zones,
+    )
+
+    return zones
+
+
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
     Helper function to return a set of IPv4 networks to which
     the network interfaces on this node are attached.
-    Excludes public and loopback network ranges.
+    Exclude public and loopback network ranges.
 
     Args:
         min_netmask(int): The minimum netmask to be used.
@@ -333,14 +460,9 @@ def _check_ip_and_port(ip_address, port, timeout):
         bool: True if a connection can be made.
     """
 
-    _socket = None
-    try:
-        _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        _socket.settimeout(timeout)
-        return not bool(_socket.connect_ex((ip_address, port)))
-    finally:
-        if _socket:
-            _socket.close()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket_:
+        socket_.settimeout(timeout)
+        return not bool(socket_.connect_ex((ip_address, port)))
 
 
 def _is_sonos(ip_address):
@@ -363,159 +485,40 @@ def _is_sonos(ip_address):
         return False
 
 
-# pylint: disable=too-many-statements
-def scan_network(
-    include_invisible=False,
-    multi_household=False,
-    max_threads=256,
-    scan_timeout=0.1,
-    min_netmask=24,
+def _sonos_scan_worker_thread(
+    ip_set, socket_timeout, sonos_ip_addresses, multi_household
 ):
-    """Scan all attached networks for Sonos devices.
+    """Helper function worker thread to take IP addresses from a set and
+    test whether there is (1) a device with port 1400 open at that IP
+    address, then (2) check the device is a Sonos device.
 
-    This function scans the IPv4 networks to which this node is attached,
-    searching for Sonos devices. Multiple parallel threads are used to
-    scan IP addresses in parallel for faster discovery.
-
-    Public and loopback IP ranges are excluded from the scan, and the scope of
-    the search can be controlled by setting a minimum netmask.
-
-    This function is intended for use when the usual discovery function is not
-    working, perhaps due to multicast problems on the network to which the SoCo
-    host is attached. The function can also be used to find a complete list of
-    speakers across multiple Sonos Households. For example, this is the case
-    where there are 'split' S1/S2 Sonos systems on the network.
-
-    Note that this call may fail to find speakers present on the network, and
-    this can be due to ARP cache misses and ARP requests that don't
-    complete within the timeout. The call can be retried with longer values for
-    scan_timeout if necessary.
-
-    Args:
-        include_invisible (bool, optional): Whether to include invisible Sonos devices
-            in the set of devices returned.
-        multi_household (bool, optional): Whether to find all the speakers on the
-            network exhaustively.
-            If set to `False`, discovery will stop as soon as at least one speaker is
-            found. In the case of multiple households on the attached networks, this
-            means that only the speakers from the first-discovered household will be
-            returned.
-            If set to `True`, discovery will proceed until all speakers, from all
-            households, have been found.
-        max_threads (int, optional): The maximum number of threads to use when
-            scanning the network.
-        scan_timeout (float, optional): The network timeout in seconds to use when
-            checking each IP address for a Sonos device.
-        min_netmask (int, optional): The minimum number of netmask bits. Used to
-                constrain the network search space.
-
-    Returns:
-        set: A set of `SoCo` instances, one for each zone found, or else `None`.
+    Once a there is a hit, the set is cleared to prevent any further
+    checking of addresses by any thread, unless 'multi_household is
+    set, in which case all IP addresses will be checked.
     """
 
-    def sonos_scan_worker_thread(
-        ip_set, socket_timeout, sonos_ip_addresses, multi_household
-    ):
-        """Helper function worker thread to take IP addresses from a set and
-        test whether there is (1) a device with port 1400 open at that IP
-        address, then (2) check the device is a Sonos device.
-        Once a there is a hit, the list is cleared to prevent any further
-        checking of addresses by any thread.
-        """
-
-        while True:
-            try:
-                ip_addr = ip_set.pop()
-            except KeyError:
-                break
-
-            ip_address = str(ip_addr)
-            try:
-                check = _check_ip_and_port(ip_address, 1400, socket_timeout)
-            except OSError:
-                # With large numbers of threads, we can exceed the file handle limit.
-                # Put the address back on the list and drop out of this thread.
-                ip_set.add(ip_addr)
-                break
-
-            if check:
-                _LOG.info("Found open port 1400 at IP '%s'", ip_address)
-                if _is_sonos(ip_address):
-                    _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
-                    sonos_ip_addresses.append(ip_address)
-                    # Clear the list to eliminate further searching by
-                    # all threads, if we're not doing an exhaustive search
-                    if not multi_household:
-                        ip_set.clear()
-
-    # Generate the set of IPs to check
-    ip_set = set()
-    for network in _find_ipv4_networks(min_netmask):
-        ip_set.update(set(network))
-
-    # Find Sonos devices on the list of IPs
-    # Use threading to scan the list efficiently
-    sonos_ip_addresses = []
-    thread_list = []
-    if max_threads > len(ip_set):
-        max_threads = len(ip_set)
-    for _ in range(max_threads):
-        thread = threading.Thread(
-            target=sonos_scan_worker_thread,
-            args=(ip_set, scan_timeout, sonos_ip_addresses, multi_household),
-        )
+    while True:
         try:
-            thread.start()
-        except RuntimeError:
-            # We probably can't start any more threads
-            # Cease thread creation and continue
-            _LOG.info(
-                "Runtime error starting thread number %d ... continue",
-                len(thread_list) + 1,
-            )
-            break
-        thread_list.append(thread)
-    _LOG.info("Created %d scanner threads", len(thread_list))
-
-    # Wait for all threads to finish
-    for thread in thread_list:
-        thread.join()
-    _LOG.info("All %d scanner threads terminated", len(thread_list))
-
-    # No Sonos devices found
-    if len(sonos_ip_addresses) == 0:
-        _LOG.info("No Sonos zones discovered")
-        return None
-
-    # Disable caching to prevent problems with the list of zones
-    # if there are multiple households
-    if multi_household:
-        original_cache_state = core.zone_group_state_shared_cache.enabled
-        if original_cache_state:
-            core.zone_group_state_shared_cache.enabled = False
-            _LOG.info("Disabled SoCo caching")
-
-    # Collect SoCo objects
-    zones = set()
-    for ip_address in sonos_ip_addresses:
-        if include_invisible:
-            for zone in config.SOCO_CLASS(ip_address).all_zones:
-                zones.add(zone)
-        else:
-            for zone in config.SOCO_CLASS(ip_address).visible_zones:
-                zones.add(zone)
-        # Stop here unless we want exhaustively to find all speakers
-        # across all households
-        if not multi_household:
+            ip_addr = ip_set.pop()
+        except KeyError:
             break
 
-    # Restore the original cache state if required
-    if multi_household and original_cache_state:
-        core.zone_group_state_shared_cache.enabled = True
-        _LOG.info("Re-enabled SoCo caching")
+        ip_address = str(ip_addr)
+        try:
+            check = _check_ip_and_port(ip_address, 1400, socket_timeout)
+        except OSError:
+            # With large numbers of threads, we can exceed the file handle limit.
+            # Put the address back on the list and drop out of this thread.
+            ip_set.add(ip_addr)
+            break
 
-    _LOG.info(
-        "Include invisible: %s | %d Zones: %s", include_invisible, len(zones), zones
-    )
-
-    return list(zones)
+        if check:
+            _LOG.info("Found open port 1400 at IP '%s'", ip_address)
+            if _is_sonos(ip_address):
+                _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
+                sonos_ip_addresses.append(ip_address)
+                # Clear the list to eliminate further searching by
+                # all threads, if we're not doing an exhaustive search
+                if not multi_household:
+                    ip_set.clear()
+                    break

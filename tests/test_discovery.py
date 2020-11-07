@@ -18,6 +18,7 @@ from soco.discovery import (
     _find_ipv4_networks,
     _check_ip_and_port,
     _is_sonos,
+    _sonos_scan_worker_thread,
     scan_network,
 )
 
@@ -129,6 +130,27 @@ def test__is_sonos(monkeypatch):
         assert _is_sonos("192.168.0.3") is False
 
 
+def test__sonos_scan_worker_thread(monkeypatch):
+    _setup_sockets(monkeypatch)
+
+    with patch("soco.config.SOCO_CLASS", new=_mock_soco_new):
+        ip_set = {"192.168.0.1", "192.168.0.2", "192.168.0.3"}
+        sonos_ip_addresses = []
+        _sonos_scan_worker_thread(ip_set, 0.1, sonos_ip_addresses, False)
+        assert len(sonos_ip_addresses) == 1
+        assert (
+            "192.168.0.1" in sonos_ip_addresses or "192.168.0.2" in sonos_ip_addresses
+        )
+        assert "192.168.0.3" not in sonos_ip_addresses
+
+        ip_set = {"192.168.0.1", "192.168.0.2", "192.168.0.3"}
+        sonos_ip_addresses = []
+        _sonos_scan_worker_thread(ip_set, 0.1, sonos_ip_addresses, True)
+        assert len(sonos_ip_addresses) == 2
+        assert set(["192.168.0.1", "192.168.0.2"]) == set(sonos_ip_addresses)
+        assert "192.168.0.3" not in sonos_ip_addresses
+
+
 def test_scan_network(monkeypatch):
     _setup_sockets(monkeypatch)
     _set_up_adapters(monkeypatch)
@@ -148,10 +170,12 @@ def test_scan_network(monkeypatch):
         assert "192.168.0.2" in scan_network(
             include_invisible=True, multi_household=True
         )
+        # This last one can take a few seconds to run; large address
+        # space, and large number of threads
         assert "192.168.0.1" in scan_network(
             include_invisible=False,
             multi_household=True,
-            max_threads=5000,
+            max_threads=15000,
             min_netmask=16,
         )
 
