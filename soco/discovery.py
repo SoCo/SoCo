@@ -401,6 +401,35 @@ def scan_network(
     return zones
 
 
+def scan_network_by_household_id(
+    household_id, include_invisible=False, **network_scan_kwargs
+):
+    """Convenience function to find the zones in a specific Sonos
+    Household.
+
+    Args:
+        household_id (str): The Sonos Household ID to search for. IDs take the
+            form 'Sonos_XXXXXXXXXXXXXXXXXXXXXXXXXX'.
+        include_invisible (bool, optional): Whether to include invisible Sonos devices
+            in the set of devices returned.
+        **network_scan_kwargs: Arguments for the `scan_network` function.
+            See its docstring for details. Note that the argument
+            'multi_household' is forced to `True` when this function is
+            called.
+
+    Returns:
+        set: A set of `SoCo` instances, one for each zone found, or else `None`.
+    """
+
+    # multi_household must be set to True
+    network_scan_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
+    if zones:
+        zones = {x for x in zones if x.household_id == household_id}
+    _LOG.info("Returning zones: %s", zones)
+    return zones
+
+
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
