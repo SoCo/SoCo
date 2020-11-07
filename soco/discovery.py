@@ -413,19 +413,21 @@ def scan_network_by_household_id(
         include_invisible (bool, optional): Whether to include invisible Sonos devices
             in the set of devices returned.
         **network_scan_kwargs: Arguments for the `scan_network` function.
-            See its docstring for details. Note that the argument
+            See its docstring for details. (Note that the argument
             'multi_household' is forced to `True` when this function is
-            called.
+            called.)
 
     Returns:
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
+    # Take a copy to avoid creating side effects
+    new_kwargs = network_scan_kwargs
     # multi_household must be set to True
-    network_scan_kwargs["multi_household"] = True
-    zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
+    new_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=include_invisible, **new_kwargs)
     if zones:
-        zones = {x for x in zones if x.household_id == household_id}
+        zones = {zone for zone in zones if zone.household_id == household_id}
     _LOG.info("Returning zones: %s", zones)
     return zones
 
