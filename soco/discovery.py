@@ -293,8 +293,9 @@ def scan_network(
     This function is intended for use when the usual discovery function is not
     working, perhaps due to multicast problems on the network to which the SoCo
     host is attached. The function can also be used to find a complete list of
-    speakers across multiple Sonos Households. For example, this is the case
-    where there are 'split' S1/S2 Sonos systems on the network.
+    speakers when there are multiple Sonos households present.
+    For example, this is the case where there are 'split' S1/S2 Sonos systems
+    on the network.
 
     Note that this call may fail to find speakers present on the network, and
     this can be due to ARP cache misses and ARP requests that don't
@@ -405,10 +406,10 @@ def scan_network_by_household_id(
     household_id, include_invisible=False, **network_scan_kwargs
 ):
     """Convenience function to find the zones in a specific Sonos
-    Household.
+    household.
 
     Args:
-        household_id (str): The Sonos Household ID to search for. IDs take the
+        household_id (str): The Sonos household ID to search for. IDs take the
             form 'Sonos_XXXXXXXXXXXXXXXXXXXXXXXXXX'.
         include_invisible (bool, optional): Whether to include invisible Sonos devices
             in the set of devices returned.
@@ -421,11 +422,9 @@ def scan_network_by_household_id(
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
     """
 
-    # Take a copy to avoid creating side effects
-    new_kwargs = network_scan_kwargs.copy()
     # multi_household must be set to True
-    new_kwargs["multi_household"] = True
-    zones = scan_network(include_invisible=include_invisible, **new_kwargs)
+    network_scan_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
     if zones:
         zones = {zone for zone in zones if zone.household_id == household_id}
     _LOG.info("Returning zones: %s", zones)
@@ -443,22 +442,20 @@ def scan_network_get_household_ids(**network_scan_kwargs):
             called.)
 
     Returns:
-        list: A list of Sonos Household IDs, each in the form of a `str`
+        set: A set of Sonos household IDs, each in the form of a `str`
         like 'Sonos_XXXXXXXXXXXXXXXXXXXXXXXXXX'.
     """
 
-    # Take a copy to avoid creating side effects
-    new_kwargs = network_scan_kwargs.copy()
     # multi_household must be set to True
-    new_kwargs["multi_household"] = True
-    zones = scan_network(include_invisible=True, **new_kwargs)
+    network_scan_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=True, **network_scan_kwargs)
     household_ids = set()
     if zones:
         for zone in zones:
             household_ids.add(zone.household_id)
 
     _LOG.info("Returning household IDs: %s", household_ids)
-    return list(household_ids)
+    return household_ids
 
 
 def scan_network_get_by_name(name, **network_scan_kwargs):
@@ -481,11 +478,9 @@ def scan_network_get_by_name(name, **network_scan_kwargs):
         matching zone is found. Only returns visible zones.
     """
 
-    # Take a copy to avoid creating side effects
-    new_kwargs = network_scan_kwargs.copy()
     # multi_household must be set to True
-    new_kwargs["multi_household"] = True
-    zones = scan_network(include_invisible=False, **new_kwargs)
+    network_scan_kwargs["multi_household"] = True
+    zones = scan_network(include_invisible=False, **network_scan_kwargs)
     matching_zone = None
     if zones:
         for zone in zones:
