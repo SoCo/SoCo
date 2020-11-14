@@ -12,9 +12,13 @@ import re
 import socket
 from functools import wraps
 from xml.sax.saxutils import escape
+from xml.parsers.expat import ExpatError
 import warnings
+import xmltodict
 
 import requests
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import config
 from .compat import UnicodeType
@@ -224,6 +228,7 @@ class SoCo(_SocoSingletonBase):
         get_sleep_timer
         create_stereo_pair
         separate_stereo_pair
+        get_battery_info
 
     .. warning::
 
@@ -2152,6 +2157,74 @@ class SoCo(_SocoSingletonBase):
             if getattr(sonos_playlist, attr_name) == match:
                 return sonos_playlist
         raise ValueError('No match on "{0}" for value "{1}"'.format(attr_name, match))
+
+    def get_battery_info(self, timeout=3.0):
+        """Get battery information for a Sonos speaker.
+
+        Obtains battery information for Sonos speakers that report it. This only
+        applies to Sonos Move speakers at the time of writing.
+
+        This method may only work on Sonos 'S2' systems.
+
+        Uses the 'support/review' URL, which collects comprehensive
+        system information from all players in the system via the target device,
+        so it's a somewhat expensive call and should be used sparingly.
+
+        Args:
+            timeout (float, optional): The timeout to use when making the
+                HTTP request.
+
+        Returns:
+            dict: A `dict` containing battery status data.
+
+            Example return value::
+
+                {'Health': 'GREEN',
+                 'Level': 100,
+                 'Temperature': 'NORMAL',
+                 'PowerSource': 'SONOS_CHARGING_RING'}
+
+        Raises:
+            NotSupportedException: If the speaker does not report battery
+                information.
+            ConnectionError: If the HTTP connection failed, or returned an
+                unsuccessful status code.
+            TimeoutError: If making the HTTP connection, or reading the
+                response, timed out.
+        """
+
+        # Retrieve information from the speaker's support URL
+        try:
+            response = requests.get(
+                "http://" + self.ip_address + ":1400/support/review",
+                timeout=timeout,
+            )
+        except (ConnectTimeout, ReadTimeout) as error:
+            raise TimeoutError from error
+        except RequestsConnectionError as error:
+            raise ConnectionError from error
+
+        if response.status_code != 200:
+            raise ConnectionError
+
+        # Convert the XML response and traverse to obtain the battery information
+        battery_info = {}
+        try:
+            zp_list = xmltodict.parse(response.text)["ZPNetworkInfo"]["ZPSupportInfo"]
+            for zp_device in zp_list:
+                if zp_device["ZPInfo"]["IPAddress"] == self.ip_address:
+                    for info_item in zp_device["LocalBatteryStatus"]["Data"]:
+                        battery_info[info_item["@name"]] = info_item["#text"]
+                    try:
+                        battery_info["Level"] = int(battery_info["Level"])
+                    except KeyError:
+                        pass
+                    return battery_info
+        except (KeyError, ExpatError) as error:
+            # Battery information not supported
+            raise NotSupportedException from error
+
+        return battery_info
 
 
 # definition section
