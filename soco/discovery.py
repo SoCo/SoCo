@@ -16,7 +16,6 @@ import ifaddr
 
 from . import config
 from .utils import really_utf8
-from . import core
 
 _LOG = logging.getLogger(__name__)
 
