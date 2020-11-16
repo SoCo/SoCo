@@ -274,12 +274,14 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
+# pylint: disable=too-many-arguments
 def scan_network(
     include_invisible=False,
     multi_household=False,
     max_threads=256,
     scan_timeout=0.1,
     min_netmask=24,
+    networks_to_scan=None,
 ):
     """Scan all attached networks for Sonos devices.
 
@@ -289,6 +291,8 @@ def scan_network(
 
     Public and loopback IP ranges are excluded from the scan, and the scope of
     the search can be controlled by setting a minimum netmask.
+
+    Alternatively, a list of networks to scan can be provided.
 
     This function is intended for use when the usual discovery function is not
     working, perhaps due to multicast problems on the network to which the SoCo
@@ -318,7 +322,10 @@ def scan_network(
         scan_timeout (float, optional): The network timeout in seconds to use when
             checking each IP address for a Sonos device.
         min_netmask (int, optional): The minimum number of netmask bits. Used to
-                constrain the network search space.
+            constrain the network search space.
+        networks_to_scan (list, optional): A `list` of IPv4 networks to search,
+            each a `str` of form "192.168.0.1/24". Only the specified networks will
+            be searched. The 'min_netmask' option (if supplied) is ignored.
 
     Returns:
         set: A set of `SoCo` instances, one for each zone found, or else `None`.
@@ -326,8 +333,18 @@ def scan_network(
 
     # Generate the set of IPs to check
     ip_set = set()
-    for network in _find_ipv4_networks(min_netmask):
-        ip_set.update(set(network))
+    if networks_to_scan:
+        for network_to_scan in networks_to_scan:
+            try:
+                network = ipaddress.IPv4Network(network_to_scan, False)
+            except ValueError:
+                _LOG.info("'%s' is not a valid IPv4 network", network_to_scan)
+                # Ignore the error and continue processing the list
+                continue
+            ip_set.update(set(network))
+    else:
+        for network in _find_ipv4_networks(min_netmask):
+            ip_set.update(set(network))
 
     # Find Sonos devices on the list of IPs
     # Use threading to scan the list efficiently
@@ -613,3 +630,5 @@ def _sonos_scan_worker_thread(
                 if not multi_household:
                     ip_set.clear()
                     break
+            else:
+                _LOG.info("'%s' is not a Sonos device", ip_address)

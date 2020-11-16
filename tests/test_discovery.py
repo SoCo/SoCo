@@ -170,7 +170,7 @@ def test_scan_network(monkeypatch):
         assert "192.168.0.2" in scan_network(
             include_invisible=True, multi_household=True
         )
-        # This last one can take a few seconds to run; large address
+        # This one can take a few seconds to run; large address
         # space, and large number of threads
         assert "192.168.0.1" in scan_network(
             include_invisible=False,
@@ -178,6 +178,18 @@ def test_scan_network(monkeypatch):
             max_threads=15000,
             min_netmask=16,
         )
+        # Test specified networks
+        assert "192.168.0.1" in scan_network(
+            include_invisible=False, networks_to_scan=["192.168.0.1/24"]
+        )
+        assert "192.168.0.2" in scan_network(
+            include_invisible=True, networks_to_scan=["192.168.0.1/24"]
+        )
+        assert "192.168.0.2" not in scan_network(
+            include_invisible=False, networks_to_scan=["192.168.0.1/24"]
+        )
+        assert "192.168.0.1" in scan_network(networks_to_scan=[])
+        assert scan_network(networks_to_scan=["not_a_network", ""]) is None
 
 
 # Helper functions for scan_network() tests
