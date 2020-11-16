@@ -5,9 +5,15 @@ SoCo 0.17 release notes
 top of the API changes that Sonos introduced with the 10.1 software
 update.
 
+.. warning::
+   The changes to SoCo to accommodate the Sonos API changes as of
+   version 10.1 are **backwards incompatible**. This means that if
+   SoCo is updated to version 0.17, then *it will be necessary to
+   update the Sonos software to ≥10.1* at the same time.
+
+
 `SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
 that allows you to programmatically control Sonos speakers.
-
 
 New Features and Improvements
 =============================

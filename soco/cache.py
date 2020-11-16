@@ -2,7 +2,7 @@
 # pylint: disable=not-context-manager,useless-object-inheritance
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
-# a bug in pylint: https://github.com/PyCQA/pylint/issues/782
+# a bug in pylint https://github.com/PyCQA/pylint/issues/782
 
 # NOTE: useless-object-inheritance needed for Python 2.x compatability
 
@@ -20,10 +20,11 @@ from .compat import dumps
 class _BaseCache(object):
 
     """An abstract base class for the cache."""
+
     # pylint: disable=no-self-use, unused-argument
 
     def __init__(self, *args, **kwargs):
-        super(_BaseCache, self).__init__()
+        super().__init__()
         self._cache = {}
         #: `bool`: whether the cache is enabled
         self.enabled = True
@@ -105,7 +106,7 @@ class TimedCache(_BaseCache):
             default_timeout (int): The default number of seconds after
             which items will be expired.
         """
-        super(TimedCache, self).__init__()
+        super().__init__()
         #: `int`: The default caching expiry interval in seconds.
         self.default_timeout = default_timeout
         # A thread lock for the cache
@@ -158,7 +159,7 @@ class TimedCache(_BaseCache):
         if not self.enabled:
             return
         # Check for a timeout keyword, store and remove it.
-        timeout = kwargs.pop('timeout', None)
+        timeout = kwargs.pop("timeout", None)
         if timeout is None:
             timeout = self.default_timeout
         cache_key = self.make_key(args, kwargs)

@@ -39,3 +39,6 @@ coverage.xml
 
 # Installer logs
 pip-log.txt
+
+# PyCharm
+.idea/

@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="S://myweb/music/mp3/Christina%20Aguilera%20-%20Back%20To%20Basics%202CD%202006/000-christina_aguilera-back_to_basics-2cd-2006.m3u" parentID="A:PLAYLISTS" restricted="true">
+    <res protocolInfo="x-file-cifs:*:audio/mpegurl:*">x-file-cifs://myweb/music/mp3/Christina%20Aguilera%20-%20Back%20To%20Basics%202CD%202006/000-christina_aguilera-back_to_basics-2cd-2006.m3u</res>
+    <dc:title>000-christina_aguilera-back_to_basics-2cd-2006.m3u</dc:title>
+    <upnp:class>object.container.playlistContainer</upnp:class>
+  </container>
+</DIDL-Lite>

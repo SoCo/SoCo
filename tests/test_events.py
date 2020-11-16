@@ -5,9 +5,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from soco.events import (
-    Event, parse_event_xml
-)
+from soco.events_base import Event, parse_event_xml
 
 
 DUMMY_EVENT = """
@@ -70,14 +68,14 @@ DUMMY_EVENT = """
 
 def test_event_object():
     # Basic initialisation
-    dummy_event = Event('123', '456', 'dummy', 123456.7, {'zone': 'kitchen'})
-    assert dummy_event.sid == '123'
-    assert dummy_event.seq == '456'
+    dummy_event = Event("123", "456", "dummy", 123456.7, {"zone": "kitchen"})
+    assert dummy_event.sid == "123"
+    assert dummy_event.seq == "456"
     assert dummy_event.timestamp == 123456.7
-    assert dummy_event.service == 'dummy'
-    assert dummy_event.variables == {'zone': 'kitchen'}
+    assert dummy_event.service == "dummy"
+    assert dummy_event.variables == {"zone": "kitchen"}
     # attribute access
-    assert dummy_event.zone == 'kitchen'
+    assert dummy_event.zone == "kitchen"
     # Should not access non-existent attributes
     with pytest.raises(AttributeError):
         var = dummy_event.non_existent
@@ -90,6 +88,6 @@ def test_event_object():
 
 def test_event_parsing():
     event_dict = parse_event_xml(DUMMY_EVENT)
-    assert event_dict['zone_group_state']
-    assert event_dict['alarm_run_sequence'] == 'RINCON_000EXXXXXX0:56:0'
-    assert event_dict['zone_group_id'] == "RINCON_000XXXX01400:57"
+    assert event_dict["zone_group_state"]
+    assert event_dict["alarm_run_sequence"] == "RINCON_000EXXXXXX0:56:0"
+    assert event_dict["zone_group_id"] == "RINCON_000XXXX01400:57"

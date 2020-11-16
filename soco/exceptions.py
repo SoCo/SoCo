@@ -38,7 +38,7 @@ class SoCoUPnPException(SoCoException):
                 encoded string.
             error_description (str): A description of the error. Default is ""
         """
-        super(SoCoUPnPException, self).__init__()
+        super().__init__()
         self.message = message
         self.error_code = error_code
         self.error_description = error_description
@@ -101,7 +101,7 @@ class EventParseException(SoCoException):
             metadata (str): The metadata which failed to parse
             cause (Exception): The original exception
         """
-        super(EventParseException, self).__init__()
+        super().__init__()
         self.tag = tag
         self.metadata = metadata
         self.__cause__ = cause
@@ -124,7 +124,7 @@ class SoCoFault(object):
         Args:
             exception (Exception): The exception which should be thrown on use
         """
-        self.__dict__['exception'] = exception
+        self.__dict__["exception"] = exception
 
     def __getattr__(self, name):
         raise self.exception
@@ -139,10 +139,9 @@ class SoCoFault(object):
         raise self.exception
 
     def __repr__(self):
-        return '<{0}: {1} at {2}>'.format(self.__class__.__name__,
-                                          repr(self.exception),
-                                          hex(id(self)))
+        return "<{0}: {1} at {2}>".format(
+            self.__class__.__name__, repr(self.exception), hex(id(self))
+        )
 
     def __str__(self):
-        return '<{0}: {1}>'.format(self.__class__.__name__,
-                                   repr(self.exception))
+        return "<{0}: {1}>".format(self.__class__.__name__, repr(self.exception))

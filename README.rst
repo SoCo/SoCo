@@ -11,8 +11,12 @@ For more background on the project, please see Rahim's `blog post
 
 Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
 
-.. image:: https://travis-ci.org/SoCo/SoCo.svg?branch=master
-   :target: https://travis-ci.org/SoCo/SoCo
+.. image:: https://badges.gitter.im/SoCo/SoCo.svg
+   :alt: Join the chat at https://gitter.im/SoCo/SoCo
+   :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+.. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
+   :target: https://travis-ci.com/SoCo/SoCo
    :alt: Build Status
 
 .. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
@@ -198,6 +202,13 @@ Related Projects
 
 Socos is a command line tool for controlling Sonos devices. It is developed
 in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_.
+
+SoCo-CLI (`soco-cli <https://github.com/avantrec/soco-cli>`_) is a powerful and
+fully-featured command line tool suitable for use in scripts, scheduled tasks, etc. It
+supports time-based and state-based actions, and repeated commands using loops. It also
+provides an alternative speaker discovery mechanism for situations where SoCo discovery
+does not work, and it functions with multiple Sonos systems on the same network as is the
+case with split S1/S2 systems.
 
 More of a Ruby fan? Not a problem, `Sam Soffes`_ is building out an
 awesome `Ruby gem`_.

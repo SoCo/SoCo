@@ -1,0 +1,9 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="A:ALBUM/St.%20Anger" parentID="A:ALBUM" restricted="true">
+    <dc:title>St. Anger</dc:title>
+    <upnp:class>object.container.album.musicAlbum.sonos-favorite</upnp:class>
+    <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_000E5884455C01400#A:ALBUM/St.%20Anger</res>
+    <dc:creator>Metallica</dc:creator>
+    <upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2fmyweb%2fmusic%2fogg%2fMetallica%2520-%2520St.%2520Anger%2f01%2520-%2520Frantic.ogg&amp;v=15</upnp:albumArtURI>
+  </container>
+</DIDL-Lite>

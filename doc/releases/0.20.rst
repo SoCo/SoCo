@@ -1,0 +1,47 @@
+SoCo 0.20 release notes
+***********************
+
+**SoCo 0.20** is the latest increment to the SoCo module. Among the additions
+this time are support for adding stereo pairs, proper categorization of Sonos
+Amp as a playbar to add proper support for 'night sound' and 'speech
+enhancement' and finally a fix for a long running issue where vendor extended
+DIDL-Lite classes would cause events to crash without specific code added for
+each one. See the full list of additions and bugfixes below.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a Python
+package that allows you to programmatically control Sonos speakers.
+
+New Features and Improvements
+=============================
+
+* Add support for creating and separating stereo pairs of speakers. Note: works
+  with dissimilar Sonos speakers if required. Pull request `#704
+  <https://github.com/SoCo/SoCo/pull/704>`_.
+* Add support for autogenerating vendor extended DIDL-Lite classes. Pull request
+  `#713 <https://github.com/SoCo/SoCo/pull/713>`_. This should fix all the
+  problems where SoCo would crash if some vendor specific data type is
+  unknown. 
+* Categorize Sonos Amp as a playbar in order to provide support for 'night
+  sound' and 'speech enhancement'. Pull request `#721
+  <https://github.com/SoCo/SoCo/pull/721>`_
+* If port 1400 is in use, the next available 100 ports will be tried. Pull
+  request `#724 <https://github.com/SoCo/SoCo/pull/724>`_.
+
+Bugfixes
+========
+
+* Fix bug where data_structures_upgrade would fail on items that has no uri.
+  Issue `#702 <https://github.com/SoCo/SoCo/issues/702>`_.
+* Process share browsing correctly. Issue `#717
+  <https://github.com/SoCo/SoCo/issues/717>`_. Credit to @Sonosy for the fix.
+
+Developer improvements
+======================
+
+* Format all soco main, test and example code with the black code formatter
+  (https://github.com/psf/black) and make it mandatory going forward including a
+  TravisCI check. Pull request `#706 <https://github.com/SoCo/SoCo/pull/706>`_.
+* Improve ``test_remove_playlist_bad_id()`` to handle the case of no
+  existing playlists. Pull request `#726
+  <https://github.com/SoCo/SoCo/pull/726>`_, fixes issue `#725
+  <https://github.com/SoCo/SoCo/issues/725>`_.

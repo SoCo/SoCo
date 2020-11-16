@@ -11,17 +11,26 @@ Preparations
   `semantic versioning <http://semver.org/>`_. Tag names should be prefixed
   with ``v``.
 
-* Create the release notes in ``release_notes.html`` by copying contents from
-  the release notes issue. Texts can be rewritten for legibility.
+* Create the release notes RST document in ``doc/releases`` by copying
+  contents from the release notes issue. Texts can be rewritten for
+  legibility.
 
-* Verify that all tests pass.
+* Verify that all tests pass locally and on all supported versions of
+  Python via Travis-CI (the status is visible on the project frontpage
+  on GitHub).
 
 
 Create and Publish
 ------------------
 
-* Update the version number in ``__init__.py`` (see
-  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
+* Update the version number in ``__init__.py`` (see `example
+  <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_) and commit.
+
+* (**If any changes other than the version number was made** in
+  preparation for the release, push the release commit to GitHub
+  before proceeding, to ensure that all the continuous integration
+  passes. The automatic deployment to PyPI mentioned below, will not
+  work if continuous integration fails.)
 
 * Tag the current commit, eg
 

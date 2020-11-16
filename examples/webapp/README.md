@@ -8,7 +8,7 @@ This example depends on several external libraries. The easiest way to install e
 
 `pip install -r requirements.txt`
 
-Once all dependanices have been installed, rename `settings.py.example` to `settings.py` and edit the file.
+Once all dependencies have been installed, rename `settings.py.example` to `settings.py` and edit the file.
 
 ### Album Art
 In order to show album art, this example makes use of the [Rovi API](http://developer.rovicorp.com). If you'd like to have album art, you'll need to sign up for your own (free) API key. You can do so by going to their [Developer Portal](http://developer.rovicorp.com) and clicking on "Register" at the top right of the page. API keys are issued automatically, but Album Art must be manually enabled for accounts. Simply send an e-mail to [apisupport@rovicorp.com](apisupport@rovicorp.com) and ask that it be enabled for your account.

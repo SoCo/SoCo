@@ -160,3 +160,25 @@ Clearing the queue is done with the
   >>> queue = device.get_queue()
   >>> len(queue)
   0
+
+Listing and deleting music library shares
+-----------------------------------------
+
+Music library shares are the local network drive shares connected to
+Sonos, which host the audio content in the Sonos Music Library.
+
+To list the shares connected to Sonos, use the
+:meth:`~soco.music_library.MusicLibrary.list_library_shares` method as follows::
+
+  >>> device.music_library.list_library_shares()
+  ['//share_host_01/music', '//share_host_02/music']
+
+The result is a list of network share locations.
+
+To delete a network share, use the
+:meth:`~soco.music_library.MusicLibrary.delete_library_share` method as follows::
+
+  >>> device.music_library.delete_library_share('//share_host_01/music')
+
+You may want to check that the deletion has succeeded, by waiting a few seconds,
+then confirming that the share has disappeared from the list of shares.

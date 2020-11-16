@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="A:GENRE/Choral" parentID="A:GENRE" restricted="true">
+    <dc:title>Choral</dc:title>
+    <upnp:class>object.container.genre.musicGenre</upnp:class>
+    <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_B8E93781F3EA01400#A:GENRE/Choral</res>
+  </container>
+</DIDL-Lite>
