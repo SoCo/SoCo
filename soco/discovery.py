@@ -16,7 +16,6 @@ import ifaddr
 
 from . import config
 from .utils import really_utf8
-from . import core
 
 _LOG = logging.getLogger(__name__)
 
@@ -380,14 +379,6 @@ def scan_network(
         _LOG.info("No Sonos zones discovered")
         return None
 
-    # Disable caching to prevent problems with the list of zones
-    # if there are multiple households
-    if multi_household:
-        original_cache_state = core.zone_group_state_shared_cache.enabled
-        if original_cache_state:
-            core.zone_group_state_shared_cache.enabled = False
-            _LOG.info("Disabled SoCo caching")
-
     # Collect SoCo instances
     zones = set()
     for ip_address in sonos_ip_addresses:
@@ -401,12 +392,6 @@ def scan_network(
         # all zones across all households
         if not multi_household:
             break
-
-    # Restore the original cache state if required
-    if multi_household:
-        if original_cache_state:
-            core.zone_group_state_shared_cache.enabled = True
-            _LOG.info("Re-enabled SoCo caching")
 
     _LOG.info(
         "Include_invisible: %s | multi_household: %s | %d Zones: %s",
