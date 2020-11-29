@@ -41,6 +41,11 @@ from .xml import XML
 _LOG = logging.getLogger(__name__)
 
 
+def print(*args, **kwargs):
+    pass
+
+
+
 class SoapFault(SoCoException):
 
     """An exception encapsulating a SOAP Fault."""
@@ -164,6 +169,7 @@ class SoapMessage(object):
 
         headers = {"Content-Type": 'text/xml; charset="utf-8"'}
         if soap_action is not None:
+            # FIXME The successful auth was with SOAP-Action 
             headers.update({"SOAPACTION": '"{}"'.format(soap_action)})
         if http_headers is not None:
             headers.update(http_headers)
@@ -279,6 +285,7 @@ class SoapMessage(object):
         """
 
         headers, data = self.prepare()
+        headers["Accept-Language"] = "en-US"
 
         # Check log level before logging XML, since prettifying it is
         # expensive
