@@ -30,8 +30,8 @@ from ..xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-def print(*args, **kwargs):
-    pass
+# def print(*args, **kwargs):
+#     pass
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
@@ -187,8 +187,8 @@ class MusicServiceSoapClient(object):
             `MusicServiceException`: containing details of the error
                 returned by the music service.
         """
-        print(method)
-        print(self.get_soap_header())
+        # print(method)
+        # print(self.get_soap_header())
         message = SoapMessage(
             endpoint=self.endpoint,
             method=method,
@@ -203,7 +203,7 @@ class MusicServiceSoapClient(object):
 
         try:
             result_elt = message.call()
-            print("RES", "+" * 40)
+            # print("RES", "+" * 40)
             from soco.utils import show_xml
 
             # show_xml(result_elt)
@@ -259,22 +259,27 @@ class MusicServiceSoapClient(object):
 
         return result if result is not None else {}
 
-    def device_link_auth_part1(self):
-        """Perform part 1 of a device link authentication session
+    def device_or_app_link_auth_part1(self):
+        """Perform part 1 of a Device or App Link authentication session
 
         See `MusicService.device_link_auth_part1` for details
 
         """
-        # result = self.call("getDeviceLinkCode", [("householdId", self._household_id)])[
-        #    "getDeviceLinkCodeResult"
-        # ]
-        result = self.call("getAppLink", [("householdId", self._household_id)])[
-            "getAppLinkResult"
-        ]
-        return (result["regUrl"], result["linkCode"])
+        if self.music_service.auth_type == "DeviceLink":
+            result = self.call(
+                "getDeviceLinkCode", [("householdId", self._household_id)]
+            )["getDeviceLinkCodeResult"]
+            return (result["regUrl"], result["linkCode"])
+        elif self.music_service.auth_type == "AppLink":
+            result = self.call("getAppLink", [("householdId", self._household_id)])[
+                "getAppLinkResult"
+            ]
+            # print(result)
+            auth_parts = result["authorizeAccount"]["deviceLink"]
+            return auth_parts["regUrl"], auth_parts["linkCode"]
 
-    def device_link_auth_part2(self, link_code):
-        """Perform part 2 of a device link authentication session
+    def device_or_app_link_auth_part2(self, link_code):
+        """Perform part 2 of a Device or App Link authentication session
 
         See `MusicService.device_link_auth_part2` for details
 
@@ -434,7 +439,7 @@ class MusicService(object):
             self.token_store = JsonFileTokenStore.from_config_file()
         # Look up the data for this service
         data = self.get_data_for_name(service_name)
-        print(data)
+        # print(data)
         self.uri = data["Uri"]
         self.secure_uri = data["SecureUri"]
         self.capabilities = data["Capabilities"]
@@ -738,7 +743,7 @@ class MusicService(object):
             desc = "SA_RINCON{service_type}_".format(service_type=self.service_type)
         return desc
 
-    def device_link_auth_part1(self):
+    def device_or_app_link_auth_part1(self):
         """Perform part 1 of a device link authentication session
 
         Returns:
@@ -746,19 +751,17 @@ class MusicService(object):
             form of information: (registration_URL, link_code)
 
         """
-        return self.soap_client.device_link_auth_part1()
 
-    def device_link_auth_part2(self, linkcode):
+        return self.soap_client.device_or_app_link_auth_part1()
+
+    def device_or_app_link_auth_part2(self, linkcode):
         """Perform part 2 of the device link authentication session
 
         Args:
             linkcode (str): The link code returned in part1
 
-        Return:
-            FIXME
-
         """
-        return self.soap_client.device_link_auth_part2(linkcode)
+        return self.soap_client.device_or_app_link_auth_part2(linkcode)
 
     ########################################################################
     #                                                                      #
