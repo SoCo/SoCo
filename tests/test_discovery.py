@@ -15,6 +15,7 @@ from soco import config
 from soco.discovery import (
     any_soco,
     by_name,
+    _find_ipv4_addresses,
     _find_ipv4_networks,
     _check_ip_and_port,
     _is_sonos,
@@ -114,6 +115,11 @@ def test__find_ipv4_networks(monkeypatch):
     assert ipaddress.ip_network("192.168.1.1/16", False) in _find_ipv4_networks(0)
     assert ipaddress.ip_network("15.100.100.100/8", False) not in _find_ipv4_networks(8)
     assert ipaddress.ip_network("127.0.0.1/24", False) not in _find_ipv4_networks(24)
+
+
+def test__find_ipv4_addresses(monkeypatch):
+    _set_up_adapters(monkeypatch)
+    assert _find_ipv4_addresses() == {"192.168.0.1", "192.168.1.1", "15.100.100.100"}
 
 
 def test__check_ip_and_port(monkeypatch):

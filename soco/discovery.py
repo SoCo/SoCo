@@ -44,9 +44,9 @@ def discover(
         interface_addr (str or None): Discovery operates by sending UDP
             multicast datagrams. ``interface_addr`` is a string (dotted
             quad) representation of the network interface address to use as
-            the source of the datagrams (i.e. it is a value for
+            the source of the datagrams (i.e., it is a value for
             `socket.IP_MULTICAST_IF <socket>`). If `None` or not specified,
-            the system default interface for UDP multicast messages will be
+            the system default interface(s) for UDP multicast messages will be
             used. This is probably what you want to happen. Defaults to
             `None`.
         allow_network_scan (bool, optional): If normal discovery fails, fall
@@ -57,21 +57,6 @@ def discover(
     Returns:
         set: a set of `SoCo` instances, one for each zone found, or else
         `None`.
-
-    Note:
-        There is no easy cross-platform way to find out the addresses of the
-        local machine's network interfaces. You might try the
-        `netifaces module <https://pypi.python.org/pypi/netifaces>`_ and some
-        code like this:
-
-            >>> from netifaces import interfaces, AF_INET, ifaddresses
-            >>> data = [ifaddresses(i) for i in interfaces()]
-            >>> [d[AF_INET][0]['addr'] for d in data if d.get(AF_INET)]
-            ['127.0.0.1', '192.168.1.20']
-
-            This should provide you with a list of values to try for
-            interface_addr if you are having trouble finding your Sonos devices
-
     """
 
     def create_socket(interface_addr=None):
@@ -118,19 +103,8 @@ def discover(
         _sockets.append(create_socket(interface_addr))
         _LOG.info("Sending discovery packets on default interface")
     else:
-        # Find the local network address using a couple of different methods.
-        # Create a socket for each unique address found, and one for the
-        # default multicast address
-        addresses = set()
-        try:
-            addresses.add(socket.gethostbyname(socket.gethostname()))
-        except socket.error:
-            pass
-        try:
-            addresses.add(socket.gethostbyname(socket.getfqdn()))
-        except socket.error:
-            pass
-        for address in addresses:
+        # Lookup the local network addresses
+        for address in _find_ipv4_addresses():
             try:
                 _sockets.append(create_socket(address))
             except socket.error as e:
@@ -228,7 +202,7 @@ def any_soco(allow_network_scan=False, **network_scan_kwargs):
 
     Returns:
         SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set),
-        or `None` if no instances are found
+        or `None` if no instances are found.
     """
 
     cls = config.SOCO_CLASS
@@ -261,7 +235,7 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
 
     Returns:
         SoCo: A `SoCo` instance (or subclass if `config.SOCO_CLASS` is set),
-        or `None` if no instances are found
+        or `None` if no instances are found.
     """
     devices = discover(allow_network_scan=allow_network_scan, **network_scan_kwargs)
     if devices is None:
@@ -539,6 +513,33 @@ def _find_ipv4_networks(min_netmask):
 
     _LOG.info("Set of networks to search: %s", str(ipv4_net_list))
     return ipv4_net_list
+
+
+def _find_ipv4_addresses():
+    """Discover all the host's IP addresses.
+
+    Helper function to return a set of IPv4 addresses associated
+    with the network interfaces of this host.
+
+    Returns:
+        set: A set of IPv4 addresses (dotted decimal strings). Empty
+        set if there are no addresses found.
+    """
+
+    ipv4_addr_list = set()
+    for adapter in ifaddr.get_adapters():
+        for ifaddr_network in adapter.ips:
+            try:
+                ipaddress.IPv4Network(ifaddr_network.ip)
+            except ValueError:
+                # Not an IPv4 address
+                continue
+            ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
+            if not ipv4_network.is_loopback:
+                ipv4_addr_list.add(ifaddr_network.ip)
+
+    _LOG.info("Set of attached IPs: %s", str(ipv4_addr_list))
+    return ipv4_addr_list
 
 
 def _check_ip_and_port(ip_address, port, timeout):
