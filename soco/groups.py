@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
+
 """This module contains classes and functionality relating to Sonos Groups."""
 
 from __future__ import unicode_literals
@@ -57,6 +60,21 @@ class ZoneGroup(object):
 
     A consistent readable label for the group members can be returned with
     the `label` and `short_label` properties.
+
+    Properties are available to get and set the group `volume` and the group
+    `mute` state, and the `set_relative_volume()` method can be used to make
+    relative adjustments to the group volume, e.g.:
+
+        >>> device.group.volume = 25
+        >>> device.group.volume
+        25
+        >>> device.group.set_relative_volume(-10)
+        15
+        >>> device.group.mute
+        >>> False
+        >>> device.group.mute = True
+        >>> device.group.mute
+        True
     """
 
     def __init__(self, uid, coordinator, members=None):
@@ -87,14 +105,15 @@ class ZoneGroup(object):
 
     def __repr__(self):
         return "{0}(uid='{1}', coordinator={2!r}, members={3!r})".format(
-            self.__class__.__name__, self.uid, self.coordinator, self.members)
+            self.__class__.__name__, self.uid, self.coordinator, self.members
+        )
 
     @property
     def label(self):
         """str: A description of the group.
 
-            >>> device.group.label
-            'Kitchen, Living Room'
+        >>> device.group.label
+        'Kitchen, Living Room'
         """
         group_names = sorted([m.player_name for m in self.members])
         return ", ".join(group_names)
@@ -111,3 +130,73 @@ class ZoneGroup(object):
         if len(group_names) > 1:
             group_label += " + {}".format(len(group_names) - 1)
         return group_label
+
+    @property
+    def volume(self):
+        """int: The volume of the group.
+
+        An integer between 0 and 100.
+        """
+        response = self.coordinator.groupRenderingControl.GetGroupVolume(
+            [("InstanceID", 0)]
+        )
+        return int(response["CurrentVolume"])
+
+    @volume.setter
+    def volume(self, group_volume):
+        group_volume = int(group_volume)
+        group_volume = max(0, min(group_volume, 100))  # Coerce in range
+        self.coordinator.groupRenderingControl.SetGroupVolume(
+            [("InstanceID", 0), ("DesiredVolume", group_volume)]
+        )
+
+    @property
+    def mute(self):
+        """bool: The mute state for the group.
+
+        True or False.
+        """
+        response = self.coordinator.groupRenderingControl.GetGroupMute(
+            [("InstanceID", 0)]
+        )
+        mute_state = response["CurrentMute"]
+        return bool(int(mute_state))
+
+    @mute.setter
+    def mute(self, group_mute):
+        mute_value = "1" if group_mute else "0"
+        self.coordinator.groupRenderingControl.SetGroupMute(
+            [("InstanceID", 0), ("DesiredMute", mute_value)]
+        )
+
+    def set_relative_volume(self, relative_group_volume):
+        """Adjust the group volume up or down by a relative amount.
+
+        If the adjustment causes the volume to overshoot the maximum value
+        of 100, the volume will be set to 100. If the adjustment causes the
+        volume to undershoot the minimum value of 0, the volume will be set
+        to 0.
+
+        Note that this method is an alternative to using addition and
+        subtraction assignment operators (+=, -=) on the `volume` property
+        of a `ZoneGroup` instance. These operators perform the same function
+        as `set_relative_volume()` but require two network calls per
+        operation instead of one.
+
+        Args:
+            relative_group_volume (int): The relative volume adjustment. Can be
+                positive or negative.
+
+        Returns:
+            int: The new group volume setting.
+
+        Raises:
+            ValueError: If ``relative_group_volume`` cannot be cast as
+                an integer.
+        """
+        relative_group_volume = int(relative_group_volume)
+        # Sonos automatically handles out-of-range values.
+        resp = self.coordinator.groupRenderingControl.SetRelativeGroupVolume(
+            [("InstanceID", 0), ("Adjustment", relative_group_volume)]
+        )
+        return int(resp["NewVolume"])

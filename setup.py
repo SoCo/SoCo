@@ -25,7 +25,7 @@ class PyTest(TestCommand):
 
 
 src = io.open('soco/__init__.py', encoding='utf-8').read()
-metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", src))
+metadata = dict(re.findall("__([a-z]+)__ = \"([^\"]+)\"", src))
 docstrings = re.findall('"""(.*?)"""', src, re.MULTILINE | re.DOTALL)
 
 NAME = 'soco'
@@ -51,10 +51,10 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 2',
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.3',
-    'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: Implementation :: CPython',
     'Programming Language :: Python :: Implementation :: PyPy',
     'Topic :: Home Automation',

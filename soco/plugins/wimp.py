@@ -10,19 +10,24 @@ import socket
 
 import requests
 
-from ..exceptions import (
-    SoCoUPnPException, UnknownXMLStructure
-)
+from ..exceptions import SoCoUPnPException, UnknownXMLStructure
 from ..ms_data_structures import (
-    MSAlbum, MSAlbumList, MSArtist, MSArtistTracklist,
-    MSCollection, MSFavorites, MSPlaylist, MSTrack, get_ms_item
+    MSAlbum,
+    MSAlbumList,
+    MSArtist,
+    MSArtistTracklist,
+    MSCollection,
+    MSFavorites,
+    MSPlaylist,
+    MSTrack,
+    get_ms_item,
 )
 from ..services import MusicServices
 from ..utils import really_utf8
 from ..xml import XML
 from .__init__ import SoCoPlugin
 
-__all__ = ['Wimp']
+__all__ = ["Wimp"]
 
 
 def _post(url, headers, body, retries=3, timeout=3.0):
@@ -42,8 +47,7 @@ def _post(url, headers, body, retries=3, timeout=3.0):
     out = None
     while out is None:
         try:
-            out = requests.post(url, headers=headers, data=body,
-                                timeout=timeout)
+            out = requests.post(url, headers=headers, data=body, timeout=timeout)
         # Due to a bug in requests, the post command will sometimes fail to
         # properly wrap a socket.timeout exception in requests own exception.
         # See https://github.com/kennethreitz/requests/issues/2045
@@ -66,7 +70,7 @@ def _ns_tag(ns_id, tag):
     :param tag: The tag
     :type str: str
     """
-    return '{{{}}}{}'.format(NS[ns_id], tag)
+    return "{{{}}}{}".format(NS[ns_id], tag)
 
 
 def _get_header(soap_action):
@@ -82,16 +86,16 @@ def _get_header(soap_action):
     # the available music in each country is bound to the account.
     language, _ = locale.getdefaultlocale()
     if language is None:
-        language = ''
+        language = ""
     else:
-        language = language.replace('_', '-') + ', '
+        language = language.replace("_", "-") + ", "
 
     header = {
-        'CONNECTION': 'close',
-        'ACCEPT-ENCODING': 'gzip',
-        'ACCEPT-LANGUAGE': '{}en-US;q=0.9'.format(language),
-        'Content-Type': 'text/xml; charset="utf-8"',
-        'SOAPACTION': SOAP_ACTION[soap_action]
+        "CONNECTION": "close",
+        "ACCEPT-ENCODING": "gzip",
+        "ACCEPT-LANGUAGE": "{}en-US;q=0.9".format(language),
+        "Content-Type": 'text/xml; charset="utf-8"',
+        "SOAPACTION": SOAP_ACTION[soap_action],
     }
     return header
 
@@ -151,27 +155,26 @@ class Wimp(SoCoPlugin):
             -jeg-ikke-logge-p%C3%A5-WiMP-med-min-Sonos-n%C3%A5r-jeg-har-et
             -gyldigt-abonnement->`_ (In Danish)
         """
-        super(Wimp, self).__init__(soco)
+        super().__init__(soco)
 
         # Instantiate variables
-        self._url = 'http://client.wimpmusic.com/sonos/services/Sonos'
-        self._serial_number = soco.get_speaker_info()['serial_number']
+        self._url = "http://client.wimpmusic.com/sonos/services/Sonos"
+        self._serial_number = soco.get_speaker_info()["serial_number"]
         self._username = username
         self._service_id = 20
-        self._http_vars = {'retries': retries, 'timeout': timeout}
+        self._http_vars = {"retries": retries, "timeout": timeout}
 
         # Get a session id for the searches
         self._music_services = MusicServices(soco)
-        response = self._music_services.GetSessionId([
-            ('ServiceId', 20),
-            ('Username', username)
-        ])
-        self._session_id = response['SessionId']
+        response = self._music_services.GetSessionId(
+            [("ServiceId", 20), ("Username", username)]
+        )
+        self._session_id = response["SessionId"]
 
     @property
     def name(self):
         """Return the human read-able name for the plugin"""
-        return 'Wimp Plugin for {}'.format(self._username)
+        return "Wimp Plugin for {}".format(self._username)
 
     @property
     def username(self):
@@ -187,31 +190,28 @@ class Wimp(SoCoPlugin):
     def description(self):
         """Return the music service description for the DIDL metadata on the
         form ``'SA_RINCON5127_...self.username...'``"""
-        return 'SA_RINCON5127_{}'.format(self._username)
+        return "SA_RINCON5127_{}".format(self._username)
 
     def get_tracks(self, search, start=0, max_items=100):
         """Search for tracks.
 
         See get_music_service_information for details on the arguments
         """
-        return self.get_music_service_information('tracks', search, start,
-                                                  max_items)
+        return self.get_music_service_information("tracks", search, start, max_items)
 
     def get_albums(self, search, start=0, max_items=100):
         """Search for albums.
 
         See get_music_service_information for details on the arguments
         """
-        return self.get_music_service_information('albums', search, start,
-                                                  max_items)
+        return self.get_music_service_information("albums", search, start, max_items)
 
     def get_artists(self, search, start=0, max_items=100):
         """Search for artists.
 
         See get_music_service_information for details on the arguments
         """
-        return self.get_music_service_information('artists', search, start,
-                                                  max_items)
+        return self.get_music_service_information("artists", search, start, max_items)
 
     def get_playlists(self, search, start=0, max_items=100):
         """Search for playlists.
@@ -223,11 +223,11 @@ class Wimp(SoCoPlugin):
             Un-intuitively this method returns MSAlbumList items. See
             note in class doc string for details.
         """
-        return self.get_music_service_information('playlists', search, start,
-                                                  max_items)
+        return self.get_music_service_information("playlists", search, start, max_items)
 
-    def get_music_service_information(self, search_type, search, start=0,
-                                      max_items=100):
+    def get_music_service_information(
+        self, search_type, search, start=0, max_items=100
+    ):
         """Search for music service information items.
 
         :param search_type: The type of search to perform, possible values are:
@@ -245,34 +245,32 @@ class Wimp(SoCoPlugin):
             items. See note in class doc string for details.
         """
         # Check input
-        if search_type not in ['artists', 'albums', 'tracks', 'playlists']:
-            message = 'The requested search {} is not valid'\
-                .format(search_type)
+        if search_type not in ["artists", "albums", "tracks", "playlists"]:
+            message = "The requested search {} is not valid".format(search_type)
             raise ValueError(message)
         # Transform search: tracks -> tracksearch
-        search_type = '{}earch'.format(search_type)
-        parent_id = SEARCH_PREFIX.format(search_type=search_type,
-                                         search=search)
+        search_type = "{}earch".format(search_type)
+        parent_id = SEARCH_PREFIX.format(search_type=search_type, search=search)
 
         # Perform search
         body = self._search_body(search_type, search, start, max_items)
-        headers = _get_header('search')
+        headers = _get_header("search")
         response = _post(self._url, headers, body, **self._http_vars)
         self._check_for_errors(response)
-        result_dom = XML.fromstring(response.text.encode('utf-8'))
+        result_dom = XML.fromstring(response.text.encode("utf-8"))
 
         # Parse results
-        search_result = result_dom.find('.//' + _ns_tag('', 'searchResult'))
-        out = {'item_list': []}
-        for element in ['index', 'count', 'total']:
-            out[element] = search_result.findtext(_ns_tag('', element))
+        search_result = result_dom.find(".//" + _ns_tag("", "searchResult"))
+        out = {"item_list": []}
+        for element in ["index", "count", "total"]:
+            out[element] = search_result.findtext(_ns_tag("", element))
 
-        if search_type == 'tracksearch':
-            item_name = 'mediaMetadata'
+        if search_type == "tracksearch":
+            item_name = "mediaMetadata"
         else:
-            item_name = 'mediaCollection'
-        for element in search_result.findall(_ns_tag('', item_name)):
-            out['item_list'].append(get_ms_item(element, self, parent_id))
+            item_name = "mediaCollection"
+        for element in search_result.findall(_ns_tag("", item_name)):
+            out["item_list"].append(get_ms_item(element, self, parent_id))
 
         return out
 
@@ -295,7 +293,7 @@ class Wimp(SoCoPlugin):
         """
         # Check for correct service
         if ms_item is not None and ms_item.service_id != self._service_id:
-            message = 'This music service item is not for this service'
+            message = "This music service item is not for this service"
             raise ValueError(message)
 
         # Form HTTP body and set parent_id
@@ -303,37 +301,39 @@ class Wimp(SoCoPlugin):
             body = self._browse_body(ms_item.item_id)
             parent_id = ms_item.extended_id
             if parent_id is None:
-                parent_id = ''
+                parent_id = ""
         else:
-            body = self._browse_body('root')
-            parent_id = '0'
+            body = self._browse_body("root")
+            parent_id = "0"
 
         # Get HTTP header and post
-        headers = _get_header('get_metadata')
+        headers = _get_header("get_metadata")
         response = _post(self._url, headers, body, **self._http_vars)
 
         # Check for errors and get XML
         self._check_for_errors(response)
         result_dom = XML.fromstring(really_utf8(response.text))
         # Find the getMetadataResult item ...
-        xpath_search = './/' + _ns_tag('', 'getMetadataResult')
+        xpath_search = ".//" + _ns_tag("", "getMetadataResult")
         metadata_result = list(result_dom.findall(xpath_search))
         # ... and make sure there is exactly 1
         if len(metadata_result) != 1:
             raise UnknownXMLStructure(
-                'The results XML has more than 1 \'getMetadataResult\'. This '
-                'is unexpected and parsing will dis-continue.'
+                "The results XML has more than 1 'getMetadataResult'. This "
+                "is unexpected and parsing will dis-continue."
             )
         metadata_result = metadata_result[0]
 
         # Browse the children of metadata result
-        out = {'item_list': []}
-        for element in ['index', 'count', 'total']:
-            out[element] = metadata_result.findtext(_ns_tag('', element))
+        out = {"item_list": []}
+        for element in ["index", "count", "total"]:
+            out[element] = metadata_result.findtext(_ns_tag("", element))
         for result in metadata_result:
-            if result.tag in [_ns_tag('', 'mediaCollection'),
-                              _ns_tag('', 'mediaMetadata')]:
-                out['item_list'].append(get_ms_item(result, self, parent_id))
+            if result.tag in [
+                _ns_tag("", "mediaCollection"),
+                _ns_tag("", "mediaMetadata"),
+            ]:
+                out["item_list"].append(get_ms_item(result, self, parent_id))
         return out
 
     @staticmethod
@@ -366,8 +366,8 @@ class Wimp(SoCoPlugin):
             :py:class:`soco.data_structures.MusicServiceItem`
         """
         extension = None
-        if 'mime_type' in item_content:
-            extension = MIME_TYPE_TO_EXTENSION[item_content['mime_type']]
+        if "mime_type" in item_content:
+            extension = MIME_TYPE_TO_EXTENSION[item_content["mime_type"]]
         out = URIS.get(item_class)
         if out:
             out = out.format(extension=extension, **item_content)
@@ -402,15 +402,13 @@ class Wimp(SoCoPlugin):
         xml = self._base_body()
 
         # Add the Body part
-        XML.SubElement(xml, 's:Body')
-        item_attrib = {
-            'xmlns': 'http://www.sonos.com/Services/1.1'
-        }
-        search = XML.SubElement(xml[1], 'search', item_attrib)
-        XML.SubElement(search, 'id').text = search_type
-        XML.SubElement(search, 'term').text = search_term
-        XML.SubElement(search, 'index').text = str(start)
-        XML.SubElement(search, 'count').text = str(max_items)
+        XML.SubElement(xml, "s:Body")
+        item_attrib = {"xmlns": "http://www.sonos.com/Services/1.1"}
+        search = XML.SubElement(xml[1], "search", item_attrib)
+        XML.SubElement(search, "id").text = search_type
+        XML.SubElement(search, "term").text = search_term
+        XML.SubElement(search, "index").text = str(start)
+        XML.SubElement(search, "count").text = str(max_items)
 
         return XML.tostring(xml)
 
@@ -437,15 +435,13 @@ class Wimp(SoCoPlugin):
         xml = self._base_body()
 
         # Add the Body part
-        XML.SubElement(xml, 's:Body')
-        item_attrib = {
-            'xmlns': 'http://www.sonos.com/Services/1.1'
-        }
-        search = XML.SubElement(xml[1], 'getMetadata', item_attrib)
-        XML.SubElement(search, 'id').text = search_id
+        XML.SubElement(xml, "s:Body")
+        item_attrib = {"xmlns": "http://www.sonos.com/Services/1.1"}
+        search = XML.SubElement(xml[1], "getMetadata", item_attrib)
+        XML.SubElement(search, "id").text = search_id
         # Investigate this index, count stuff more
-        XML.SubElement(search, 'index').text = '0'
-        XML.SubElement(search, 'count').text = '100'
+        XML.SubElement(search, "index").text = "0"
+        XML.SubElement(search, "count").text = "100"
 
         return XML.tostring(xml)
 
@@ -465,19 +461,17 @@ class Wimp(SoCoPlugin):
          </s:Envelope>
         """
         item_attrib = {
-            'xmlns:s': 'http://schemas.xmlsoap.org/soap/envelope/',
+            "xmlns:s": "http://schemas.xmlsoap.org/soap/envelope/",
         }
-        xml = XML.Element('s:Envelope', item_attrib)
+        xml = XML.Element("s:Envelope", item_attrib)
 
         # Add the Header part
-        XML.SubElement(xml, 's:Header')
-        item_attrib = {
-            'xmlns': 'http://www.sonos.com/Services/1.1'
-        }
-        credentials = XML.SubElement(xml[0], 'credentials', item_attrib)
-        XML.SubElement(credentials, 'sessionId').text = self._session_id
-        XML.SubElement(credentials, 'deviceId').text = self._serial_number
-        XML.SubElement(credentials, 'deviceProvider').text = 'Sonos'
+        XML.SubElement(xml, "s:Header")
+        item_attrib = {"xmlns": "http://www.sonos.com/Services/1.1"}
+        credentials = XML.SubElement(xml[0], "credentials", item_attrib)
+        XML.SubElement(credentials, "sessionId").text = self._session_id
+        XML.SubElement(credentials, "deviceId").text = self._serial_number
+        XML.SubElement(credentials, "deviceProvider").text = "Sonos"
 
         return xml
 
@@ -489,52 +483,47 @@ class Wimp(SoCoPlugin):
         if response.status_code != 200:
             xml_error = really_utf8(response.text)
             error_dom = XML.fromstring(xml_error)
-            fault = error_dom.find('.//' + _ns_tag('s', 'Fault'))
-            error_description = fault.find('faultstring').text
+            fault = error_dom.find(".//" + _ns_tag("s", "Fault"))
+            error_description = fault.find("faultstring").text
             error_code = EXCEPTION_STR_TO_CODE[error_description]
-            message = 'UPnP Error {} received: {} from {}'.format(
-                error_code, error_description, self._url)
+            message = "UPnP Error {} received: {} from {}".format(
+                error_code, error_description, self._url
+            )
             raise SoCoUPnPException(
                 message=message,
                 error_code=error_code,
                 error_description=error_description,
-                error_xml=really_utf8(response.text)
+                error_xml=really_utf8(response.text),
             )
 
 
 SOAP_ACTION = {
-    'get_metadata': '"http://www.sonos.com/Services/1.1#getMetadata"',
-    'search': '"http://www.sonos.com/Services/1.1#search"'
+    "get_metadata": '"http://www.sonos.com/Services/1.1#getMetadata"',
+    "search": '"http://www.sonos.com/Services/1.1#search"',
 }
 # Note UPnP exception 802 while trying to add a Wimp track indicates that these
 # are tracks that not available in Wimp. Do something with that.
-EXCEPTION_STR_TO_CODE = {
-    'unknown': 20000,
-    'ItemNotFound': 20001
-}
-SEARCH_PREFIX = '00020064{search_type}:{search}'
+EXCEPTION_STR_TO_CODE = {"unknown": 20000, "ItemNotFound": 20001}
+SEARCH_PREFIX = "00020064{search_type}:{search}"
 ID_PREFIX = {
-    MSTrack: '00030020',
-    MSAlbum: '0004002c',
-    MSArtist: '10050024',
-    MSAlbumList: '000d006c',
-    MSPlaylist: '0006006c',
-    MSArtistTracklist: '100f006c',
+    MSTrack: "00030020",
+    MSAlbum: "0004002c",
+    MSArtist: "10050024",
+    MSAlbumList: "000d006c",
+    MSPlaylist: "0006006c",
+    MSArtistTracklist: "100f006c",
     MSFavorites: None,  # This one is unknown
-    MSCollection: None  # This one is unknown
-
+    MSCollection: None,  # This one is unknown
 }
-MIME_TYPE_TO_EXTENSION = {
-    'audio/aac': 'mp4'
-}
+MIME_TYPE_TO_EXTENSION = {"audio/aac": "mp4"}
 URIS = {
-    MSTrack: 'x-sonos-http:{item_id}.{extension}?sid={service_id}&flags=32',
-    MSAlbum: 'x-rincon-cpcontainer:{extended_id}',
-    MSAlbumList: 'x-rincon-cpcontainer:{extended_id}',
-    MSPlaylist: 'x-rincon-cpcontainer:{extended_id}',
-    MSArtistTracklist: 'x-rincon-cpcontainer:{extended_id}'
+    MSTrack: "x-sonos-http:{item_id}.{extension}?sid={service_id}&flags=32",
+    MSAlbum: "x-rincon-cpcontainer:{extended_id}",
+    MSAlbumList: "x-rincon-cpcontainer:{extended_id}",
+    MSPlaylist: "x-rincon-cpcontainer:{extended_id}",
+    MSArtistTracklist: "x-rincon-cpcontainer:{extended_id}",
 }
 NS = {
-    's': 'http://schemas.xmlsoap.org/soap/envelope/',
-    '': 'http://www.sonos.com/Services/1.1'
+    "s": "http://schemas.xmlsoap.org/soap/envelope/",
+    "": "http://www.sonos.com/Services/1.1",
 }

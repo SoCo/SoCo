@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance, too-many-arguments
+
 """Data structures for music service items
 
 The basis for this implementation is this page in the Sonos API
@@ -87,11 +91,11 @@ def get_class(class_key):
         for basecls in (MediaMetadata, MediaCollection):
             if class_key.startswith(basecls.__name__):
                 # So MediaMetadataTrack turns into MSTrack
-                class_name = 'MS' + class_key.replace(basecls.__name__, '')
+                class_name = "MS" + class_key.replace(basecls.__name__, "")
                 if sys.version_info[0] == 2:
-                    class_name = class_name.encode('ascii')
+                    class_name = class_name.encode("ascii")
                 CLASSES[class_key] = type(class_name, (basecls,), {})
-                _LOG.info('Class %s created', CLASSES[class_key])
+                _LOG.info("Class %s created", CLASSES[class_key])
     return CLASSES[class_key]
 
 
@@ -107,27 +111,33 @@ def parse_response(service, response, search_type):
     Returns:
         SearchResult: A SearchResult object
     """
-    _LOG.debug('Parse response "%s" from service "%s" of type "%s"', response,
-               service, search_type)
+    _LOG.debug(
+        'Parse response "%s" from service "%s" of type "%s"',
+        response,
+        service,
+        search_type,
+    )
     items = []
     # The result to be parsed is in either searchResult or getMetadataResult
-    if 'searchResult' in response:
-        response = response['searchResult']
-    elif 'getMetadataResult' in response:
-        response = response['getMetadataResult']
+    if "searchResult" in response:
+        response = response["searchResult"]
+    elif "getMetadataResult" in response:
+        response = response["getMetadataResult"]
     else:
-        raise ValueError('"response" should contain either the key '
-                         '"searchResult" or "getMetadataResult"')
+        raise ValueError(
+            '"response" should contain either the key '
+            '"searchResult" or "getMetadataResult"'
+        )
 
     # Form the search metadata
     search_metadata = {
-        'number_returned': response['count'],
-        'total_matches': None,
-        'search_type': search_type,
-        'update_id': None,
+        "number_returned": response["count"],
+        "total_matches": None,
+        "search_type": search_type,
+        "update_id": None,
     }
 
-    for result_type in ('mediaCollection', 'mediaMetadata'):
+    for result_type in ("mediaCollection", "mediaMetadata"):
         # Upper case the first letter (used for the class_key)
         result_type_proper = result_type[0].upper() + result_type[1:]
         raw_items = response.get(result_type, [])
@@ -139,7 +149,7 @@ def parse_response(service, response, search_type):
             # Form the class_key, which is a unique string for this type,
             # formed by concatenating the result type with the item type. Turns
             # into e.g: MediaMetadataTrack
-            class_key = result_type_proper + raw_item['itemType'].title()
+            class_key = result_type_proper + raw_item["itemType"].title()
             cls = get_class(class_key)
             items.append(cls.from_music_service(service, raw_item))
     return SearchResult(items, **search_metadata)
@@ -159,19 +169,19 @@ def form_uri(item_id, service, is_track):
     if is_track:
         uri = service.sonos_uri_from_id(item_id)
     else:
-        uri = 'x-rincon-cpcontainer:' + item_id
+        uri = "x-rincon-cpcontainer:" + item_id
     return uri
 
 
 # Type Helper
-BOOL_STRS = set(('true', 'false'))
+BOOL_STRS = set(("true", "false"))
 
 
 def bool_str(string):
     """Returns a boolean from a string imput of 'true' or 'false'"""
     if string not in BOOL_STRS:
         raise ValueError('Invalid boolean string: "{}"'.format(string))
-    return True if string == 'true' else False
+    return string == "true"
 
 
 # Music Service item base classes
@@ -189,12 +199,11 @@ class MetadataDictBase(object):
 
     def __init__(self, metadata_dict):
         """Initialize local variables"""
-        _LOG.debug('MetadataDictBase.__init__ with: %s', metadata_dict)
+        _LOG.debug("MetadataDictBase.__init__ with: %s", metadata_dict)
         for key in metadata_dict:
             # Check for invalid fields
             if key not in self._valid_fields:
-                message = ('%s instantiated with invalid field "%s" and '
-                           'value: %s')
+                message = '%s instantiated with invalid field "%s" and value: "%s"'
                 # Really wanted to raise exceptions here, but as it
                 # turns out I have already encountered invalid fields
                 # from music services.
@@ -212,9 +221,11 @@ class MetadataDictBase(object):
         """Return item from metadata in case of unknown attribute"""
         try:
             return self.metadata[key]
-        except KeyError:
+        except KeyError as error:
             message = 'Class {} has no attribute "{}"'
-            raise AttributeError(message.format(self.__class__.__name__, key))
+            raise AttributeError(
+                message.format(self.__class__.__name__, key)
+            ) from error
 
 
 class MusicServiceItem(MetadataDictBase):
@@ -224,8 +235,15 @@ class MusicServiceItem(MetadataDictBase):
     _valid_fields = {}
     _types = {}
 
-    def __init__(self, item_id, desc,  # pylint: disable=too-many-arguments
-                 resources, uri, metadata_dict, music_service=None):
+    def __init__(
+        self,
+        item_id,
+        desc,  # pylint: disable=too-many-arguments
+        resources,
+        uri,
+        metadata_dict,
+        music_service=None,
+    ):
         """Init music service item
 
         Args:
@@ -237,11 +255,17 @@ class MusicServiceItem(MetadataDictBase):
             music_service (MusicService): The MusicService instance the item
                 originates from
         """
-        _LOG.debug('%s.__init__ with item_id=%s, desc=%s, resources=%s, '
-                   'uri=%s, metadata_dict=..., music_service=%s',
-                   self.__class__.__name__, item_id, desc, resources, uri,
-                   music_service)
-        super(MusicServiceItem, self).__init__(metadata_dict)
+        _LOG.debug(
+            "%s.__init__ with item_id=%s, desc=%s, resources=%s, "
+            "uri=%s, metadata_dict=..., music_service=%s",
+            self.__class__.__name__,
+            item_id,
+            desc,
+            resources,
+            uri,
+            music_service,
+        )
+        super().__init__(metadata_dict)
         self.item_id = item_id
         self.desc = desc
         self.resources = resources
@@ -263,21 +287,22 @@ class MusicServiceItem(MetadataDictBase):
             MusicServiceItem: A MusicServiceItem instance
         """
         # Form the item_id
-        quoted_id = quote_url(content_dict['id'].encode('utf-8'))
+        quoted_id = quote_url(content_dict["id"].encode("utf-8"))
         # The hex prefix remains a mistery for now
-        item_id = '0fffffff{}'.format(quoted_id)
+        item_id = "0fffffff{}".format(quoted_id)
         # Form the uri
-        is_track = cls == get_class('MediaMetadataTrack')
+        is_track = cls == get_class("MediaMetadataTrack")
         uri = form_uri(item_id, music_service, is_track)
         # Form resources and get desc
         resources = [DidlResource(uri=uri, protocol_info="DUMMY")]
         desc = music_service.desc
-        return cls(item_id, desc, resources, uri, content_dict,
-                   music_service=music_service)
+        return cls(
+            item_id, desc, resources, uri, content_dict, music_service=music_service
+        )
 
     def __str__(self):
         """Return custom string representation"""
-        title = self.metadata.get('title')
+        title = self.metadata.get("title")
         str_ = '<{} title="{}">'
         return str_.format(self.__class__.__name__, title)
 
@@ -299,7 +324,7 @@ class MusicServiceItem(MetadataDictBase):
             parent_id="DUMMY",  # Ditto
             item_id=self.item_id,
             desc=self.desc,
-            resources=self.resources
+            resources=self.resources,
         )
         return didl_item.to_element(include_namespaces=include_namespaces)
 
@@ -308,36 +333,38 @@ class TrackMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set((
-        'artistId',
-        'artist',
-        'composerId',
-        'composer',
-        'albumId',
-        'album',
-        'albumArtURI',
-        'albumArtistId',
-        'albumArtist',
-        'genreId',
-        'genre',
-        'duration',
-        'canPlay',
-        'canSkip',
-        'canAddToFavorites',
-        'rating',
-        'trackNumber',
-        'isFavorite',
-    ))
+    _valid_fields = set(
+        (
+            "artistId",
+            "artist",
+            "composerId",
+            "composer",
+            "albumId",
+            "album",
+            "albumArtURI",
+            "albumArtistId",
+            "albumArtist",
+            "genreId",
+            "genre",
+            "duration",
+            "canPlay",
+            "canSkip",
+            "canAddToFavorites",
+            "rating",
+            "trackNumber",
+            "isFavorite",
+        )
+    )
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'duration': int,
-        'canPlay': bool_str,
-        'canSkip': bool_str,
-        'canAddToFavorites': bool_str,
-        'rating': int,
-        'trackNumber': int,
-        'isFavorite': bool_str,
+        "duration": int,
+        "canPlay": bool_str,
+        "canSkip": bool_str,
+        "canAddToFavorites": bool_str,
+        "rating": int,
+        "trackNumber": int,
+        "isFavorite": bool_str,
     }
 
 
@@ -345,26 +372,28 @@ class StreamMetadata(MetadataDictBase):
     """Stream metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set((
-        'currentHost',
-        'currentShowId',
-        'currentShow',
-        'secondsRemaining',
-        'secondsToNextShow',
-        'bitrate',
-        'logo',
-        'hasOutOfBandMetadata',
-        'description',
-        'isEphemeral',
-    ))
+    _valid_fields = set(
+        (
+            "currentHost",
+            "currentShowId",
+            "currentShow",
+            "secondsRemaining",
+            "secondsToNextShow",
+            "bitrate",
+            "logo",
+            "hasOutOfBandMetadata",
+            "description",
+            "isEphemeral",
+        )
+    )
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'secondsRemaining': int,
-        'secondsToNextShow': int,
-        'bitrate': int,
-        'hasOutOfBandMetadata': bool_str,
-        'isEphemeral': bool_str,
+        "secondsRemaining": int,
+        "secondsToNextShow": int,
+        "bitrate": int,
+        "hasOutOfBandMetadata": bool_str,
+        "isEphemeral": bool_str,
     }
 
 
@@ -372,22 +401,24 @@ class MediaMetadata(MusicServiceItem):
     """Base class for all media metadata items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set((
-        'id',
-        'title',
-        'mimeType',
-        'itemType',
-        'displayType',
-        'summary',
-        'trackMetadata',
-        'streamMetadata',
-        'dynamic',
-    ))
+    _valid_fields = set(
+        (
+            "id",
+            "title",
+            "mimeType",
+            "itemType",
+            "displayType",
+            "summary",
+            "trackMetadata",
+            "streamMetadata",
+            "dynamic",
+        )
+    )
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'trackMetadata': TrackMetadata,
-        'streamMetadata': StreamMetadata,
+        "trackMetadata": TrackMetadata,
+        "streamMetadata": StreamMetadata,
         # We ignore types on the dynamic field
         # 'dynamic': ???,
     }
@@ -397,32 +428,34 @@ class MediaCollection(MusicServiceItem):
     """Base class for all mediaCollection items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set((
-        'id',
-        'title',
-        'itemType',
-        'displayType',
-        'summary',
-        'artistId',
-        'artist',
-        'albumArtURI',
-        'canPlay',
-        'canEnumerate',
-        'canAddToFavorites',
-        'containsFavorite',
-        'canScroll',
-        'canSkip',
-        'isFavorite',
-    ))
+    _valid_fields = set(
+        (
+            "id",
+            "title",
+            "itemType",
+            "displayType",
+            "summary",
+            "artistId",
+            "artist",
+            "albumArtURI",
+            "canPlay",
+            "canEnumerate",
+            "canAddToFavorites",
+            "containsFavorite",
+            "canScroll",
+            "canSkip",
+            "isFavorite",
+        )
+    )
 
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
-        'canPlay': bool_str,
-        'canEnumerate': bool_str,
-        'canAddToFavorites': bool_str,
-        'containsFavorite': bool_str,
-        'canScroll': bool_str,
-        'canSkip': bool_str,
-        'isFavorite': bool_str,
+        "canPlay": bool_str,
+        "canEnumerate": bool_str,
+        "canAddToFavorites": bool_str,
+        "containsFavorite": bool_str,
+        "canScroll": bool_str,
+        "canSkip": bool_str,
+        "isFavorite": bool_str,
     }

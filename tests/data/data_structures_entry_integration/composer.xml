@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="A:COMPOSER/Alicia%20Keys%2fWarryn%20Smiley%20Campbell" parentID="A:COMPOSER" restricted="true">
+    <dc:title>Alicia Keys/Warryn Smiley Campbell</dc:title>
+    <upnp:class>object.container.person.composer</upnp:class>
+    <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_B8E93781F3EA01400#A:COMPOSER/Alicia%20Keys%2fWarryn%20Smiley%20Campbell</res>
+  </container>
+</DIDL-Lite>

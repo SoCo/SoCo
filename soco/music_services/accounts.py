@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance,no-else-continue
+
 """This module contains classes relating to Third Party music services."""
 
-from __future__ import (
-    absolute_import, unicode_literals
-)
+from __future__ import absolute_import, unicode_literals
 
 import logging
 import weakref
@@ -29,24 +30,24 @@ class Account(object):
     _all_accounts = weakref.WeakValueDictionary()
 
     def __init__(self):
-        super(Account, self).__init__()
+        super().__init__()
         #: str: A unique identifier for the music service to which this
         #: account relates, eg ``'2311'`` for Spotify.
-        self.service_type = ''
+        self.service_type = ""
         #: str: A unique identifier for this account
-        self.serial_number = ''
+        self.serial_number = ""
         #: str: The account's nickname
-        self.nickname = ''
+        self.nickname = ""
         #: bool: `True` if this account has been deleted
         self.deleted = False
         #: str: The username used for logging into the music service
-        self.username = ''
+        self.username = ""
         #: str: Metadata for the account
-        self.metadata = ''
+        self.metadata = ""
         #: str: Used for OpenAuth id for some services
-        self.oa_device_id = ''
+        self.oa_device_id = ""
         #: str: Used for OpenAuthid for some services
-        self.key = ''
+        self.key = ""
 
     def __repr__(self):
         return "<{} '{}:{}:{}' at {}>".format(
@@ -54,7 +55,7 @@ class Account(object):
             self.serial_number,
             self.service_type,
             self.nickname,
-            hex(id(self))
+            hex(id(self)),
         )
 
     def __str__(self):
@@ -77,8 +78,7 @@ class Account(object):
         # This returns an encrypted string, and, so far, we cannot decrypt it
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
-        settings_url = "http://{}:1400/status/accounts".format(
-            device.ip_address)
+        settings_url = "http://{}:1400/status/accounts".format(device.ip_address)
         result = requests.get(settings_url).content
         log.debug("Account data: %s", result)
         return result
@@ -125,11 +125,11 @@ class Account(object):
         # ...
         #   <Accounts />
 
-        xml_accounts = root.findall('.//Account')
+        xml_accounts = root.findall(".//Account")
         result = {}
         for xml_account in xml_accounts:
-            serial_number = xml_account.get('SerialNum')
-            is_deleted = True if xml_account.get('Deleted') == '1' else False
+            serial_number = xml_account.get("SerialNum")
+            is_deleted = xml_account.get("Deleted") == "1"
             # cls._all_accounts is a weakvaluedict keyed by serial number.
             # We use it as a database to store details of the accounts we
             # know about. We need to update it with info obtained from the
@@ -158,28 +158,28 @@ class Account(object):
                 cls._all_accounts[serial_number] = account
 
             # Now, update the entry in our database with the details from XML
-            account.service_type = xml_account.get('Type')
+            account.service_type = xml_account.get("Type")
             account.deleted = is_deleted
-            account.username = xml_account.findtext('UN')
+            account.username = xml_account.findtext("UN")
             # Not sure what 'MD' stands for.  Metadata? May Delete?
-            account.metadata = xml_account.findtext('MD')
-            account.nickname = xml_account.findtext('NN')
-            account.oa_device_id = xml_account.findtext('OADevID')
-            account.key = xml_account.findtext('Key')
+            account.metadata = xml_account.findtext("MD")
+            account.nickname = xml_account.findtext("NN")
+            account.oa_device_id = xml_account.findtext("OADevID")
+            account.key = xml_account.findtext("Key")
             result[serial_number] = account
-            # There is always a TuneIn account, but it is handled separately
-            #  by Sonos, and does not appear in the xml account data. We
-            # need to add it ourselves.
-            tunein = Account()
-            tunein.service_type = '65031'  # Is this always the case?
-            tunein.deleted = False
-            tunein.username = ''
-            tunein.metadata = ''
-            tunein.nickname = ''
-            tunein.oa_device_id = ''
-            tunein.key = ''
-            tunein.serial_number = '0'
-            result['0'] = tunein
+        # There is always a TuneIn account, but it is handled separately
+        #  by Sonos, and does not appear in the xml account data. We
+        # need to add it ourselves.
+        tunein = Account()
+        tunein.service_type = "65031"  # Is this always the case?
+        tunein.deleted = False
+        tunein.username = ""
+        tunein.metadata = ""
+        tunein.nickname = ""
+        tunein.oa_device_id = ""
+        tunein.key = ""
+        tunein.serial_number = "0"
+        result["0"] = tunein
 
         return result
 
@@ -194,6 +194,5 @@ class Account(object):
             list: A list of `Account` instances.
         """
         return [
-            a for a in cls.get_accounts().values()
-            if a.service_type == service_type
+            a for a in cls.get_accounts().values() if a.service_type == service_type
         ]

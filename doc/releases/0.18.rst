@@ -1,0 +1,71 @@
+SoCo 0.18 release notes
+***********************
+
+**SoCo 0.18** adds lots of small improvements to the events
+functionality plus a major addition in the form of allowing choice of
+how the event listener is implemented. Besides that there is a logging
+improvement. Details are below.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a Python
+package that allows you to programmatically control Sonos speakers.
+
+New Features and Improvements
+=============================
+
+* Allow the user to choose how the event listener is implemented and a
+  lot of other event code improvements as outlined below. (Pull
+  request `#602 <https://github.com/SoCo/SoCo/pull/602>`_).
+
+  * A major feature addition is to allow the user to choose how the
+    event listener is implemented. The default is for the event
+    listener to use the requests library and run in a thread. This
+    update allows the user to run the event listener using the
+    twisted.internet library, by setting the ``config.EVENTS_MODULE``
+    module to point to the :py:mod:`soco.events_twisted` module. See
+    the example in events_twisted.
+
+  * Stops the event listener when the last active subscription is
+    unsubscribed.
+
+  * Raise :class:`soco.exceptions.SoCoException` on an attempt to
+    subscribe a subscription more than once (use
+    :meth:`soco.events.Subscription.renew` instead).
+
+  * Allow an optional strict parameter for
+    :meth:`soco.events.Subscription.subscribe`,
+    :meth:`soco.events.Subscription.renew` and
+    :meth:`soco.events.Subscription.unsubscribe`. If set to False,
+    Exceptions will be logged rather than raised. Default: True
+
+  * Upon autorenewal, call :meth:`soco.events.Subscription.renew` with
+    the strict flag set to False, so that any Exception is logged, not
+    raised. This is because there is no calling code to catch an
+    Exception.
+
+  * Provide for calling code to set
+    :attr:`soco.events.Subscription.auto_renew_fail` to refer to a
+    callback function. If an Exception occurs upon autorenewal, this
+    callback will be called with the Exception as the sole parameter.
+
+  * If an Exception occurs upon
+    :meth:`~events.Subscription.subscribe` or
+    :meth:`~events.Subscription.renew`, cancel the subscription,
+    unless the Exception was a SoCoException on
+    :meth:`~event.Subscription.subscribe`. For example, if an Exception occurs
+    because the network went down, the subscription will be canceled.
+
+  * Use a threading lock with :meth:`~events.Subscription.subscribe`,
+    :meth:`~events.Subscription.renew` and :meth:`~events.Subscription.unsubscribe`, because
+    autorenewal occurs from a thread.
+
+* Add a simple
+  :class:`soco.data_structures.DidlPlaylistContainerTracklist` class to
+  the :py:mod:`soco.data_structures` module (Pull request `#645
+  <https://github.com/SoCo/SoCo/pull/645>`_). The class is used by Sonos
+  when Sonos Speakers are controlled by Spotify Connect. The absence of
+  the class from the data_structures module causes errors. This fixes the error
+  message reported in pull request `#639
+  <https://github.com/SoCo/SoCo/pull/639>`_.
+
+* Remove logging of UPnP failures (Pull request `#640
+  <https://github.com/SoCo/SoCo/pull/640>`_

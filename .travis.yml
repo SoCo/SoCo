@@ -1,20 +1,18 @@
 language: python
 python:
-  - "pypy" # Run slowest first so as not to hold up the build
   - "pypy3"
-  - "2.7"
-  - "3.3"
-  - "3.4"
   - "3.5"
   - "3.6"
-  - "3.5-dev"
-  - "3.6-dev"
-  - "3.7-dev"
+  - "3.7"
+  - "3.8"
+  - "3.9"
+  - "3.9-dev"
+  - "3.10-dev"
   - "nightly"
 
 matrix:
   allow_failures:
-    - python: "3.7-dev"
+    - python: "3.10-dev"
     - python: "nightly"
 
 cache:
@@ -28,10 +26,19 @@ install:
 
 script:
   - flake8 soco
+  - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
   - pylint soco
-  - py.test --cov-config .coveragerc --cov soco .
+  - pytest --cov-config .coveragerc --cov soco .
+  - if [ `python -c "from __future__ import print_function;import sys;print(int(sys.version_info.major==3 and sys.version_info.minor>=6 and sys.implementation.name == 'cpython'))"` -gt 0 ];then black --check soco tests;fi
 
 after_script:
   - coveralls
 
-sudo: false
+deploy:
+  provider: pypi
+  user: soco-bot
+  password:
+    secure: IgMK3d7ON41NRlfIPYhlk7BPfT/jPRqC1Qn2Lcj69/vqSK5be0vyWloGRAI26v9r9VS1+slSocSUZ05BiUXQj6+srvgWLQfuRnivz6ZjttL/P+oHEvqeV917NqXU2gV7Xejs4j1Y1lu38KdAlul1XZ+0leq3tm88q8bNKAij/C0=
+  on:
+    tags: true
+  distributions: sdist bdist_wheel

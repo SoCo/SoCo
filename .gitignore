@@ -29,6 +29,7 @@ doc/_build
 .tox/
 .coverage
 .cache
+.pytest_cache
 coverage.xml
 
 # Mercurial
@@ -38,3 +39,6 @@ coverage.xml
 
 # Installer logs
 pip-log.txt
+
+# PyCharm
+.idea/
