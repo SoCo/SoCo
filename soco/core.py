@@ -2221,7 +2221,7 @@ class SoCo(_SocoSingletonBase):
                         battery_info[info_item["@name"]] = info_item["#text"]
                     try:
                         battery_info["Level"] = int(battery_info["Level"])
-                    except KeyError:
+                    except (KeyError, ValueError):
                         pass
                     return battery_info
         except (KeyError, ExpatError) as error:
