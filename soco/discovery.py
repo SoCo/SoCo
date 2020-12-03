@@ -460,16 +460,18 @@ def scan_network_get_household_ids(**network_scan_kwargs):
     return household_ids
 
 
-def scan_network_get_by_name(name, **network_scan_kwargs):
+def scan_network_get_by_name(name, household_id=None, **network_scan_kwargs):
     """Convenience function to use `scan_network` to find a zone
     by its name.
 
     Note that if there are multiple zones with the same name,
-    perhaps in different households, then only one of the zones
-    will be returned.
+    then only one of the zones will be returned. Optionally,
+    the search can be constrained to a specific household.
 
     Args:
         name (str): The name of the zone to find.
+        household_id (str, optional): Use this to find the zone in a specific
+             Sonos household.
         **network_scan_kwargs: Arguments for the `scan_network` function.
             See its docstring for details. (Note that the argument
             'multi_household' is forced to `True` when this function is
@@ -487,8 +489,13 @@ def scan_network_get_by_name(name, **network_scan_kwargs):
     if zones:
         for zone in zones:
             if zone.player_name == name:
-                matching_zone = zone
-                break
+                if household_id:
+                    if zone.household_id == household_id:
+                        matching_zone = zone
+                        break
+                else:
+                    matching_zone = zone
+                    break
 
     _LOG.info("Returning zone: %s", matching_zone)
     return matching_zone
