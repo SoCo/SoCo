@@ -60,7 +60,7 @@ def discover(
     """
 
     def create_socket(interface_addr=None):
-        """A helper function for creating a socket for discover purposes.
+        """A helper function for creating a socket for discovery purposes.
 
         Create and return a socket with appropriate options set for multicast.
         """
@@ -101,9 +101,9 @@ def discover(
                 "{0} is not a valid IP address string".format(interface_addr)
             ) from e
         _sockets.append(create_socket(interface_addr))
-        _LOG.info("Sending discovery packets on default interface")
+        _LOG.info("Sending discovery packets on specified interface")
     else:
-        # Lookup the local network addresses
+        # Use all relevant network interfaces
         for address in _find_ipv4_addresses():
             try:
                 _sockets.append(create_socket(address))
@@ -114,12 +114,6 @@ def discover(
                     e.__class__.__name__,
                     e,
                 )
-        # Add a socket using the system default address
-        _sockets.append(create_socket())
-        # Used to be logged as:
-        # list(s.getsockname()[0] for s in _sockets)
-        # but getsockname fails on Windows with unconnected unbound sockets
-        # https://bugs.python.org/issue1049
         _LOG.info("Sending discovery packets on %s", _sockets)
 
     for _ in range(0, 3):
@@ -519,14 +513,15 @@ def _find_ipv4_addresses():
     """Discover all the host's IP addresses.
 
     Helper function to return a set of IPv4 addresses associated
-    with the network interfaces of this host.
+    with the network interfaces of this host. Loopback and link
+    local addresses are excluded.
 
     Returns:
         set: A set of IPv4 addresses (dotted decimal strings). Empty
         set if there are no addresses found.
     """
 
-    ipv4_addr_list = set()
+    ipv4_addresses = set()
     for adapter in ifaddr.get_adapters():
         for ifaddr_network in adapter.ips:
             try:
@@ -535,11 +530,11 @@ def _find_ipv4_addresses():
                 # Not an IPv4 address
                 continue
             ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
-            if not ipv4_network.is_loopback:
-                ipv4_addr_list.add(ifaddr_network.ip)
+            if not ipv4_network.is_loopback and not ipv4_network.is_link_local:
+                ipv4_addresses.add(ifaddr_network.ip)
 
-    _LOG.info("Set of attached IPs: %s", str(ipv4_addr_list))
-    return ipv4_addr_list
+    _LOG.info("Set of attached IPs: %s", str(ipv4_addresses))
+    return ipv4_addresses
 
 
 def _check_ip_and_port(ip_address, port, timeout):
