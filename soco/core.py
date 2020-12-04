@@ -1215,17 +1215,17 @@ class SoCo(_SocoSingletonBase):
     @property
     def is_playing_radio(self):
         """bool: Is the speaker playing radio?"""
-        return self.music_source == "RADIO"
+        return self.music_source == RADIO
 
     @property
     def is_playing_line_in(self):
         """bool: Is the speaker playing line-in?"""
-        return self.music_source == "LINE_IN"
+        return self.music_source == LINE_IN
 
     @property
     def is_playing_tv(self):
         """bool: Is the playbar speaker input from TV?"""
-        return self.music_source == "TV"
+        return self.music_source == TV
 
     @property
     def music_source(self):
@@ -1241,6 +1241,7 @@ class SoCo(_SocoSingletonBase):
         *   ``'LINE_IN'`` -- speaker is playing music from the line-in at
             another Sonos speaker.
         *   ``'TV'`` -- speaker is playing input from TV.
+        *   ``'AIRPLAY'`` -- speaker is playing from AirPlay.
         *   ``'UNKNOWN'`` -- any other input.
 
         """
@@ -1251,7 +1252,7 @@ class SoCo(_SocoSingletonBase):
         for regex, source in SOURCES.items():
             if re.match(regex, track_uri) is not None:
                 return source
-        return "UNKNOWN"
+        return UNKNOWN
 
     def switch_to_tv(self):
         """Switch the playbar speaker's input to TV."""
@@ -2265,20 +2266,30 @@ PLAY_MODES = (
     "REPEAT_ONE",
 )
 
+# Music source names
+LIBRARY = "LIBRARY"
+RADIO = "RADIO"
+WEB_FILE = "WEB_FILE"
+LINE_IN = "LINE_IN"
+TV = "TV"
+AIRPLAY = "AIRPLAY"
+UNKNOWN = "UNKNOWN"
+NONE = "NONE"
+
 # URI prefixes for music sources
 SOURCES = {
-    r"^$": "NONE",
-    r"^x-file-cifs:": "LIBRARY",
-    r"^x-rincon-mp3radio:": "RADIO",
-    r"^x-sonosapi-stream:": "RADIO",
-    r"^x-sonosapi-radio:": "RADIO",
-    r"^x-sonosapi-hls:": "RADIO",
-    r"^aac:": "RADIO",
-    r"^hls-radio:": "RADIO",
-    r"^https?:": "WEB_FILE",
-    r"^x-rincon-stream:": "LINE_IN",
-    r"^x-sonos-htastream:": "TV",
-    r"^x-sonos-vli:.*,airplay:": "AIRPLAY",
+    r"^$": NONE,
+    r"^x-file-cifs:": LIBRARY,
+    r"^x-rincon-mp3radio:": RADIO,
+    r"^x-sonosapi-stream:": RADIO,
+    r"^x-sonosapi-radio:": RADIO,
+    r"^x-sonosapi-hls:": RADIO,
+    r"^aac:": RADIO,
+    r"^hls-radio:": RADIO,
+    r"^https?:": WEB_FILE,
+    r"^x-rincon-stream:": LINE_IN,
+    r"^x-sonos-htastream:": TV,
+    r"^x-sonos-vli:.*,airplay:": AIRPLAY,
 }
 
 # soundbar product names
