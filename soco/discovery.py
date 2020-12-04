@@ -288,8 +288,8 @@ def scan_network(
     searching for Sonos devices. Multiple parallel threads are used to
     scan IP addresses in parallel for faster discovery.
 
-    Public and loopback IP ranges are excluded from the scan, and the scope of
-    the search can be controlled by setting a minimum netmask.
+    Public, loopback and link local IP ranges are excluded from the scan,
+    and the scope of the search can be controlled by setting a minimum netmask.
 
     Alternatively, a list of networks to scan can be provided.
 
@@ -540,7 +540,7 @@ def _find_ipv4_networks(min_netmask):
 
     Helper function to return a set of IPv4 networks to which
     the network interfaces on this node are attached.
-    Exclude public and loopback network ranges.
+    Exclude public, loopback and link local network ranges.
 
     Args:
         min_netmask(int): The minimum netmask to be used.
@@ -560,8 +560,12 @@ def _find_ipv4_networks(min_netmask):
                 continue
 
             ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
-            # Restrict to private networks and exclude loopback
-            if ipv4_network.is_private and not ipv4_network.is_loopback:
+            # Restrict to private networks, and exclude loopback and link local
+            if (
+                ipv4_network.is_private
+                and not ipv4_network.is_loopback
+                and not ipv4_network.is_link_local
+            ):
                 # Constrain the size of network that will be searched
                 netmask = ifaddr_network.network_prefix
                 if netmask < min_netmask:

@@ -114,6 +114,7 @@ def test__find_ipv4_networks(monkeypatch):
     assert ipaddress.ip_network("192.168.1.1/16", False) in _find_ipv4_networks(0)
     assert ipaddress.ip_network("15.100.100.100/8", False) not in _find_ipv4_networks(8)
     assert ipaddress.ip_network("127.0.0.1/24", False) not in _find_ipv4_networks(24)
+    assert ipaddress.ip_network("169.254.1.10/16", False) not in _find_ipv4_networks(16)
 
 
 def test__check_ip_and_port(monkeypatch):
@@ -147,7 +148,7 @@ def test__sonos_scan_worker_thread(monkeypatch):
         sonos_ip_addresses = []
         _sonos_scan_worker_thread(ip_set, 0.1, sonos_ip_addresses, True)
         assert len(sonos_ip_addresses) == 2
-        assert set(["192.168.0.1", "192.168.0.2"]) == set(sonos_ip_addresses)
+        assert {"192.168.0.1", "192.168.0.2"} == set(sonos_ip_addresses)
         assert "192.168.0.3" not in sonos_ip_addresses
 
 
@@ -203,7 +204,8 @@ def _set_up_adapters(monkeypatch):
     private_16 = ifaddr.IP("192.168.1.1", 16, "private-16")
     public = ifaddr.IP("15.100.100.100", 8, "public")
     loopback = ifaddr.IP("127.0.0.1", 24, "loopback")
-    ips = [private_24, private_16, public, loopback]
+    link_local = ifaddr.IP("169.254.1.10", 16, "link_local")
+    ips = [private_24, private_16, public, loopback, link_local]
 
     # Set up mock adapters
     adapters = OrderedDict()
