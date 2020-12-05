@@ -220,6 +220,7 @@ class SoCo(_SocoSingletonBase):
     ..  autosummary::
 
         music_source
+        music_source_from_uri
         switch_to_line_in
         switch_to_tv
         set_sleep_timer
@@ -1227,11 +1228,16 @@ class SoCo(_SocoSingletonBase):
         """bool: Is the playbar speaker input from TV?"""
         return self.music_source == MUSIC_SRC_TV
 
-    @property
-    def music_source(self):
-        """str: The current source of music.
+    def music_source_from_uri(self, uri):
+        """Determine the type of music source from a URI.
 
-        Possible values are:
+        Arguments:
+            uri (str) : The URI representing the music source
+
+        Returns:
+            str: The current source of music.
+
+        Possible return values are:
 
         *   ``'NONE'`` -- speaker has no music to play.
         *   ``'LIBRARY'`` -- speaker is playing queued titles from the music
@@ -1246,14 +1252,21 @@ class SoCo(_SocoSingletonBase):
         The strings above can be imported as ``MUSIC_SRC_LIBRARY``,
         ``MUSIC_SRC_RADIO``, etc.
         """
+        for regex, source in SOURCES.items():
+            if re.match(regex, uri) is not None:
+                return source
+        return MUSIC_SRC_UNKNOWN
+
+    @property
+    def music_source(self):
+        """str: The current source of music.
+
+        Possible return values are the same as used in `music_source_from_uri()`.
+        """
         response = self.avTransport.GetPositionInfo(
             [("InstanceID", 0), ("Channel", "Master")]
         )
-        track_uri = response["TrackURI"]
-        for regex, source in SOURCES.items():
-            if re.match(regex, track_uri) is not None:
-                return source
-        return MUSIC_SRC_UNKNOWN
+        return self.music_source_from_uri(response["TrackURI"])
 
     def switch_to_tv(self):
         """Switch the playbar speaker's input to TV."""
