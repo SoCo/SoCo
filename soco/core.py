@@ -1228,7 +1228,8 @@ class SoCo(_SocoSingletonBase):
         """bool: Is the playbar speaker input from TV?"""
         return self.music_source == MUSIC_SRC_TV
 
-    def music_source_from_uri(self, uri):
+    @staticmethod
+    def music_source_from_uri(uri):
         """Determine the type of music source from a URI.
 
         Arguments:
