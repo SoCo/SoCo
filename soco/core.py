@@ -219,10 +219,12 @@ class SoCo(_SocoSingletonBase):
     ..  rubric:: Miscellaneous
     ..  autosummary::
 
-        switch_to_line_in
+        music_source
+        music_source_from_uri
         is_playing_radio
-        is_playing_line_in
         is_playing_tv
+        is_playing_line_in
+        switch_to_line_in
         switch_to_tv
         set_sleep_timer
         get_sleep_timer
@@ -1217,29 +1219,58 @@ class SoCo(_SocoSingletonBase):
     @property
     def is_playing_radio(self):
         """bool: Is the speaker playing radio?"""
-        response = self.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
-        track_uri = response["TrackURI"]
-        return re.match(r"^x-rincon-mp3radio:", track_uri) is not None
+        return self.music_source == MUSIC_SRC_RADIO
 
     @property
     def is_playing_line_in(self):
         """bool: Is the speaker playing line-in?"""
-        response = self.avTransport.GetPositionInfo(
-            [("InstanceID", 0), ("Channel", "Master")]
-        )
-        track_uri = response["TrackURI"]
-        return re.match(r"^x-rincon-stream:", track_uri) is not None
+        return self.music_source == MUSIC_SRC_LINE_IN
 
     @property
     def is_playing_tv(self):
         """bool: Is the playbar speaker input from TV?"""
+        return self.music_source == MUSIC_SRC_TV
+
+    @staticmethod
+    def music_source_from_uri(uri):
+        """Determine a music source from a URI.
+
+        Arguments:
+            uri (str) : The URI representing the music source
+
+        Returns:
+            str: The current source of music.
+
+        Possible return values are:
+
+        *   ``'NONE'`` -- speaker has no music to play.
+        *   ``'LIBRARY'`` -- speaker is playing queued titles from the music
+            library.
+        *   ``'RADIO'`` -- speaker is playing radio.
+        *   ``'WEB_FILE'`` -- speaker is playing a music file via http/https.
+        *   ``'LINE_IN'`` -- speaker is playing music from line-in.
+        *   ``'TV'`` -- speaker is playing input from TV.
+        *   ``'AIRPLAY'`` -- speaker is playing from AirPlay.
+        *   ``'UNKNOWN'`` -- any other input.
+
+        The strings above can be imported as ``MUSIC_SRC_LIBRARY``,
+        ``MUSIC_SRC_RADIO``, etc.
+        """
+        for regex, source in SOURCES.items():
+            if re.match(regex, uri) is not None:
+                return source
+        return MUSIC_SRC_UNKNOWN
+
+    @property
+    def music_source(self):
+        """str: The current music source (radio, TV, line-in, etc.).
+
+        Possible return values are the same as used in `music_source_from_uri()`.
+        """
         response = self.avTransport.GetPositionInfo(
             [("InstanceID", 0), ("Channel", "Master")]
         )
-        track_uri = response["TrackURI"]
-        return re.match(r"^x-sonos-htastream:", track_uri) is not None
+        return self.music_source_from_uri(response["TrackURI"])
 
     def switch_to_tv(self):
         """Switch the playbar speaker's input to TV."""
@@ -2242,6 +2273,7 @@ NS = {
     "upnp": "{urn:schemas-upnp-org:metadata-1-0/upnp/}",
     "": "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}",
 }
+
 # Valid play modes
 PLAY_MODES = (
     "NORMAL",
@@ -2251,8 +2283,36 @@ PLAY_MODES = (
     "SHUFFLE_REPEAT_ONE",
     "REPEAT_ONE",
 )
+
+# Music source names
+MUSIC_SRC_LIBRARY = "LIBRARY"
+MUSIC_SRC_RADIO = "RADIO"
+MUSIC_SRC_WEB_FILE = "WEB_FILE"
+MUSIC_SRC_LINE_IN = "LINE_IN"
+MUSIC_SRC_TV = "TV"
+MUSIC_SRC_AIRPLAY = "AIRPLAY"
+MUSIC_SRC_UNKNOWN = "UNKNOWN"
+MUSIC_SRC_NONE = "NONE"
+
+# URI prefixes for music sources
+SOURCES = {
+    r"^$": MUSIC_SRC_NONE,
+    r"^x-file-cifs:": MUSIC_SRC_LIBRARY,
+    r"^x-rincon-mp3radio:": MUSIC_SRC_RADIO,
+    r"^x-sonosapi-stream:": MUSIC_SRC_RADIO,
+    r"^x-sonosapi-radio:": MUSIC_SRC_RADIO,
+    r"^x-sonosapi-hls:": MUSIC_SRC_RADIO,
+    r"^aac:": MUSIC_SRC_RADIO,
+    r"^hls-radio:": MUSIC_SRC_RADIO,
+    r"^https?:": MUSIC_SRC_WEB_FILE,
+    r"^x-rincon-stream:": MUSIC_SRC_LINE_IN,
+    r"^x-sonos-htastream:": MUSIC_SRC_TV,
+    r"^x-sonos-vli:.*,airplay:": MUSIC_SRC_AIRPLAY,
+}
+
 # soundbar product names
 SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc")
+
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
