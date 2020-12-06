@@ -221,6 +221,9 @@ class SoCo(_SocoSingletonBase):
 
         music_source
         music_source_from_uri
+        is_playing_radio
+        is_playing_tv
+        is_playing_line_in
         switch_to_line_in
         switch_to_tv
         set_sleep_timer
@@ -1230,7 +1233,7 @@ class SoCo(_SocoSingletonBase):
 
     @staticmethod
     def music_source_from_uri(uri):
-        """Determine the type of music source from a URI.
+        """Determine a music source from a URI.
 
         Arguments:
             uri (str) : The URI representing the music source
@@ -1260,7 +1263,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def music_source(self):
-        """str: The current source of music.
+        """str: The current music source (radio, TV, line-in, etc.).
 
         Possible return values are the same as used in `music_source_from_uri()`.
         """
