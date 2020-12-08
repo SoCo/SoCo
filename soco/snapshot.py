@@ -224,9 +224,7 @@ class Snapshot(object):
         # command to check, fixed volume always has volume set to 100.
         # So only checked fixed volume if volume is 100.
         if self.volume == 100:
-            fixed_vol = self.device.renderingControl.GetOutputFixed(
-                [("InstanceID", 0)]
-            )["CurrentFixed"]
+            fixed_vol = self.device.fixed_volume
         else:
             fixed_vol = False
 

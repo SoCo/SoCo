@@ -985,10 +985,11 @@ class SoCo(_SocoSingletonBase):
                 "CurrentSupportsFixed"
             ]
         ):
+            fixed_volume_value = "1" if fixed_volume else "0"
             self.renderingControl.SetOutputFixed(
                 [
                     ("InstanceID", 0),
-                    ("DesiredFixed", int(fixed_volume)),
+                    ("DesiredFixed", fixed_volume_value),
                 ]
             )
         else:
