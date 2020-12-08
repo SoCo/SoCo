@@ -197,6 +197,7 @@ class SoCo(_SocoSingletonBase):
         balance
         night_mode
         dialog_mode
+        fixed_volume
         status_light
 
     ..  rubric:: Playlists and Favorites
@@ -812,7 +813,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def loudness(self):
-        """bool: The Sonos speaker's loudness compensation.
+        """bool: The speaker's loudness compensation.
 
         True if on, False otherwise.
 
@@ -921,7 +922,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def dialog_mode(self):
-        """bool: Get the Sonos speaker's dialog mode.
+        """bool: The speaker's dialog mode.
 
         True if on, False if off, None if not supported.
         """
@@ -953,6 +954,45 @@ class SoCo(_SocoSingletonBase):
                 ("DesiredValue", int(dialog_mode)),
             ]
         )
+
+    @property
+    def fixed_volume(self):
+        """bool: The device's fixed volume output setting.
+
+        True if on, False if off. Only applicable to certain
+        Sonos devices (Connect and Port at the time of writing).
+        All other devices always return False.
+
+        Attempting to set the property for a non-applicable device
+        will raise a `NotSupportedException`.
+        """
+        response = self.renderingControl.GetOutputFixed([("InstanceID", 0)])
+        return bool(int(response["CurrentFixed"]))
+
+    @fixed_volume.setter
+    def fixed_volume(self, fixed_volume):
+        """Switch on/off the device's fixed volume output setting.
+
+        Only applicable to certain Sonos devices.
+
+        :param fixed_volume: Enable or disable fixed volume output mode.
+        :type fixed_volume: bool
+        :raises NotSupportedException: If the device does not support
+        fixed volume output mode.
+        """
+        if int(
+            self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])[
+                "CurrentSupportsFixed"
+            ]
+        ):
+            self.renderingControl.SetOutputFixed(
+                [
+                    ("InstanceID", 0),
+                    ("DesiredFixed", int(fixed_volume)),
+                ]
+            )
+        else:
+            raise NotSupportedException
 
     def _parse_zone_group_state(self):
         """The Zone Group State contains a lot of useful information.
