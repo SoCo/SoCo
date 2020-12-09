@@ -197,6 +197,7 @@ class SoCo(_SocoSingletonBase):
         balance
         night_mode
         dialog_mode
+        trueplay
         status_light
 
     ..  rubric:: Playlists and Favorites
@@ -951,6 +952,45 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
                 ("EQType", "DialogLevel"),
                 ("DesiredValue", int(dialog_mode)),
+            ]
+        )
+
+    @property
+    def trueplay(self):
+        """bool: Whether Trueplay is enabled on this device.
+        True if on, False if off.
+
+        Devices that do not support Trueplay, or which do not have
+        a current Trueplay calibration, will raise a `NotSupportedException`
+        both when getting and setting the property..
+        """
+        response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
+        if response["RoomCalibrationAvailable"] == "0":
+            raise NotSupportedException
+        return response["RoomCalibrationEnabled"] == "1"
+
+    @trueplay.setter
+    def trueplay(self, trueplay):
+        """Switch on/off the device's TruePlay setting. Only available to
+        Sonos speakers, not the Connect, Amp, etc., and only available to
+        speakers that have a current Trueplay calibration.
+
+        :param trueplay: Enable or disable Trueplay.
+        :type trueplay: bool
+        :raises NotSupportedException: If the device does not support
+        Trueplay or doesn't have a current calibration.
+        """
+        if not int(
+            self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])[
+                "RoomCalibrationAvailable"
+            ]
+        ):
+            raise NotSupportedException
+        trueplay_value = "1" if trueplay else "0"
+        self.renderingControl.SetRoomCalibrationStatus(
+            [
+                ("InstanceID", 0),
+                ("RoomCalibrationEnabled", trueplay_value),
             ]
         )
 

@@ -6,7 +6,7 @@ import pytest
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException, NotSupportedException
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
@@ -1147,6 +1147,31 @@ class TestRenderingControl:
         moco.renderingControl.SetLoudness.assert_called_once_with(
             [("InstanceID", 0), ("Channel", "Master"), ("DesiredLoudness", "0")]
         )
+
+    def test_soco_trueplay(self, moco):
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "1",
+            "RoomCalibrationEnabled": "1",
+        }
+        assert moco.trueplay
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.trueplay = False
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.SetRoomCalibrationStatus.assert_called_once_with(
+            [("InstanceID", 0), ("RoomCalibrationEnabled", "0")]
+        )
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "0",
+            "RoomCalibrationEnabled": "0",
+        }
+        with pytest.raises(NotSupportedException):
+            assert not moco.trueplay
+        with pytest.raises(NotSupportedException):
+            moco.trueplay = True
 
     def test_soco_balance(self, moco):
         # GetVolume is called twice, once for each of the left
