@@ -197,6 +197,7 @@ class SoCo(_SocoSingletonBase):
         balance
         night_mode
         dialog_mode
+        supports_fixed_volume
         fixed_volume
         status_light
 
@@ -956,6 +957,13 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def supports_fixed_volume(self):
+        """bool: Whether the device supports fixed volume output."""
+
+        response = self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])
+        return response["CurrentSupportsFixed"] == "1"
+
+    @property
     def fixed_volume(self):
         """bool: The device's fixed volume output setting.
 
@@ -963,16 +971,9 @@ class SoCo(_SocoSingletonBase):
         Sonos devices (Connect and Port at the time of writing).
         All other devices always return False.
 
-        Attempting to get or set this property for a non-applicable
+        Attempting to set this property for a non-applicable
         device will raise a `NotSupportedException`.
         """
-
-        if not int(
-            self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])[
-                "CurrentSupportsFixed"
-            ]
-        ):
-            raise NotSupportedException
 
         response = self.renderingControl.GetOutputFixed([("InstanceID", 0)])
         return response["CurrentFixed"] == "1"
@@ -989,15 +990,15 @@ class SoCo(_SocoSingletonBase):
         fixed volume output mode.
         """
 
-        # Will throw an exception if fixed_volume not supported
-        # If no change in state, do nothing
-        if fixed_volume != self.fixed_volume:
+        try:
             self.renderingControl.SetOutputFixed(
                 [
                     ("InstanceID", 0),
                     ("DesiredFixed", "1" if fixed_volume else "0"),
                 ]
             )
+        except SoCoUPnPException as error:
+            raise NotSupportedException from error
 
     def _parse_zone_group_state(self):
         """The Zone Group State contains a lot of useful information.

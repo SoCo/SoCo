@@ -1149,26 +1149,33 @@ class TestRenderingControl:
         )
 
     def test_soco_fixed_volume(self, moco):
-        moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
         }
+        assert moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "0"
+        }
+        assert not moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+
+        moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
         assert moco.fixed_volume
         moco.renderingControl.GetOutputFixed.assert_called_once_with(
             [("InstanceID", 0)]
         )
         moco.fixed_volume = False
-        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
-            [("InstanceID", 0)]
-        )
         moco.renderingControl.SetOutputFixed.assert_called_once_with(
             [("InstanceID", 0), ("DesiredFixed", "0")]
         )
-        moco.renderingControl.GetSupportsOutputFixed.return_value = {
-            "CurrentSupportsFixed": "0"
-        }
-        with pytest.raises(NotSupportedException):
-            assert moco.fixed_volume
+        moco.renderingControl.SetOutputFixed.side_effect = SoCoUPnPException(
+            None, None, None
+        )
         with pytest.raises(NotSupportedException):
             moco.fixed_volume = True
 
