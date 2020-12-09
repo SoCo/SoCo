@@ -963,11 +963,17 @@ class SoCo(_SocoSingletonBase):
         Sonos devices (Connect and Port at the time of writing).
         All other devices always return False.
 
-        Attempting to set the property for a non-applicable device
-        will raise a `NotSupportedException`.
+        Attempting to get or set this property for a non-applicable
+        device will raise a `NotSupportedException`.
         """
+        if not int(
+            self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])[
+                "CurrentSupportsFixed"
+            ]
+        ):
+            raise NotSupportedException
         response = self.renderingControl.GetOutputFixed([("InstanceID", 0)])
-        return bool(int(response["CurrentFixed"]))
+        return response["CurrentFixed"] == "1"
 
     @fixed_volume.setter
     def fixed_volume(self, fixed_volume):
@@ -980,20 +986,19 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         fixed volume output mode.
         """
-        if int(
+        if not int(
             self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])[
                 "CurrentSupportsFixed"
             ]
         ):
-            fixed_volume_value = "1" if fixed_volume else "0"
-            self.renderingControl.SetOutputFixed(
-                [
-                    ("InstanceID", 0),
-                    ("DesiredFixed", fixed_volume_value),
-                ]
-            )
-        else:
             raise NotSupportedException
+        fixed_volume_value = "1" if fixed_volume else "0"
+        self.renderingControl.SetOutputFixed(
+            [
+                ("InstanceID", 0),
+                ("DesiredFixed", fixed_volume_value),
+            ]
+        )
 
     def _parse_zone_group_state(self):
         """The Zone Group State contains a lot of useful information.

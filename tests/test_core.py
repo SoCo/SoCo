@@ -6,7 +6,7 @@ import pytest
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException, NotSupportedException
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
@@ -1150,17 +1150,27 @@ class TestRenderingControl:
 
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "1"
+        }
         assert moco.fixed_volume
         moco.renderingControl.GetOutputFixed.assert_called_once_with(
             [("InstanceID", 0)]
         )
         moco.fixed_volume = False
-        moco.renderingControl.GetSupportsOutputFixed.assert_called_once_with(
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
             [("InstanceID", 0)]
         )
         moco.renderingControl.SetOutputFixed.assert_called_once_with(
             [("InstanceID", 0), ("DesiredFixed", "0")]
         )
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "0"
+        }
+        with pytest.raises(NotSupportedException):
+            assert moco.fixed_volume
+        with pytest.raises(NotSupportedException):
+            moco.fixed_volume = True
 
     def test_soco_balance(self, moco):
         # GetVolume is called twice, once for each of the left
