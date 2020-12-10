@@ -6,7 +6,7 @@ import pytest
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import SoCoSlaveException, SoCoUPnPException, NotSupportedException
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
@@ -1147,6 +1147,37 @@ class TestRenderingControl:
         moco.renderingControl.SetLoudness.assert_called_once_with(
             [("InstanceID", 0), ("Channel", "Master"), ("DesiredLoudness", "0")]
         )
+
+    def test_soco_fixed_volume(self, moco):
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "1"
+        }
+        assert moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "0"
+        }
+        assert not moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+
+        moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
+        assert moco.fixed_volume
+        moco.renderingControl.GetOutputFixed.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.fixed_volume = False
+        moco.renderingControl.SetOutputFixed.assert_called_once_with(
+            [("InstanceID", 0), ("DesiredFixed", "0")]
+        )
+        moco.renderingControl.SetOutputFixed.side_effect = SoCoUPnPException(
+            None, None, None
+        )
+        with pytest.raises(NotSupportedException):
+            moco.fixed_volume = True
 
     def test_soco_balance(self, moco):
         # GetVolume is called twice, once for each of the left
