@@ -47,6 +47,7 @@ from .services import (
     AlarmClock,
     SystemProperties,
     MusicServices,
+    AudioIn,
     GroupRenderingControl,
 )
 from .utils import really_utf8, camel_to_underscore, deprecated
@@ -283,6 +284,7 @@ class SoCo(_SocoSingletonBase):
         self.alarmClock = AlarmClock(self)
         self.systemProperties = SystemProperties(self)
         self.musicServices = MusicServices(self)
+        self.audioIn = AudioIn(self)
 
         self.music_library = MusicLibrary(self)
 
