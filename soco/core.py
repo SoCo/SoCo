@@ -968,7 +968,10 @@ class SoCo(_SocoSingletonBase):
 
         Devices that do not support Trueplay, or which do not have
         a current Trueplay calibration, will raise a `NotSupportedException`
-        both when getting and setting the property..
+        when both getting and setting the property.
+
+        Can only be set on visible devices. Attempting to set on non-visible
+        devices will raise a `SoCoNotVisibleException`.
         """
         response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
         if response["RoomCalibrationAvailable"] == "0":
@@ -977,7 +980,7 @@ class SoCo(_SocoSingletonBase):
 
     @trueplay.setter
     def trueplay(self, trueplay):
-        """Switch on/off the device's TruePlay setting. Only available to
+        """Toggle the device's TruePlay setting. Only available to
         Sonos speakers, not the Connect, Amp, etc., and only available to
         speakers that have a current Trueplay calibration.
 
@@ -985,13 +988,13 @@ class SoCo(_SocoSingletonBase):
         :type trueplay: bool
         :raises NotSupportedException: If the device does not support
         Trueplay or doesn't have a current calibration.
+        :raises SoCoNotVisibleException: If the device is not visible.
         """
-        if not int(
-            self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])[
-                "RoomCalibrationAvailable"
-            ]
-        ):
+        response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
+        if response["RoomCalibrationAvailable"] == "0":
             raise NotSupportedException
+        if not self.is_visible:
+            raise SoCoNotVisibleException
         trueplay_value = "1" if trueplay else "0"
         self.renderingControl.SetRoomCalibrationStatus(
             [

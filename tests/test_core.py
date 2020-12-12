@@ -1155,28 +1155,47 @@ class TestRenderingControl:
 
     def test_soco_trueplay(self, moco):
         moco.renderingControl.GetRoomCalibrationStatus.return_value = {
-            "RoomCalibrationAvailable": "1",
-            "RoomCalibrationEnabled": "1",
-        }
-        assert moco.trueplay
-        moco.renderingControl.GetRoomCalibrationStatus.assert_called_once_with(
-            [("InstanceID", 0)]
-        )
-        moco.trueplay = False
-        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
-            [("InstanceID", 0)]
-        )
-        moco.renderingControl.SetRoomCalibrationStatus.assert_called_once_with(
-            [("InstanceID", 0), ("RoomCalibrationEnabled", "0")]
-        )
-        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
             "RoomCalibrationAvailable": "0",
             "RoomCalibrationEnabled": "0",
         }
         with pytest.raises(NotSupportedException):
             assert not moco.trueplay
-        with pytest.raises(NotSupportedException):
+            moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+                [("InstanceID", 0)]
+            )
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "1",
+            "RoomCalibrationEnabled": "1",
+        }
+        assert moco.trueplay
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        # Setter tests for 'is_visible' property, so this needs to be
+        # mocked.
+        with mock.patch(
+            "soco.SoCo.is_visible", new_callable=mock.PropertyMock
+        ) as mock_is_visible:
+            mock_is_visible.return_value = True
+            moco.trueplay = False
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "0"),
+                ]
+            )
             moco.trueplay = True
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "1"),
+                ]
+            )
+            # Check for exception if attempt to set the property on a
+            # non-visible speaker.
+            mock_is_visible.return_value = False
+            with pytest.raises(SoCoNotVisibleException):
+                moco.trueplay = True
 
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
