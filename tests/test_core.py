@@ -6,7 +6,14 @@ import pytest
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoSlaveException, SoCoUPnPException, NotSupportedException
+
+from soco.exceptions import (
+    SoCoSlaveException,
+    SoCoUPnPException,
+    SoCoNotVisibleException,
+    NotSupportedException,
+)
+
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
@@ -1219,6 +1226,36 @@ class TestDeviceProperties:
         moco.deviceProperties.SetLEDState.assert_called_with(
             [("DesiredLEDState", "On")]
         )
+
+    def test_buttons_enabled(self, moco):
+        moco.deviceProperties.GetButtonLockState.return_value = {
+            "CurrentButtonLockState": "On"
+        }
+        assert not moco.buttons_enabled
+        moco.deviceProperties.GetButtonLockState.return_value = {
+            "CurrentButtonLockState": "Off"
+        }
+        assert moco.buttons_enabled
+        moco.deviceProperties.GetButtonLockState.assert_called_with()
+        # Setter tests for 'is_visible' property, so this needs to be
+        # mocked.
+        with mock.patch(
+            "soco.SoCo.is_visible", new_callable=mock.PropertyMock
+        ) as mock_is_visible:
+            mock_is_visible.return_value = True
+            moco.buttons_enabled = False
+            moco.deviceProperties.SetButtonLockState.assert_called_once_with(
+                [("DesiredButtonLockState", "On")]
+            )
+            moco.buttons_enabled = True
+            moco.deviceProperties.SetButtonLockState.assert_called_with(
+                [("DesiredButtonLockState", "Off")]
+            )
+            # Check for exception if attempt to set the property on a
+            # non-visible speaker.
+            mock_is_visible.return_value = False
+            with pytest.raises(SoCoNotVisibleException):
+                moco.buttons_enabled = True
 
     def test_soco_set_player_name(self, moco):
         moco.player_name = "μИⅠℂ☺ΔЄ💋"

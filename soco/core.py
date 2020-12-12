@@ -35,6 +35,7 @@ from .exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
     NotSupportedException,
+    SoCoNotVisibleException,
 )
 from .groups import ZoneGroup
 from .music_library import MusicLibrary
@@ -201,6 +202,7 @@ class SoCo(_SocoSingletonBase):
         supports_fixed_volume
         fixed_volume
         status_light
+        buttons_enabled
 
     ..  rubric:: Playlists and Favorites
     ..  autosummary::
@@ -1349,6 +1351,42 @@ class SoCo(_SocoSingletonBase):
         self.deviceProperties.SetLEDState(
             [
                 ("DesiredLEDState", led_state),
+            ]
+        )
+
+    @property
+    def buttons_enabled(self):
+        """bool: Whether the control buttons on the device are enabled.
+
+        `True` if the control buttons are enabled, `False` if disabled.
+
+        This property can only be set on visible speakers, and will enable
+        or disable the buttons for all speakers in any bonded set (e.g., a
+        stereo pair). Attempting to set it on invisible speakers
+        (e.g., the RH speaker of a stereo pair) will raise a
+        `SoCoNotVisibleException`.
+        """
+        lock_state = self.deviceProperties.GetButtonLockState()[
+            "CurrentButtonLockState"
+        ]
+        return lock_state == "Off"
+
+    @buttons_enabled.setter
+    def buttons_enabled(self, enabled):
+        """Enable or disable the device's control buttons.
+
+        Args:
+            bool: True to enable the buttons, False to disable.
+
+        Raises:
+            SoCoNotVisibleException: If the speaker is not visible.
+        """
+        if not self.is_visible:
+            raise SoCoNotVisibleException
+        lock_state = "Off" if enabled else "On"
+        self.deviceProperties.SetButtonLockState(
+            [
+                ("DesiredButtonLockState", lock_state),
             ]
         )
 
