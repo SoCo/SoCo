@@ -35,6 +35,7 @@ from .exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
     NotSupportedException,
+    SoCoNotVisibleException,
 )
 from .groups import ZoneGroup
 from .music_library import MusicLibrary
@@ -47,6 +48,7 @@ from .services import (
     AlarmClock,
     SystemProperties,
     MusicServices,
+    AudioIn,
     GroupRenderingControl,
 )
 from .utils import really_utf8, camel_to_underscore, deprecated
@@ -197,8 +199,11 @@ class SoCo(_SocoSingletonBase):
         balance
         night_mode
         dialog_mode
+        supports_fixed_volume
+        fixed_volume
         trueplay
         status_light
+        buttons_enabled
 
     ..  rubric:: Playlists and Favorites
     ..  autosummary::
@@ -282,6 +287,7 @@ class SoCo(_SocoSingletonBase):
         self.alarmClock = AlarmClock(self)
         self.systemProperties = SystemProperties(self)
         self.musicServices = MusicServices(self)
+        self.audioIn = AudioIn(self)
 
         self.music_library = MusicLibrary(self)
 
@@ -813,7 +819,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def loudness(self):
-        """bool: The Sonos speaker's loudness compensation.
+        """bool: The speaker's loudness compensation.
 
         True if on, False otherwise.
 
@@ -922,7 +928,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def dialog_mode(self):
-        """bool: Get the Sonos speaker's dialog mode.
+        """bool: The speaker's dialog mode.
 
         True if on, False if off, None if not supported.
         """
@@ -993,6 +999,50 @@ class SoCo(_SocoSingletonBase):
                 ("RoomCalibrationEnabled", trueplay_value),
             ]
         )
+
+    @property
+    def supports_fixed_volume(self):
+        """bool: Whether the device supports fixed volume output."""
+
+        response = self.renderingControl.GetSupportsOutputFixed([("InstanceID", 0)])
+        return response["CurrentSupportsFixed"] == "1"
+
+    @property
+    def fixed_volume(self):
+        """bool: The device's fixed volume output setting.
+
+        True if on, False if off. Only applicable to certain
+        Sonos devices (Connect and Port at the time of writing).
+        All other devices always return False.
+
+        Attempting to set this property for a non-applicable
+        device will raise a `NotSupportedException`.
+        """
+
+        response = self.renderingControl.GetOutputFixed([("InstanceID", 0)])
+        return response["CurrentFixed"] == "1"
+
+    @fixed_volume.setter
+    def fixed_volume(self, fixed_volume):
+        """Switch on/off the device's fixed volume output setting.
+
+        Only applicable to certain Sonos devices.
+
+        :param fixed_volume: Enable or disable fixed volume output mode.
+        :type fixed_volume: bool
+        :raises NotSupportedException: If the device does not support
+        fixed volume output mode.
+        """
+
+        try:
+            self.renderingControl.SetOutputFixed(
+                [
+                    ("InstanceID", 0),
+                    ("DesiredFixed", "1" if fixed_volume else "0"),
+                ]
+            )
+        except SoCoUPnPException as error:
+            raise NotSupportedException from error
 
     def _parse_zone_group_state(self):
         """The Zone Group State contains a lot of useful information.
@@ -1341,6 +1391,42 @@ class SoCo(_SocoSingletonBase):
         self.deviceProperties.SetLEDState(
             [
                 ("DesiredLEDState", led_state),
+            ]
+        )
+
+    @property
+    def buttons_enabled(self):
+        """bool: Whether the control buttons on the device are enabled.
+
+        `True` if the control buttons are enabled, `False` if disabled.
+
+        This property can only be set on visible speakers, and will enable
+        or disable the buttons for all speakers in any bonded set (e.g., a
+        stereo pair). Attempting to set it on invisible speakers
+        (e.g., the RH speaker of a stereo pair) will raise a
+        `SoCoNotVisibleException`.
+        """
+        lock_state = self.deviceProperties.GetButtonLockState()[
+            "CurrentButtonLockState"
+        ]
+        return lock_state == "Off"
+
+    @buttons_enabled.setter
+    def buttons_enabled(self, enabled):
+        """Enable or disable the device's control buttons.
+
+        Args:
+            bool: True to enable the buttons, False to disable.
+
+        Raises:
+            SoCoNotVisibleException: If the speaker is not visible.
+        """
+        if not self.is_visible:
+            raise SoCoNotVisibleException
+        lock_state = "Off" if enabled else "On"
+        self.deviceProperties.SetButtonLockState(
+            [
+                ("DesiredButtonLockState", lock_state),
             ]
         )
 

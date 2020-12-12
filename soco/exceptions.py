@@ -81,6 +81,11 @@ class SoCoSlaveException(SoCoException):
     """Raised when a master command is called on a slave."""
 
 
+class SoCoNotVisibleException(SoCoException):
+    """Raised when a command intended for a visible speaker is called
+    on an invisible one."""
+
+
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
 

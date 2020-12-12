@@ -776,6 +776,10 @@ class MusicServices(Service):
     services."""
 
 
+class AudioIn(Service):
+    """Sonos audio in service, for functions related to RCA audio input."""
+
+
 class DeviceProperties(Service):
     """Sonos device properties service, for functions relating to zones, LED
     state, stereo pairs etc."""
