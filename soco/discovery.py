@@ -59,7 +59,7 @@ def discover(
         `None`.
     """
 
-    def create_socket(interface_addr=None):
+    def create_socket(interface_addr):
         """A helper function for creating a socket for discovery purposes.
 
         Create and return a socket with appropriate options set for multicast.
@@ -70,12 +70,9 @@ def discover(
         _sock.setsockopt(
             socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack("B", 4)
         )
-        if interface_addr is not None:
-            _sock.setsockopt(
-                socket.IPPROTO_IP,
-                socket.IP_MULTICAST_IF,
-                socket.inet_aton(interface_addr),
-            )
+        _sock.setsockopt(
+            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface_addr)
+        )
         return _sock
 
     # pylint: disable=invalid-name
