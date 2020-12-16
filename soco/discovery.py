@@ -507,7 +507,7 @@ def _find_ipv4_networks(min_netmask):
 
 
 def _find_ipv4_addresses():
-    """Discover all the host's IP addresses.
+    """Discover and return all the host's IPv4 addresses.
 
     Helper function to return a set of IPv4 addresses associated
     with the network interfaces of this host. Loopback and link
