@@ -1072,6 +1072,42 @@ class SoCo(_SocoSingletonBase):
             ]
         )
 
+    def soundbar_audio_input_format(self) -> Optional[str]:
+        """Return string presentation of the audio input format.
+
+        Returns None when the device is not a soundbar.
+        While the variable is available on non-soundbar devices,
+        it is likely always 0 as as there is no audio inputs.
+
+        TODO: move to a separate PR?
+        """
+        if self.is_soundbar:
+            return None
+
+        value_map = {
+            0: "No input connected",
+            2: "Stereo",
+            7: "Dolby 2.0",
+            18: "Dolby 5.1",
+            21: "No input",
+            22: "No audio",
+            # TODO: I didn't receive the above values (besides 0, 21 and 22),
+            # but the following instead based on some testing.
+            33554434: "PCM 2.0",
+            33554454: "PCM 2.0 no audio",
+            33554488: "Dolby 2.0",
+            84934713: "Dolby 5.1",
+        }
+
+        response = self.deviceProperties.GetZoneInfo()
+        format = int(response["HTAudioIn"])
+        if format not in value_map:
+            logging.warning("Unknown audio input format: %s", format)
+
+        format_str = value_map.get(format, f"Unknown format: {format}")
+
+        return format_str
+
     @property
     def supports_fixed_volume(self):
         """bool: Whether the device supports fixed volume output."""
