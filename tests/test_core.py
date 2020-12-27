@@ -1158,11 +1158,10 @@ class TestRenderingControl:
             "RoomCalibrationAvailable": "0",
             "RoomCalibrationEnabled": "0",
         }
-        with pytest.raises(NotSupportedException):
-            assert not moco.trueplay
-            moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
-                [("InstanceID", 0)]
-            )
+        assert moco.trueplay is None
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
         moco.renderingControl.GetRoomCalibrationStatus.return_value = {
             "RoomCalibrationAvailable": "1",
             "RoomCalibrationEnabled": "1",

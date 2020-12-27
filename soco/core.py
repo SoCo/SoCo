@@ -967,16 +967,18 @@ class SoCo(_SocoSingletonBase):
         True if on, False if off.
 
         Devices that do not support Trueplay, or which do not have
-        a current Trueplay calibration, will raise a `NotSupportedException`
-        when both getting and setting the property.
+        a current Trueplay calibration, will return `None` on getting
+        the property, and  raise a `NotSupportedException` when
+        setting the property.
 
         Can only be set on visible devices. Attempting to set on non-visible
         devices will raise a `SoCoNotVisibleException`.
         """
         response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
         if response["RoomCalibrationAvailable"] == "0":
-            raise NotSupportedException
-        return response["RoomCalibrationEnabled"] == "1"
+            return None
+        else:
+            return response["RoomCalibrationEnabled"] == "1"
 
     @trueplay.setter
     def trueplay(self, trueplay):
@@ -993,8 +995,10 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
         if response["RoomCalibrationAvailable"] == "0":
             raise NotSupportedException
+
         if not self.is_visible:
             raise SoCoNotVisibleException
+
         trueplay_value = "1" if trueplay else "0"
         self.renderingControl.SetRoomCalibrationStatus(
             [
