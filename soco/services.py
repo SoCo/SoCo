@@ -872,6 +872,22 @@ class RenderingControl(Service):
         self.event_subscription_url = "/MediaRenderer/RenderingControl/Event"
         self.DEFAULT_ARGS.update({"InstanceID": 0})
 
+    def get_eq_variable(self, variable: str) -> int:
+        """Return the EQ value for given variable as an integer."""
+        response = self.GetEQ([("InstanceID", 0), ("EQType", variable)])
+
+        return int(response["CurrentValue"])
+
+    def set_eq_variable(self, variable: str, value: int):
+        """Set the EQ variable to given (integer) value."""
+        return self.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", variable),
+                ("DesiredValue", value),
+            ]
+        )
+
 
 class MR_ConnectionManager(Service):  # pylint: disable=invalid-name
     """UPnP standard connection manager service for the media renderer."""
