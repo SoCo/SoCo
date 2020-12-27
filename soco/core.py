@@ -201,6 +201,7 @@ class SoCo(_SocoSingletonBase):
         dialog_mode
         supports_fixed_volume
         fixed_volume
+        trueplay
         status_light
         buttons_enabled
 
@@ -957,6 +958,52 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
                 ("EQType", "DialogLevel"),
                 ("DesiredValue", int(dialog_mode)),
+            ]
+        )
+
+    @property
+    def trueplay(self):
+        """bool: Whether Trueplay is enabled on this device.
+        True if on, False if off.
+
+        Devices that do not support Trueplay, or which do not have
+        a current Trueplay calibration, will return `None` on getting
+        the property, and  raise a `NotSupportedException` when
+        setting the property.
+
+        Can only be set on visible devices. Attempting to set on non-visible
+        devices will raise a `SoCoNotVisibleException`.
+        """
+        response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
+        if response["RoomCalibrationAvailable"] == "0":
+            return None
+        else:
+            return response["RoomCalibrationEnabled"] == "1"
+
+    @trueplay.setter
+    def trueplay(self, trueplay):
+        """Toggle the device's TruePlay setting. Only available to
+        Sonos speakers, not the Connect, Amp, etc., and only available to
+        speakers that have a current Trueplay calibration.
+
+        :param trueplay: Enable or disable Trueplay.
+        :type trueplay: bool
+        :raises NotSupportedException: If the device does not support
+        Trueplay or doesn't have a current calibration.
+        :raises SoCoNotVisibleException: If the device is not visible.
+        """
+        response = self.renderingControl.GetRoomCalibrationStatus([("InstanceID", 0)])
+        if response["RoomCalibrationAvailable"] == "0":
+            raise NotSupportedException
+
+        if not self.is_visible:
+            raise SoCoNotVisibleException
+
+        trueplay_value = "1" if trueplay else "0"
+        self.renderingControl.SetRoomCalibrationStatus(
+            [
+                ("InstanceID", 0),
+                ("RoomCalibrationEnabled", trueplay_value),
             ]
         )
 

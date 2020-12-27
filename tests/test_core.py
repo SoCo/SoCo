@@ -6,14 +6,12 @@ import pytest
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
     SoCoNotVisibleException,
     NotSupportedException,
 )
-
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
@@ -1155,6 +1153,49 @@ class TestRenderingControl:
             [("InstanceID", 0), ("Channel", "Master"), ("DesiredLoudness", "0")]
         )
 
+    def test_soco_trueplay(self, moco):
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "0",
+            "RoomCalibrationEnabled": "0",
+        }
+        assert moco.trueplay is None
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "1",
+            "RoomCalibrationEnabled": "1",
+        }
+        assert moco.trueplay
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        # Setter tests for 'is_visible' property, so this needs to be
+        # mocked.
+        with mock.patch(
+            "soco.SoCo.is_visible", new_callable=mock.PropertyMock
+        ) as mock_is_visible:
+            mock_is_visible.return_value = True
+            moco.trueplay = False
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "0"),
+                ]
+            )
+            moco.trueplay = True
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "1"),
+                ]
+            )
+            # Check for exception if attempt to set the property on a
+            # non-visible speaker.
+            mock_is_visible.return_value = False
+            with pytest.raises(SoCoNotVisibleException):
+                moco.trueplay = True
+
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
@@ -1170,7 +1211,6 @@ class TestRenderingControl:
         moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
             [("InstanceID", 0)]
         )
-
         moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
         assert moco.fixed_volume
         moco.renderingControl.GetOutputFixed.assert_called_once_with(
