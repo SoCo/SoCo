@@ -261,6 +261,56 @@ class Alarm(object):
             pass
         self._alarm_id = None
 
+    def remove_id(self,alarm_id):
+        """Remove the alarm from the Sonos system.
+
+        There is no need to call `save`. The Python instance is not deleted,
+        and can be saved back to Sonos again if desired.
+        """
+        self._alarm_id = alarm_id
+        self.zone.alarmClock.DestroyAlarm([
+            ('ID', self._alarm_id)
+        ])
+        alarm_id = self._alarm_id
+        try:
+            del Alarm._all_alarms[alarm_id]
+        except KeyError:
+            pass
+        self._alarm_id = None
+
+    def save_id(self):
+        """Save the alarm to the Sonos system.
+
+        Raises:
+            ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
+                because there
+                is already an alarm for this room at the specified time.
+        """
+        # pylint: disable=bad-continuation
+        args = [
+            ('StartLocalTime', self.start_time.strftime(TIME_FORMAT)),
+            ('Duration', '' if self.duration is None else
+                self.duration.strftime(TIME_FORMAT)),
+            ('Recurrence', self.recurrence),
+            ('Enabled', '1' if self.enabled else '0'),
+            ('RoomUUID', self.zone.uid),
+            ('ProgramURI', "x-rincon-buzzer:0" if self.program_uri is None
+                else self.program_uri),
+            ('ProgramMetaData', self.program_metadata),
+            ('PlayMode', self.play_mode),
+            ('Volume', self.volume),
+            ('IncludeLinkedZones', '1' if self.include_linked_zones else '0')
+        ]
+        if self._alarm_id is None:
+            response = self.zone.alarmClock.CreateAlarm(args)
+            self._alarm_id = response['AssignedID']
+            Alarm._all_alarms[self._alarm_id] = self
+        else:
+            # The alarm has been saved before. Update it instead.
+            args.insert(0, ('ID', self._alarm_id))
+            self.zone.alarmClock.UpdateAlarm(args)
+        return self._alarm_id
+
 
 def get_alarms(zone=None):
     """Get a set of all alarms known to the Sonos system.
