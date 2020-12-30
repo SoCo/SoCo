@@ -461,7 +461,7 @@ class Service(object):
             ValueError: If the argument lists do not match the action
                 signature.
             `SoCoUPnPException`: if a SOAP error occurs.
-            `UnknownSoCoException`: if an unknonwn UPnP error occurs.
+            `UnknownSoCoException`: if an unknown UPnP error occurs.
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
