@@ -1,15 +1,15 @@
 SoCo
 ====
 
-SoCo (Sonos Controller) is a Python project that allows you to
-programmatically control `Sonos speakers`_. It was originally created at `Music
+SoCo (Sonos Controller) is a Python library that allows you to
+control `Sonos speakers`_ programmatically. It was originally created at `Music
 Hack Day Sydney`_ by `Rahim Sonawalla`_ and is now developed by a `team of
 people`_ at its `GitHub repository`_
 
 For more background on the project, please see Rahim's `blog post
 <http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/>`_.
 
-Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
+Visit the `SoCo documentation`_ for a more detailed overview of the functionailty.
 
 .. image:: https://badges.gitter.im/SoCo/SoCo.svg
    :alt: Join the chat at https://gitter.im/SoCo/SoCo
@@ -40,17 +40,17 @@ If you have another music service that should be on the list, comment in #557
 Installation
 ------------
 
-SoCo requires Python 2.7, or 3.4 or newer.
+SoCo requires Python 3.5 or newer.
 
 Use pip:
 
 ``pip install soco``
 
 
-SoCo depends on the `Requests`_ HTTP library. If you use pip to install Soco,
-Requests will be installed automatically for you. If not, you can use:
-
-``pip install requests``
+SoCo depends on a number of Python packages. If you use pip to install Soco,
+the dependencies will be installed automatically for you. If not, you can inspect
+the requirements in the `requirements.txt <https://github.com/SoCo/SoCo/blob/master/requirements.txt>`_
+file.
 
 
 Basic Usage
@@ -119,7 +119,7 @@ Of course, you can also play music!
 Support
 -------
 
-If you need support for SoCo, feel free to post your question either on our `Google Group`_ or on the #soco IRC channel on `freenode`_.
+If you need support for SoCo, feel free to post your question in the `SoCo Gitter Room <https://gitter.im/SoCo/SoCo>`_.
 
 Example Applications
 --------------------
@@ -200,15 +200,17 @@ SoCo also supports lower level access from Python to all Sonos services
 Related Projects
 ----------------
 
-Socos is a command line tool for controlling Sonos devices. It is developed
+**Socos** is a command line tool for controlling Sonos devices. It is developed
 in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_.
 
-SoCo-CLI (`soco-cli <https://github.com/avantrec/soco-cli>`_) is a powerful and
+**SoCo-CLI** (`soco-cli <https://github.com/avantrec/soco-cli>`_) is a powerful and
 fully-featured command line tool suitable for use in scripts, scheduled tasks, etc. It
-supports time-based and state-based actions, and repeated commands using loops. It also
-provides an alternative speaker discovery mechanism for situations where SoCo discovery
-does not work, and it functions with multiple Sonos systems on the same network as is the
-case with split S1/S2 systems.
+supports time-based and state-based actions, and repeated commands using loops. Audio
+files on the local filesystem can be played back directly on Sonos from the command line.
+Multi-household Sonos systems are supported.
+
+Older Projects
+^^^^^^^^^^^^^^
 
 More of a Ruby fan? Not a problem, `Sam Soffes`_ is building out an
 awesome `Ruby gem`_.
@@ -219,10 +221,10 @@ where there isn’t an official Sonos Controller application! Find, fork,
 and contribute to it here: https://github.com/labero/SoCo-Tk.
 
 
-Google Group
-------------
+SoCo Gitter Room
+----------------
 
-There is a Soco group over at `Google Groups`_.  Feel free to drop by for support, ideas or casual conversation related to SoCo.
+There is a `SoCo Gitter discussion room <https://gitter.im/SoCo/SoCo>`_.  Feel free to drop by for support, ideas or casual conversation related to SoCo.
 
 
 License
@@ -234,7 +236,6 @@ SoCo is released under the `MIT license`_.
 .. _Sonos speakers: http://www.sonos.com/system/
 .. _Music Hack Day Sydney: http://sydney.musichackday.org/2012/
 .. _blog post: http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/
-.. _Requests: http://docs.python-requests.org/
 .. _Sam Soffes: https://github.com/soffes
 .. _Ruby gem: https://github.com/soffes/sonos
 .. _Joel Björkman: https://github.com/labero
@@ -242,7 +243,4 @@ SoCo is released under the `MIT license`_.
 .. _Rahim Sonawalla: https://github.com/rahims/SoCo
 .. _GitHub repository: https://github.com/SoCo/SoCo
 .. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
-.. _Google Groups: https://groups.google.com/forum/#!forum/python-soco
-.. _Google Group: https://groups.google.com/forum/#!forum/python-soco
 .. _SoCo documentation: https://soco.readthedocs.org/en/latest/
-.. _freenode: https://freenode.net/
