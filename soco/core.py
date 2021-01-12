@@ -21,7 +21,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import config
-from .compat import UnicodeType
 from .data_structures import (
     DidlObject,
     DidlPlaylistContainer,
@@ -2161,7 +2160,7 @@ class SoCo(_SocoSingletonBase):
         # allow either a string 'SQ:10' or an object with item_id attribute.
         object_id = getattr(sonos_playlist, "item_id", sonos_playlist)
 
-        if isinstance(tracks, UnicodeType):
+        if isinstance(tracks, str):
             track_list = [
                 tracks,
             ]

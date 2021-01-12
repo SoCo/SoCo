@@ -11,10 +11,10 @@
 from __future__ import unicode_literals
 
 import threading
+from pickle import dumps
 from time import time
 
 from . import config
-from .compat import dumps
 
 
 class _BaseCache(object):

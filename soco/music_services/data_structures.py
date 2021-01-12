@@ -58,13 +58,13 @@ Class overview:
 
 
 """
+from urllib.parse import quote as quote_url
 
 from __future__ import print_function, absolute_import
 import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
-from ..compat import quote_url
 
 
 _LOG = logging.getLogger(__name__)

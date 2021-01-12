@@ -13,9 +13,10 @@ import logging
 import requests
 
 from xmltodict import parse
+from urllib.parse import quote as quote_url
+from urllib.parse import urlparse, parse_qs
 
 from .. import discovery
-from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem

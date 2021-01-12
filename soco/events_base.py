@@ -16,9 +16,9 @@ import socket
 import time
 import threading
 import weakref
+from queue import Queue
 
 from . import config
-from .compat import Queue
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoException, SoCoFault, EventParseException
 from .utils import camel_to_underscore

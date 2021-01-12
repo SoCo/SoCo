@@ -31,11 +31,9 @@ helpful.
 
 from __future__ import unicode_literals
 
-import sys
 import textwrap
 import warnings
 
-from .compat import with_metaclass
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode, first_cap
 from .xml import XML, ns_tag
@@ -420,8 +418,7 @@ class DidlMetaClass(type):
         return new_cls
 
 
-# Py2/3 compatible way of declaring the metaclass
-class DidlObject(with_metaclass(DidlMetaClass, object)):
+class DidlObject(metaclass=DidlMetaClass):
     """Abstract base class for all DIDL-Lite items.
 
     You should not need to instantiate this. Its XML representation looks

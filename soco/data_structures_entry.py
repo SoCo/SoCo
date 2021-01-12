@@ -6,11 +6,11 @@ objects from both music library and music service data structures
 from __future__ import absolute_import
 
 import logging
+from urllib.parse import urlparse
 
 from .xml import XML, ns_tag
 from .data_structures import didl_class_to_soco_class
 from .exceptions import DIDLMetadataError
-from .compat import urlparse
 from .music_services.data_structures import get_class
 from .music_services.music_service import desc_from_uri
 

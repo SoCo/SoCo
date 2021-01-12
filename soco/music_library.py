@@ -13,13 +13,13 @@ from __future__ import unicode_literals
 
 import logging
 import xmltodict
+from urllib.parse import quote as quote_url
 
 from . import discovery
 from .data_structures import SearchResult, DidlResource, DidlObject, DidlMusicAlbum
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
-from .compat import quote_url
 
 _LOG = logging.getLogger(__name__)
 

@@ -55,11 +55,14 @@ from __future__ import unicode_literals
 
 import errno
 import logging
+import socketserver
 import threading
 
 import requests
 
-from .compat import BaseHTTPRequestHandler, URLError, socketserver, urlopen
+from http.server import BaseHTTPRequestHandler
+from urllib.error import URLError
+from urllib.request import urlopen
 
 # Event is imported so that 'from events import Events' still works
 # pylint: disable=unused-import
