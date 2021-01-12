@@ -4,9 +4,6 @@
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint. See https://github.com/PyCQA/pylint/issues/782
 
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
 
 """Base classes used by :py:mod:`soco.events` and
 :py:mod:`soco.events_twisted`."""

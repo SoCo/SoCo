@@ -4,9 +4,6 @@
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint. See https://github.com/PyCQA/pylint/issues/782
 
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
 
 """Classes to handle Sonos UPnP Events and Subscriptions.
 
@@ -20,11 +17,7 @@ Example:
 
     Run this code, and change your volume, tracks etc::
 
-        from __future__ import print_function
-        try:
-            from queue import Empty
-        except:  # Py2.7
-            from Queue import Empty
+        from queue import Empty
 
         import logging
         logging.basicConfig()
