@@ -25,6 +25,7 @@ Contributors
 * David Harding
 * Jeff Hinrichs
 * Jeroen Idserda
+* Hugo van Kemenade
 * Todd Neal
 * nixscripter
 * Kenneth Nielsen
