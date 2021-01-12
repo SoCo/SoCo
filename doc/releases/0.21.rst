@@ -1,7 +1,7 @@
 SoCo 0.21 release notes
 ***********************
 
-**SoCo 0.21** (Release date 2021-01-17), contains significant improvements to the speaker discovery process, which should address most of the common problems that are encountered.
+**SoCo 0.21** (Released on 2021-01-17), contains significant improvements to the speaker discovery process, which should address most of the common problems that are encountered.
 
 Multi-household Sonos systems can now be discovered and controlled.
 
@@ -9,7 +9,7 @@ The `AudioIn` service has been added, providing access to Line In operations and
 
 A number of additional miscellaneous speaker state controls have been provided, for speaker buttons, fixed volume output, and Trueplay. The battery status of Sonos Move speakers can also now be obtained. The `music_source` property on SoCo objects provides a convenient way to determine what type of source is being played by a speaker.
 
-SoCo is now fully Python 3.9 compatible.
+SoCo 0.21 is now fully Python 3.9 compatible, requires Python 3.5+, and is no longer compatible with Python 2.x.
 
 New Features and Improvements
 =============================
