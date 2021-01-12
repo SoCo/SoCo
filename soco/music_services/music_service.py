@@ -20,13 +20,14 @@ from xmltodict import parse
 
 from .. import discovery
 from ..compat import parse_qs, quote_url, urlparse
-from ..exceptions import MusicServiceException
+from ..exceptions import MusicServiceException, MusicServiceAuthException
 
 # from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem
 from .token_store import JsonFileTokenStore
 from ..soap import SoapFault, SoapMessage
 from ..xml import XML
+from ..utils import show_xml
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -204,49 +205,64 @@ class MusicServiceSoapClient(object):
 
         try:
             result_elt = message.call()
-            # print("RES", "+" * 40)
-            from soco.utils import show_xml
-
-            # show_xml(result_elt)
-
         except SoapFault as exc:
             print("SoapFault")
             print(exc.faultcode)
             print(exc.detail)
-            # if "Client.TokenRefreshRequired" in exc.faultcode:
-            #     log.debug("Token refresh required. Trying again")
-            #     # Remove any cached value for the SOAP header
-            #     self._cached_soap_header = None
+            if "Client.TokenRefreshRequired" in exc.faultcode:
+                if self.music_service.auth_type not in ("DeviceLink", "AppLink"):
+                    raise MusicServiceAuthException(
+                        "Token-refresh not supported for music service auth type: "
+                        + self.music_service.auth_type
+                    )
 
-            #     # <detail>
-            #     #   <refreshAuthTokenResult>
-            #     #       <authToken>xxxxxxx</authToken>
-            #     #       <privateKey>zzzzzz</privateKey>
-            #     #   </refreshAuthTokenResult>
-            #     # </detail>
-            #     auth_token = exc.detail.findtext(".//authToken")
-            #     private_key = exc.detail.findtext(".//privateKey")
-            #     # We have new details - update the account
-            #     self.music_service.account.oa_device_id = auth_token
-            #     self.music_service.account.key = private_key
-            #     message = SoapMessage(
-            #         endpoint=self.endpoint,
-            #         method=method,
-            #         parameters=args,
-            #         http_headers=self.http_headers,
-            #         soap_action="http://www.sonos.com/Services/1"
-            #         ".1#{0}".format(method),
-            #         soap_header=self.get_soap_header(),
-            #         namespace=self.namespace,
-            #         timeout=self.timeout,
-            #     )
-            #     result_elt = message.call()
-            # else:
-            #     print("Other Fault")
-            #     print(exc.faultcode)
-            #     print(exc.detail)
-            #     raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
-            raise
+                log.debug("Token refresh required. Trying again")
+                # Remove any cached value for the SOAP header
+                self._cached_soap_header = None
+                from soco.utils import show_xml
+
+                show_xml(exc.detail)
+
+                # Extract new token and key from the error message
+                # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
+                #   <ms:RefreshAuthTokenResult>
+                #     <ms:authToken>xxxxxxx</ms:authToken>
+                #     <ms:privateKey>yyyyyy</ms:privateKey>
+                #   </ms:RefreshAuthTokenResult>
+                # </detail>
+                auth_token = exc.detail.find(
+                    ".//xmlns:authToken", {"xmlns": self.namespace}
+                ).text
+                private_key = exc.detail.find(
+                    ".//xmlns:privateKey", {"xmlns": self.namespace}
+                ).text
+                for _ in range(10):
+                    print("#" * 30 + "REAUTH TO" + "#" * 30)
+                print(auth_token, private_key)
+                # return
+                token_pair = (auth_token, private_key)
+                self.token_store.save_token_pair(
+                    self.music_service.service_id,
+                    token_pair,
+                )
+
+                # We now have now token and key, make a new call
+                message = SoapMessage(
+                    endpoint=self.endpoint,
+                    method=method,
+                    parameters=[] if args is None else args,
+                    http_headers=self.http_headers,
+                    soap_action="http://www.sonos.com/Services/1.1#{0}".format(method),
+                    soap_header=self.get_soap_header(),
+                    namespace=self.namespace,
+                    timeout=self.timeout,
+                )
+                result_elt = message.call()
+            else:
+                print("Other Fault")
+                print(exc.faultcode)
+                print(exc.detail)
+                raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
