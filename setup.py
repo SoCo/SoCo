@@ -62,6 +62,8 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+PYTHON_REQUIRES = ">=3.5"
+
 with io.open("README.rst", encoding="utf-8") as file:
     LONG_DESCRIPTION = file.read()
 
@@ -84,4 +86,5 @@ setup(
     long_description=LONG_DESCRIPTION,
     cmdclass={"test": PyTest},
     classifiers=CLASSIFIERS,
+    python_requires=PYTHON_REQUIRES,
 )
