@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import mock
 import pytest
+import requests_mock
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
@@ -1326,6 +1327,44 @@ class TestDeviceProperties:
         moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
+
+    def test_get_battery_info(self, moco):
+        url = "http://" + moco.ip_address + ":1400/status/batterystatus"
+
+        # A speaker that returns battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n<?xml-stylesheet type="text/xsl"'
+                + 'href="/xml/review.xsl"?><ZPSupportInfo><LocalBatteryStatus>\n'
+                + '<Data name="Health">GREEN</Data>\n<Data name="Level">100</Data>\n'
+                + '<Data name="Temperature">NORMAL</Data>\n'
+                + '<Data name="PowerSource">SONOS_CHARGING_RING</Data>\n'
+                + "</LocalBatteryStatus></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            assert moco.get_battery_info() == {
+                "Health": "GREEN",
+                "Level": 100,
+                "Temperature": "NORMAL",
+                "PowerSource": "SONOS_CHARGING_RING",
+            }
+
+        # A speaker that doesn't have battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n'
+                + '<?xml-stylesheet type="text/xsl" href="/xml/review.xsl"?>'
+                + "<ZPSupportInfo></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            with pytest.raises(NotSupportedException):
+                moco.get_battery_info()
+
+        # A network request that fails
+        with requests_mock.Mocker() as m:
+            m.get(url, status_code=404)
+            with pytest.raises(ConnectionError):
+                moco.get_battery_info()
 
 
 class TestZoneGroupTopology:
