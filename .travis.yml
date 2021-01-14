@@ -33,4 +33,3 @@ script:
 
 after_script:
   - coveralls
-
