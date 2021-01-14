@@ -2334,10 +2334,6 @@ class SoCo(_SocoSingletonBase):
 
         This method may only work on Sonos 'S2' systems.
 
-        Uses the 'support/review' URL, which collects comprehensive
-        system information from all players in the system via the target device,
-        so it's a somewhat expensive call and should be used sparingly.
-
         Args:
             timeout (float, optional): The timeout to use when making the
                 HTTP request.
@@ -2361,10 +2357,10 @@ class SoCo(_SocoSingletonBase):
                 response, timed out.
         """
 
-        # Retrieve information from the speaker's support URL
+        # Retrieve information from the speaker's status URL
         try:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/support/review",
+                "http://" + self.ip_address + ":1400/status/batterystatus",
                 timeout=timeout,
             )
         except (ConnectTimeout, ReadTimeout) as error:
@@ -2378,17 +2374,14 @@ class SoCo(_SocoSingletonBase):
         # Convert the XML response and traverse to obtain the battery information
         battery_info = {}
         try:
-            zp_list = xmltodict.parse(response.text)["ZPNetworkInfo"]["ZPSupportInfo"]
-            for zp_device in zp_list:
-                if zp_device["ZPInfo"]["IPAddress"] == self.ip_address:
-                    for info_item in zp_device["LocalBatteryStatus"]["Data"]:
-                        battery_info[info_item["@name"]] = info_item["#text"]
-                    try:
-                        battery_info["Level"] = int(battery_info["Level"])
-                    except (KeyError, ValueError):
-                        pass
-                    return battery_info
-        except (KeyError, ExpatError) as error:
+            zp_info = xmltodict.parse(response.text)["ZPSupportInfo"]
+            for info_item in zp_info["LocalBatteryStatus"]["Data"]:
+                battery_info[info_item["@name"]] = info_item["#text"]
+            try:
+                battery_info["Level"] = int(battery_info["Level"])
+            except (KeyError, ValueError):
+                pass
+        except (KeyError, ExpatError, TypeError) as error:
             # Battery information not supported
             raise NotSupportedException from error
 
