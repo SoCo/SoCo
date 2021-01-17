@@ -39,7 +39,7 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
@@ -92,7 +92,7 @@ class TestVolume(object):
 
     valid_values = range(101)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_volume(self, soco):
         """A fixture which restores volume after each test in the class is
         run."""
@@ -141,7 +141,7 @@ class TestBass(object):
 
     valid_values = range(-10, 11)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_bass(self, soco):
         """A fixture which restores bass EQ after each test in the class is
         run."""
@@ -179,7 +179,7 @@ class TestTreble(object):
 
     valid_values = range(-10, 11)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_treble(self, soco):
         """A fixture which restores treble EQ after each test in the class is
         run."""
@@ -422,7 +422,7 @@ class TestSonosPlaylist(object):
     existing_playlists = None
     playlist_name = "zSocoTestPlayList42"
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_sonos_playlists(self, soco):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
@@ -499,7 +499,7 @@ class TestTimer(object):
 
     existing_timer = None
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_timer(self, soco):
         """A fixture which cleans up after each timer test."""
         existing_timer = soco.get_sleep_timer()
@@ -526,7 +526,7 @@ class TestReorderSonosPlaylist(object):
     test_playlist = None
     queue_length = None
 
-    @pytest.yield_fixture(autouse=True, scope="class")
+    @pytest.fixture(autouse=True, scope="class")
     def restore_sonos_playlists(self, soco):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:

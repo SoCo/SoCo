@@ -19,7 +19,7 @@ from soco.xml import XML
 IP_ADDR = "192.168.1.101"
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco():
     """A mock soco with fake services and hardcoded is_coordinator.
 
@@ -46,7 +46,7 @@ def moco():
         patch.stop()
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco_only_on_master():
     """A mock soco with fake services.
 
@@ -190,7 +190,7 @@ ZGS = (
 )
 
 
-@pytest.yield_fixture
+@pytest.fixture()
 def moco_zgs(moco):
     """A mock soco with zone group state."""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {"ZoneGroupState": ZGS}
