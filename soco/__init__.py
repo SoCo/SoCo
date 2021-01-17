@@ -19,9 +19,9 @@ from .exceptions import SoCoException, UnknownSoCoException
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = "The SoCo-Team <python-soco@googlegroups.com>"
-# Please add the suffix "+" to the version after release, to make it
-# possible infer whether in development code from the version string
-__version__ = "0.21"
+# Please increment the version number and add the suffix "-dev" after
+# a release, to make it possible to identify in-development code
+__version__ = "0.22.0-dev"
 __website__ = "https://github.com/SoCo/SoCo"
 __license__ = "MIT License"
 
