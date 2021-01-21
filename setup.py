@@ -25,7 +25,7 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-src = io.open("soco/__init__.py", encoding="utf-8").read()
+src = open("soco/__init__.py", encoding="utf-8").read()
 metadata = dict(re.findall('__([a-z]+)__ = "([^"]+)"', src))
 docstrings = re.findall('"""(.*?)"""', src, re.MULTILINE | re.DOTALL)
 
@@ -65,7 +65,7 @@ CLASSIFIERS = [
 
 PYTHON_REQUIRES = ">=3.5"
 
-with io.open("README.rst", encoding="utf-8") as file:
+with open("README.rst", encoding="utf-8") as file:
     LONG_DESCRIPTION = file.read()
 
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")

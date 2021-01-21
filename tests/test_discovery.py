@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import socket
 import select
 import ipaddress
@@ -8,7 +5,7 @@ import ifaddr
 
 from collections import OrderedDict
 
-from mock import patch, MagicMock as Mock, PropertyMock, call
+from unittest.mock import patch, MagicMock as Mock, PropertyMock, call
 
 from soco import discover
 from soco import config

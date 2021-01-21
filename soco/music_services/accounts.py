@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance,no-else-continue
 
 """This module contains classes relating to Third Party music services."""
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
 import weakref
@@ -19,7 +16,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes
-class Account(object):
+class Account:
 
     """An account for a Music Service.
 

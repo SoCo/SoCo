@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance, too-many-arguments
 
@@ -60,7 +58,6 @@ Class overview:
 """
 from urllib.parse import quote as quote_url
 
-from __future__ import print_function, absolute_import
 import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
@@ -171,7 +168,7 @@ def form_uri(item_id, service, is_track):
 
 
 # Type Helper
-BOOL_STRS = set(("true", "false"))
+BOOL_STRS = {"true", "false"}
 
 
 def bool_str(string):
@@ -182,7 +179,7 @@ def bool_str(string):
 
 
 # Music Service item base classes
-class MetadataDictBase(object):
+class MetadataDictBase:
     """Class used to parse metadata from kwargs"""
 
     # The following two fields should be overwritten in subclasses
@@ -330,8 +327,7 @@ class TrackMetadata(MetadataDictBase):
     """Track metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set(
-        (
+    _valid_fields = {
             "artistId",
             "artist",
             "composerId",
@@ -350,8 +346,7 @@ class TrackMetadata(MetadataDictBase):
             "rating",
             "trackNumber",
             "isFavorite",
-        )
-    )
+    }
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -369,8 +364,7 @@ class StreamMetadata(MetadataDictBase):
     """Stream metadata class"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set(
-        (
+    _valid_fields = {
             "currentHost",
             "currentShowId",
             "currentShow",
@@ -381,8 +375,7 @@ class StreamMetadata(MetadataDictBase):
             "hasOutOfBandMetadata",
             "description",
             "isEphemeral",
-        )
-    )
+    }
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -398,8 +391,7 @@ class MediaMetadata(MusicServiceItem):
     """Base class for all media metadata items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set(
-        (
+    _valid_fields = {
             "id",
             "title",
             "mimeType",
@@ -409,8 +401,7 @@ class MediaMetadata(MusicServiceItem):
             "trackMetadata",
             "streamMetadata",
             "dynamic",
-        )
-    )
+    }
     # _types is a dict of fields with non-string types and their
     # convertion callables
     _types = {
@@ -425,8 +416,7 @@ class MediaCollection(MusicServiceItem):
     """Base class for all mediaCollection items"""
 
     # _valid_fields is a set of valid fields
-    _valid_fields = set(
-        (
+    _valid_fields = {
             "id",
             "title",
             "itemType",
@@ -442,8 +432,7 @@ class MediaCollection(MusicServiceItem):
             "canScroll",
             "canSkip",
             "isFavorite",
-        )
-    )
+    }
 
     # _types is a dict of fields with non-string types and their
     # convertion callables

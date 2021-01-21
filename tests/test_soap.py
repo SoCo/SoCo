@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the soap module."""
 
-from __future__ import unicode_literals
 
 from soco.soap import SoapMessage
 from soco.xml import XML

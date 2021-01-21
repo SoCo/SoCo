@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the cache module."""
 
-from __future__ import unicode_literals
 
 from soco.cache import Cache, NullCache, TimedCache
 

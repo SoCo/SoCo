@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
@@ -8,7 +7,6 @@
 """Base classes used by :py:mod:`soco.events` and
 :py:mod:`soco.events_twisted`."""
 
-from __future__ import unicode_literals
 
 import atexit
 import logging
@@ -128,7 +126,7 @@ def parse_event_xml(xml_event):
     return result
 
 
-class Event(object):
+class Event:
     """A read-only object representing a received event.
 
     The values of the evented variables can be accessed via the ``variables``
@@ -185,7 +183,7 @@ class Event(object):
         raise TypeError("Event object does not support attribute assignment")
 
 
-class EventNotifyHandlerBase(object):
+class EventNotifyHandlerBase:
     """Base class for `soco.events.EventNotifyHandler` and
     `soco.events_twisted.EventNotifyHandler`.
     """
@@ -253,7 +251,7 @@ class EventNotifyHandlerBase(object):
         raise NotImplementedError
 
 
-class EventListenerBase(object):
+class EventListenerBase:
     """Base class for `soco.events.EventListener` and
     `soco.events_twisted.EventListener`.
     """
@@ -295,7 +293,7 @@ class EventListenerBase(object):
                             (any_zone.ip_address, config.EVENT_LISTENER_PORT)
                         )
                         ip_address = temp_sock.getsockname()[0]
-                    except socket.error:
+                    except OSError:
                         log.exception("Could not start Event Listener: check network.")
                         ip_address = None
                     finally:
@@ -344,7 +342,7 @@ class EventListenerBase(object):
         raise NotImplementedError
 
 
-class SubscriptionBase(object):
+class SubscriptionBase:
     """Base class for `soco.events.Subscription` and
     `soco.events_twisted.Subscription`
     """
@@ -691,7 +689,7 @@ class SubscriptionBase(object):
         self.unsubscribe()
 
 
-class SubscriptionsMap(object):
+class SubscriptionsMap:
     """Maintains a mapping of sids to `soco.events.Subscription` instances
     and the thread safe lock to go with it. Registers each subscription to
     be unsubscribed at exit.

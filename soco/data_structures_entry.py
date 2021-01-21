@@ -3,7 +3,6 @@ objects from both music library and music service data structures
 
 """
 
-from __future__ import absolute_import
 
 import logging
 from urllib.parse import urlparse
@@ -79,7 +78,7 @@ def attempt_datastructure_upgrade(didl_item):
         path = path.rsplit(".", 1)[0]
         # The ID has an 8 (hex) digit prefix. But it doesn't seem to
         # matter what it is!
-        item_id = "11111111{0}".format(path)
+        item_id = "11111111{}".format(path)
 
         # Pass over all the available metadata in the metadata dict, in the
         # future ask ms data structure to upgrade metadata from the service

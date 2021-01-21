@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=too-many-instance-attributes
 
 # Disable while we have Python 2.x compatability
@@ -22,7 +21,7 @@ Warning:
 """
 
 
-class Snapshot(object):
+class Snapshot:
     """A snapshot of the current state.
 
     Note:

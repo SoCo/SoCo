@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # pylint: disable=E0611,R0913
 
 """ Script to analyse ws dumps """
-from __future__ import print_function
 
 import argparse
 import codecs
@@ -63,7 +61,7 @@ STARTS = ["<s:Envelope", "<e:propertyset"]
 ENDS = ["</s:Envelope>", "</e:propertyset>"]
 
 
-class AnalyzeWS(object):
+class AnalyzeWS:
     """ Class for analysis of WireShark dumps. Also shows the parts of the
     WireShark dumps syntax highlighted in the terminal and/or writes them to
     files and shows them in a browser.
@@ -90,7 +88,7 @@ class AnalyzeWS(object):
             with open(os.path.join(this_dir, "analyse_ws.ini")) as file__:
                 self.config = ConfigParser()
                 self.config.readfp(file__)
-        except IOError:
+        except OSError:
             self.config = None
         self.pages = {}
 
@@ -102,7 +100,7 @@ class AnalyzeWS(object):
         # Check if the file is present, since rdpcap will not do that
         if not (os.path.isfile(filename) and os.access(filename, os.R_OK)):
             print(
-                "The file '{0}' is either not present or not readable. "
+                "The file '{}' is either not present or not readable. "
                 "Exiting!".format(filename)
             )
             sys.exit(1)
@@ -117,13 +115,13 @@ class AnalyzeWS(object):
 
         for number, packet in enumerate(packets):
             # See if there is a field called load
-            self._debug("\nNUMBER {0}".format(number), no_prefix=True)
+            self._debug("\nNUMBER {}".format(number), no_prefix=True)
             try:
                 # Will cause AttributeError if there is no load
                 packet.getfieldval("load")
                 # Get the full load
                 load = packet.sprintf("%TCP.payload%")
-                self._debug("PAYLOAD LENGTH {0}".format(len(load)), no_prefix=True)
+                self._debug("PAYLOAD LENGTH {}".format(len(load)), no_prefix=True)
                 self._debug(load, load=True)
                 self._parse_load(load)
             except AttributeError:
@@ -180,7 +178,7 @@ class AnalyzeWS(object):
                 if (
                     len(self.messages) > 0 and not self.messages[-1].write_closed
                 ) and not no_prefix:
-                    print("--OPEN--> {0}".format(message))
+                    print("--OPEN--> {}".format(message))
                 else:
                     print(message)
 
@@ -197,9 +195,9 @@ class AnalyzeWS(object):
                 filename, mode="w", encoding=self.messages[message_no].encoding
             ) as file__:
                 file__.write(self.messages[message_no].output)
-        except IOError as excep:
+        except OSError as excep:
             print(
-                "Unable for open the file '{0}' for writing. The "
+                "Unable for open the file '{}' for writing. The "
                 "following exception was raised:".format(filename)
             )
             print(excep)
@@ -210,7 +208,7 @@ class AnalyzeWS(object):
     def __create_file_name(self, message_no):
         """ Create the filename to save to """
         cwd = os.getcwd()
-        filename = "{0}_{1}.xml".format(self.output_prefix, message_no)
+        filename = "{}_{}.xml".format(self.output_prefix, message_no)
         return os.path.join(cwd, filename)
 
     def to_browser_mode(self):
@@ -306,14 +304,14 @@ class AnalyzeWS(object):
 
         # Menu
         max_message = str(len(self.messages) - 1)
-        position_string = u"{{0: >{0}}}/{{1: <{0}}}".format(len(max_message))
+        position_string = "{{0: >{0}}}/{{1: <{0}}}".format(len(max_message))
         position_string = position_string.format(message_no, max_message)
         # Assume less than 100 pages
         current_max_page = len(self.pages[message_no]) - 1
-        pages_string = u"{0: >2}/{1: <2}".format(page_no, current_max_page)
+        pages_string = "{: >2}/{: <2}".format(page_no, current_max_page)
         menu = (
-            u"(b)rowser | {0} | Message {1} \u2193 (s)\u2191 (w) | "
-            u"Page {2} \u2190 (a)\u2192 (d) | (q)uit\n{3}"
+            "(b)rowser | {} | Message {} \u2193 (s)\u2191 (w) | "
+            "Page {} \u2190 (a)\u2192 (d) | (q)uit\n{}"
         ).format(file_exists_label, position_string, pages_string, "-" * width)
 
         print(menu)
@@ -324,7 +322,7 @@ class AnalyzeWS(object):
         """ Form the pages """
         self.pages[message_no] = []
         page_height = height - 4  # 2-3 for menu, 1 for cursor
-        outline = u""
+        outline = ""
         no_lines_page = 0
         for original, formatted in zip(content.split("\n"), out.split("\n")):
             no_lines_original = int(math.ceil(len(original) / float(width)))
@@ -332,24 +330,24 @@ class AnalyzeWS(object):
             # Blank line
             if len(original) == 0:
                 if no_lines_page + 1 <= page_height:
-                    outline += u"\n"
+                    outline += "\n"
                     no_lines_page += 1
                 else:
                     self.pages[message_no].append(outline)
-                    outline = u"\n"
+                    outline = "\n"
                     no_lines_page = 1
-                original = formatted = u"\n"
+                original = formatted = "\n"
             # Too large line
             elif no_lines_original > page_height:
                 if len(outline) > 0:
                     self.pages[message_no].append(outline)
-                    outline = u""
+                    outline = ""
                     no_lines_page = 0
                 self.pages[message_no].append(formatted)
             # The line(s) can be added to the current page
             elif no_lines_page + no_lines_original <= page_height:
                 if len(outline) > 0:
-                    outline += u"\n"
+                    outline += "\n"
                 outline += formatted
                 no_lines_page += no_lines_original
             # End the page and start a new
@@ -361,17 +359,17 @@ class AnalyzeWS(object):
         if len(outline) > 0:
             self.pages[message_no].append(outline)
         if len(self.pages[message_no]) == 0:
-            self.pages[message_no].append(u"")
+            self.pages[message_no].append("")
 
 
-class WSPart(object):
+class WSPart:
     """ This class parses and represents a single Sonos UPnP message """
 
     def __init__(self, captured, args):
         self.external_inner_xml = args.external_inner_xml
         self.inner_xml = []
-        self.body_formatted = u""
-        self.output = u""
+        self.body_formatted = ""
+        self.output = ""
         self.write_closed = False
         # Analyze initial xml part
         try:
@@ -405,7 +403,7 @@ class WSPart(object):
             item = text.getparent()
             didl_tree = etree.fromstring(item.text)
             if self.external_inner_xml:
-                item.text = "DIDL_REPLACEMENT_{0}".format(len(self.inner_xml))
+                item.text = "DIDL_REPLACEMENT_{}".format(len(self.inner_xml))
                 self.inner_xml.append(didl_tree)
             else:
                 item.text = None
@@ -416,7 +414,7 @@ class WSPart(object):
             for item in inner_tree.xpath('//*[contains(@val, "DIDL")]'):
                 if self.external_inner_xml:
                     didl_tree = etree.fromstring(item.attrib["val"])
-                    item.attrib["val"] = "DIDL_REPLACEMENT_{0}".format(
+                    item.attrib["val"] = "DIDL_REPLACEMENT_{}".format(
                         len(self.inner_xml)
                     )
                     self.inner_xml.append(didl_tree)
@@ -430,17 +428,17 @@ class WSPart(object):
 
     def _form_output(self):
         """ Form the output """
-        self.output = u""
+        self.output = ""
         if self.external_inner_xml:
-            self.output += u"<Dummy_tag_to_create_valid_xml_on_external_inner" "_xml>\n"
-        self.output += u"<!-- BODY -->\n{0}".format(self.body_formatted)
+            self.output += "<Dummy_tag_to_create_valid_xml_on_external_inner" "_xml>\n"
+        self.output += "<!-- BODY -->\n{}".format(self.body_formatted)
 
         if self.external_inner_xml:
             for number, didl in enumerate(self.inner_xml):
-                self.output += u"\n<!-- DIDL_{0} -->\n{1}".format(
+                self.output += "\n<!-- DIDL_{} -->\n{}".format(
                     number, etree.tostring(didl, pretty_print=True)
                 )
-            self.output += u"</Dummy_tag_to_create_valid_xml_on_external_" "inner_xml>"
+            self.output += "</Dummy_tag_to_create_valid_xml_on_external_" "inner_xml>"
 
 
 def __build_option_parser():
@@ -560,7 +558,7 @@ def main():
     analyze_ws = AnalyzeWS(args)
     try:
         analyze_ws.set_file(args.file_[0])
-    except IOError:
+    except OSError:
         print("IOError raised while reading file. Exiting!")
         sys.exit(3)
 

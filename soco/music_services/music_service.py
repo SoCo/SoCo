@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme
 
 """Sonos Music Services interface.
@@ -6,7 +5,6 @@
 This module provides the MusicService class and related functionality.
 """
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
 
@@ -27,7 +25,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
-class MusicServiceSoapClient(object):
+class MusicServiceSoapClient:
 
     """A SOAP client for accessing Music Services.
 
@@ -147,7 +145,7 @@ class MusicServiceSoapClient(object):
             method=method,
             parameters=[] if args is None else args,
             http_headers=self.http_headers,
-            soap_action="http://www.sonos.com/Services/1" ".1#{0}".format(method),
+            soap_action="http://www.sonos.com/Services/1" ".1#{}".format(method),
             soap_header=self.get_soap_header(),
             namespace=self.namespace,
             timeout=self.timeout,
@@ -178,7 +176,7 @@ class MusicServiceSoapClient(object):
                     parameters=args,
                     http_headers=self.http_headers,
                     soap_action="http://www.sonos.com/Services/1"
-                    ".1#{0}".format(method),
+                    ".1#{}".format(method),
                     soap_header=self.get_soap_header(),
                     namespace=self.namespace,
                     timeout=self.timeout,
@@ -202,7 +200,7 @@ class MusicServiceSoapClient(object):
 
 
 # pylint: disable=too-many-instance-attributes
-class MusicService(object):
+class MusicService:
 
     """The MusicService class provides access to third party music services.
 
@@ -365,7 +363,7 @@ class MusicService(object):
         )
 
     def __repr__(self):
-        return "<{0} '{1}' at {2}>".format(
+        return "<{} '{}' at {}>".format(
             self.__class__.__name__, self.service_name, hex(id(self))
         )
 

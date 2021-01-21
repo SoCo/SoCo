@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance,import-outside-toplevel
 
 """This class contains utility functions used internally by SoCo."""
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import functools
 import re
@@ -115,7 +112,7 @@ def show_xml(xml):
     print(prettify(string))
 
 
-class deprecated(object):
+class deprecated:
 
     """A decorator for marking deprecated objects.
 

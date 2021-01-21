@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
@@ -51,7 +50,6 @@ Example:
 
 """
 
-from __future__ import unicode_literals
 
 import errno
 import logging
@@ -221,7 +219,7 @@ class EventListener(EventListenerBase):
         self._listener_thread.stop()
         # Send a dummy request in case the http server is currently listening
         try:
-            urlopen("http://%s:%s/" % (address[0], address[1]))
+            urlopen("http://{}:{}/".format(address[0], address[1]))
         except URLError:
             # If the server is already shut down, we receive a socket error,
             # which we ignore.

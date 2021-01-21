@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=star-args, too-many-arguments, fixme, import-outside-toplevel
 
 # Disable while we have Python 2.x compatability
@@ -29,7 +28,6 @@ helpful.
 # http://upnp.org/specs/av/UPnP-av-ContentDirectory-v2-Service.pdf
 
 
-from __future__ import unicode_literals
 
 import textwrap
 import warnings
@@ -160,7 +158,7 @@ def form_name(didl_class):
 ###############################################################################
 
 
-class DidlResource(object):
+class DidlResource:
 
     """Identifies a resource, typically some type of a binary asset, such as a
     song.
@@ -254,7 +252,7 @@ class DidlResource(object):
                     return int(result)
                 except ValueError as error:
                     raise DIDLMetadataError(
-                        "Could not convert {0} to an integer".format(name)
+                        "Could not convert {} to an integer".format(name)
                     ) from error
             else:
                 return None
@@ -285,7 +283,7 @@ class DidlResource(object):
         return cls(**content)
 
     def __repr__(self):
-        return "<{0} '{1}' at {2}>".format(
+        return "<{} '{}' at {}>".format(
             self.__class__.__name__, self.uri, hex(id(self))
         )
 
@@ -410,7 +408,7 @@ class DidlMetaClass(type):
             bases (tuple): Base classes.
             attrs (dict): attributes defined for the class.
         """
-        new_cls = super(DidlMetaClass, cls).__new__(cls, name, bases, attrs)
+        new_cls = super().__new__(cls, name, bases, attrs)
         # Register all subclasses with the global _DIDL_CLASS_TO_CLASS mapping
         item_class = attrs.get("item_class", None)
         if item_class is not None:
@@ -524,10 +522,10 @@ class DidlObject(metaclass=DidlMetaClass):
             # For each attribute, check to see if this class allows it
             if key not in self._translation:
                 raise ValueError(
-                    "The key '{0}' is not allowed as an argument. Only "
+                    "The key '{}' is not allowed as an argument. Only "
                     "these keys are allowed: parent_id, item_id, title, "
                     "restricted, resources, desc"
-                    " {1}".format(key, ", ".join(self._translation.keys()))
+                    " {}".format(key, ", ".join(self._translation.keys()))
                 )
             # It is an allowed attribute. Set it as an attribute on self, so
             # that it can be accessed as Classname.attribute in the normal
@@ -554,7 +552,7 @@ class DidlObject(metaclass=DidlMetaClass):
         if not (tag.endswith("item") or tag.endswith("container")):
             raise DIDLMetadataError(
                 "Wrong element. Expected <item> or <container>,"
-                " got <{0}> for class {1}'".format(tag, cls.item_class)
+                " got <{}> for class {}'".format(tag, cls.item_class)
             )
         # and that the upnp matches what we are expecting
         item_class = element.find(ns_tag("upnp", "class")).text
@@ -566,8 +564,8 @@ class DidlObject(metaclass=DidlMetaClass):
 
         if item_class != cls.item_class:
             raise DIDLMetadataError(
-                "UPnP class is incorrect. Expected '{0}',"
-                " got '{1}'".format(cls.item_class, item_class)
+                "UPnP class is incorrect. Expected '{}',"
+                " got '{}'".format(cls.item_class, item_class)
             )
 
         # parent_id, item_id  and restricted are stored as attributes on the
@@ -688,7 +686,7 @@ class DidlObject(metaclass=DidlMetaClass):
             middle = self.title.encode("ascii", "replace")[0:40]
         else:
             middle = str(self.to_dict).encode("ascii", "replace")[0:40]
-        return "<{0} '{1}' at {2}>".format(
+        return "<{} '{}' at {}>".format(
             self.__class__.__name__, middle, hex(id(self))
         )
 
@@ -1319,7 +1317,7 @@ class SearchResult(ListOfMusicInfoItems):
         self._metadata["search_type"] = search_type
 
     def __repr__(self):
-        return "{0}(items={1}, search_type='{2}')".format(
+        return "{}(items={}, search_type='{}')".format(
             self.__class__.__name__,
             super().__repr__(),
             self.search_type,
@@ -1336,7 +1334,7 @@ class Queue(ListOfMusicInfoItems):
     """Container class that represents a queue."""
 
     def __repr__(self):
-        return "{0}(items={1})".format(
+        return "{}(items={})".format(
             self.__class__.__name__,
             super().__repr__(),
         )

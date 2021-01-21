@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """Tests for the services module."""
 
 # These tests require pytest.
 
-from __future__ import unicode_literals
 
 import pytest
 
@@ -130,7 +128,7 @@ def test_method_dispatcher_arg_count(service):
     service.send_command = mock.Mock()
     # http://bugs.python.org/issue7688
     # __name__ must be a string in python 2
-    method = service.__getattr__(str("test"))
+    method = service.__getattr__("test")
     assert method("onearg")
     service.send_command.assert_called_with("test", "onearg")
     assert method()  # no args

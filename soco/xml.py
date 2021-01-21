@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=invalid-name,wrong-import-position,redefined-builtin
 
 """This class contains XML related utility functions."""
 
-from __future__ import absolute_import, unicode_literals
 
 import sys
 import re
@@ -43,7 +41,7 @@ illegal_unichrs = [
 ]
 
 illegal_ranges = [
-    "%s-%s" % (chr(low), chr(high))
+    "{}-{}".format(chr(low), chr(high))
     for (low, high) in illegal_unichrs
     if low < sys.maxunicode
 ]
