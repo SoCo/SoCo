@@ -2436,8 +2436,8 @@ SOURCES = {
     r"^x-sonos-vli:.*,airplay:": MUSIC_SRC_AIRPLAY,
 }
 
-# soundbar product names
-SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc")
+# Soundbar product names
+SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc", "arc sl")
 
 
 if config.SOCO_CLASS is None:
