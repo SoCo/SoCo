@@ -60,7 +60,6 @@ Class overview:
 """
 
 from __future__ import print_function, absolute_import
-import sys
 import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
@@ -92,8 +91,6 @@ def get_class(class_key):
             if class_key.startswith(basecls.__name__):
                 # So MediaMetadataTrack turns into MSTrack
                 class_name = "MS" + class_key.replace(basecls.__name__, "")
-                if sys.version_info[0] == 2:
-                    class_name = class_name.encode("ascii")
                 CLASSES[class_key] = type(class_name, (basecls,), {})
                 _LOG.info("Class %s created", CLASSES[class_key])
     return CLASSES[class_key]

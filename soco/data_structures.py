@@ -73,10 +73,7 @@ def to_didl_string(*args):
     )
     for arg in args:
         didl.append(arg.to_element())
-    if sys.version_info[0] == 2:
-        return XML.tostring(didl)
-    else:
-        return XML.tostring(didl, encoding="unicode")
+    return XML.tostring(didl, encoding="unicode")
 
 
 def didl_class_to_soco_class(didl_class):

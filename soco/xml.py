@@ -14,8 +14,6 @@ import xml.etree.ElementTree as XML
 # Create regular expression for filtering invalid characters, from:
 # http://stackoverflow.com/questions/1707890/
 # fast-way-to-filter-illegal-xml-unicode-chars-in-python
-if sys.version_info[0] >= 3:
-    unichr = chr
 
 illegal_unichrs = [
     (0x00, 0x08),
@@ -45,7 +43,7 @@ illegal_unichrs = [
 ]
 
 illegal_ranges = [
-    "%s-%s" % (unichr(low), unichr(high))
+    "%s-%s" % (chr(low), chr(high))
     for (low, high) in illegal_unichrs
     if low < sys.maxunicode
 ]
