@@ -435,6 +435,8 @@ class TestSoco:
             ("Sonos Beam", True),
             ("Sonos Playbar", True),
             ("Sonos Playbase", True),
+            ("Sonos Arc", True),
+            ("Sonos Arc SL", True),
         ),
     )
     def test_soco_is_soundbar(self, moco, model_name):
