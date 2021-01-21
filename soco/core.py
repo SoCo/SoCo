@@ -91,9 +91,7 @@ class _ArgsSingleton(type):
         if key not in cls._instances:
             cls._instances[key] = {}
         if args not in cls._instances[key]:
-            cls._instances[key][args] = super().__call__(
-                *args, **kwargs
-            )
+            cls._instances[key][args] = super().__call__(*args, **kwargs)
         return cls._instances[key][args]
 
 

@@ -8,7 +8,6 @@ They may be set by your code as follows::
 """
 
 
-
 SOCO_CLASS = None
 """The class object to use when `SoCo` instances are created.
 

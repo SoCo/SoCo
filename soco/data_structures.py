@@ -28,7 +28,6 @@ helpful.
 # http://upnp.org/specs/av/UPnP-av-ContentDirectory-v2-Service.pdf
 
 
-
 import textwrap
 import warnings
 
@@ -686,9 +685,7 @@ class DidlObject(metaclass=DidlMetaClass):
             middle = self.title.encode("ascii", "replace")[0:40]
         else:
             middle = str(self.to_dict).encode("ascii", "replace")[0:40]
-        return "<{} '{}' at {}>".format(
-            self.__class__.__name__, middle, hex(id(self))
-        )
+        return "<{} '{}' at {}>".format(self.__class__.__name__, middle, hex(id(self)))
 
     def __str__(self):
         """Get the str value for the item.

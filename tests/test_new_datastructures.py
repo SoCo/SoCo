@@ -24,7 +24,9 @@ def assert_xml_equal(left, right, explain=None):
 
     def _build_explanation(left, right, explain):
         if left.tag != right.tag:
-            explain.append("tag <{}> does not match tag <{}>".format(left.tag, right.tag))
+            explain.append(
+                "tag <{}> does not match tag <{}>".format(left.tag, right.tag)
+            )
         for name, value in left.attrib.items():
             if right.get(name) != value:
                 explain.append(
@@ -39,11 +41,15 @@ def assert_xml_equal(left, right, explain=None):
                 )
         if left.text != right.text:
             explain.append(
-                "text for element <{}>: {!r} != {!r}".format(left.tag, left.text, right.text)
+                "text for element <{}>: {!r} != {!r}".format(
+                    left.tag, left.text, right.text
+                )
             )
         if left.tail != right.tail:
             explain.append(
-                "tail for element <{}>: {!r} != {!r}".format(left.tag, left.text, right.text)
+                "tail for element <{}>: {!r} != {!r}".format(
+                    left.tag, left.text, right.text
+                )
             )
         for i1, i2 in zip(left, right):
             _build_explanation(i1, i2, explain)

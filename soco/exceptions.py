@@ -4,7 +4,6 @@
 """Exceptions that are used by SoCo."""
 
 
-
 class SoCoException(Exception):
 
     """Base class for all SoCo exceptions."""

@@ -4,7 +4,6 @@
 """This module contains classes and functionality relating to Sonos Groups."""
 
 
-
 class ZoneGroup:
 
     """
