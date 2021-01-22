@@ -56,11 +56,11 @@ import logging
 import socketserver
 import threading
 
-import requests
-
 from http.server import BaseHTTPRequestHandler
 from urllib.error import URLError
 from urllib.request import urlopen
+
+import requests
 
 # Event is imported so that 'from events import Events' still works
 # pylint: disable=unused-import

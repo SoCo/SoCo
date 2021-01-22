@@ -9,8 +9,10 @@ For access to third party music streaming services, see the
 
 
 import logging
-import xmltodict
+
 from urllib.parse import quote as quote_url
+
+import xmltodict
 
 from . import discovery
 from .data_structures import SearchResult, DidlResource, DidlObject, DidlMusicAlbum

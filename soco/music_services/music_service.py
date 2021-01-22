@@ -8,11 +8,12 @@ This module provides the MusicService class and related functionality.
 
 import logging
 
+from urllib.parse import quote as quote_url
+from urllib.parse import urlparse, parse_qs
+
 import requests
 
 from xmltodict import parse
-from urllib.parse import quote as quote_url
-from urllib.parse import urlparse, parse_qs
 
 from .. import discovery
 from ..exceptions import MusicServiceException

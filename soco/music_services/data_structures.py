@@ -328,24 +328,24 @@ class TrackMetadata(MetadataDictBase):
 
     # _valid_fields is a set of valid fields
     _valid_fields = {
-            "artistId",
-            "artist",
-            "composerId",
-            "composer",
-            "albumId",
-            "album",
-            "albumArtURI",
-            "albumArtistId",
-            "albumArtist",
-            "genreId",
-            "genre",
-            "duration",
-            "canPlay",
-            "canSkip",
-            "canAddToFavorites",
-            "rating",
-            "trackNumber",
-            "isFavorite",
+        "artistId",
+        "artist",
+        "composerId",
+        "composer",
+        "albumId",
+        "album",
+        "albumArtURI",
+        "albumArtistId",
+        "albumArtist",
+        "genreId",
+        "genre",
+        "duration",
+        "canPlay",
+        "canSkip",
+        "canAddToFavorites",
+        "rating",
+        "trackNumber",
+        "isFavorite",
     }
     # _types is a dict of fields with non-string types and their
     # convertion callables
@@ -365,16 +365,16 @@ class StreamMetadata(MetadataDictBase):
 
     # _valid_fields is a set of valid fields
     _valid_fields = {
-            "currentHost",
-            "currentShowId",
-            "currentShow",
-            "secondsRemaining",
-            "secondsToNextShow",
-            "bitrate",
-            "logo",
-            "hasOutOfBandMetadata",
-            "description",
-            "isEphemeral",
+        "currentHost",
+        "currentShowId",
+        "currentShow",
+        "secondsRemaining",
+        "secondsToNextShow",
+        "bitrate",
+        "logo",
+        "hasOutOfBandMetadata",
+        "description",
+        "isEphemeral",
     }
     # _types is a dict of fields with non-string types and their
     # convertion callables
@@ -392,15 +392,15 @@ class MediaMetadata(MusicServiceItem):
 
     # _valid_fields is a set of valid fields
     _valid_fields = {
-            "id",
-            "title",
-            "mimeType",
-            "itemType",
-            "displayType",
-            "summary",
-            "trackMetadata",
-            "streamMetadata",
-            "dynamic",
+        "id",
+        "title",
+        "mimeType",
+        "itemType",
+        "displayType",
+        "summary",
+        "trackMetadata",
+        "streamMetadata",
+        "dynamic",
     }
     # _types is a dict of fields with non-string types and their
     # convertion callables
@@ -417,21 +417,21 @@ class MediaCollection(MusicServiceItem):
 
     # _valid_fields is a set of valid fields
     _valid_fields = {
-            "id",
-            "title",
-            "itemType",
-            "displayType",
-            "summary",
-            "artistId",
-            "artist",
-            "albumArtURI",
-            "canPlay",
-            "canEnumerate",
-            "canAddToFavorites",
-            "containsFavorite",
-            "canScroll",
-            "canSkip",
-            "isFavorite",
+        "id",
+        "title",
+        "itemType",
+        "displayType",
+        "summary",
+        "artistId",
+        "artist",
+        "albumArtURI",
+        "canPlay",
+        "canEnumerate",
+        "canAddToFavorites",
+        "containsFavorite",
+        "canScroll",
+        "canSkip",
+        "isFavorite",
     }
 
     # _types is a dict of fields with non-string types and their
