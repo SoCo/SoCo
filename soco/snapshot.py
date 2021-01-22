@@ -169,51 +169,7 @@ class Snapshot(object):
         """
 
         if self.is_coordinator:
-            # Start by ensuring that the speaker is paused as we don't want
-            # things all rolling back when we are changing them, as this could
-            # include things like audio
-            transport_info = self.device.get_current_transport_info()
-            if transport_info is not None:
-                if transport_info["current_transport_state"] == "PLAYING":
-                    self.device.pause()
-
-            # Check if the queue should be restored
-            self._restore_queue()
-
-            # Reinstate what was playing
-
-            if self.is_playing_queue and self.playlist_position > 0:
-                # was playing from playlist
-
-                if self.playlist_position is not None:
-                    # The position in the playlist returned by
-                    # get_current_track_info starts at 1, but when
-                    # playing from playlist, the index starts at 0
-                    # if position > 0:
-                    self.playlist_position -= 1
-                    self.device.play_from_queue(self.playlist_position, False)
-
-                if self.track_position is not None:
-                    if self.track_position != "":
-                        self.device.seek(self.track_position)
-
-                # reinstate track, position, play mode, cross fade
-                # Need to make sure there is a proper track selected first
-                self.device.play_mode = self.play_mode
-                self.device.cross_fade = self.cross_fade
-
-            elif self.is_playing_cloud_queue:
-                # was playing a cloud queue started by Alexa
-                # No way yet to re-start this so prevent it throwing an error!
-                pass
-
-            else:
-                # was playing a stream (radio station, file, or nothing)
-                # reinstate uri and meta data
-                if self.media_uri != "":
-                    self.device.play_uri(
-                        self.media_uri, self.media_metadata, start=False
-                    )
+            self._restore_coordinator()
 
         # For all devices:
         self.device.mute = self.mute
@@ -250,6 +206,54 @@ class Snapshot(object):
                 self.device.play()
             elif self.transport_state == "STOPPED":
                 self.device.stop()
+
+    def _restore_coordinator(self):
+        """Do the coordinator-only part of the restore."""
+        # Start by ensuring that the speaker is paused as we don't want
+        # things all rolling back when we are changing them, as this could
+        # include things like audio
+        transport_info = self.device.get_current_transport_info()
+        if transport_info is not None:
+            if transport_info["current_transport_state"] == "PLAYING":
+                self.device.pause()
+
+        # Check if the queue should be restored
+        self._restore_queue()
+
+        # Reinstate what was playing
+
+        if self.is_playing_queue and self.playlist_position > 0:
+            # was playing from playlist
+
+            if self.playlist_position is not None:
+                # The position in the playlist returned by
+                # get_current_track_info starts at 1, but when
+                # playing from playlist, the index starts at 0
+                # if position > 0:
+                self.playlist_position -= 1
+                self.device.play_from_queue(self.playlist_position, False)
+
+            if self.track_position is not None:
+                if self.track_position != "":
+                    self.device.seek(self.track_position)
+
+            # reinstate track, position, play mode, cross fade
+            # Need to make sure there is a proper track selected first
+            self.device.play_mode = self.play_mode
+            self.device.cross_fade = self.cross_fade
+
+        elif self.is_playing_cloud_queue:
+            # was playing a cloud queue started by Alexa
+            # No way yet to re-start this so prevent it throwing an error!
+            pass
+
+        else:
+            # was playing a stream (radio station, file, or nothing)
+            # reinstate uri and meta data
+            if self.media_uri != "":
+                self.device.play_uri(
+                    self.media_uri, self.media_metadata, start=False
+                )
 
     def _save_queue(self):
         """Save the current state of the queue."""
