@@ -609,7 +609,11 @@ class SubscriptionBase(object):
         if callback and hasattr(callback, "__call__"):
             callback(event)
         else:
-            self.events.put(event)
+            try:
+                self.events.put(event)
+            # pylint: disable=broad-except
+            except Exception as ex:
+                log.debug("Error putting event %s, ex=%s", event, ex)
 
     # pylint: disable=missing-docstring
     def _auto_renew_start(self, interval):
