@@ -171,33 +171,7 @@ class Snapshot(object):
         if self.is_coordinator:
             self._restore_coordinator()
 
-        # For all devices:
-        self.device.mute = self.mute
-
-        # Reinstate volume
-        # Can only change volume on device with fixed volume set to False
-        # otherwise get uPnP error, so check first. Before issuing a network
-        # command to check, fixed volume always has volume set to 100.
-        # So only checked fixed volume if volume is 100.
-        if self.volume == 100:
-            fixed_vol = self.device.fixed_volume
-        else:
-            fixed_vol = False
-
-        # now set volume if not fixed
-        if not fixed_vol:
-            self.device.bass = self.bass
-            self.device.treble = self.treble
-            self.device.loudness = self.loudness
-
-            if fade:
-                # if fade requested in restore
-                # set volume to 0 then fade up to saved volume (non blocking)
-                self.device.volume = 0
-                self.device.ramp_to_volume(self.volume)
-            else:
-                # set volume
-                self.device.volume = self.volume
+        self._restore_volume(fade)
 
         # Now everything is set, see if we need to be playing, stopped
         # or paused ( only for coordinators)
@@ -254,6 +228,38 @@ class Snapshot(object):
                 self.device.play_uri(
                     self.media_uri, self.media_metadata, start=False
                 )
+
+    def _restore_volume(self, fade):
+        """Reinstate volume.
+
+        Args:
+            fade (bool): Whether volume should be faded up on restore.
+        """
+        self.device.mute = self.mute
+
+        # Can only change volume on device with fixed volume set to False
+        # otherwise get uPnP error, so check first. Before issuing a network
+        # command to check, fixed volume always has volume set to 100.
+        # So only checked fixed volume if volume is 100.
+        if self.volume == 100:
+            fixed_vol = self.device.fixed_volume
+        else:
+            fixed_vol = False
+
+        # now set volume if not fixed
+        if not fixed_vol:
+            self.device.bass = self.bass
+            self.device.treble = self.treble
+            self.device.loudness = self.loudness
+
+            if fade:
+                # if fade requested in restore
+                # set volume to 0 then fade up to saved volume (non blocking)
+                self.device.volume = 0
+                self.device.ramp_to_volume(self.volume)
+            else:
+                # set volume
+                self.device.volume = self.volume
 
     def _save_queue(self):
         """Save the current state of the queue."""
