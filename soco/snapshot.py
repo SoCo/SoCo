@@ -167,11 +167,11 @@ class Snapshot(object):
         Args:
             fade (bool): Whether volume should be faded up on restore.
         """
-
-        if self.is_coordinator:
-            self._restore_coordinator()
-
-        self._restore_volume(fade)
+        try:
+            if self.is_coordinator:
+                self._restore_coordinator()
+        finally:
+            self._restore_volume(fade)
 
         # Now everything is set, see if we need to be playing, stopped
         # or paused ( only for coordinators)
