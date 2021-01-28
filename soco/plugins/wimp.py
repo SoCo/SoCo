@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=star-args,too-many-locals
 
 """Plugin for the Wimp music service (Service ID 20)"""
 
-from __future__ import unicode_literals
 
 import locale
 import socket

@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance
 
 """Exceptions that are used by SoCo."""
-
-from __future__ import unicode_literals
 
 
 class SoCoException(Exception):
@@ -115,7 +111,7 @@ class EventParseException(SoCoException):
         return "Invalid metadata for '{}'".format(self.tag)
 
 
-class SoCoFault(object):
+class SoCoFault:
     """Class to represent a failed object instantiation.
 
     It rethrows the exception on common use.
@@ -144,9 +140,9 @@ class SoCoFault(object):
         raise self.exception
 
     def __repr__(self):
-        return "<{0}: {1} at {2}>".format(
+        return "<{}: {} at {}>".format(
             self.__class__.__name__, repr(self.exception), hex(id(self))
         )
 
     def __str__(self):
-        return "<{0}: {1}>".format(self.__class__.__name__, repr(self.exception))
+        return "<{}: {}>".format(self.__class__.__name__, repr(self.exception))

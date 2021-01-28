@@ -34,10 +34,7 @@ Example: setting up
 
 .. code-block:: python
 
-    try:
-        from queue import Empty
-    except:  # Py2.7
-        from Queue import Empty
+    from queue import Empty
 
     import soco
     from soco.events import event_listener

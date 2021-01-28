@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable-msg=R0904
 
 """This file contains the classes used to perform unit tests on the methods in
@@ -14,7 +13,6 @@ to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
 PLEASE RESPECT THIS.
 """
-from __future__ import unicode_literals
 
 import time
 import unittest

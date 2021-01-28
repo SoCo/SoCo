@@ -1,17 +1,12 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint. See https://github.com/PyCQA/pylint/issues/782
 
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
 
 """Base classes used by :py:mod:`soco.events` and
 :py:mod:`soco.events_twisted`."""
 
-from __future__ import unicode_literals
 
 import atexit
 import logging
@@ -19,9 +14,9 @@ import socket
 import time
 import threading
 import weakref
+from queue import Queue
 
 from . import config
-from .compat import Queue
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoException, SoCoFault, EventParseException
 from .utils import camel_to_underscore
@@ -131,7 +126,7 @@ def parse_event_xml(xml_event):
     return result
 
 
-class Event(object):
+class Event:
     """A read-only object representing a received event.
 
     The values of the evented variables can be accessed via the ``variables``
@@ -188,7 +183,7 @@ class Event(object):
         raise TypeError("Event object does not support attribute assignment")
 
 
-class EventNotifyHandlerBase(object):
+class EventNotifyHandlerBase:
     """Base class for `soco.events.EventNotifyHandler` and
     `soco.events_twisted.EventNotifyHandler`.
     """
@@ -256,7 +251,7 @@ class EventNotifyHandlerBase(object):
         raise NotImplementedError
 
 
-class EventListenerBase(object):
+class EventListenerBase:
     """Base class for `soco.events.EventListener` and
     `soco.events_twisted.EventListener`.
     """
@@ -298,7 +293,7 @@ class EventListenerBase(object):
                             (any_zone.ip_address, config.EVENT_LISTENER_PORT)
                         )
                         ip_address = temp_sock.getsockname()[0]
-                    except socket.error:
+                    except OSError:
                         log.exception("Could not start Event Listener: check network.")
                         ip_address = None
                     finally:
@@ -347,7 +342,7 @@ class EventListenerBase(object):
         raise NotImplementedError
 
 
-class SubscriptionBase(object):
+class SubscriptionBase:
     """Base class for `soco.events.Subscription` and
     `soco.events_twisted.Subscription`
     """
@@ -694,7 +689,7 @@ class SubscriptionBase(object):
         self.unsubscribe()
 
 
-class SubscriptionsMap(object):
+class SubscriptionsMap:
     """Maintains a mapping of sids to `soco.events.Subscription` instances
     and the thread safe lock to go with it. Registers each subscription to
     be unsubscribed at exit.

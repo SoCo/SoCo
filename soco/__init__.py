@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """SoCo (Sonos Controller) is a simple library to control Sonos speakers."""
 
 # There is no need for all strings here to be unicode, and Py2 cannot import
@@ -10,8 +8,6 @@
 
 
 import logging
-import warnings
-import sys
 
 from .core import SoCo
 from .discovery import discover
@@ -38,9 +34,3 @@ __all__ = [
 # Avoids spurious error messages if no logger is configured by the user
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-if sys.version_info.major < 3:
-    warnings.warn(
-        "Version 0.19 of SoCo is the last to support Python 2.7",
-        stacklevel=2,
-    )

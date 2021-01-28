@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 """This module contains methods for discovering Sonos devices on the
 network."""
 
-from __future__ import unicode_literals
 
 import logging
 import socket
@@ -93,9 +91,9 @@ def discover(
     if interface_addr is not None:
         try:
             address = socket.inet_aton(interface_addr)
-        except socket.error as e:
+        except OSError as e:
             raise ValueError(
-                "{0} is not a valid IP address string".format(interface_addr)
+                "{} is not a valid IP address string".format(interface_addr)
             ) from e
         _sockets.append(create_socket(interface_addr))
         _LOG.info("Sending discovery packets on specified interface")
@@ -104,7 +102,7 @@ def discover(
         for address in _find_ipv4_addresses():
             try:
                 _sockets.append(create_socket(address))
-            except socket.error as e:
+            except OSError as e:
                 _LOG.warning(
                     "Can't make a discovery socket for %s: %s: %s",
                     address,

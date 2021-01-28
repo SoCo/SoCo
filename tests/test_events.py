@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the services module."""
 
-from __future__ import unicode_literals
 
 import pytest
 

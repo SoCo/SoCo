@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """This module contains configuration variables.
 
 They may be set by your code as follows::
@@ -8,8 +6,6 @@ They may be set by your code as follows::
     ...
     config.VARIABLE = value
 """
-
-from __future__ import unicode_literals
 
 
 SOCO_CLASS = None
