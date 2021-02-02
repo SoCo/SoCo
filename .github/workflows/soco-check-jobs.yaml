@@ -10,7 +10,7 @@ on:
     branches: [ actions-test ]
 
 jobs:
-  SoCo-Check-Jobs-3-9:
+  SoCo-Check-Jobs-Py_3-9:
 
     runs-on: ubuntu-latest
 
@@ -38,7 +38,7 @@ jobs:
       run: |
         black --check soco tests
 
-  SoCo-Check-Jobs-3-8:
+  SoCo-Check-Jobs-Py_3-8:
 
     runs-on: ubuntu-latest
 
@@ -66,7 +66,7 @@ jobs:
       run: |
         black --check soco tests
 
-  SoCo-Check-Jobs-3-7:
+  SoCo-Check-Jobs-Py_3-7:
 
     runs-on: ubuntu-latest
 
@@ -94,7 +94,7 @@ jobs:
       run: |
         black --check soco tests
 
-  SoCo-Check-Jobs-3-6:
+  SoCo-Check-Jobs-Py_3-6:
 
     runs-on: ubuntu-latest
 
@@ -122,7 +122,7 @@ jobs:
       run: |
         black --check soco tests
 
-  SoCo-Check-Jobs-3-5:
+  SoCo-Check-Jobs-Py_3-5:
 
     runs-on: ubuntu-latest
 
