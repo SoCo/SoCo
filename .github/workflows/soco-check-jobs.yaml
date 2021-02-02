@@ -60,6 +60,3 @@ jobs:
       - name: Test with pytest
         run: |
           pytest soco .
-      - name: Test formatting with Black
-        run: |
-          black --check soco tests
