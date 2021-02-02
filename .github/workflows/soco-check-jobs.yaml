@@ -10,7 +10,7 @@ on:
     branches: [ actions-test ]
 
 jobs:
-  build:
+  SoCo-Check-Jobs-3-9:
 
     runs-on: ubuntu-latest
 
@@ -36,3 +36,30 @@ jobs:
     - name: Test formatting with Black
       run: |
         black --check soco tests
+
+  SoCo-Check-Jobs-3-5:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.5
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.5
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 soco
+      - name: Test with pytest
+        run: |
+          pytest soco .
+      - name: Test formatting with Black
+        run: |
+          black --check soco tests
