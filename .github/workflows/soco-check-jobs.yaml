@@ -33,7 +33,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Test with pytest
       run: |
-        pytest soco .
+        pytest --cov-config .coveragerc --cov soco .
     - name: Test formatting with Black
       run: |
         black --check soco tests
@@ -61,7 +61,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Test with pytest
       run: |
-        pytest soco .
+        pytest --cov-config .coveragerc --cov soco .
     - name: Test formatting with Black
       run: |
         black --check soco tests
@@ -89,7 +89,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Test with pytest
       run: |
-        pytest soco .
+        pytest --cov-config .coveragerc --cov soco .
     - name: Test formatting with Black
       run: |
         black --check soco tests
@@ -117,7 +117,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - name: Test with pytest
       run: |
-        pytest soco .
+        pytest --cov-config .coveragerc --cov soco .
     - name: Test formatting with Black
       run: |
         black --check soco tests
@@ -145,4 +145,4 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
       - name: Test with pytest
         run: |
-          pytest soco .
+          pytest --cov-config .coveragerc --cov soco .
