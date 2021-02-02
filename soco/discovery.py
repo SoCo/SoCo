@@ -20,13 +20,7 @@ _LOG = logging.getLogger(__name__)
 # pylint: disable=too-many-locals, too-many-branches
 
 
-def discover(
-    timeout=5,
-    include_invisible=False,
-    interface_addr=None,
-    allow_network_scan=False,
-    **network_scan_kwargs
-):
+def discover(timeout=5, include_invisible=False, interface_addr=None, allow_network_scan=False, **network_scan_kwargs):
     """Discover Sonos zones on the local network.
 
     Return a set of `SoCo` instances for each zone found.
