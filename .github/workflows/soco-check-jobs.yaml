@@ -3,9 +3,13 @@ name: SoCo
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - 'v0.21.fixes'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - 'v0.21.fixes'
 
 jobs:
   SoCo-Check-Jobs-Py_3-9:
