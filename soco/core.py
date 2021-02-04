@@ -1238,7 +1238,6 @@ class SoCo(_SocoSingletonBase):
             ]
         )
         self._zgs_cache.clear()
-        self._parse_zone_group_state()
 
     def unjoin(self):
         """Remove this speaker from a group.
@@ -1250,7 +1249,6 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([("InstanceID", 0)])
         self._zgs_cache.clear()
-        self._parse_zone_group_state()
 
     def create_stereo_pair(self, rh_slave_speaker):
         """Create a stereo pair.
