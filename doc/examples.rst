@@ -58,6 +58,56 @@ Getting a device by player name can be done with the
   SoCo("192.168.1.18")
 
 
+.. _examples_handle_group:
+
+Handle group of devices
+-----------------------
+
+Information about group
+^^^^^^^^^^^^^^^^^^^^^^^
+
+To get information about group, pick a device and use the :attr:`~soco.core.SoCo.all_groups`
+property::
+
+  >>> import soco
+  >>> devices = {device.player_name: device for device in soco.discover()}
+  >>> devices
+  {'Living Room': SoCo("192.168.1.47"), 'Office': SoCo("192.168.1.48")}
+
+  >>> devices['Living Room'].all_groups
+  {ZoneGroup(uid='RINCON_347E5C68F04001400:2900176654', coordinator=SoCo("192.168.1.48"), members={SoCo("192.168.1.48")}),
+   ZoneGroup(uid='RINCON_7828CAF58E6E01400:3613865501', coordinator=SoCo("192.168.1.47"), members={SoCo("192.168.1.47")})}
+
+In the case above, there are two independently devices (one group for each device).
+
+Join/unjoin devices
+^^^^^^^^^^^^^^^^^^^
+
+You can use the :meth:`~soco.core.SoCo.join` method to join a device to a master device::
+
+  >>> devices['Office'].join(devices['Living Room'])
+  >>> devices['Living Room'].all_groups
+  {ZoneGroup(uid='RINCON_7828CAF58E6E01400:3613865501', coordinator=SoCo("192.168.1.47"), members={SoCo("192.168.1.47"), SoCo("192.168.1.48")})}
+
+Now, there is now only a single group composed of the two devices. The Living Room device is the coordinator of the group.
+
+Use the :meth:`~soco.core.SoCo.unjoin` method to unjoin a device in a group::
+
+  >>> devices['Living Room'].unjoin()
+  >>> devices['Living Room'].all_groups
+  {ZoneGroup(uid='RINCON_7828CAF58E6E01400:3613865501', coordinator=SoCo("192.168.1.48"), members={SoCo("192.168.1.48")}),
+   ZoneGroup(uid='RINCON_7828CAF58E6E01400:3613865502', coordinator=SoCo("192.168.1.47"), members={SoCo("192.168.1.47")})}
+
+Party mode
+^^^^^^^^^^
+
+Use the :meth:`~soco.core.SoCo.partymode` method to join all devices in your network in one command::
+
+  >>> devices['Living Room'].partymode()
+  >>> devices['Living Room'].all_groups
+  {ZoneGroup(uid='RINCON_7828CAF58E6E01400:3613865501', coordinator=SoCo("192.168.1.47"), members={SoCo("192.168.1.47"), SoCo("192.168.1.48")})}
+
+
 .. _examples_playback_control:
 
 Playback control
@@ -109,6 +159,27 @@ that the input for that method is a string on the form "HH:MM:SS" or
   >>> device.seek("0:00:30")
   >>> device.get_current_track_info()['position']
   '0:00:31'
+
+Control inside a group
+^^^^^^^^^^^^^^^^^^^^^^
+
+Only the coordinator of a group can control the group. You can use the
+:attr:`~soco.core.SoCo.is_coordinator` property to see if a device is the
+coordinator::
+
+  >>> devices['Living Room'].is_coordinator
+  True
+
+From a device, you can get the coordinator of a group by using the
+:attr:`~soco.core.SoCo.group` property of the :class:`~soco.core.SoCo` instance
+that return a :class:`~soco.groups.ZoneGroup` instance followed by its 
+:attr:`~soco.groups.ZoneGroup.coordinator` property::
+
+  >>> devices['Living Room'].group.coordinator
+  SoCo("192.168.1.47")
+  >>> devices['Office'].group.coordinator
+  SoCo("192.168.1.47")
+
 
 Seeing and manipulating the queue
 ---------------------------------
