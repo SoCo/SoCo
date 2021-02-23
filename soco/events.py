@@ -394,6 +394,7 @@ class Subscription(SubscriptionBase):
         if success:
             success(response.headers)
 
+    # pylint: disable=inconsistent-return-statements
     def _wrap(self, method, strict, *args, **kwargs):
 
         """This is a wrapper for `Subscription.subscribe`, `Subscription.renew`
