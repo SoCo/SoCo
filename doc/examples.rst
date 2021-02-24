@@ -163,8 +163,10 @@ that the input for that method is a string on the form "HH:MM:SS" or
 Control inside a group
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Only the coordinator of a group can control the group. You can use the
-:attr:`~soco.core.SoCo.is_coordinator` property to see if a device is the
+Only the coordinator of a group can control the group (queue, volume, loudness, mute, ...)
+but all commands sent to the coordinator are applied to all members of the group.
+
+You can use the :attr:`~soco.core.SoCo.is_coordinator` property to see if a device is the
 coordinator::
 
   >>> devices['Living Room'].is_coordinator
