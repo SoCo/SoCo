@@ -838,10 +838,10 @@ def desc_from_uri(uri):
     # the uri as if it were http
     if ":" in uri:
         _, uri = uri.split(":", 1)
-    query_string_initial = parse_qs(urlparse(uri, "http").query)
-    # Strip 'amp;' prefix from keys if required
-    #   See https://github.com/SoCo/SoCo/issues/810
-    query_string = {k.replace("amp;", ""): v for k, v in query_string_initial.items()}
+    # Remove 'amp;' from uri, leaving '&' as the separator
+    # See: https://github.com/SoCo/SoCo/issues/810
+    uri = uri.replace("amp;", "")
+    query_string = parse_qs(urlparse(uri, "http").query)
     # Is there an account serial number?
     if query_string.get("sn"):
         account_serial_number = query_string["sn"][0]
