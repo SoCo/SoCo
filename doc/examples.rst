@@ -163,8 +163,13 @@ that the input for that method is a string on the form "HH:MM:SS" or
 Control inside a group
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Only the coordinator of a group can control the group (queue, volume, loudness, mute, ...)
-but all commands sent to the coordinator are applied to all members of the group.
+Only the coordinator of a group can control that it is played (play, pause, stop, next, 
+previous, seek commands) and can handle the queue (add or remove track, clear the queue)
+and playlists. A :class:`~soco.exceptions.SoCoSlaveException` exception will raise if a
+master command is called on a non-coordinator device. 
+
+Other commands like volume, loudness and treble, mute, night mode are controlled on each
+individual players in the group.
 
 You can use the :attr:`~soco.core.SoCo.is_coordinator` property to see if a device is the
 coordinator::
@@ -181,6 +186,21 @@ that return a :class:`~soco.groups.ZoneGroup` instance followed by its
   SoCo("192.168.1.47")
   >>> devices['Office'].group.coordinator
   SoCo("192.168.1.47")
+
+To set a group volume, use the :attr:`~soco.groups.ZoneGroup.volume` property or the
+:meth:`~soco.groups.ZoneGroup.set_relative_volume` method::
+
+  >>> # let's define some alias...
+  >>> lr = devices['Living Room']
+  >>> of = devices['Office']
+  >>> lr.volume, of.volume
+  (17, 10)
+  >>> g = lr.group  # alias to the group
+  >>> g.volume
+  13
+  >>> g.volume = 20
+  >>> lr.volume, of.volume
+  (27, 13)
 
 
 Seeing and manipulating the queue
