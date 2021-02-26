@@ -30,9 +30,9 @@ plex_track = (
 plex_album = plex_track.album()
 plex_artist = plex_track.artist()
 
-base_id = f"{plex_server.machineIdentifier}:{plex_track.librarySectionID}"
-item_id = quote(f"1004206c{base_id}:{plex_album.ratingKey}:album")
-parent_id = quote(f"1005206c{base_id}:{plex_artist.ratingKey}:artist")
+base_id = "{}:{}".format(plex_server.machineIdentifier, plex_track.librarySectionID)
+item_id = quote("1004206c{}:{}:album".format(base_id, plex_album.ratingKey))
+parent_id = quote("1005206c{}:{}:artist".format(base_id, plex_artist.ratingKey))
 
 album_title = plex_album.title
 album_art_uri = plex_album.artUrl
@@ -58,7 +58,9 @@ q = Queue(br)
 
 URIs = XML.Element("URIs")
 URI = XML.SubElement(
-    URIs, "URI", {"uri": f"x-rincon-cpcontainer:{item_id}?sid=212&flags=8300&sn=9"}
+    URIs,
+    "URI",
+    {"uri": "x-rincon-cpcontainer:{}?sid=212&flags=8300&sn=9".format(item_id)},
 )
 didl = XML.SubElement(
     URI,
