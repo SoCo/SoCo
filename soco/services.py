@@ -111,7 +111,7 @@ class Service:
         '<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"'
         ' s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
         "<s:Body>"
-        '<u:{action} xmlns:u="urn:schemas-upnp-org:service:'
+        '<u:{action} xmlns:u="urn:schemas-{ns}:service:'
         '{service_type}:{version}">'
         "{arguments}"
         "</u:{action}>"
@@ -409,6 +409,7 @@ class Service:
         body = self.soap_body_template.format(
             arguments=arguments,
             action=action,
+            ns='sonos-com' if action in ["ReplaceAllTracks"] else 'upnp-org',
             service_type=self.service_type,
             version=self.version,
         )
