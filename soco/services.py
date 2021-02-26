@@ -409,7 +409,7 @@ class Service:
         body = self.soap_body_template.format(
             arguments=arguments,
             action=action,
-            ns='sonos-com' if action in ["ReplaceAllTracks"] else 'upnp-org',
+            ns="sonos-com" if action in ["ReplaceAllTracks"] else "upnp-org",
             service_type=self.service_type,
             version=self.version,
         )
