@@ -477,8 +477,12 @@ class Service:
         log.debug("Sending %s, %s", headers, prettify(body))
         # Convert the body to bytes, and send it.
         response = requests.post(
-            self.base_url + self.control_url, headers=headers, data=body.encode("utf-8")
+            self.base_url + self.control_url,
+            headers=headers,
+            data=body.encode("utf-8"),
+            timeout=20,
         )
+
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         log.info("Received status %s from %s", status, self.soco.ip_address)
@@ -684,7 +688,7 @@ class Service:
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree
         # which likes to receive bytes
-        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).content
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
@@ -744,7 +748,7 @@ class Service:
 
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
-        scpd_body = requests.get(self.base_url + self.scpd_url).text
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).text
         tree = XML.fromstring(scpd_body.encode("utf-8"))
         # parse the state variables to get the relevant variable types
         statevars = tree.findall("{}stateVariable".format(ns))
