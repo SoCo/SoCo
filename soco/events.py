@@ -389,8 +389,20 @@ class Subscription(SubscriptionBase):
                 of response headers as its only parameter.
 
         """
-        response = requests.request(method, url, headers=headers)
-        response.raise_for_status()
+        response = None
+        try:
+            response = requests.request(method, url, headers=headers, timeout=3)
+        except requests.exceptions.RequestException:
+            # Ignore timeout for unsubscribe since we are leaving anyway.
+            if method != "UNSUBSCRIBE":
+                raise
+
+        # Ignore "412 Client Error: Precondition Failed for url:" from
+        # rebooted speakers. The reboot will have unsubscribed us which is
+        # what we are trying to do.
+        if response and response.status_code != 412:
+            response.raise_for_status()
+
         if success:
             success(response.headers)
 
