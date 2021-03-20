@@ -41,11 +41,6 @@ from .xml import XML
 _LOG = logging.getLogger(__name__)
 
 
-def print(*args, **kwargs):
-    pass
-
-
-
 class SoapFault(SoCoException):
 
     """An exception encapsulating a SOAP Fault."""
@@ -281,6 +276,7 @@ class SoapMessage(object):
         Raises:
              SoapFault: if a SOAP error occurs.
              ~requests.exceptions.HTTPError: if an http error occurs.
+             xml.etree.ElementTree.ParseError: If the response cannot be parsed as XML
 
         """
 
@@ -302,6 +298,7 @@ class SoapMessage(object):
         status = response.status_code
         if status == 200:
             # The response is good. Extract the Body
+            print(response.content)
             tree = XML.fromstring(response.content)
             # Get the first child of the <Body> tag. NB There should only be
             # one if the RPC standard is followed.
