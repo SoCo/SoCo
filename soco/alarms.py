@@ -363,5 +363,5 @@ def remove_alarm_by_id(zone, alarm_id):
         if alarm.alarm_id == alarm_id:
             alarm.remove()
             return True
-    else:
-        return False
+
+    return False
