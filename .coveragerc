@@ -10,6 +10,3 @@ exclude_lines =
 
     # No need to test __repr__
     def __repr__
-
-    # Python 2/3 compatibility
-    except ImportError

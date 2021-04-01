@@ -1,0 +1,38 @@
+SoCo 0.16 release notes
+***********************
+
+**SoCo 0.16** is a new version of the SoCo library. This release adds new
+features and fixes several bugs.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+
+New Features and Improvements
+=============================
+
+* Allow the user to configure the event listener IP address that is sent to the
+  Sonos speakers. The default is to auto detect, but it can now be overridden.
+  This allows for more complex network configurations (e.g. using Docker
+  containers) to be supported.
+  (`#604 <https://github.com/SoCo/SoCo/pull/604>`_)
+
+* The ``play_uri`` method now accepts title arguments that need XML escaping.
+  (`#605 <https://github.com/SoCo/SoCo/pull/605>`_)
+
+* A harmless "Could not handle track info" warning has been removed.
+  (`#606 <https://github.com/SoCo/SoCo/pull/606>`_)
+
+* Let ``from_didl_string`` throw ``DIDLMetadataErrors``, allowing them to be
+  caught in the event handling code.
+  (`#601 <https://github.com/SoCo/SoCo/pull/601>`_)
+
+* Added support for ``object.item.audioItem.audioBook``
+  (`#618 <https://github.com/SoCo/SoCo/pull/618>`_)
+
+
+Bugfixes
+========
+
+* Fix ``DidlMusicAlbum`` inheriting fields from ``DidlAudioItem`` instead of
+  ``DidlAlbum`` (`#592 <https://github.com/SoCo/SoCo/pull/592>`_)

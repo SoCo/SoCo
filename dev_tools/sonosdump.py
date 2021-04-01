@@ -1,10 +1,8 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
 
 
 """ Dump all known UPnP commands """
 
-from __future__ import unicode_literals, print_function
 import argparse
 import re
 

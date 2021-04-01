@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
+# Disable while we have Python 2.x compatability
+# pylint: disable=useless-object-inheritance
 
 """Exceptions that are used by SoCo."""
-
-from __future__ import unicode_literals
 
 
 class SoCoException(Exception):
@@ -35,7 +34,7 @@ class SoCoUPnPException(SoCoException):
                 encoded string.
             error_description (str): A description of the error. Default is ""
         """
-        super(SoCoUPnPException, self).__init__()
+        super().__init__()
         self.message = message
         self.error_code = error_code
         self.error_description = error_description
@@ -78,6 +77,11 @@ class SoCoSlaveException(SoCoException):
     """Raised when a master command is called on a slave."""
 
 
+class SoCoNotVisibleException(SoCoException):
+    """Raised when a command intended for a visible speaker is called
+    on an invisible one."""
+
+
 class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
 
@@ -98,7 +102,7 @@ class EventParseException(SoCoException):
             metadata (str): The metadata which failed to parse
             cause (Exception): The original exception
         """
-        super(EventParseException, self).__init__()
+        super().__init__()
         self.tag = tag
         self.metadata = metadata
         self.__cause__ = cause
@@ -107,7 +111,7 @@ class EventParseException(SoCoException):
         return "Invalid metadata for '{}'".format(self.tag)
 
 
-class SoCoFault(object):
+class SoCoFault:
     """Class to represent a failed object instantiation.
 
     It rethrows the exception on common use.
@@ -121,7 +125,7 @@ class SoCoFault(object):
         Args:
             exception (Exception): The exception which should be thrown on use
         """
-        self.__dict__['exception'] = exception
+        self.__dict__["exception"] = exception
 
     def __getattr__(self, name):
         raise self.exception
@@ -136,10 +140,9 @@ class SoCoFault(object):
         raise self.exception
 
     def __repr__(self):
-        return '<{0}: {1} at {2}>'.format(self.__class__.__name__,
-                                          repr(self.exception),
-                                          hex(id(self)))
+        return "<{}: {} at {}>".format(
+            self.__class__.__name__, repr(self.exception), hex(id(self))
+        )
 
     def __str__(self):
-        return '<{0}: {1}>'.format(self.__class__.__name__,
-                                   repr(self.exception))
+        return "<{}: {}>".format(self.__class__.__name__, repr(self.exception))

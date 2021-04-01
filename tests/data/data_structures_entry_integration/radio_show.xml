@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="R:0/1/29" parentID="R:0/1" restricted="false">
+    <dc:title>Hitlisten på P7 MIX</dc:title>
+    <upnp:class>object.container.radioShow</upnp:class>
+    <res protocolInfo="x-sonosapi-show:*:*:*">x-sonosapi-show:F00080000p571331%3afavorite</res>
+  </container>
+</DIDL-Lite>

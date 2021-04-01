@@ -33,9 +33,9 @@ New Features and Improvements
 Bugfixes
 ========
 
-* Small bugfix to stop an error where `None` would be returned by
-  `metadata.findtext`. Instead, an empty string is returned.
-  (`#539 <https://github.com/SoCo/SoCo/pull/539>`_)
+* Small bugfix to stop an error where ``None`` would be returned by
+  ``metadata.findtext``. Instead, an empty string is returned.  (`#539
+  <https://github.com/SoCo/SoCo/pull/539>`_)
 
 * Fix a race that could lead to events being missed shortly after a
   subscription was started. (`#533 <https://github.com/SoCo/SoCo/pull/533>`_)

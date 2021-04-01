@@ -1,0 +1,37 @@
+SoCo 0.17 release notes
+***********************
+
+**SoCo 0.17** adds a single new feature and updates SoCo to work on
+top of the API changes that Sonos introduced with the 10.1 software
+update.
+
+.. warning::
+   The changes to SoCo to accommodate the Sonos API changes as of
+   version 10.1 are **backwards incompatible**. This means that if
+   SoCo is updated to version 0.17, then *it will be necessary to
+   update the Sonos software to ≥10.1* at the same time.
+
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a simple Python class
+that allows you to programmatically control Sonos speakers.
+
+New Features and Improvements
+=============================
+
+* Add the ``is_soundbar`` property to the SoCo class to indicate
+  whether or not the current instance represents a Play:Bar, a
+  Play:Base, or a Beam and, when appropriate, enable features like
+  Night and Dialog mode. (Pull request `#637
+  <https://github.com/SoCo/SoCo/pull/637>`_). (Fixes `#633
+  <https://github.com/SoCo/SoCo/issues/633>`_).
+
+
+Bugfixes
+========
+
+* Fix discovery which was broken as a consequence of API changes in
+  Sonos software version 10.1. (Commit `f532cad
+  <https://github.com/SoCo/SoCo/commit/f532cadb41179d3e030a6fc21bc32f7773070169>`_)
+* Fix parsing of favorites which was broken as a consequence of API
+  changes in Sonos software version 10.1. (Commit `58efcb6
+  <https://github.com/SoCo/SoCo/commit/58efcb691128583922477825c5801bc83d7fe95f>`_)
