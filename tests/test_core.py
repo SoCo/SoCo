@@ -575,6 +575,22 @@ class TestAVTransport:
             [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
         )
 
+    def test_available_actions(self, moco):
+        moco.avTransport.GetCurrentTransportActions.return_value = {
+            "Actions": "Set, Stop, Pause, Play, X_DLNA_SeekTime, X_DLNA_SeekTrackNr"
+        }
+        assert moco.available_actions == [
+            "Set",
+            "Stop",
+            "Pause",
+            "Play",
+            "SeekTime",
+            "SeekTrackNr",
+        ]
+        moco.avTransport.GetCurrentTransportActions.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+
     def test_soco_cross_fade2(self, moco):
         moco.avTransport.GetCrossfadeMode.return_value = {"CrossfadeMode": "1"}
         assert moco.cross_fade
