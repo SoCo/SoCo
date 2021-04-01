@@ -227,7 +227,7 @@ class SoCo(_SocoSingletonBase):
         is_playing_line_in
         switch_to_line_in
         switch_to_tv
-        get_available_actions
+        available_actions
         set_sleep_timer
         get_sleep_timer
         create_stereo_pair
@@ -1622,16 +1622,17 @@ class SoCo(_SocoSingletonBase):
 
         return playstate
 
-    def get_available_actions(self):
-        """Get the transport actions that are currently available on the
+    @property
+    @only_on_master
+    def available_actions(self):
+        """The transport actions that are currently available on the
         speaker.
 
-        Returns:
-            list: A list of strings representing the available actions, such as
-                `['Set', 'Stop', 'Play'].`
+        :returns: list: A list of strings representing the available actions, such as
+                    ['Set', 'Stop', 'Play'].
 
-        Possible list items are: ``Set``, ``Stop``, ``Pause``, ``Play``,
-        ``Next``, ``Previous``, ``SeekTime``, ``SeekTrackNr``.
+        Possible list items are: 'Set', 'Stop', 'Pause', 'Play',
+        'Next', 'Previous', 'SeekTime', 'SeekTrackNr'.
         """
         result = self.avTransport.GetCurrentTransportActions([
             ('InstanceID', 0)
@@ -1650,7 +1651,7 @@ class SoCo(_SocoSingletonBase):
             IP address
         :returns: A :py:class:`~.soco.data_structures.Queue` object
 
-        This method is heavly based on Sam Soffes (aka soffes) ruby
+        This method is heavily based on Sam Soffes (aka soffes) ruby
         implementation
         """
         queue = []
