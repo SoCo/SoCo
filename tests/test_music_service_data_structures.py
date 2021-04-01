@@ -1,12 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """Test for music_services/data_structures"""
 
-from __future__ import unicode_literals, print_function
 
 from collections import OrderedDict
 import pytest
-from mock import PropertyMock, Mock, patch
+from unittest.mock import PropertyMock, Mock, patch
 from soco.music_services import data_structures
 from soco.data_structures import DidlResource
 
@@ -207,7 +204,7 @@ def test_bool_str():
         data_structures.bool_str("dummy")
 
 
-class TestMetadataDictBase(object):
+class TestMetadataDictBase:
     """Tests for the MetadataDictBase class"""
 
     def test_init(self):
@@ -257,7 +254,7 @@ class TestMetadataDictBase(object):
             metadata.nonexistent_key
 
 
-class TestMusicServiceItem(object):
+class TestMusicServiceItem:
     """Test the MusicServiceItem class"""
 
     @patch("soco.music_services.data_structures.MetadataDictBase.__init__")

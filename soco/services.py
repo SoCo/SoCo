@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme, invalid-name
 
 # Disable while we have Python 2.x compatability
@@ -32,7 +31,6 @@ Argument(name='CurrentDateFormat', vartype='string')] ...
 
 # UPnP Spec at http://upnp.org/specs/arch/UPnP-arch-DeviceArchitecture-v1.0.pdf
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
 from collections import namedtuple
@@ -82,8 +80,8 @@ class Argument(namedtuple("ArgumentBase", "name, vartype")):
     def __str__(self):
         argument = self.name
         if self.vartype.default:
-            argument = "{0}={1}".format(self.name, self.vartype.default)
-        return "{0}: {1}".format(argument, str(self.vartype))
+            argument = "{}={}".format(self.name, self.vartype.default)
+        return "{}: {}".format(argument, str(self.vartype))
 
 
 class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
@@ -91,14 +89,14 @@ class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
 
     def __str__(self):
         if self.list:
-            return "[{0}]".format(", ".join(self.list))
+            return "[{}]".format(", ".join(self.list))
         if self.range:
-            return "[{0}..{1}]".format(self.range[0], self.range[1])
+            return "[{}..{}]".format(self.range[0], self.range[1])
         return self.datatype
 
 
 # pylint: disable=too-many-instance-attributes
-class Service(object):
+class Service:
     """A class representing a UPnP service.
 
     This is the base class for all Sonos Service classes. This class has a
@@ -312,7 +310,7 @@ class Service(object):
         action_response = tree.find("{http://schemas.xmlsoap.org/soap/envelope/}Body")[
             0
         ]
-        return dict((i.tag, i.text or "") for i in action_response)
+        return {i.tag: i.text or "" for i in action_response}
 
     def compose_args(self, action_name, in_argdict):
         """Compose the argument list from an argument dictionary, with
@@ -338,15 +336,15 @@ class Service(object):
                 # The found 'action' will be visible from outside the loop
                 break
         else:
-            raise AttributeError("Unknown Action: {0}".format(action_name))
+            raise AttributeError("Unknown Action: {}".format(action_name))
 
         # Check for given argument names which do not occur in the expected
         # argument list
         # pylint: disable=undefined-loop-variable
-        unexpected = set(in_argdict) - set(argument.name for argument in action.in_args)
+        unexpected = set(in_argdict) - {argument.name for argument in action.in_args}
         if unexpected:
             raise ValueError(
-                "Unexpected argument '{0}'. Method signature: {1}".format(
+                "Unexpected argument '{}'. Method signature: {}".format(
                     next(iter(unexpected)), str(action)
                 )
             )
@@ -364,7 +362,7 @@ class Service(object):
             if argument.vartype.default is not None:
                 composed.append((name, argument.vartype.default))
             raise ValueError(
-                "Missing argument '{0}'. Method signature: {1}".format(
+                "Missing argument '{}'. Method signature: {}".format(
                     argument.name, str(action)
                 )
             )
@@ -461,7 +459,7 @@ class Service(object):
             ValueError: If the argument lists do not match the action
                 signature.
             `SoCoUPnPException`: if a SOAP error occurs.
-            `UnknownSoCoException`: if an unknonwn UPnP error occurs.
+            `UnknownSoCoException`: if an unknown UPnP error occurs.
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
@@ -479,8 +477,12 @@ class Service(object):
         log.debug("Sending %s, %s", headers, prettify(body))
         # Convert the body to bytes, and send it.
         response = requests.post(
-            self.base_url + self.control_url, headers=headers, data=body.encode("utf-8")
+            self.base_url + self.control_url,
+            headers=headers,
+            data=body.encode("utf-8"),
+            timeout=20,
         )
+
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
         log.info("Received status %s from %s", status, self.soco.ip_address)
@@ -686,7 +688,7 @@ class Service(object):
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree
         # which likes to receive bytes
-        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).content
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
@@ -746,7 +748,7 @@ class Service(object):
 
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
-        scpd_body = requests.get(self.base_url + self.scpd_url).text
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).text
         tree = XML.fromstring(scpd_body.encode("utf-8"))
         # parse the state variables to get the relevant variable types
         statevars = tree.findall("{}stateVariable".format(ns))

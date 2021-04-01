@@ -6,7 +6,7 @@
 Welcome to SoCo's documentation!
 ================================
 
-SoCo (Sonos Controller) is a high level Python 2/3 library to control your
+SoCo (Sonos Controller) is a high level Python 3 library to control your
 `Sonos <www.sonos.com>`_ ® speakers with::
 
     # Import soco and get a SoCo instance

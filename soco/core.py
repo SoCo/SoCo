@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme, protected-access
 """The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
 
-from __future__ import absolute_import, unicode_literals
 
 import datetime
 import logging
@@ -21,7 +19,6 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import config
-from .compat import UnicodeType
 from .data_structures import (
     DidlObject,
     DidlPlaylistContainer,
@@ -94,14 +91,12 @@ class _ArgsSingleton(type):
         if key not in cls._instances:
             cls._instances[key] = {}
         if args not in cls._instances[key]:
-            cls._instances[key][args] = super(_ArgsSingleton, cls).__call__(
-                *args, **kwargs
-            )
+            cls._instances[key][args] = super().__call__(*args, **kwargs)
         return cls._instances[key][args]
 
 
 class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
-    _ArgsSingleton(str("ArgsSingletonMeta"), (object,), {})
+    _ArgsSingleton("ArgsSingletonMeta", (object,), {})
 ):
 
     """The base class for the SoCo class.
@@ -120,7 +115,7 @@ def only_on_master(function):
         """Master checking inner function."""
         if not self.is_coordinator:
             message = (
-                'The method or property "{0}" can only be called/used '
+                'The method or property "{}" can only be called/used '
                 "on the coordinator in a group".format(function.__name__)
             )
             raise SoCoSlaveException(message)
@@ -232,6 +227,7 @@ class SoCo(_SocoSingletonBase):
         is_playing_line_in
         switch_to_line_in
         switch_to_tv
+        available_actions
         set_sleep_timer
         get_sleep_timer
         create_stereo_pair
@@ -270,7 +266,7 @@ class SoCo(_SocoSingletonBase):
         # Sonos does not (yet) support IPv6
         try:
             socket.inet_aton(ip_address)
-        except socket.error as error:
+        except OSError as error:
             raise ValueError("Not a valid IP address string") from error
         #: The speaker's ip address
         self.ip_address = ip_address
@@ -307,10 +303,10 @@ class SoCo(_SocoSingletonBase):
         _LOG.debug("Created SoCo instance for ip: %s", ip_address)
 
     def __str__(self):
-        return "<{0} object at ip {1}>".format(self.__class__.__name__, self.ip_address)
+        return "<{} object at ip {}>".format(self.__class__.__name__, self.ip_address)
 
     def __repr__(self):
-        return '{0}("{1}")'.format(self.__class__.__name__, self.ip_address)
+        return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
 
     @property
     def player_name(self):
@@ -571,7 +567,7 @@ class SoCo(_SocoSingletonBase):
             self.get_speaker_info()
 
         # first, set the queue itself as the source URI
-        uri = "x-rincon-queue:{0}#0".format(self.uid)
+        uri = "x-rincon-queue:{}#0".format(self.uid)
         self.avTransport.SetAVTransportURI(
             [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", "")]
         )
@@ -667,7 +663,7 @@ class SoCo(_SocoSingletonBase):
         if force_radio:
             colon = uri.find(":")
             if colon > 0:
-                uri = "x-rincon-mp3radio{0}".format(uri[colon:])
+                uri = "x-rincon-mp3radio{}".format(uri[colon:])
 
         self.avTransport.SetAVTransportURI(
             [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)]
@@ -1238,12 +1234,11 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetAVTransportURI(
             [
                 ("InstanceID", 0),
-                ("CurrentURI", "x-rincon:{0}".format(master.uid)),
+                ("CurrentURI", "x-rincon:{}".format(master.uid)),
                 ("CurrentURIMetaData", ""),
             ]
         )
         self._zgs_cache.clear()
-        self._parse_zone_group_state()
 
     def unjoin(self):
         """Remove this speaker from a group.
@@ -1255,7 +1250,6 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([("InstanceID", 0)])
         self._zgs_cache.clear()
-        self._parse_zone_group_state()
 
     def create_stereo_pair(self, rh_slave_speaker):
         """Create a stereo pair.
@@ -1308,7 +1302,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetAVTransportURI(
             [
                 ("InstanceID", 0),
-                ("CurrentURI", "x-rincon-stream:{0}".format(uid)),
+                ("CurrentURI", "x-rincon-stream:{}".format(uid)),
                 ("CurrentURIMetaData", ""),
             ]
         )
@@ -1375,7 +1369,7 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.SetAVTransportURI(
             [
                 ("InstanceID", 0),
-                ("CurrentURI", "x-sonos-htastream:{0}:spdif".format(self.uid)),
+                ("CurrentURI", "x-sonos-htastream:{}:spdif".format(self.uid)),
                 ("CurrentURIMetaData", ""),
             ]
         )
@@ -1628,6 +1622,24 @@ class SoCo(_SocoSingletonBase):
 
         return playstate
 
+    @property
+    @only_on_master
+    def available_actions(self):
+        """The transport actions that are currently available on the
+        speaker.
+
+        :returns: list: A list of strings representing the available actions, such as
+                    ['Set', 'Stop', 'Play'].
+
+        Possible list items are: 'Set', 'Stop', 'Pause', 'Play',
+        'Next', 'Previous', 'SeekTime', 'SeekTrackNr'.
+        """
+        result = self.avTransport.GetCurrentTransportActions([("InstanceID", 0)])
+        actions = result["Actions"]
+        # The actions might look like 'X_DLNA_SeekTime', but we only want the
+        # last part
+        return [action.split("_")[-1] for action in actions.split(", ")]
+
     def get_queue(self, start=0, max_items=100, full_album_art_uri=False):
         """Get information about the queue.
 
@@ -1637,7 +1649,7 @@ class SoCo(_SocoSingletonBase):
             IP address
         :returns: A :py:class:`~.soco.data_structures.Queue` object
 
-        This method is heavly based on Sam Soffes (aka soffes) ruby
+        This method is heavily based on Sam Soffes (aka soffes) ruby
         implementation
         """
         queue = []
@@ -1878,7 +1890,7 @@ class SoCo(_SocoSingletonBase):
                     "ObjectID",
                     "FV:2"
                     if favorite_type is SONOS_FAVORITES
-                    else "R:0/{0}".format(favorite_type),
+                    else "R:0/{}".format(favorite_type),
                 ),
                 ("BrowseFlag", "BrowseDirectChildren"),
                 ("Filter", "*"),
@@ -1938,7 +1950,7 @@ class SoCo(_SocoSingletonBase):
 
         item_id = response["AssignedObjectID"]
         obj_id = item_id.split(":", 2)[1]
-        uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
+        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(obj_id)
 
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         return DidlPlaylistContainer(
@@ -1963,7 +1975,7 @@ class SoCo(_SocoSingletonBase):
         )
         item_id = response["AssignedObjectID"]
         obj_id = item_id.split(":", 2)[1]
-        uri = "file:///jffs/settings/savedqueues.rsq#{0}".format(obj_id)
+        uri = "file:///jffs/settings/savedqueues.rsq#{}".format(obj_id)
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         return DidlPlaylistContainer(
             resources=res, title=title, parent_id="SQ:", item_id=item_id
@@ -2161,7 +2173,7 @@ class SoCo(_SocoSingletonBase):
         # allow either a string 'SQ:10' or an object with item_id attribute.
         object_id = getattr(sonos_playlist, "item_id", sonos_playlist)
 
-        if isinstance(tracks, UnicodeType):
+        if isinstance(tracks, str):
             track_list = [
                 tracks,
             ]
@@ -2324,7 +2336,7 @@ class SoCo(_SocoSingletonBase):
         for sonos_playlist in self.get_sonos_playlists():
             if getattr(sonos_playlist, attr_name) == match:
                 return sonos_playlist
-        raise ValueError('No match on "{0}" for value "{1}"'.format(attr_name, match))
+        raise ValueError('No match on "{}" for value "{}"'.format(attr_name, match))
 
     def get_battery_info(self, timeout=3.0):
         """Get battery information for a Sonos speaker.
@@ -2333,10 +2345,6 @@ class SoCo(_SocoSingletonBase):
         applies to Sonos Move speakers at the time of writing.
 
         This method may only work on Sonos 'S2' systems.
-
-        Uses the 'support/review' URL, which collects comprehensive
-        system information from all players in the system via the target device,
-        so it's a somewhat expensive call and should be used sparingly.
 
         Args:
             timeout (float, optional): The timeout to use when making the
@@ -2361,10 +2369,10 @@ class SoCo(_SocoSingletonBase):
                 response, timed out.
         """
 
-        # Retrieve information from the speaker's support URL
+        # Retrieve information from the speaker's status URL
         try:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/support/review",
+                "http://" + self.ip_address + ":1400/status/batterystatus",
                 timeout=timeout,
             )
         except (ConnectTimeout, ReadTimeout) as error:
@@ -2378,17 +2386,14 @@ class SoCo(_SocoSingletonBase):
         # Convert the XML response and traverse to obtain the battery information
         battery_info = {}
         try:
-            zp_list = xmltodict.parse(response.text)["ZPNetworkInfo"]["ZPSupportInfo"]
-            for zp_device in zp_list:
-                if zp_device["ZPInfo"]["IPAddress"] == self.ip_address:
-                    for info_item in zp_device["LocalBatteryStatus"]["Data"]:
-                        battery_info[info_item["@name"]] = info_item["#text"]
-                    try:
-                        battery_info["Level"] = int(battery_info["Level"])
-                    except (KeyError, ValueError):
-                        pass
-                    return battery_info
-        except (KeyError, ExpatError) as error:
+            zp_info = xmltodict.parse(response.text)["ZPSupportInfo"]
+            for info_item in zp_info["LocalBatteryStatus"]["Data"]:
+                battery_info[info_item["@name"]] = info_item["#text"]
+            try:
+                battery_info["Level"] = int(battery_info["Level"])
+            except (KeyError, ValueError):
+                pass
+        except (KeyError, ExpatError, TypeError) as error:
             # Battery information not supported
             raise NotSupportedException from error
 
@@ -2443,8 +2448,8 @@ SOURCES = {
     r"^x-sonos-vli:.*,airplay:": MUSIC_SRC_AIRPLAY,
 }
 
-# soundbar product names
-SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc")
+# Soundbar product names
+SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc", "arc sl")
 
 
 if config.SOCO_CLASS is None:

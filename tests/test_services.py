@@ -1,20 +1,14 @@
-# -*- coding: utf-8 -*-
 """Tests for the services module."""
 
-# These tests require pytest, and mock. Mock comes with Python 3.3, but has
-# also been backported for Python 2.7. It is available on pypi.
+# These tests require pytest.
 
-from __future__ import unicode_literals
 
 import pytest
 
 from soco.exceptions import SoCoUPnPException
 from soco.services import Service, Action, Argument, Vartype
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock  # TODO: add mock to requirements
+from unittest import mock
 
 # Dummy known-good errors/responses etc.  These are not necessarily valid as
 # actual commands, but are valid XML/UPnP. They also contain unicode characters
@@ -134,7 +128,7 @@ def test_method_dispatcher_arg_count(service):
     service.send_command = mock.Mock()
     # http://bugs.python.org/issue7688
     # __name__ must be a string in python 2
-    method = service.__getattr__(str("test"))
+    method = service.__getattr__("test")
     assert method("onearg")
     service.send_command.assert_called_with("test", "onearg")
     assert method()  # no args
@@ -249,6 +243,7 @@ def test_send_command(service):
             "http://192.168.1.101:1400/Service/Control",
             headers=mock.ANY,
             data=DUMMY_VALID_ACTION.encode("utf-8"),
+            timeout=20,
         )
         # Now the cache should be primed, so try it again
         fake_post.reset_mock()

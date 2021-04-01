@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """The Spotify plugin has been DEPRECATED
 
 The Spotify Plugin has been immediately deprecated (August 2016),

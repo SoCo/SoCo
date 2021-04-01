@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=star-args,no-member
 
 """Unit tests for the music service data structures."""
 
-from __future__ import unicode_literals
 
 from xml.sax.saxutils import escape
 
@@ -188,7 +186,7 @@ MS_PLAYLIST_SEARCH_DICT = {
 }
 
 
-class FakeMusicService(object):
+class FakeMusicService:
     """A fake music service."""
 
     def __init__(self, username):

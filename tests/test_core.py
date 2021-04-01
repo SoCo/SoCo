@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-import mock
+from unittest import mock
 import pytest
+import requests_mock
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
@@ -18,7 +16,7 @@ from soco.xml import XML
 IP_ADDR = "192.168.1.101"
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco():
     """A mock soco with fake services and hardcoded is_coordinator.
 
@@ -45,7 +43,7 @@ def moco():
         patch.stop()
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco_only_on_master():
     """A mock soco with fake services.
 
@@ -189,7 +187,7 @@ ZGS = (
 )
 
 
-@pytest.yield_fixture
+@pytest.fixture()
 def moco_zgs(moco):
     """A mock soco with zone group state."""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {"ZoneGroupState": ZGS}
@@ -434,6 +432,8 @@ class TestSoco:
             ("Sonos Beam", True),
             ("Sonos Playbar", True),
             ("Sonos Playbase", True),
+            ("Sonos Arc", True),
+            ("Sonos Arc SL", True),
         ),
     )
     def test_soco_is_soundbar(self, moco, model_name):
@@ -573,6 +573,22 @@ class TestAVTransport:
         moco.play_mode = "normal"
         moco.avTransport.SetPlayMode.assert_called_once_with(
             [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+    def test_available_actions(self, moco):
+        moco.avTransport.GetCurrentTransportActions.return_value = {
+            "Actions": "Set, Stop, Pause, Play, X_DLNA_SeekTime, X_DLNA_SeekTrackNr"
+        }
+        assert moco.available_actions == [
+            "Set",
+            "Stop",
+            "Pause",
+            "Play",
+            "SeekTime",
+            "SeekTrackNr",
+        ]
+        moco.avTransport.GetCurrentTransportActions.assert_called_once_with(
+            [("InstanceID", 0)]
         )
 
     def test_soco_cross_fade2(self, moco):
@@ -1326,6 +1342,44 @@ class TestDeviceProperties:
         moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
+
+    def test_get_battery_info(self, moco):
+        url = "http://" + moco.ip_address + ":1400/status/batterystatus"
+
+        # A speaker that returns battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n<?xml-stylesheet type="text/xsl"'
+                + 'href="/xml/review.xsl"?><ZPSupportInfo><LocalBatteryStatus>\n'
+                + '<Data name="Health">GREEN</Data>\n<Data name="Level">100</Data>\n'
+                + '<Data name="Temperature">NORMAL</Data>\n'
+                + '<Data name="PowerSource">SONOS_CHARGING_RING</Data>\n'
+                + "</LocalBatteryStatus></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            assert moco.get_battery_info() == {
+                "Health": "GREEN",
+                "Level": 100,
+                "Temperature": "NORMAL",
+                "PowerSource": "SONOS_CHARGING_RING",
+            }
+
+        # A speaker that doesn't have battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n'
+                + '<?xml-stylesheet type="text/xsl" href="/xml/review.xsl"?>'
+                + "<ZPSupportInfo></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            with pytest.raises(NotSupportedException):
+                moco.get_battery_info()
+
+        # A network request that fails
+        with requests_mock.Mocker() as m:
+            m.get(url, status_code=404)
+            with pytest.raises(ConnectionError):
+                moco.get_battery_info()
 
 
 class TestZoneGroupTopology:

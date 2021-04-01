@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager,import-error,wrong-import-position
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
@@ -63,7 +62,6 @@ twisted.python.failure.Failure.html
 
 """
 
-from __future__ import unicode_literals
 
 import sys
 import logging
@@ -71,7 +69,7 @@ import logging
 # Hack to make docs build without twisted installed
 if "sphinx" in sys.modules:
 
-    class Resource(object):  # pylint: disable=no-init
+    class Resource:  # pylint: disable=no-init
         """Fake Resource class to use when building docs"""
 
 

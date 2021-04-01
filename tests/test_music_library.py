@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-import mock
+from unittest import mock
 import pytest
 
 from soco import SoCo
@@ -10,7 +7,7 @@ from soco.exceptions import SoCoUPnPException
 IP_ADDR = "192.168.1.101"
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco():
     """A mock soco with fake services and hardcoded is_coordinator.
 

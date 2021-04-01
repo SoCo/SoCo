@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance
 
 """This module contains classes relating to Sonos Alarms."""
 
-from __future__ import unicode_literals
 
 import logging
 import re
@@ -55,7 +52,7 @@ def is_valid_recurrence(text):
     return re.search(r"^ON_[0-7]{1,7}$", text) is not None
 
 
-class Alarm(object):
+class Alarm:
 
     """A class representing a Sonos Alarm.
 
@@ -158,7 +155,7 @@ class Alarm(object):
 
     def __repr__(self):
         middle = str(self.start_time.strftime(TIME_FORMAT))
-        return "<{0} id:{1}@{2} at {3}>".format(
+        return "<{} id:{}@{} at {}>".format(
             self.__class__.__name__, self._alarm_id, middle, hex(id(self))
         )
 

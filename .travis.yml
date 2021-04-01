@@ -33,12 +33,3 @@ script:
 
 after_script:
   - coveralls
-
-deploy:
-  provider: pypi
-  user: soco-bot
-  password:
-    secure: IgMK3d7ON41NRlfIPYhlk7BPfT/jPRqC1Qn2Lcj69/vqSK5be0vyWloGRAI26v9r9VS1+slSocSUZ05BiUXQj6+srvgWLQfuRnivz6ZjttL/P+oHEvqeV917NqXU2gV7Xejs4j1Y1lu38KdAlul1XZ+0leq3tm88q8bNKAij/C0=
-  on:
-    tags: true
-  distributions: sdist bdist_wheel

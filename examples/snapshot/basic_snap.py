@@ -15,7 +15,6 @@ Note: The Snapshot class is designed for single use. If a second snapshot is
 required create another instance of the class e.g. `snap2 = Snapshot(device)`.
 """
 
-from __future__ import print_function, unicode_literals
 import time
 import soco
 from soco.snapshot import Snapshot

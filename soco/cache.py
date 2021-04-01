@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager,useless-object-inheritance
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
@@ -8,16 +7,15 @@
 
 """This module contains the classes underlying SoCo's caching system."""
 
-from __future__ import unicode_literals
 
 import threading
+from pickle import dumps
 from time import time
 
 from . import config
-from .compat import dumps
 
 
-class _BaseCache(object):
+class _BaseCache:
 
     """An abstract base class for the cache."""
 
@@ -215,6 +213,6 @@ class Cache(NullCache):
             new_cls = TimedCache
         else:
             new_cls = NullCache
-        instance = super(Cache, cls).__new__(new_cls)
+        instance = super().__new__(new_cls)
         instance.__init__(*args, **kwargs)
         return instance

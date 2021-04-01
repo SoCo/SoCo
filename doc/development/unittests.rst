@@ -11,10 +11,8 @@ continues to work past updates to the Sonos units' internal software.
 Setting up your environment
 ===========================
 
-To run the unit tests, you will need to have the `py.test <http://pytest.org/latest>`_
-testing tool installed. You will also need a copy of `Mock <http://www.voidspace.org.uk/python/mock/>`_
-
-Mock comes with Python >=3.3, but has been backported for Python 2.7
+To run the unit tests, you will need to have the `pytest <http://pytest.org/latest>`_
+testing tool installed.
 
 You can install them and other development dependencies using the
 :file:`requirements-dev.txt` file like this:

@@ -1,0 +1,41 @@
+SoCo 0.21 release notes
+***********************
+
+**SoCo 0.21** (Released on 2021-01-17), contains significant improvements to the speaker discovery process, which should address most of the common problems that are encountered.
+
+Multi-household Sonos systems can now be discovered and controlled.
+
+The `AudioIn` service has been added, providing access to Line In operations and events.
+
+A number of additional miscellaneous speaker state controls have been provided, for speaker buttons, fixed volume output, and Trueplay. The battery status of Sonos Move speakers can also now be obtained. The `music_source` property on SoCo objects provides a convenient way to determine what type of source is being played by a speaker.
+
+SoCo 0.21 is now fully Python 3.9 compatible, requires Python 3.5+, and is no longer compatible with Python 2.x.
+
+New Features and Improvements
+=============================
+
+* Add support for **network scan discovery**, including allowing multi-household systems to be discovered: pull requests `#733 <https://github.com/SoCo/SoCo/pull/733>`_,  `#755 <https://github.com/SoCo/SoCo/pull/755>`_, and `#770 <https://github.com/SoCo/SoCo/pull/770>`_.
+* Add the **AudioIn service** for access to Line In operations and events: PR `#777 <https://github.com/SoCo/SoCo/pull/777>`_.
+* Add the ability to inspect and set  **Fixed Volume** output: PR `#773 <https://github.com/SoCo/SoCo/pull/773>`_.
+* Add the ability to inspect and set whether **speaker buttons** are enabled: PR `#774 <https://github.com/SoCo/SoCo/pull/774>`_.
+* Add the ability to inspect and set  **Trueplay** enablement: PR `#775 <https://github.com/SoCo/SoCo/pull/775>`_.
+* Add the ability to determine the **battery state** of Sonos Move speakers: PR `#756 <https://github.com/SoCo/SoCo/pull/756>`_.
+
+Bug Fixes
+=========
+
+* Improve zone group state caching to accommodate multi-household systems: PR `#656 <https://github.com/SoCo/SoCo/pull/656>`_. (Note: possible **breaking change**: if you've previously been setting the ``soco.core.zone_group_state_shared_cache.enabled`` property, this property is no longer global but is instead now a private property of SoCo instances.)
+* When restoring snapshots, do not try to restore bass/treble/loudness on devices with fixed volume enabled: PR `#772 <https://github.com/SoCo/SoCo/pull/772>`_.
+* Ensure that all relevant NICs and IP addresses are included in multicast speaker discovery: PR `#767 <https://github.com/SoCo/SoCo/pull/767>`_.
+
+Developer Improvements
+======================
+
+* Numerous fixes to allow the documentation to build cleanly: PR `#753 <https://github.com/SoCo/SoCo/pull/753>`_.
+* Full Python 3.9 compatibility, including updated check jobs: PRs `#745 <https://github.com/SoCo/SoCo/pull/745>`_ and `#751 <https://github.com/SoCo/SoCo/pull/751>`_.
+* Code changes to allow Pylint and Black to be updated to their most recent versions: PRs `#748 <https://github.com/SoCo/SoCo/pull/748>`_ and `#749 <https://github.com/SoCo/SoCo/pull/749>`_.
+
+List of Changes Associated with the 0.21 Milestone
+==================================================
+
+See: https://github.com/SoCo/SoCo/milestone/17?closed=1

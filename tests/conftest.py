@@ -31,7 +31,7 @@ def pytest_runtest_setup(item):
         pytest.skip("use --ip and an ip address to run integration tests.")
 
 
-class Helpers(object):
+class Helpers:
     """Test helper functions"""
 
     @staticmethod

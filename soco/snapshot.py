@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=too-many-instance-attributes
 
 # Disable while we have Python 2.x compatability
@@ -22,7 +21,7 @@ Warning:
 """
 
 
-class Snapshot(object):
+class Snapshot:
     """A snapshot of the current state.
 
     Note:
@@ -167,58 +166,74 @@ class Snapshot(object):
         Args:
             fade (bool): Whether volume should be faded up on restore.
         """
+        try:
+            if self.is_coordinator:
+                self._restore_coordinator()
+        finally:
+            self._restore_volume(fade)
 
+        # Now everything is set, see if we need to be playing, stopped
+        # or paused ( only for coordinators)
         if self.is_coordinator:
-            # Start by ensuring that the speaker is paused as we don't want
-            # things all rolling back when we are changing them, as this could
-            # include things like audio
-            transport_info = self.device.get_current_transport_info()
-            if transport_info is not None:
-                if transport_info["current_transport_state"] == "PLAYING":
-                    self.device.pause()
+            if self.transport_state == "PLAYING":
+                self.device.play()
+            elif self.transport_state == "STOPPED":
+                self.device.stop()
 
-            # Check if the queue should be restored
-            self._restore_queue()
+    def _restore_coordinator(self):
+        """Do the coordinator-only part of the restore."""
+        # Start by ensuring that the speaker is paused as we don't want
+        # things all rolling back when we are changing them, as this could
+        # include things like audio
+        transport_info = self.device.get_current_transport_info()
+        if transport_info is not None:
+            if transport_info["current_transport_state"] == "PLAYING":
+                self.device.pause()
 
-            # Reinstate what was playing
+        # Check if the queue should be restored
+        self._restore_queue()
 
-            if self.is_playing_queue and self.playlist_position > 0:
-                # was playing from playlist
+        # Reinstate what was playing
 
-                if self.playlist_position is not None:
-                    # The position in the playlist returned by
-                    # get_current_track_info starts at 1, but when
-                    # playing from playlist, the index starts at 0
-                    # if position > 0:
-                    self.playlist_position -= 1
-                    self.device.play_from_queue(self.playlist_position, False)
+        if self.is_playing_queue and self.playlist_position > 0:
+            # was playing from playlist
 
-                if self.track_position is not None:
-                    if self.track_position != "":
-                        self.device.seek(self.track_position)
+            if self.playlist_position is not None:
+                # The position in the playlist returned by
+                # get_current_track_info starts at 1, but when
+                # playing from playlist, the index starts at 0
+                # if position > 0:
+                self.playlist_position -= 1
+                self.device.play_from_queue(self.playlist_position, False)
 
-                # reinstate track, position, play mode, cross fade
-                # Need to make sure there is a proper track selected first
-                self.device.play_mode = self.play_mode
-                self.device.cross_fade = self.cross_fade
+            if self.track_position is not None:
+                if self.track_position != "":
+                    self.device.seek(self.track_position)
 
-            elif self.is_playing_cloud_queue:
-                # was playing a cloud queue started by Alexa
-                # No way yet to re-start this so prevent it throwing an error!
-                pass
+            # reinstate track, position, play mode, cross fade
+            # Need to make sure there is a proper track selected first
+            self.device.play_mode = self.play_mode
+            self.device.cross_fade = self.cross_fade
 
-            else:
-                # was playing a stream (radio station, file, or nothing)
-                # reinstate uri and meta data
-                if self.media_uri != "":
-                    self.device.play_uri(
-                        self.media_uri, self.media_metadata, start=False
-                    )
+        elif self.is_playing_cloud_queue:
+            # was playing a cloud queue started by Alexa
+            # No way yet to re-start this so prevent it throwing an error!
+            pass
 
-        # For all devices:
+        else:
+            # was playing a stream (radio station, file, or nothing)
+            # reinstate uri and meta data
+            if self.media_uri != "":
+                self.device.play_uri(self.media_uri, self.media_metadata, start=False)
+
+    def _restore_volume(self, fade):
+        """Reinstate volume.
+
+        Args:
+            fade (bool): Whether volume should be faded up on restore.
+        """
         self.device.mute = self.mute
 
-        # Reinstate volume
         # Can only change volume on device with fixed volume set to False
         # otherwise get uPnP error, so check first. Before issuing a network
         # command to check, fixed volume always has volume set to 100.
@@ -242,14 +257,6 @@ class Snapshot(object):
             else:
                 # set volume
                 self.device.volume = self.volume
-
-        # Now everything is set, see if we need to be playing, stopped
-        # or paused ( only for coordinators)
-        if self.is_coordinator:
-            if self.transport_state == "PLAYING":
-                self.device.play()
-            elif self.transport_state == "STOPPED":
-                self.device.stop()
 
     def _save_queue(self):
         """Save the current state of the queue."""

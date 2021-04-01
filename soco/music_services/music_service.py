@@ -1,24 +1,21 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme
-
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
 
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
 """
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
+
+from urllib.parse import quote as quote_url
+from urllib.parse import urlparse, parse_qs
 
 import requests
 
 from xmltodict import parse
 
 from .. import discovery
-from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException
 from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem
@@ -29,7 +26,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
-class MusicServiceSoapClient(object):
+class MusicServiceSoapClient:
 
     """A SOAP client for accessing Music Services.
 
@@ -149,7 +146,7 @@ class MusicServiceSoapClient(object):
             method=method,
             parameters=[] if args is None else args,
             http_headers=self.http_headers,
-            soap_action="http://www.sonos.com/Services/1" ".1#{0}".format(method),
+            soap_action="http://www.sonos.com/Services/1" ".1#{}".format(method),
             soap_header=self.get_soap_header(),
             namespace=self.namespace,
             timeout=self.timeout,
@@ -180,7 +177,7 @@ class MusicServiceSoapClient(object):
                     parameters=args,
                     http_headers=self.http_headers,
                     soap_action="http://www.sonos.com/Services/1"
-                    ".1#{0}".format(method),
+                    ".1#{}".format(method),
                     soap_header=self.get_soap_header(),
                     namespace=self.namespace,
                     timeout=self.timeout,
@@ -204,7 +201,7 @@ class MusicServiceSoapClient(object):
 
 
 # pylint: disable=too-many-instance-attributes
-class MusicService(object):
+class MusicService:
 
     """The MusicService class provides access to third party music services.
 
@@ -367,7 +364,7 @@ class MusicService(object):
         )
 
     def __repr__(self):
-        return "<{0} '{1}' at {2}>".format(
+        return "<{} '{}' at {}>".format(
             self.__class__.__name__, self.service_name, hex(id(self))
         )
 
@@ -841,6 +838,9 @@ def desc_from_uri(uri):
     # the uri as if it were http
     if ":" in uri:
         _, uri = uri.split(":", 1)
+    # Remove 'amp;' from uri, leaving '&' as the separator
+    # See: https://github.com/SoCo/SoCo/issues/810
+    uri = uri.replace("amp;", "")
     query_string = parse_qs(urlparse(uri, "http").query)
     # Is there an account serial number?
     if query_string.get("sn"):

@@ -17,7 +17,6 @@ supply the zone name. The local machine IP should be autodetected.
 """
 
 
-from __future__ import print_function, unicode_literals
 
 import os
 import sys
@@ -48,7 +47,7 @@ class HttpServer(Thread):
     """A simple HTTP Server in its own thread"""
 
     def __init__(self, port):
-        super(HttpServer, self).__init__()
+        super().__init__()
         self.daemon = True
         handler = SimpleHTTPRequestHandler
         self.httpd = TCPServer(("", port), handler)
