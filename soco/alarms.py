@@ -17,7 +17,7 @@ def is_valid_recurrence(text):
     """Check that ``text`` is a valid recurrence string.
 
     A valid recurrence string is  ``DAILY``, ``ONCE``, ``WEEKDAYS``,
-    ``WEEKENDS`` or of the form ``ON_DDDDDD`` where ``D`` is a number from 0-7
+    ``WEEKENDS`` or of the form ``ON_DDDDDD`` where ``D`` is a number from 0-6
     representing a day of the week (Sunday is 0), e.g. ``ON_034`` meaning
     Sunday, Wednesday and Thursday
 
@@ -36,7 +36,7 @@ def is_valid_recurrence(text):
         False
         >>> is_valid_recurrence('ON_132')  # Mon, Tue, Wed
         True
-        >>> is_valid_recurrence('ON_777')  # Sat
+        >>> is_valid_recurrence('ON_666')  # Sat
         True
         >>> is_valid_recurrence('ON_3421') # Mon, Tue, Wed, Thur
         True
@@ -45,7 +45,7 @@ def is_valid_recurrence(text):
     """
     if text in ("DAILY", "ONCE", "WEEKDAYS", "WEEKENDS"):
         return True
-    return re.search(r"^ON_[0-7]{1,7}$", text) is not None
+    return re.search(r"^ON_[0-6]{1,7}$", text) is not None
 
 
 class Alarm:
@@ -108,7 +108,7 @@ class Alarm:
             recurrence (str, optional): A string representing how
                 often the alarm should be triggered. Can be ``DAILY``,
                 ``ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
-                ``ON_DDDDDD`` where ``D`` is a number from 0-7 representing a
+                ``ON_DDDDDD`` where ``D`` is a number from 0-6 representing a
                 day of the week (Sunday is 0), e.g. ``ON_034`` meaning Sunday,
                 Wednesday and Thursday. Defaults to ``DAILY``.
             enabled (bool, optional): `True` if alarm is enabled, `False`
