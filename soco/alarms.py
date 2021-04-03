@@ -1,8 +1,4 @@
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
 """This module contains classes relating to Sonos Alarms."""
-
 
 import logging
 import re
@@ -211,6 +207,9 @@ class Alarm:
     def save(self):
         """Save the alarm to the Sonos system.
 
+        Returns:
+            str: The alarm ID, or `None` if no alarm was saved.
+
         Raises:
             ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
                 because there
@@ -243,6 +242,7 @@ class Alarm:
             # The alarm has been saved before. Update it instead.
             args.insert(0, ("ID", self._alarm_id))
             self.zone.alarmClock.UpdateAlarm(args)
+        return self._alarm_id
 
     def remove(self):
         """Remove the alarm from the Sonos system.
