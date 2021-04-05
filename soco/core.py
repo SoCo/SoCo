@@ -149,6 +149,8 @@ class SoCo(_SocoSingletonBase):
         mute
         volume
         play_mode
+        shuffle
+        repeat
         cross_fade
         ramp_to_volume
         set_relative_volume
@@ -471,8 +473,9 @@ class SoCo(_SocoSingletonBase):
         """bool: The queue's repeat option.
 
         True if enabled, False otherwise.
-        Might also be ``'ONE'`` if repeating the same title is enabled
-        (not supported by the official controller).
+
+        Can also be the string ``'ONE'`` for play mode
+        ``'REPEAT_ONE'``.
         """
         return PLAY_MODES[self.play_mode][1]
 
