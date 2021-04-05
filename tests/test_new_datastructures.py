@@ -8,6 +8,44 @@ from soco.exceptions import DIDLMetadataError
 from soco.xml import XML
 
 
+@pytest.fixture
+def didl_object():
+    return data_structures.DidlObject(
+        title='a_title',
+        parent_id='pid',
+        item_id='iid',
+        creator='a_creator',
+        write_status='wstatus',
+    )
+
+
+@pytest.fixture
+def didl_object_dict():
+    return {
+        'title': 'a_title',
+        'parent_id': 'pid',
+        'item_id': 'iid',
+        'creator': 'a_creator',
+        'write_status': 'wstatus',
+        'restricted': True,
+        'desc': 'RINCON_AssociatedZPUDN'
+    }
+
+
+@pytest.fixture
+def resource():
+    return data_structures.DidlResource('a%20uri', 'a:protocol:info:xx')
+
+
+@pytest.fixture
+def resource_dict():
+    return {'uri': 'a%20uri', 'protocol_info': 'a:protocol:info:xx'}
+
+
+def _strip_ns(tag):
+    return tag[tag.find('}')+1:]
+
+
 def assert_xml_equal(left, right, explain=None):
     """Helper function for comparing XML elements.
 
@@ -24,6 +62,39 @@ def assert_xml_equal(left, right, explain=None):
 
     def _build_explanation(left, right, explain):
         if left.tag != right.tag:
+<<<<<<< HEAD
+            explain.append('tag <%s> does not match tag <%s>' %
+                           (left.tag, right.tag))
+        tag = _strip_ns(left.tag)
+        for attrib in set(left.attrib) - set(right.attrib):
+            explain.append('left element <%s> has attribute %s but right does not' %
+                           (tag, attrib))
+        for attrib in set(right.attrib) - set(left.attrib):
+            explain.append('right element <%s> has attribute %s but left does not' %
+                           (tag, attrib))
+        for attrib in set(left.attrib) & set(right.attrib):
+            if left.get(attrib) != right.get(attrib):
+                explain.append('attribute %s for element <%s>: %r != %r' %
+                               (attrib, tag, left.get(attrib), right.get(attrib)))
+        if left.text != right.text:
+            explain.append('text for element <%s>: %r != %r' %
+                           (tag, left.text, right.text))
+        if left.tail != right.tail:
+            explain.append('tail for element <%s>: %r != %r' %
+                           (tag, left.tail, right.tail))
+
+        left_childtags = set(child.tag for child in left)
+        right_childtags = set(child.tag for child in right)
+        for child_tag in left_childtags - right_childtags:
+            explain.append('left element <%s> has child <%s> but right does not' %
+                           (tag, _strip_ns(child_tag)))
+        for child_tag in right_childtags - left_childtags:
+            explain.append('right element <%s> has child <%s> but left does not' %
+                           (tag, _strip_ns(child_tag)))
+        for child_tag in right_childtags & left_childtags:
+            _build_explanation(left.find(child_tag), right.find(child_tag),
+                               explain)
+=======
             explain.append(
                 "tag <{}> does not match tag <{}>".format(left.tag, right.tag)
             )
@@ -53,13 +124,19 @@ def assert_xml_equal(left, right, explain=None):
             )
         for i1, i2 in zip(left, right):
             _build_explanation(i1, i2, explain)
+>>>>>>> master
         return
 
     explain = []
     _build_explanation(left, right, explain)
     if explain != []:
+<<<<<<< HEAD
+        header = "Comparing XML elements %s and %s:\n" % (left, right)
+        assert False, header + '\n'.join(explain)
+=======
         header = "Comparing XML elements {} and {}".format(left, right)
         assert False, header + "\n".join(explain)
+>>>>>>> master
 
 
 class TestResource:
@@ -85,6 +162,31 @@ class TestResource:
         )
         assert data_structures.DidlResource.from_element(elt) == res
 
+<<<<<<< HEAD
+    def test_didl_resource_to_dict(self, resource):
+        rez = resource.to_dict()
+        assert rez['uri'] == 'a%20uri'
+        assert rez['protocol_info'] == 'a:protocol:info:xx'
+        assert len(rez) == 12
+
+    def test_didl_resource_to_dict_remove_nones(self, resource, resource_dict):
+        rez = resource.to_dict(remove_nones=True)
+        assert rez == resource_dict
+
+    def test_didl_resource_to_dict_from_dict(self, resource):
+        rez = data_structures.DidlResource.from_dict(resource.to_dict())
+        assert resource == rez
+
+    def test_didl_resource_from_dict(self, resource, resource_dict):
+        rez = data_structures.DidlResource.from_dict(resource_dict)
+        assert resource == rez
+
+    def test_didl_resource_eq(self, resource):
+        assert resource != data_structures.DidlObject(
+            title='a_title', parent_id='pid', item_id='iid')
+        assert resource is not None
+        assert resource == resource
+=======
     def test_didl_resource_to_dict(self):
         res = data_structures.DidlResource("a%20uri", "a:protocol:info:xx")
         rez = res.to_dict()
@@ -116,6 +218,7 @@ class TestResource:
         )
         assert res is not None
         assert res == res
+>>>>>>> master
 
 
 class TestDidlObject:
@@ -136,14 +239,20 @@ class TestDidlObject:
 
     def test_create_didl_object_with_no_params(self):
         with pytest.raises(TypeError):
-            didl_object = data_structures.DidlObject()
+            didl_obj = data_structures.DidlObject()
 
     def test_create_didl_object_with_disallowed_params(self):
         with pytest.raises(ValueError) as excinfo:
+<<<<<<< HEAD
+            didl_obj = data_structures.DidlObject(
+                title='a_title', parent_id='pid', item_id='iid', bad_args='other')
+        assert 'not allowed' in str(excinfo.value)
+=======
             didl_object = data_structures.DidlObject(
                 title="a_title", parent_id="pid", item_id="iid", bad_args="other"
             )
         assert "not allowed" in str(excinfo.value)
+>>>>>>> master
 
     def test_create_didl_object_with_good_params(self):
         didl_object = data_structures.DidlObject(
@@ -212,6 +321,33 @@ class TestDidlObject:
             excinfo.value
         )
 
+<<<<<<< HEAD
+    def test_didl_object_from_dict(self, didl_object, didl_object_dict):
+        assert data_structures.DidlObject.from_dict(didl_object_dict) == \
+            didl_object
+        # adding in an attibute not in _translation should make no difference
+        didl_object_dict['creator'] = 'another_creator'
+        assert data_structures.DidlObject.from_dict(didl_object_dict) != \
+            didl_object
+        # round trip
+        assert data_structures.DidlObject.from_dict(didl_object_dict).to_dict() == \
+            didl_object_dict
+
+    def test_didl_object_from_dict_resources(self, didl_object,
+                                             didl_object_dict, resource):
+        didl_object.resources = [resource]
+        didl_object_dict['resources'] = [resource.to_dict()]
+        assert data_structures.DidlObject.from_dict(didl_object_dict) == \
+            didl_object
+
+    def test_didl_object_from_dict_resources_remove_nones(self, didl_object,
+                                                          didl_object_dict,
+                                                          resource):
+        didl_object.resources = [resource]
+        didl_object_dict['resources'] = [resource.to_dict(remove_nones=True)]
+        assert data_structures.DidlObject.from_dict(didl_object_dict) == \
+            didl_object
+=======
     def test_didl_object_from_dict(self):
         didl_object = data_structures.DidlObject(
             title="a_title",
@@ -278,6 +414,7 @@ class TestDidlObject:
             ],
         }
         assert data_structures.DidlObject.from_dict(the_dict) == didl_object
+>>>>>>> master
 
     def test_didl_comparisons(self):
         didl_object_1 = data_structures.DidlObject(
@@ -297,6 +434,31 @@ class TestDidlObject:
         )
         assert didl_object_3 != didl_object_1
 
+<<<<<<< HEAD
+    def test_didl_object_to_dict(self, didl_object, didl_object_dict):
+        assert didl_object.to_dict() == didl_object_dict
+        # adding in an attibute not in _translation should make no difference
+        didl_object.other = 'other'
+        assert didl_object.to_dict() == didl_object_dict
+        # but changing on the other should
+        didl_object.creator = 'another'
+        assert didl_object.to_dict() != didl_object_dict
+
+    def test_didl_object_to_dict_resources(self, didl_object, didl_object_dict,
+                                           resource):
+        didl_object.resources = [resource]
+        didl_object_dict['resources'] = [resource.to_dict()]
+        assert didl_object.to_dict() == didl_object_dict
+
+    def test_didl_object_to_dict_resources_remove_nones(self, didl_object,
+                                                        didl_object_dict,
+                                                        resource):
+        didl_object.resources = [resource]
+        didl_object_dict['resources'] = [resource.to_dict(remove_nones=True)]
+        assert didl_object.to_dict(remove_nones=True) == didl_object_dict
+
+    def test_didl_object_to_element(self, didl_object):
+=======
     def test_didl_object_to_dict(self):
         didl_object = data_structures.DidlObject(
             title="a_title", parent_id="pid", item_id="iid", creator="a_creator"
@@ -363,10 +525,23 @@ class TestDidlObject:
         didl_object = data_structures.DidlObject(
             title="a_title", parent_id="pid", item_id="iid", creator="a_creator"
         )
+>>>>>>> master
         # we seem to have to go through this to get ElementTree to deal
         # with namespaces properly!
         elt = XML.fromstring(XML.tostring(didl_object.to_element(True)))
         elt2 = XML.fromstring(
+<<<<<<< HEAD
+            '<dummy xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" ' +
+            'xmlns:dc="http://purl.org/dc/elements/1.1/" ' +
+            'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">' +
+            '<item id="iid" parentID="pid" restricted="true">' +
+            '<dc:title>a_title</dc:title>' +
+            '<dc:creator>a_creator</dc:creator>' +
+            '<upnp:writeStatus>wstatus</upnp:writeStatus>' +
+            '<upnp:class>object</upnp:class><desc id="cdudn" ' +
+            'nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">' +
+            'RINCON_AssociatedZPUDN</desc></item></dummy>')[0]
+=======
             '<dummy xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" '
             + 'xmlns:dc="http://purl.org/dc/elements/1.1/" '
             + 'xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
@@ -377,6 +552,7 @@ class TestDidlObject:
             + 'nameSpace="urn:schemas-rinconnetworks-com:metadata-1-0/">'
             + "RINCON_AssociatedZPUDN</desc></item></dummy>"
         )[0]
+>>>>>>> master
         assert_xml_equal(elt2, elt)
 
 

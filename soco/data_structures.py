@@ -517,6 +517,10 @@ class DidlObject(metaclass=DidlMetaClass):
         # only seems to use one, so we won't bother with a list
         self.desc = desc
 
+        # Initialize all allowed class-specific attributes to None
+        for key in self._translation:
+            setattr(self, key, None)
+
         for key, value in kwargs.items():
             # For each attribute, check to see if this class allows it
             if key not in self._translation:
@@ -766,13 +770,16 @@ class DidlObject(metaclass=DidlMetaClass):
 
         # Add the rest of the metadata attributes (i.e all those listed in
         # _translation) as sub-elements of the item element.
-        for key, value in self._translation.items():
-            if hasattr(self, key):
+        # pylint: disable=invalid-name
+        for key, (ns, tag) in self._translation.items():
+            value = getattr(self, key)
+            if value:
                 # Some attributes have a namespace of '', which means they
                 # are in the default namespace. We need to handle those
                 # carefully
                 tag = "%s:%s" % value if value[0] else "%s" % value[1]
                 XML.SubElement(elt, tag).text = "%s" % getattr(self, key)
+
         # Now add in the item class
         XML.SubElement(elt, "upnp:class").text = self.item_class
 
