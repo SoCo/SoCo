@@ -1,0 +1,28 @@
+# In the overview below, the first columns indicates whether the class is (O)fficial of (E)xtended
+#
+#
+# O object                                                  -> <class 'soco.data_structures.DidlObject'>
+# O object.item                                             -> <class 'soco.data_structures.DidlItem'>
+# O object.item.audioItem                                   -> <class 'soco.data_structures.DidlAudioItem'>
+# O object.item.audioItem.musicTrack                        -> <class 'soco.data_structures.DidlMusicTrack'>
+# O object.item.audioItem.audioBook                         -> <class 'soco.data_structures.DidlAudioBook'>
+# O object.item.audioItem.audioBroadcast                    -> <class 'soco.data_structures.DidlAudioBroadcast'>
+# E object.item.audioItem.musicTrack.recentShow             -> <class 'soco.data_structures.DidlRecentShow'>
+# E object.item.audioItem.audioBroadcast.sonos-favorite     -> <class 'soco.data_structures.DidlAudioBroadcastFavorite'>
+# E object.itemobject.item.sonos-favorite                   -> <class 'soco.data_structures.DidlFavorite'>
+# O object.container                                        -> <class 'soco.data_structures.DidlContainer'>
+# O object.container.album                                  -> <class 'soco.data_structures.DidlAlbum'>
+# O object.container.album.musicAlbum                       -> <class 'soco.data_structures.DidlMusicAlbum'>
+# E object.container.album.musicAlbum.sonos-favorite        -> <class 'soco.data_structures.DidlMusicAlbumFavorite'>
+# E object.container.album.musicAlbum.compilation           -> <class 'soco.data_structures.DidlMusicAlbumCompilation'>
+# O object.container.person                                 -> <class 'soco.data_structures.DidlPerson'>
+# E object.container.person.composer                        -> <class 'soco.data_structures.DidlComposer'>
+# O object.container.person.musicArtist                     -> <class 'soco.data_structures.DidlMusicArtist'>
+# E object.container.albumlist                              -> <class 'soco.data_structures.DidlAlbumList'>
+# O object.container.playlistContainer                      -> <class 'soco.data_structures.DidlPlaylistContainer'>
+# E object.container.playlistContainer.sameArtist           -> <class 'soco.data_structures.DidlSameArtist'>
+# E object.container.playlistContainer.sonos-favorite       -> <class 'soco.data_structures.DidlPlaylistContainerFavorite'>
+# E object.container.playlistContainer.tracklist            -> <class 'soco.data_structures.DidlPlaylistContainerTracklist'>
+# O object.container.genre                                  -> <class 'soco.data_structures.DidlGenre'>
+# O object.container.genre.musicGenre                       -> <class 'soco.data_structures.DidlMusicGenre'>
+# E object.container.radioShow                              -> <class 'soco.data_structures.DidlRadioShow'>

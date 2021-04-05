@@ -1,18 +1,22 @@
 SoCo
 ====
 
-SoCo (Sonos Controller) is a Python project that allows you to
-programmatically control `Sonos speakers`_. It was originally created at `Music
+SoCo (Sonos Controller) is a Python library that allows you to
+control `Sonos speakers`_ programmatically. It was originally created at `Music
 Hack Day Sydney`_ by `Rahim Sonawalla`_ and is now developed by a `team of
 people`_ at its `GitHub repository`_
 
 For more background on the project, please see Rahim's `blog post
 <http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/>`_.
 
-Visit the `SoCo documentation`_ for a more detailed overview of all the functionailty.
+Visit the `SoCo documentation`_ for a more detailed overview of the functionailty.
 
-.. image:: https://travis-ci.org/SoCo/SoCo.svg?branch=master
-   :target: https://travis-ci.org/SoCo/SoCo
+.. image:: https://badges.gitter.im/SoCo/SoCo.svg
+   :alt: Join the chat at https://gitter.im/SoCo/SoCo
+   :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
+.. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
+   :target: https://travis-ci.com/SoCo/SoCo
    :alt: Build Status
 
 .. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
@@ -36,17 +40,17 @@ If you have another music service that should be on the list, comment in #557
 Installation
 ------------
 
-SoCo requires Python 2.7, or 3.3 or newer.
+SoCo requires Python 3.5 or newer.
 
 Use pip:
 
 ``pip install soco``
 
 
-SoCo depends on the `Requests`_ HTTP library. If you use pip to install Soco,
-Requests will be installed automatically for you. If not, you can use:
-
-``pip install requests``
+SoCo depends on a number of Python packages. If you use pip to install Soco,
+the dependencies will be installed automatically for you. If not, you can inspect
+the requirements in the `requirements.txt <https://github.com/SoCo/SoCo/blob/master/requirements.txt>`_
+file.
 
 
 Basic Usage
@@ -115,7 +119,7 @@ Of course, you can also play music!
 Support
 -------
 
-If you need support for SoCo, feel free to post your question either on our `Google Group`_ or on the #soco IRC channel on `freenode`_.
+If you need support for SoCo, feel free to post your question in the `SoCo Gitter Room <https://gitter.im/SoCo/SoCo>`_.
 
 Example Applications
 --------------------
@@ -134,13 +138,12 @@ Features
 
 SoCo supports the following controls amongst others:
 
--  Play
--  Pause
--  Stop
--  Next track
--  Previous track
--  Get current transport information(if speaker is
-   playing,paused,stopped)
+-  Play, Pause, Stop
+-  Next track, Previous track
+-  Volume get and set
+-  Mute (or unmute)
+-  Get current transport information (if speaker is
+   playing, paused or stopped)
 -  Get information about the currently playing track
 
    -  Track title
@@ -152,16 +155,31 @@ SoCo supports the following controls amongst others:
    -  Playlist position (for example, item 5 in the playlist)
    -  Track URI
 
--  Mute (or unmute) the speaker
--  Get or set the speaker volume
--  Get or set the speaker’s bass EQ
--  Get or set the speaker’s treble EQ
--  Toggle the speaker’s loudness compensation
--  Toggle the speaker's night mode
--  Toggle the speaker's dialog mode
--  Turn on (or off) the white status light on the unit
+-  Receive events when the player state changes
+-  Search for and play music items:
+
+   -  Local music library
+   -  Webradio via TuneIn and music services (still unstable)
+   -  Saved Sonos favorites, favorite radio stations and shows
+
 -  Switch the speaker’s source to line-in or TV input (if the Zone Player
    supports it)
+-  Manage the Sonos queue:
+
+   -  Get the items in the queue
+   -  Add items to the queue
+   -  Clear the queue
+   -  Play a specific song from the queue
+
+-  Join or unjoin speakers from a group
+-  Put all Sonos speakers in a network into “party mode”.
+
+-  Get or set alarms
+-  Get or set sleep timers
+
+-  Get or set the speaker’s bass and treble EQ
+-  Toggle the speaker’s loudness compensation, night mode and dialog mode
+-  Toggle the white status light on the unit
 -  Get the speaker’s information
 
    -  Zone Name
@@ -173,25 +191,26 @@ SoCo supports the following controls amongst others:
    -  MAC Address
 
 -  Set the speaker’s Zone Name
--  Find all the Sonos speakers in a network.
--  Put all Sonos speakers in a network into “party mode”.
--  “Unjoin” speakers from a group.
--  Manage the Sonos queue (get the items in it, add to it, clear it,
-   play a specific song from it)
--  Get the saved favorite radio stations and shows (title and stream
-   URI)
--  Search for and play item from your music library
 -  Start a music library update and determine if one is in progress
 
-SoCo also supports lower level access from Python to all Sonos services (eg
-Alarms)
+SoCo also supports lower level access from Python to all Sonos services
+(e.g. ContentDirectory or RenderingControl).
 
 
 Related Projects
 ----------------
 
-Socos is a command line tool for controlling Sonos devices. It is developed
+**Socos** is a command line tool for controlling Sonos devices. It is developed
 in conjunction with Soco, but in a `separate repository <https://github.com/SoCo/socos>`_.
+
+**SoCo-CLI** (`soco-cli <https://github.com/avantrec/soco-cli>`_) is a powerful and
+fully-featured command line tool suitable for use in scripts, scheduled tasks, etc. It
+supports time-based and state-based actions, and repeated commands using loops. Audio
+files on the local filesystem can be played back directly on Sonos from the command line.
+Multi-household Sonos systems are supported.
+
+Older Projects
+^^^^^^^^^^^^^^
 
 More of a Ruby fan? Not a problem, `Sam Soffes`_ is building out an
 awesome `Ruby gem`_.
@@ -202,10 +221,10 @@ where there isn’t an official Sonos Controller application! Find, fork,
 and contribute to it here: https://github.com/labero/SoCo-Tk.
 
 
-Google Group
-------------
+SoCo Gitter Room
+----------------
 
-There is a Soco group over at `Google Groups`_.  Feel free to drop by for support, ideas or casual conversation related to SoCo.
+There is a `SoCo Gitter discussion room <https://gitter.im/SoCo/SoCo>`_.  Feel free to drop by for support, ideas or casual conversation related to SoCo.
 
 
 License
@@ -217,7 +236,6 @@ SoCo is released under the `MIT license`_.
 .. _Sonos speakers: http://www.sonos.com/system/
 .. _Music Hack Day Sydney: http://sydney.musichackday.org/2012/
 .. _blog post: http://www.hirahim.com/blog/2012/04/29/dissecting-the-sonos-controller/
-.. _Requests: http://docs.python-requests.org/
 .. _Sam Soffes: https://github.com/soffes
 .. _Ruby gem: https://github.com/soffes/sonos
 .. _Joel Björkman: https://github.com/labero
@@ -225,7 +243,4 @@ SoCo is released under the `MIT license`_.
 .. _Rahim Sonawalla: https://github.com/rahims/SoCo
 .. _GitHub repository: https://github.com/SoCo/SoCo
 .. _team of people: https://github.com/SoCo/SoCo/blob/master/AUTHORS.rst
-.. _Google Groups: https://groups.google.com/forum/#!forum/python-soco
-.. _Google Group: https://groups.google.com/forum/#!forum/python-soco
 .. _SoCo documentation: https://soco.readthedocs.org/en/latest/
-.. _freenode: https://freenode.net/

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """This module contains configuration variables.
 
 They may be set by your code as follows::
@@ -8,8 +6,6 @@ They may be set by your code as follows::
     ...
     config.VARIABLE = value
 """
-
-from __future__ import unicode_literals
 
 
 SOCO_CLASS = None
@@ -31,6 +27,16 @@ See also:
 """
 
 
+EVENT_ADVERTISE_IP = None
+"""The IP on which to advertise to Sonos.
+
+The default of None means that the relevant IP address will be detected
+automatically.
+
+See also:
+    The :mod:`soco.events_base` module.
+"""
+
 EVENT_LISTENER_IP = None
 """The IP on which the event listener listens.
 
@@ -38,7 +44,7 @@ The default of None means that the relevant IP address will be detected
 automatically.
 
 See also:
-    The :mod:`soco.events` module.
+    The :mod:`soco.events_base` module.
 """
 
 
@@ -48,5 +54,14 @@ EVENT_LISTENER_PORT = 1400
 The default is 1400. You must set this before subscribing to any events.
 
 See also:
-    The :mod:`soco.events` module.
+    The :mod:`soco.events_base` module.
+"""
+
+EVENTS_MODULE = None
+"""The events module to be used by the :mod:`soco.services` module.
+
+The default of None means the :mod:`soco.events` module will be used.
+
+See also:
+    The :mod:`soco.events` and :mod:`soco.events_twisted` modules.
 """

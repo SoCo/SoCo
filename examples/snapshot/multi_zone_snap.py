@@ -19,10 +19,10 @@ Note: The Snapshot class is designed for single use. If a second snapshot is
 required create another instance of the class e.g. `snap2 = Snapshot(device)`.
 """
 
-from __future__ import print_function, unicode_literals
 import time
 import soco
 from soco.snapshot import Snapshot
+
 
 def play_alert(zones, alert_uri, alert_volume=20, alert_duration=0, fade_back=False):
     """
@@ -40,7 +40,7 @@ def play_alert(zones, alert_uri, alert_volume=20, alert_duration=0, fade_back=Fa
     for zone in zones:
         zone.snap = Snapshot(zone)
         zone.snap.snapshot()
-        print('snapshot of zone: {}'.format(zone.player_name))
+        print("snapshot of zone: {}".format(zone.player_name))
 
     # prepare all zones for playing the alert
     for zone in zones:
@@ -49,7 +49,7 @@ def play_alert(zones, alert_uri, alert_volume=20, alert_duration=0, fade_back=Fa
             if not zone.is_playing_tv:  # can't pause TV - so don't try!
                 # pause music for each coordinators if playing
                 trans_state = zone.get_current_transport_info()
-                if trans_state['current_transport_state'] == 'PLAYING':
+                if trans_state["current_transport_state"] == "PLAYING":
                     zone.pause()
 
         # For every Sonos player set volume and mute for every zone
@@ -57,25 +57,29 @@ def play_alert(zones, alert_uri, alert_volume=20, alert_duration=0, fade_back=Fa
         zone.mute = False
 
     # play the sound (uri) on each sonos coordinator
-    print('will play: {} on all coordinators'.format(alert_uri))
+    print("will play: {} on all coordinators".format(alert_uri))
     for zone in zones:
         if zone.is_coordinator:
-            zone.play_uri(uri=alert_uri, title='Sonos Alert')
+            zone.play_uri(uri=alert_uri, title="Sonos Alert")
 
     # wait for alert_duration
     time.sleep(alert_duration)
 
     # restore each zone to previous state
     for zone in zones:
-        print('restoring {}'.format(zone.player_name))
+        print("restoring {}".format(zone.player_name))
         zone.snap.restore(fade=fade_back)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
 
     all_zones = soco.discover()
 
     # alert uri to send to sonos - this uri must be available to Sonos
-    alert_sound = 'https://ia800503.us.archive.org/8/items/futuresoundfx-98/futuresoundfx-96.mp3'
+    alert_sound = (
+        "https://ia800503.us.archive.org/8/items/futuresoundfx-98/futuresoundfx-96.mp3"
+    )
 
-    play_alert(all_zones, alert_sound, alert_volume=30, alert_duration=3,
-               fade_back=False)
+    play_alert(
+        all_zones, alert_sound, alert_volume=30, alert_duration=3, fade_back=False
+    )

@@ -72,8 +72,9 @@ New Features
   <https://github.com/SoCo/SoCo/pull/131>`_).
 
 * It is now possible to subscribe to events of a service using its
-  :meth:`~soco.services.Service.subscribe` method, which returns a
-  `Subscription` object. To unsubscribe, call the `unsubscribe` method on the
+  `soco.services.Service.subscribe` method, which returns a
+  `soco.events.Subscription` object. To unsubscribe, call the
+  `soco.events.Subscription.unsubscribe` method on the
   returned object. (`#121 <https://github.com/SoCo/SoCo/pull/121>`_,
   `#130 <https://github.com/SoCo/SoCo/pull/130>`_)
 
