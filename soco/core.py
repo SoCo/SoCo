@@ -149,6 +149,8 @@ class SoCo(_SocoSingletonBase):
         mute
         volume
         play_mode
+        shuffle
+        repeat
         cross_fade
         ramp_to_volume
         set_relative_volume
@@ -447,10 +449,41 @@ class SoCo(_SocoSingletonBase):
     def play_mode(self, playmode):
         """Set the speaker's mode."""
         playmode = playmode.upper()
-        if playmode not in PLAY_MODES:
+        if playmode not in PLAY_MODES.keys():
             raise KeyError("'%s' is not a valid play mode" % playmode)
 
         self.avTransport.SetPlayMode([("InstanceID", 0), ("NewPlayMode", playmode)])
+
+    @property
+    def shuffle(self):
+        """bool: The queue's shuffle option.
+
+        True if enabled, False otherwise.
+        """
+        return PLAY_MODES[self.play_mode][0]
+
+    @shuffle.setter
+    def shuffle(self, shuffle):
+        """Set the queue's shuffle option."""
+        repeat = self.repeat
+        self.play_mode = PLAY_MODE_BY_MEANING[(shuffle, repeat)]
+
+    @property
+    def repeat(self):
+        """bool: The queue's repeat option.
+
+        True if enabled, False otherwise.
+
+        Can also be the string ``'ONE'`` for play mode
+        ``'REPEAT_ONE'``.
+        """
+        return PLAY_MODES[self.play_mode][1]
+
+    @repeat.setter
+    def repeat(self, repeat):
+        """Set the queue's repeat option"""
+        shuffle = self.shuffle
+        self.play_mode = PLAY_MODE_BY_MEANING[(shuffle, repeat)]
 
     @property
     @only_on_master  # Only for symmetry with the setter
@@ -2412,15 +2445,17 @@ NS = {
     "": "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}",
 }
 
-# Valid play modes
-PLAY_MODES = (
-    "NORMAL",
-    "SHUFFLE_NOREPEAT",
-    "SHUFFLE",
-    "REPEAT_ALL",
-    "SHUFFLE_REPEAT_ONE",
-    "REPEAT_ONE",
-)
+# Valid play modes and their meanings as (shuffle, repeat) tuples
+PLAY_MODES = {
+    "NORMAL": (False, False),
+    "SHUFFLE_NOREPEAT": (True, False),
+    "SHUFFLE": (True, True),
+    "REPEAT_ALL": (False, True),
+    "SHUFFLE_REPEAT_ONE": (True, "ONE"),
+    "REPEAT_ONE": (False, "ONE"),
+}
+# Inverse mapping of PLAY_MODES
+PLAY_MODE_BY_MEANING = {meaning: mode for mode, meaning in PLAY_MODES.items()}
 
 # Music source names
 MUSIC_SRC_LIBRARY = "LIBRARY"
@@ -2450,7 +2485,6 @@ SOURCES = {
 
 # Soundbar product names
 SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc", "arc sl")
-
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
