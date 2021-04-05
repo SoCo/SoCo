@@ -1017,6 +1017,52 @@ class TestAVTransport:
             [("InstanceID", 0), ("CrossfadeMode", "0")]
         )
 
+    def test_shuffle(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.shuffle is False
+        moco.avTransport.GetTransportSettings.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.shuffle = True
+        moco.avTransport.SetPlayMode.assert_called_once_with(
+            [("InstanceID", 0), ("NewPlayMode", "SHUFFLE_NOREPEAT")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {
+            "PlayMode": "SHUFFLE_NOREPEAT"
+        }
+        assert moco.shuffle is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.shuffle = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+    def test_repeat(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.repeat is False
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = True
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ALL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ALL"}
+        assert moco.repeat is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ONE"}
+        assert moco.repeat == "ONE"
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = "ONE"
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ONE")]
+        )
+
     def test_set_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
         moco.avTransport.ConfigureSleepTimer.return_value = None
