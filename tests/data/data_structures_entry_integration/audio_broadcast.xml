@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <item id="R:0/0/12" parentID="R:0/0" restricted="false">
+    <dc:title>DR P3 93.9 (Euro Hits)</dc:title>
+    <upnp:class>object.item.audioItem.audioBroadcast</upnp:class>
+    <res protocolInfo="x-rincon-mp3radio:*:*:*">x-sonosapi-stream:s24861?sid=254&amp;flags=32</res>
+  </item>
+</DIDL-Lite>

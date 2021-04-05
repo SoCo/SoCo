@@ -15,10 +15,10 @@ or :ref:`manually <installation_manually>`.
 
 .. _installation_pip:
 
-From PyPi with pip
+From PyPI with pip
 ^^^^^^^^^^^^^^^^^^
 
-The easiest way to install *SoCo*, is to install it from `PyPi
+The easiest way to install *SoCo*, is to install it from `PyPI
 <https://pypi.python.org/pypi>`_ with the program `pip
 <https://pip.pypa.io/en/stable/>`_. This can be done with the command:
 
@@ -34,7 +34,7 @@ Manual installation from .tar.gz file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *SoCo* can also be installed manually from the .tar.gz file. First, find `the
-latest version of SoCo on PyPi <https://pypi.python.org/pypi/soco>`_ and
+latest version of SoCo on PyPI <https://pypi.python.org/pypi/soco>`_ and
 download the ``.tar.gz`` file at the bottom of the page. After that, extract
 the content and move into the extracted folder. As an example, for *SoCo*
 0.11.1 and on a Unix type system, this can be done with the following commands:

@@ -18,7 +18,6 @@ Submodules
 
    soco.alarms
    soco.cache
-   soco.compat
    soco.config
    soco.core
    soco.data_structures

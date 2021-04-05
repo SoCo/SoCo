@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable-msg=R0904
 
 """This file contains the classes used to perform unit tests on the methods in
@@ -14,7 +13,6 @@ to its original state because those same developers will likely want to listen
 to music while coding, without having it interrupted at every unit test.
 PLEASE RESPECT THIS.
 """
-from __future__ import unicode_literals
 
 import time
 import unittest
@@ -38,23 +36,28 @@ def init(**kwargs):
     """Initialize variables for the unittests that are only known at run
     time."""
     global SOCO  # pylint: disable-msg=W0603
-    SOCO = soco.SoCo(kwargs['ip'])
+    SOCO = soco.SoCo(kwargs["ip"])
 
     if len(SOCO.get_queue()) == 0:
-        raise SoCoUnitTestInitError('Unit tests on the SoCo class must be run '
-                                    'with at least 1 item in the playlist')
+        raise SoCoUnitTestInitError(
+            "Unit tests on the SoCo class must be run "
+            "with at least 1 item in the playlist"
+        )
 
     transport_info = SOCO.get_current_transport_info()
-    if transport_info['current_transport_state'] != 'PLAYING':
-        raise SoCoUnitTestInitError('Unit tests on the SoCo class must be run '
-                                    'with the sonos unit playing')
+    if transport_info["current_transport_state"] != "PLAYING":
+        raise SoCoUnitTestInitError(
+            "Unit tests on the SoCo class must be run " "with the sonos unit playing"
+        )
 
 
 def get_state():
     """Utility function to get the entire playing state before the unit tests
     starts to change it."""
-    state = {'queue': SOCO.get_queue(0, 1000),
-             'current_track_info': SOCO.get_current_track_info()}
+    state = {
+        "queue": SOCO.get_queue(0, 1000),
+        "current_track_info": SOCO.get_current_track_info(),
+    }
     return state
 
 
@@ -65,11 +68,10 @@ def set_state(state):
     """
     SOCO.stop()
     SOCO.clear_queue()
-    for track in state['queue']:
-        SOCO.add_to_queue(track['uri'])
-    SOCO.play_from_queue(
-        int(state['current_track_info']['playlist_position']) - 1)
-    SOCO.seek(state['current_track_info']['position'])
+    for track in state["queue"]:
+        SOCO.add_to_queue(track["uri"])
+    SOCO.play_from_queue(int(state["current_track_info"]["playlist_position"]) - 1)
+    SOCO.seek(state["current_track_info"]["position"])
     SOCO.play()
 
 
@@ -79,10 +81,10 @@ def wait(interval=0.1):
 
 
 # Test return strings that are used a lot
-NOT_TRUE = 'The method did not return True'
-NOT_EXP = 'The method did not return the expected value'
-NOT_TYPE = 'The return value of the method did not have the expected type: {}'
-NOT_IN_RANGE = 'The returned value is not in the expected range'
+NOT_TRUE = "The method did not return True"
+NOT_EXP = "The method did not return the expected value"
+NOT_TYPE = "The return value of the method did not have the expected type: {}"
+NOT_IN_RANGE = "The returned value is not in the expected range"
 
 
 # functions for running via pytest
@@ -133,7 +135,7 @@ class Volume(unittest.TestCase):
         wait()
 
     def test_set_0(self):
-        """ Tests whether the volume can be set to 0. Regression test for:
+        """Tests whether the volume can be set to 0. Regression test for:
         https://github.com/rahims/SoCo/issues/29
         """
         old = SOCO.volume
@@ -220,19 +222,29 @@ class GetCurrentTrackInfo(unittest.TestCase):
     def setUp(self):  # pylint: disable-msg=C0103
         # The value in this list must be kept up to date with the values in
         # the test_get doc string
-        self.info_keys = sorted(['album', 'artist', 'title', 'uri',
-                                 'playlist_position', 'duration', 'album_art',
-                                 'position'])
+        self.info_keys = sorted(
+            [
+                "album",
+                "artist",
+                "title",
+                "uri",
+                "playlist_position",
+                "duration",
+                "album_art",
+                "position",
+            ]
+        )
 
     def test_get(self):
-        """ Test is the return value is a dictinary and contains the following
+        """Test is the return value is a dictinary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position
         """
         info = SOCO.get_current_track_info()
-        self.assertIsInstance(info, dict, 'Returned info is not a dict')
-        self.assertEqual(sorted(info.keys()), self.info_keys,
-                         'Info does not contain the proper keys')
+        self.assertIsInstance(info, dict, "Returned info is not a dict")
+        self.assertEqual(
+            sorted(info.keys()), self.info_keys, "Info does not contain the proper keys"
+        )
 
 
 class AddToQueue(unittest.TestCase):
@@ -246,8 +258,9 @@ class AddToQueue(unittest.TestCase):
         SOCO.pause()
         old_queue = SOCO.get_queue(0, 1000)
         # Add new element and check
-        self.assertEqual(SOCO.add_to_queue(old_queue[-1]['uri']),
-                         len(old_queue) + 1, '')
+        self.assertEqual(
+            SOCO.add_to_queue(old_queue[-1]["uri"]), len(old_queue) + 1, ""
+        )
         wait()
         new_queue = SOCO.get_queue()
         self.assertEqual(len(new_queue) - 1, len(old_queue))
@@ -263,23 +276,25 @@ class GetQueue(unittest.TestCase):
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
         # the test_get doc string
-        self.qeueu_element_keys = sorted(['album', 'artist', 'uri',
-                                          'album_art', 'title'])
+        self.qeueu_element_keys = sorted(
+            ["album", "artist", "uri", "album_art", "title"]
+        )
 
     def test_get(self):
-        """ Tests is return value is a list of dictionaries and if each of
+        """Tests is return value is a list of dictionaries and if each of
         the dictionaries contain the keys: album, artist, uri, album_art and
         title
         """
         queue = SOCO.get_queue()
-        self.assertIsInstance(queue, list, NOT_TYPE.format('list'))
+        self.assertIsInstance(queue, list, NOT_TYPE.format("list"))
         for item in queue:
-            self.assertIsInstance(item, dict,
-                                  'Item in queue is not a dictionary')
-            self.assertEqual(sorted(item.keys()), self.qeueu_element_keys,
-                             'The keys in the queue element dict are not the '
-                             'expected ones: {}'.
-                             format(self.qeueu_element_keys))
+            self.assertIsInstance(item, dict, "Item in queue is not a dictionary")
+            self.assertEqual(
+                sorted(item.keys()),
+                self.qeueu_element_keys,
+                "The keys in the queue element dict are not the "
+                "expected ones: {}".format(self.qeueu_element_keys),
+            )
 
 
 class GetCurrentTransportInfo(unittest.TestCase):
@@ -288,26 +303,35 @@ class GetCurrentTransportInfo(unittest.TestCase):
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
         # the test doc string
-        self.transport_info_keys = sorted(['current_transport_status',
-                                           'current_transport_state',
-                                           'current_transport_speed'])
+        self.transport_info_keys = sorted(
+            [
+                "current_transport_status",
+                "current_transport_state",
+                "current_transport_speed",
+            ]
+        )
 
     def test(self):
-        """ Tests if the return value is a dictionary that contains the keys:
+        """Tests if the return value is a dictionary that contains the keys:
         current_transport_status, current_transport_state,
         current_transport_speed
         and that values have been found for all keys, i.e. they are not None
         """
         transport_info = SOCO.get_current_transport_info()
-        self.assertIsInstance(transport_info, dict, NOT_TYPE.format('dict'))
-        self.assertEqual(self.transport_info_keys,
-                         sorted(transport_info.keys()),
-                         'The keys in the speaker info dict are not the '
-                         'expected ones: {}'.format(self.transport_info_keys))
+        self.assertIsInstance(transport_info, dict, NOT_TYPE.format("dict"))
+        self.assertEqual(
+            self.transport_info_keys,
+            sorted(transport_info.keys()),
+            "The keys in the speaker info dict are not the "
+            "expected ones: {}".format(self.transport_info_keys),
+        )
         for key, value in transport_info.items():
-            self.assertIsNotNone(value, 'The value for the key "{}" is None '
-                                 'which indicate that no value was found for '
-                                 'it'.format(key))
+            self.assertIsNotNone(
+                value,
+                'The value for the key "{}" is None '
+                "which indicate that no value was found for "
+                "it".format(key),
+            )
 
 
 class GetSpeakerInfo(unittest.TestCase):
@@ -316,36 +340,52 @@ class GetSpeakerInfo(unittest.TestCase):
     def setUp(self):  # pylint: disable-msg=C0103
         # The values in this list must be kept up to date with the values in
         # the test doc string
-        self.info_keys = sorted(['zone_name', 'player_icon', 'uid',
-                                 'serial_number', 'software_version',
-                                 'hardware_version', 'mac_address',
-                                 'model_name', 'model_number',
-                                 'display_version'])
+        self.info_keys = sorted(
+            [
+                "zone_name",
+                "player_icon",
+                "uid",
+                "serial_number",
+                "software_version",
+                "hardware_version",
+                "mac_address",
+                "model_name",
+                "model_number",
+                "display_version",
+            ]
+        )
 
     def test(self):
-        """ Tests if the return value is a dictionary that contains the keys:
+        """Tests if the return value is a dictionary that contains the keys:
         zone_name, player_icon, uid, serial_number, software_version,
         hardware_version, mac_address, model_name, model_number, display_version
         and that values have been found for all keys, i.e. they are not None
         """
         speaker_info = SOCO.get_speaker_info()
-        self.assertIsInstance(speaker_info, dict, NOT_TYPE.format('dict'))
-        self.assertEqual(self.info_keys, sorted(speaker_info.keys()), 'The '
-                         'keys in speaker info are not the expected ones: {}'
-                         ''.format(self.info_keys))
+        self.assertIsInstance(speaker_info, dict, NOT_TYPE.format("dict"))
+        self.assertEqual(
+            self.info_keys,
+            sorted(speaker_info.keys()),
+            "The "
+            "keys in speaker info are not the expected ones: {}"
+            "".format(self.info_keys),
+        )
         for key, value in speaker_info.items():
-            self.assertIsNotNone(value, 'The value for the key "{}" is None '
-                                 'which indicate that no value was found for '
-                                 'it'.format(key))
+            self.assertIsNotNone(
+                value,
+                'The value for the key "{}" is None '
+                "which indicate that no value was found for "
+                "it".format(key),
+            )
 
 
 # class GetSpeakersIp(unittest.TestCase):
-    #""" Unit tests for the get_speakers_ip method """
+# """ Unit tests for the get_speakers_ip method """
 
-    # TODO: Awaits https://github.com/rahims/SoCo/issues/26
+# TODO: Awaits https://github.com/rahims/SoCo/issues/26
 
-    # def test(self):
-        # print SOCO.get_speakers_ip()
+# def test(self):
+# print SOCO.get_speakers_ip()
 
 
 class Pause(unittest.TestCase):
@@ -355,9 +395,10 @@ class Pause(unittest.TestCase):
         """Tests if the pause method works."""
         SOCO.pause()
         wait(1)
-        new = SOCO.get_current_transport_info()['current_transport_state']
-        self.assertEqual(new, 'PAUSED_PLAYBACK', 'State after pause is not '
-                         '"PAUSED_PLAYBACK"')
+        new = SOCO.get_current_transport_info()["current_transport_state"]
+        self.assertEqual(
+            new, "PAUSED_PLAYBACK", "State after pause is not " '"PAUSED_PLAYBACK"'
+        )
         SOCO.play()
         wait(1)
 
@@ -370,8 +411,8 @@ class Stop(unittest.TestCase):
         state = get_state()
         SOCO.stop()
         wait(1)
-        new = SOCO.get_current_transport_info()['current_transport_state']
-        self.assertEqual(new, 'STOPPED', 'State after stop is not "STOPPED"')
+        new = SOCO.get_current_transport_info()["current_transport_state"]
+        self.assertEqual(new, "STOPPED", 'State after stop is not "STOPPED"')
         set_state(state)  # Reset unit the way it was before the test
         wait(1)
 
@@ -383,14 +424,16 @@ class Play(unittest.TestCase):
         """Tests if the play method works."""
         SOCO.pause()
         wait(1)
-        on_pause = SOCO.get_current_transport_info()['current_transport_state']
-        self.assertEqual(on_pause, 'PAUSED_PLAYBACK', 'State after pause is '
-                         'not "PAUSED_PLAYBACK"')
+        on_pause = SOCO.get_current_transport_info()["current_transport_state"]
+        self.assertEqual(
+            on_pause, "PAUSED_PLAYBACK", "State after pause is " 'not "PAUSED_PLAYBACK"'
+        )
         SOCO.play()
         wait(1)
-        on_play = SOCO.get_current_transport_info()['current_transport_state']
-        self.assertEqual(on_play, 'PLAYING', 'State after play is not '
-                         '"PAUSED_PLAYBACK"')
+        on_play = SOCO.get_current_transport_info()["current_transport_state"]
+        self.assertEqual(
+            on_play, "PLAYING", "State after play is not " '"PAUSED_PLAYBACK"'
+        )
 
 
 class Mute(unittest.TestCase):
@@ -399,12 +442,13 @@ class Mute(unittest.TestCase):
     def test(self):
         """Tests of the mute method works."""
         old = SOCO.mute
-        self.assertEqual(old, 0, 'The unit should not be muted when running '
-                         'the unit tests')
+        self.assertEqual(
+            old, 0, "The unit should not be muted when running " "the unit tests"
+        )
         SOCO.mute = True
         wait()
         new = SOCO.mute
-        self.assertEqual(new, 1, 'The unit did not successfully mute')
+        self.assertEqual(new, 1, "The unit did not successfully mute")
         SOCO.mute = False
         wait()
 
@@ -419,15 +463,20 @@ class RemoveFromQueue(unittest.TestCase):
         SOCO.remove_from_queue(len(old_queue))
         wait()
         new_queue = SOCO.get_queue()
-        self.assertNotEqual(old_queue, new_queue, 'No difference between '
-                            'queues before and after removing the last item')
-        self.assertEqual(len(new_queue), len(old_queue) - 1, 'The length of '
-                         'queue after removing a track is not length before - '
-                         '1')
+        self.assertNotEqual(
+            old_queue,
+            new_queue,
+            "No difference between " "queues before and after removing the last item",
+        )
+        self.assertEqual(
+            len(new_queue),
+            len(old_queue) - 1,
+            "The length of " "queue after removing a track is not length before - " "1",
+        )
         # Clean up
-        SOCO.add_to_queue(track_to_remove['uri'])
+        SOCO.add_to_queue(track_to_remove["uri"])
         wait()
-        self.assertEqual(old_queue, SOCO.get_queue(), 'Clean up unsuccessful')
+        self.assertEqual(old_queue, SOCO.get_queue(), "Clean up unsuccessful")
 
 
 class Seek(unittest.TestCase):
@@ -435,24 +484,24 @@ class Seek(unittest.TestCase):
 
     def test_valid(self):
         """Tests if the seek method works with valid input."""
-        original_position = SOCO.get_current_track_info()['position']
+        original_position = SOCO.get_current_track_info()["position"]
         # Format 1
-        SOCO.seek('0:00:00')
+        SOCO.seek("0:00:00")
         wait()
-        position = SOCO.get_current_track_info()['position']
-        self.assertIn(position, ['0:00:00', '0:00:01'])
+        position = SOCO.get_current_track_info()["position"]
+        self.assertIn(position, ["0:00:00", "0:00:01"])
         # Reset and format 2
         SOCO.seek(original_position)
-        SOCO.seek('00:00:00')
+        SOCO.seek("00:00:00")
         wait()
-        position = SOCO.get_current_track_info()['position']
-        self.assertIn(position, ['0:00:00', '0:00:01'])
+        position = SOCO.get_current_track_info()["position"]
+        self.assertIn(position, ["0:00:00", "0:00:01"])
         # Clean up
         SOCO.seek(original_position)
         wait()
 
     def test_invald(self):
         """Tests if the seek method properly fails with invalid input."""
-        for string in ['invalid_time_string', '5:12', '6', 'aa:aa:aa']:
+        for string in ["invalid_time_string", "5:12", "6", "aa:aa:aa"]:
             with self.assertRaises(ValueError):
                 SOCO.seek(string)

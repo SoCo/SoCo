@@ -9,7 +9,6 @@ clip from each preset will be played.
 
 """
 
-from __future__ import unicode_literals
 
 import sys
 import time
@@ -30,19 +29,19 @@ meta_template = """
     </item>
 </DIDL-Lite>' """
 
-tunein_service = 'SA_RINCON65031_'
+tunein_service = "SA_RINCON65031_"
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    if (len(sys.argv) < 2):
-        print 'Please pass the IP address of a Zone Player as the first argument'
+    if len(sys.argv) < 2:
+        print("Please pass the IP address of a Zone Player as the first argument")
         sys.exit()
 
     speaker_ip = sys.argv[1]
     preset = 0
     limit = 12
 
-    if (len(sys.argv) == 3):
+    if len(sys.argv) == 3:
         preset = int(sys.argv[2]) - 1
         limit = 1
 
@@ -50,18 +49,20 @@ if __name__ == '__main__':
 
     if mySonos:
         stations = mySonos.get_favorite_radio_stations(preset, limit)
-        print 'returned %s of a possible %s radio stations:' % (
-            stations['returned'], stations['total'])
-    for station in stations['favorites']:
-        print station['title']
-        uri = station['uri']
+        print(
+            "returned %s of a possible %s radio stations:"
+            % (stations["returned"], stations["total"])
+        )
+    for station in stations["favorites"]:
+        print(station["title"])
+        uri = station["uri"]
         # TODO seems at least & needs to be escaped - should move this to
         # play_uri and maybe escape other chars.
-        uri = uri.replace('&', '&amp;')
+        uri = uri.replace("&", "&amp;")
 
-        metadata = meta_template.format(title=station['title'], service=tunein_service)
+        metadata = meta_template.format(title=station["title"], service=tunein_service)
 
-        print mySonos.play_uri(uri, metadata)
+        print(mySonos.play_uri(uri, metadata))
 
-        if (len(sys.argv) == 2):
+        if len(sys.argv) == 2:
             time.sleep(10)
