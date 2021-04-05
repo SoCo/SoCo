@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # soco documentation build configuration file, created by
 # sphinx-quickstart on Mon Sep 14 08:03:37 2015.
@@ -60,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'SoCo'
-copyright = '2015, The SoCo Team'
+copyright = '2015-2021, The SoCo Team'
 author = "`The SoCo Team"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -119,7 +118,7 @@ todo_include_todos = True
 # Allow auto links into the Python and Requests docs
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    'requests': ('http://www.python-requests.org/en/latest/', None)
+    'requests': ('https://requests.readthedocs.io/en/master/', None)
 }
 
 # Shortcuts to Github Issues etc. Use them like this:

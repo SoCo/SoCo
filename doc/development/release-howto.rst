@@ -11,17 +11,26 @@ Preparations
   `semantic versioning <http://semver.org/>`_. Tag names should be prefixed
   with ``v``.
 
-* Create the release notes in ``release_notes.html`` by copying contents from
-  the release notes issue. Texts can be rewritten for legibility.
+* Create the release notes RST document in ``doc/releases`` by copying
+  contents from the release notes issue. Texts can be rewritten for
+  legibility.
 
-* Verify that all tests pass.
+* Verify that all tests pass locally and on all supported versions of
+  Python via Travis-CI (the status is visible on the project frontpage
+  on GitHub).
 
 
 Create and Publish
 ------------------
 
-* Update the version number in ``__init__.py`` (see
-  `example <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_).
+* Update the version number in ``__init__.py`` (see `example
+  <https://github.com/SoCo/SoCo/commit/d35171213eabbc4>`_) and commit.
+
+* (**If any changes other than the version number was made** in
+  preparation for the release, push the release commit to GitHub
+  before proceeding, to ensure that all the continuous integration
+  passes. The automatic deployment to PyPI mentioned below, will not
+  work if continuous integration fails.)
 
 * Tag the current commit, eg
 
@@ -29,7 +38,9 @@ Create and Publish
 
     git tag -a v0.7 -m 'release version 0.7'
 
-* Push the tag. This will create a new release on GitHub.
+* Push the tag. This will create a new release on GitHub, and will
+  automatically deploy the new version to PyPI (see `#593
+  <https://github.com/SoCo/SoCo/pull/593>`_)
 
 .. code-block:: bash
 
@@ -38,12 +49,6 @@ Create and Publish
 * Update the `GitHub release <https://github.com/SoCo/SoCo/releases/new>`_
   using the release notes from the documentation. The release notes can be
   abbreviated if a link to the documentation is provided.
-
-* Upload the release to PyPI.
-
-.. code-block:: bash
-
-    python setup.py sdist bdist_wheel upload
 
 
 Wrap-Up

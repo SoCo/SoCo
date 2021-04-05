@@ -1,0 +1,7 @@
+<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/" xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
+  <container id="S://myweb/music" parentID="S:" restricted="true">
+    <dc:title>//myweb/music</dc:title>
+    <upnp:class>object.container.albumlist</upnp:class>
+    <res protocolInfo="x-rincon-playlist:*:*:*">x-rincon-playlist:RINCON_B8E93781F3EA01400#S://myweb/music</res>
+  </container>
+</DIDL-Lite>

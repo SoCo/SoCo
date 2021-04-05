@@ -1,0 +1,65 @@
+SoCo 0.19 release notes
+***********************
+
+**SoCo 0.19** is the latest increment to the SoCo module. Among the
+additions this time are added methods for library share handling, new
+methods for relative and group volume handling and a new DIDL-Lite
+class used for certain podcasts. See the full list of additions and
+bugfixes below.
+
+`SoCo (Sonos Controller) <http://python-soco.com/>`_ is a Python
+package that allows you to programmatically control Sonos speakers.
+
+New Features and Improvements
+=============================
+
+* Added class :py:class:`~soco.data_structures.DidlRecentShow` to the
+  :py:mod:`~soco.data_structures` module to implement the
+  added ``object.item.audioItem.musicTrack.recentShow`` DIDL-Lite
+  object type. Used for podcasts etc. Pull request `#677
+  <https://github.com/SoCo/SoCo/pull/677>`_.
+* Add support for Python 3.8, pull reques `#679
+  <https://github.com/SoCo/SoCo/pull/679>`_
+* Add methods
+  :py:meth:`~soco.music_library.MusicLibrary.list_library_shares` and
+  :py:meth:`~soco.music_library.MusicLibrary.delete_library_share` to
+  :py:class:`~soco.music_library.MusicLibrary`. Partially addresses
+  issue `#678 <https://github.com/SoCo/SoCo/issues/678>`_.
+* Add a :py:attr:`~soco.core.SoCo.balance` property to the
+  :py:class:`~soco.core.SoCo` class, allowing get/set of speaker
+  balance, pull request `#693
+  <https://github.com/SoCo/SoCo/pull/693>`_. Addresses issue `#692
+  <https://github.com/SoCo/SoCo/issues/692>`_. Credit to @tephlon for
+  the idea and the majority of the implementation.
+* Add the :py:meth:`~soco.core.SoCo.set_relative_volume` method to the
+  :py:class:`~soco.core.SoCo` class, pull request `#687
+  <https://github.com/SoCo/SoCo/pull/687>`_
+* Add unit test for
+  :py:meth:`soco.music_library.MusicLibrary.delete_library_share`
+  method, pull request `#694 <https://github.com/SoCo/SoCo/pull/694>`_
+* Add deprecation warning concerning the removal of Python 2.7
+  support, pull request `#697
+  <https://github.com/SoCo/SoCo/pull/697>`_
+* Add group volume operations, pull request `#688
+  <https://github.com/SoCo/SoCo/pull/688>`_
+
+Bugfixes
+========
+
+* Fixed broken link in loudness docstring, issue `#671
+  <https://github.com/SoCo/SoCo/issues/671>`_
+* In :py:mod:`soco.events`, fixed bug affecting some users in code to
+  determine system's own IP address. Some systems requires a valid
+  port to be used (not port 0), so we use
+  ``config.EVENT_LISTENER_PORT``. Pull request `#680
+  <https://github.com/SoCo/SoCo/pull/680>`_.
+* Copy metadata from :py:class:`~soco.data_structures.DidlItem` to
+  :py:class:`~soco.ms_data_structures.MusicServiceItem` in
+  :py:meth:`~soco.core.SoCo.get_queue` and events. Pull request `#589
+  <https://github.com/SoCo/SoCo/pull/589>`_. Closes issues `#535
+  <https://github.com/SoCo/SoCo/issues/535>`_, `#547
+  <https://github.com/SoCo/SoCo/issues/547>`_ and `#552
+  <https://github.com/SoCo/SoCo/issues/552>`_.
+* Fixed a bug (avoid trying to iterate a None) in the
+  :py:mod:`~soco.discovery` module, commit `c8e4a24
+  <https://github.com/SoCo/SoCo/commit/c8e4a246addbc8891752cf65a4933a9db6ff1022>`_

@@ -25,6 +25,7 @@ Contributors
 * David Harding
 * Jeff Hinrichs
 * Jeroen Idserda
+* Hugo van Kemenade
 * Todd Neal
 * nixscripter
 * Kenneth Nielsen
@@ -33,5 +34,6 @@ Contributors
 * phut
 * Dan Poirier
 * Jason Ting
+* Peter Toft (pwt)
 * Scott G Waters
 
