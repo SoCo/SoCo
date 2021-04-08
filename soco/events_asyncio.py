@@ -1,11 +1,4 @@
-# pylint: disable=not-context-manager,import-error,wrong-import-position
-
-# NOTE: The pylint not-content-manager warning is disabled pending the fix of
-# a bug in pylint. See https://github.com/PyCQA/pylint/issues/782
-
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
+# pylint: disable=import-error,wrong-import-position
 
 """Classes to handle Sonos UPnP Events and Subscriptions.
 
