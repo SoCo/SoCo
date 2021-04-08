@@ -733,7 +733,7 @@ class SoCo(_SocoSingletonBase):
         Args:
             position (str): The desired timestamp in the current track,
                 specified in the format of HH:MM:SS or H:MM:SS
-            track (int): The (0-based) track index in the queue
+            track (int): The (zero-based) track index in the queue
 
         Raises:
             ValueError: If neither position nor track are specified.
@@ -741,8 +741,8 @@ class SoCo(_SocoSingletonBase):
                 UPnP Error 711 if the target is invalid.
 
         Note:
-            The `track` parameter can only be used if the queue is currently
-            playing. If not use :py:meth:`play_from_queue`.
+            The 'track' parameter can only be used if the queue is currently
+            playing. If not, use :py:meth:`play_from_queue`.
 
         This is currently faster than :py:meth:`play_from_queue` if already
         using the queue, as it does not reinstate the queue.
