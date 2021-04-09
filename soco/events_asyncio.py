@@ -1,6 +1,4 @@
-# pylint: disable=import-error,wrong-import-position
-
-"""Classes to handle Sonos UPnP Events and Subscriptions.
+"""Classes to handle Sonos UPnP Events and Subscriptions using asyncio.
 
 The `Subscription` class from this module will be used in
 :py:mod:`soco.services` if `config.EVENTS_MODULE` is set
@@ -10,7 +8,6 @@ Example:
 
     Run this code, and change your volume, tracks etc::
 
-        from __future__ import print_function
         import logging
 
         logging.basicConfig()
@@ -27,7 +24,7 @@ Example:
             try:
                 pprint(event.variables)
             except Exception as e:
-                pprint("There was an error in print_event:", e)
+                print("There was an error in print_event:", e)
 
 
         def _get_device():
@@ -60,22 +57,12 @@ Example:
 
 """
 
-import sys
 import logging
 import socket
 import time
+import asyncio
 
-# Hack to make docs build without asyncio installed
-if "sphinx" in sys.modules:
-
-    class Resource:  # pylint: disable=no-init
-        """Fake Resource class to use when building docs"""
-
-
-else:
-    import asyncio
-    from aiohttp import ClientSession, web
-
+from aiohttp import ClientSession, web
 
 # Event is imported for compatibility with events.py
 # pylint: disable=unused-import
@@ -177,7 +164,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
         return
 
     async def async_start(self, any_zone):
-        """Start the event listener listening on the local machine under the lock
+        """Start the event listener listening on the local machine under the lock.
 
         Args:
             any_zone (SoCo): Any Sonos device on the network. It does not
