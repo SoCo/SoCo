@@ -1,6 +1,4 @@
 requests
 xmltodict
 ifaddr
---no-binary=multidict
---no-binary=yarl
-aiohttp
+aiohttp --no-binary multidict,yarl
