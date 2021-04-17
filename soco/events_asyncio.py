@@ -59,10 +59,24 @@ Example:
 
 import logging
 import socket
+import sys
 import time
 import asyncio
 
-from aiohttp import ClientSession, web
+try:
+    from aiohttp import ClientSession, web
+except ImportError as error:
+    print(
+        """ImportError: {}:
+    Use of the SoCo events_asyncio module requires the 'aiohttp'
+    package and its dependencies to be installed. aiohttp is not
+    installed with SoCo by default due to potential issues installing
+    the dependencies 'mutlidict' and 'yarl' on some platforms.
+    See: https://github.com/SoCo/SoCo/issues/819""".format(
+            error
+        )
+    )
+    sys.exit(1)
 
 # Event is imported for compatibility with events.py
 # pylint: disable=unused-import

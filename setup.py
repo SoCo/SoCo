@@ -73,6 +73,9 @@ AUTHOR, EMAIL = re.match(r"(.*) <(.*)>", AUTHOR_EMAIL).groups()
 
 REQUIREMENTS = list(open("requirements.txt"))
 
+# See https://github.com/SoCo/SoCo/issues/819
+EXTRAS_REQUIRE = {"events_asyncio": ["aiohttp"]}
+
 setup(
     name=NAME,
     version=VERSION,
@@ -83,6 +86,7 @@ setup(
     url=WEBSITE,
     packages=PACKAGES,
     install_requires=REQUIREMENTS,
+    extras_require=EXTRAS_REQUIRE,
     tests_require=TEST_REQUIREMENTS,
     long_description=LONG_DESCRIPTION,
     cmdclass={"test": PyTest},
