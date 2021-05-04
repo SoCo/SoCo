@@ -48,6 +48,10 @@ Example:
                 await sub2.unsubscribe()
                 await events_asyncio.event_listener.async_stop()
 
+            await asyncio.sleep(1)
+            print("Renewing subscription..")
+            await sub.renew()
+
             await asyncio.sleep(100)
             await before_shutdown()
 
@@ -268,11 +272,18 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
 
     async def async_stop(self):
         """Stop the listener."""
-        await self.site.stop()
-        await self.runner.cleanup()
-        await self.session.close()
-        self.sock.close()
-        self.sock = None
+        if self.site:
+            await self.site.stop()
+            self.site = None
+        if self.runner:
+            await self.runner.cleanup()
+            self.runner = None
+        if self.session:
+            await self.session.close()
+            self.session = None
+        if self.sock:
+            self.sock.close()
+            self.sock = None
         self.port = None
         self.ip_address = None
 
@@ -404,7 +415,7 @@ class Subscription(SubscriptionBase):
 
         """
         try:
-            return await self._wrap(super().renew, requested_timeout, is_autorenew)
+            return await super().renew(requested_timeout, is_autorenew)
         except Exception as exc:  # pylint: disable=broad-except
             msg = (
                 "An Exception occurred. Subscription to"
@@ -443,7 +454,10 @@ class Subscription(SubscriptionBase):
             `Subscription`: The Subscription instance.
         """
         try:
-            return await self._wrap(super().unsubscribe)
+            unsub = super().unsubscribe()
+            if unsub is None:
+                return
+            await unsub
         except Exception as exc:  # pylint: disable=broad-except
             if strict:
                 raise
@@ -489,20 +503,6 @@ class Subscription(SubscriptionBase):
                 success(response.headers)
 
         return _async_make_request()
-
-    async def _wrap(self, method, *args):
-
-        """Wrap a call into an awaitable."""
-        future = asyncio.Future()
-
-        def _wrap_action():
-            try:
-                future.set_result(method(*args))
-            except Exception as ex:  # pylint: disable=broad-except
-                future.set_exception(ex)
-
-        asyncio.get_event_loop().call_soon(_wrap_action)
-        return await future
 
 
 class nullcontext:  # pylint: disable=invalid-name
