@@ -190,8 +190,6 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
                 address reachable by the Sonos net.
 
         """
-        if not self.session:
-            self.session = ClientSession()
         if not self.start_lock:
             self.start_lock = asyncio.Lock()
         async with self.start_lock:
@@ -208,6 +206,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
             if not port:
                 return
             self.address = (ip_address, port)
+            self.session = ClientSession()
             self.is_running = True
             log.debug("Event Listener started")
 
