@@ -143,7 +143,7 @@ class SoCo(_SocoSingletonBase):
         play_uri
         pause
         stop
-        enddirectcontrolsession
+        end_direct_control_session
         seek
         next
         previous
@@ -718,8 +718,8 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Stop([("InstanceID", 0), ("Speed", 1)])
 
     @only_on_master
-    def enddirectcontrolsession(self):
-        """Ends all streaming sessions."""
+    def end_direct_control_session(self):
+        """Ends all third-party controlled streaming sessions."""
         self.avTransport.EndDirectControlSession([("InstanceID", 0)])
 
     @only_on_master
