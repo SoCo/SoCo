@@ -708,6 +708,12 @@ class TestAVTransport:
         moco.stop()
         moco.avTransport.Stop.assert_called_once_with([("InstanceID", 0), ("Speed", 1)])
 
+    def test_soco_end_direct_control_session(self, moco):
+        moco.end_direct_control_session()
+        moco.avTransport.EndDirectControlSession.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+
     def test_soco_next(self, moco):
         moco.next()
         moco.avTransport.Next.assert_called_once_with([("InstanceID", 0), ("Speed", 1)])
