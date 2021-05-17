@@ -1539,10 +1539,10 @@ class SoCo(_SocoSingletonBase):
         # Store the entire Metadata entry in the track, this can then be
         # used if needed by the client to restart a given URI
         track["metadata"] = metadata
-        # Duration seems to be '0:00:00' when listening to radio
-        if metadata != "" and track["duration"] == "0:00:00":
-            metadata = XML.fromstring(really_utf8(metadata))
-            # Try parse trackinfo
+
+        def _parse_radio_metadata(metadata):
+            """Try to parse trackinfo from radio metadata."""
+            radio_track = {}
             trackinfo = (
                 metadata.findtext(
                     ".//{urn:schemas-rinconnetworks-com:" "metadata-1-0/}streamContent"
@@ -1552,15 +1552,22 @@ class SoCo(_SocoSingletonBase):
             index = trackinfo.find(" - ")
 
             if index > -1:
-                track["artist"] = trackinfo[:index]
-                track["title"] = trackinfo[index + 3 :]
+                radio_track["artist"] = trackinfo[:index]
+                radio_track["title"] = trackinfo[index + 3 :]
             else:
                 # Might find some kind of title anyway in metadata
-                track["title"] = metadata.findtext(
+                radio_track["title"] = metadata.findtext(
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
-                if not track["title"]:
-                    track["title"] = trackinfo
+                if not radio_track["title"]:
+                    radio_track["title"] = trackinfo
+
+            return radio_track
+
+        # Duration seems to be '0:00:00' when listening to radio
+        if metadata != "" and track["duration"] == "0:00:00":
+            metadata = XML.fromstring(really_utf8(metadata))
+            track.update(_parse_radio_metadata(metadata))
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
