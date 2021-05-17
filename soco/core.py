@@ -1554,6 +1554,19 @@ class SoCo(_SocoSingletonBase):
             if index > -1:
                 radio_track["artist"] = trackinfo[:index]
                 radio_track["title"] = trackinfo[index + 3 :]
+            elif "TYPE=SNG|" in trackinfo:
+                # Examples from services:
+                #  Apple Music radio:
+                #   "TYPE=SNG|TITLE Couleurs|ARTIST M83|ALBUM Saturdays = Youth"
+                #  SiriusXM:
+                #   "BR P|TYPE=SNG|TITLE 7.15.17 LA|ARTIST Eagles|ALBUM "
+                tags = dict([p.split(" ", 1) for p in trackinfo.split("|") if " " in p])
+                if tags.get("TITLE"):
+                    radio_track["title"] = tags["TITLE"]
+                if tags.get("ARTIST"):
+                    radio_track["artist"] = tags["ARTIST"]
+                if tags.get("ALBUM"):
+                    radio_track["album"] = tags["ALBUM"]
             else:
                 # Might find some kind of title anyway in metadata
                 radio_track["title"] = metadata.findtext(
