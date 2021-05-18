@@ -73,9 +73,11 @@ def to_didl_string(*args):
 
 def didl_class_to_soco_class(didl_class):
     """Translate a DIDL-Lite class to the corresponding SoCo data structures class"""
-    # Certain music services has been observed to sub-class via a .# syntax
-    # instead of just . we simply replace it with the official syntax
-    didl_class = didl_class.replace(".#", ".")
+    # Certain music services have been observed to sub-class via a .# or # syntax.
+    # We simply remove these subclasses.
+    for separator in (".#", "#"):
+        if separator in didl_class:
+            didl_class = didl_class[: didl_class.find(separator)]
 
     try:
         cls = _DIDL_CLASS_TO_CLASS[didl_class]
@@ -558,8 +560,9 @@ class DidlObject(metaclass=DidlMetaClass):
 
         # In case this class has an # specified unofficial
         # subclass, ignore it by stripping it from item_class
-        if ".#" in item_class:
-            item_class = item_class[: item_class.find(".#")]
+        for separator in (".#", "#"):
+            if separator in item_class:
+                item_class = item_class[: item_class.find(separator)]
 
         if item_class != cls.item_class:
             raise DIDLMetadataError(
