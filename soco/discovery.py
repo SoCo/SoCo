@@ -512,6 +512,54 @@ def scan_network_any_soco(household_id=None, **network_scan_kwargs):
     return any_zone
 
 
+def contactable(speakers):
+    """Find only contactable players in a set of `SoCo` objects.
+
+    This function checks a set of `SoCo` objects to ensure that each
+    associated Sonos player is currently contactable. A new set
+    is returned containing only contactable players.
+
+    If there are any non-contactable players, this function will
+    not return until one network timeout has been exceeded. Contact
+    attempts run in parallel threads.
+
+    Args:
+        speakers(set): A set of `SoCo` objects.
+
+    Returns:
+        set: A set of `SoCo` objects, all of which have been
+        confirmed to be currently contactable.
+    """
+
+    def contactable_worker(speaker, contactable_speakers):
+        """Helper function to check whether a speaker is
+        contactable and, if so, add it to a set."""
+        try:
+            # Try getting a device property
+            _ = speaker.is_visible
+            _LOG.info("%s is contactable", speaker.ip_address)
+            contactable_speakers.add(speaker)
+        # The exception is unimportant
+        # pylint: disable=bare-except
+        except:  # noqa: E722
+            _LOG.info("%s is not contactable", speaker.ip_address)
+
+    # Use one thread per speaker
+    thread_list = []
+    contactable_speakers = set()
+    for speaker in speakers:
+        thread = threading.Thread(
+            target=contactable_worker, args=(speaker, contactable_speakers)
+        )
+        thread.start()
+        thread_list.append(thread)
+
+    for thread in thread_list:
+        thread.join()
+
+    return contactable_speakers
+
+
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
