@@ -417,7 +417,9 @@ class Subscription(SubscriptionBase):
             return await super().renew(requested_timeout, is_autorenew)
         except Exception as exc:  # pylint: disable=broad-except
             self._cancel_subscription(exc)
-            if self.auto_renew_fail is not None and hasattr(self.auto_renew_fail, "__call__"):
+            if self.auto_renew_fail is not None and hasattr(
+                self.auto_renew_fail, "__call__"
+            ):
                 # pylint: disable=not-callable
                 self.auto_renew_fail(exc)
             else:
