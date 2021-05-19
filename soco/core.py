@@ -143,6 +143,7 @@ class SoCo(_SocoSingletonBase):
         play_uri
         pause
         stop
+        end_direct_control_session
         seek
         next
         previous
@@ -715,6 +716,11 @@ class SoCo(_SocoSingletonBase):
     def stop(self):
         """Stop the currently playing track."""
         self.avTransport.Stop([("InstanceID", 0), ("Speed", 1)])
+
+    @only_on_master
+    def end_direct_control_session(self):
+        """Ends all third-party controlled streaming sessions."""
+        self.avTransport.EndDirectControlSession([("InstanceID", 0)])
 
     @only_on_master
     def seek(self, position=None, track=None):
