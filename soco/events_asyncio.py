@@ -416,22 +416,16 @@ class Subscription(SubscriptionBase):
         try:
             return await super().renew(requested_timeout, is_autorenew)
         except Exception as exc:  # pylint: disable=broad-except
-            msg = (
-                "An Exception occurred. Subscription to"
-                + " {}, sid: {} has been cancelled".format(
-                    self.service.base_url + self.service.event_subscription_url,
-                    self.sid,
-                )
-            )
-            log.exception(msg)
-            self._cancel_subscription(msg)
-            if self.auto_renew_fail is not None:
-                if hasattr(self.auto_renew_fail, "__call__"):
-                    # pylint: disable=not-callable
-                    self.auto_renew_fail(exc)
+            self._cancel_subscription(exc)
+            if self.auto_renew_fail is not None and hasattr(
+                self.auto_renew_fail, "__call__"
+            ):
+                # pylint: disable=not-callable
+                self.auto_renew_fail(exc)
+            else:
+                self._log_exception(exc)
             if strict:
                 raise
-            self._log_exception(exc)
             return self
 
     async def unsubscribe(
@@ -470,7 +464,7 @@ class Subscription(SubscriptionBase):
         )
 
     def _auto_renew_run(self, interval):
-        asyncio.ensure_future(self.renew(is_autorenew=True))
+        asyncio.ensure_future(self.renew(is_autorenew=True, strict=False))
         self._auto_renew_start(interval)
 
     def _auto_renew_cancel(self):
