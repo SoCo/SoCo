@@ -533,13 +533,10 @@ def contactable(speakers):
         is returned if no speakers are contactable.
     """
 
-    def contactable_worker(speakers, contactable_speakers):
-        """Worker thread helper function to check whether a
-        speaker is contactable and, if so, add it to a set.
-
-        Takes a set of speakers to check, and a set of
-        of speakers to be populated with those that are
-        confirmed to be contactable.
+    def contactable_worker():
+        """Worker thread helper function to check whether
+        speakers are contactable and, if so, to add them to
+        the set of contactable speakers.
         """
         while True:
             try:
@@ -563,9 +560,7 @@ def contactable(speakers):
     # Attempt to create one thread per speaker
     thread_list = []
     for _ in range(len(speakers)):
-        thread = threading.Thread(
-            target=contactable_worker, args=(speakers, contactable_speakers)
-        )
+        thread = threading.Thread(target=contactable_worker)
         try:
             thread.start()
             thread_list.append(thread)
