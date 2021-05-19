@@ -512,6 +512,69 @@ def scan_network_any_soco(household_id=None, **network_scan_kwargs):
     return any_zone
 
 
+def contactable(speakers):
+    """Find only contactable players in a set of `SoCo` objects.
+
+    This function checks a set of `SoCo` objects to ensure that each
+    associated Sonos player is currently contactable. A new set
+    is returned containing only contactable players.
+
+    If there are non-contactable players, the function return will
+    be delayed until at least one network timeout has expired (several
+    seconds). Contact attempts run in parallel threads to minimise
+    delays.
+
+    Args:
+        speakers(set): A set of `SoCo` objects.
+
+    Returns:
+        set: A set of `SoCo` objects, all of which have been
+        confirmed to be currently contactable. An empty set
+        is returned if no speakers are contactable.
+    """
+
+    def contactable_worker():
+        """Worker thread helper function to check whether
+        speakers are contactable and, if so, to add them to
+        the set of contactable speakers.
+        """
+        while True:
+            try:
+                speaker = speakers.pop()
+            except KeyError:
+                break
+            try:
+                # Try getting a device property
+                _ = speaker.is_visible
+                _LOG.info("%s is contactable", speaker.ip_address)
+                contactable_speakers.add(speaker)
+            # The exception is unimportant
+            # pylint: disable=bare-except
+            except:  # noqa: E722
+                _LOG.info("%s is not contactable", speaker.ip_address)
+
+    contactable_speakers = set()
+    if speakers is None:
+        return contactable_speakers
+
+    # Attempt to create one thread per speaker
+    thread_list = []
+    for _ in range(len(speakers)):
+        thread = threading.Thread(target=contactable_worker)
+        try:
+            thread.start()
+            thread_list.append(thread)
+        except RuntimeError:
+            # Can't create any more threads
+            _LOG.info("Failed to create a new thread")
+            break
+
+    for thread in thread_list:
+        thread.join()
+
+    return contactable_speakers
+
+
 def _find_ipv4_networks(min_netmask):
     """Discover attached IP networks.
 
