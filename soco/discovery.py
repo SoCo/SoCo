@@ -519,40 +519,60 @@ def contactable(speakers):
     associated Sonos player is currently contactable. A new set
     is returned containing only contactable players.
 
-    If there are any non-contactable players, this function will
-    not return until one network timeout has been exceeded. Contact
-    attempts run in parallel threads.
+    If there are non-contactable players, the function return will
+    be delayed until at least one network timeout has expired (several
+    seconds). Contact attempts run in parallel threads to minimise
+    delays.
 
     Args:
         speakers(set): A set of `SoCo` objects.
 
     Returns:
         set: A set of `SoCo` objects, all of which have been
-        confirmed to be currently contactable.
+        confirmed to be currently contactable. An empty set
+        is returned if no speakers are contactable.
     """
 
-    def contactable_worker(speaker, contactable_speakers):
-        """Helper function to check whether a speaker is
-        contactable and, if so, add it to a set."""
-        try:
-            # Try getting a device property
-            _ = speaker.is_visible
-            _LOG.info("%s is contactable", speaker.ip_address)
-            contactable_speakers.add(speaker)
-        # The exception is unimportant
-        # pylint: disable=bare-except
-        except:  # noqa: E722
-            _LOG.info("%s is not contactable", speaker.ip_address)
+    def contactable_worker(speakers, contactable_speakers):
+        """Worker thread helper function to check whether a
+        speaker is contactable and, if so, add it to a set.
 
-    # Use one thread per speaker
-    thread_list = []
+        Takes a set of speakers to check, and a set of
+        of speakers to be populated with those that are
+        confirmed to be contactable.
+        """
+        while True:
+            try:
+                speaker = speakers.pop()
+            except KeyError:
+                break
+            try:
+                # Try getting a device property
+                _ = speaker.is_visible
+                _LOG.info("%s is contactable", speaker.ip_address)
+                contactable_speakers.add(speaker)
+            # The exception is unimportant
+            # pylint: disable=bare-except
+            except:  # noqa: E722
+                _LOG.info("%s is not contactable", speaker.ip_address)
+
     contactable_speakers = set()
-    for speaker in speakers:
+    if speakers is None:
+        return contactable_speakers
+
+    # Attempt to create one thread per speaker
+    thread_list = []
+    for _ in range(len(speakers)):
         thread = threading.Thread(
-            target=contactable_worker, args=(speaker, contactable_speakers)
+            target=contactable_worker, args=(speakers, contactable_speakers)
         )
-        thread.start()
-        thread_list.append(thread)
+        try:
+            thread.start()
+            thread_list.append(thread)
+        except RuntimeError:
+            # Can't create any more threads
+            _LOG.info("Failed to create a new thread")
+            break
 
     for thread in thread_list:
         thread.join()
