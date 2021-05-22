@@ -128,7 +128,7 @@ class EventNotifyHandler(Resource, EventNotifyHandlerBase):
 
     # pylint: disable=no-self-use, missing-docstring
     def log_event(self, seq, service_id, timestamp):
-        log.info("Event %s received for %s service at %s", seq, service_id, timestamp)
+        log.debug("Event %s received for %s service at %s", seq, service_id, timestamp)
 
 
 class EventListener(EventListenerBase):
@@ -173,7 +173,7 @@ class EventListener(EventListenerBase):
         ):
             try:
                 if port_number > self.requested_port_number:
-                    log.warning("Trying next port (%d)", port_number)
+                    log.debug("Trying next port (%d)", port_number)
                 # pylint: disable=no-member
                 self.port = reactor.listenTCP(
                     port_number, factory, interface=ip_address
@@ -185,7 +185,7 @@ class EventListener(EventListenerBase):
                 continue
 
         if self.port:
-            log.info("Event listener running on %s", (ip_address, self.port.port))
+            log.debug("Event listener running on %s", (ip_address, self.port.port))
             return self.port.port
         else:
             return None
