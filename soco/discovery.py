@@ -103,7 +103,7 @@ def discover(
                 "{} is not a valid IP address string".format(interface_addr)
             ) from e
         _sockets.append(create_socket(interface_addr))
-        _LOG.info("Sending discovery packets on specified interface")
+        _LOG.debug("Sending discovery packets on specified interface")
     else:
         # Use all relevant network interfaces
         for address in _find_ipv4_addresses():
@@ -116,7 +116,7 @@ def discover(
                     e.__class__.__name__,
                     e,
                 )
-        _LOG.info("Sending discovery packets on %s", _sockets)
+        _LOG.debug("Sending discovery packets on %s", _sockets)
 
     for _ in range(0, 3):
         # Send a few times to each socket. UDP is unreliable
@@ -175,7 +175,7 @@ def discover(
                     else:
                         return zone.visible_zones
         elif allow_network_scan:
-            _LOG.info("Falling back to network scan discovery")
+            _LOG.debug("Falling back to network scan discovery")
             return scan_network(
                 include_invisible=include_invisible,
                 **network_scan_kwargs,
@@ -314,7 +314,7 @@ def scan_network(
             try:
                 network = ipaddress.IPv4Network(network_to_scan, False)
             except ValueError:
-                _LOG.info("'%s' is not a valid IPv4 network", network_to_scan)
+                _LOG.debug("'%s' is not a valid IPv4 network", network_to_scan)
                 # Ignore the error and continue processing the list
                 continue
             ip_set.update(set(network))
@@ -338,22 +338,22 @@ def scan_network(
         except RuntimeError:
             # We probably can't start any more threads
             # Cease thread creation and continue
-            _LOG.info(
+            _LOG.warning(
                 "Runtime error starting thread number %d ... continue",
                 len(thread_list) + 1,
             )
             break
         thread_list.append(thread)
-    _LOG.info("Created %d scanner threads", len(thread_list))
+    _LOG.debug("Created %d scanner threads", len(thread_list))
 
     # Wait for all threads to finish
     for thread in thread_list:
         thread.join()
-    _LOG.info("All %d scanner threads terminated", len(thread_list))
+    _LOG.debug("All %d scanner threads terminated", len(thread_list))
 
     # No Sonos devices found
     if len(sonos_ip_addresses) == 0:
-        _LOG.info("No Sonos zones discovered")
+        _LOG.debug("No Sonos zones discovered")
         return None
 
     # Collect SoCo instances
@@ -370,7 +370,7 @@ def scan_network(
         if not multi_household:
             break
 
-    _LOG.info(
+    _LOG.debug(
         "Include_invisible: %s | multi_household: %s | %d Zones: %s",
         include_invisible,
         multi_household,
@@ -406,7 +406,7 @@ def scan_network_by_household_id(
     zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
     if zones:
         zones = {zone for zone in zones if zone.household_id == household_id}
-    _LOG.info("Returning zones: %s", zones)
+    _LOG.debug("Returning zones: %s", zones)
     return zones
 
 
@@ -433,7 +433,7 @@ def scan_network_get_household_ids(**network_scan_kwargs):
         for zone in zones:
             household_ids.add(zone.household_id)
 
-    _LOG.info("Returning household IDs: %s", household_ids)
+    _LOG.debug("Returning household IDs: %s", household_ids)
     return household_ids
 
 
@@ -474,7 +474,7 @@ def scan_network_get_by_name(name, household_id=None, **network_scan_kwargs):
                     matching_zone = zone
                     break
 
-    _LOG.info("Returning zone: %s", matching_zone)
+    _LOG.debug("Returning zone: %s", matching_zone)
     return matching_zone
 
 
@@ -508,7 +508,7 @@ def scan_network_any_soco(household_id=None, **network_scan_kwargs):
                     any_zone = zone
                     break
 
-    _LOG.info("Returning zone: %s", any_zone)
+    _LOG.debug("Returning zone: %s", any_zone)
     return any_zone
 
 
@@ -546,12 +546,12 @@ def contactable(speakers):
             try:
                 # Try getting a device property
                 _ = speaker.is_visible
-                _LOG.info("%s is contactable", speaker.ip_address)
+                _LOG.debug("%s is contactable", speaker.ip_address)
                 contactable_speakers.add(speaker)
             # The exception is unimportant
             # pylint: disable=bare-except
             except:  # noqa: E722
-                _LOG.info("%s is not contactable", speaker.ip_address)
+                _LOG.debug("%s is not contactable", speaker.ip_address)
 
     contactable_speakers = set()
     if speakers is None:
@@ -566,7 +566,7 @@ def contactable(speakers):
             thread_list.append(thread)
         except RuntimeError:
             # Can't create any more threads
-            _LOG.info("Failed to create a new thread")
+            _LOG.warning("Failed to create a new thread")
             break
 
     for thread in thread_list:
@@ -622,7 +622,7 @@ def _find_ipv4_networks(min_netmask):
                 )
                 ipv4_net_list.add(network)
 
-    _LOG.info("Set of networks to search: %s", str(ipv4_net_list))
+    _LOG.debug("Set of networks to search: %s", str(ipv4_net_list))
     return ipv4_net_list
 
 
@@ -650,7 +650,7 @@ def _find_ipv4_addresses():
             if not ipv4_network.is_loopback and not ipv4_network.is_link_local:
                 ipv4_addresses.add(ifaddr_network.ip)
 
-    _LOG.info("Set of attached IPs: %s", str(ipv4_addresses))
+    _LOG.debug("Set of attached IPs: %s", str(ipv4_addresses))
     return ipv4_addresses
 
 
@@ -719,9 +719,9 @@ def _sonos_scan_worker_thread(
             break
 
         if check:
-            _LOG.info("Found open port 1400 at IP '%s'", ip_address)
+            _LOG.debug("Found open port 1400 at IP '%s'", ip_address)
             if _is_sonos(ip_address):
-                _LOG.info("Confirmed Sonos device at IP '%s'", ip_address)
+                _LOG.debug("Confirmed Sonos device at IP '%s'", ip_address)
                 sonos_ip_addresses.append(ip_address)
                 # Clear the list to eliminate further searching by
                 # all threads, if we're not doing an exhaustive search
@@ -729,4 +729,4 @@ def _sonos_scan_worker_thread(
                     ip_set.clear()
                     break
             else:
-                _LOG.info("'%s' is not a Sonos device", ip_address)
+                _LOG.debug("'%s' is not a Sonos device", ip_address)
