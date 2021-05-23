@@ -152,7 +152,7 @@ class EventNotifyHandler(EventNotifyHandlerBase):
 
     # pylint: disable=no-self-use, missing-docstring
     def log_event(self, seq, service_id, timestamp):
-        log.info("Event %s received for %s service at %s", seq, service_id, timestamp)
+        log.debug("Event %s received for %s service at %s", seq, service_id, timestamp)
 
 
 class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-attributes
@@ -238,7 +238,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
         ):
             try:
                 if port_number > self.requested_port_number:
-                    log.warning("Trying next port (%d)", port_number)
+                    log.debug("Trying next port (%d)", port_number)
                 # pylint: disable=no-member
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.bind((ip_address, port_number))
@@ -267,7 +267,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
         await self.runner.setup()
         self.site = web.SockSite(self.runner, self.sock)
         await self.site.start()
-        log.info("Event listener running on %s", (self.ip_address, self.port))
+        log.debug("Event listener running on %s", (self.ip_address, self.port))
 
     async def async_stop(self):
         """Stop the listener."""
