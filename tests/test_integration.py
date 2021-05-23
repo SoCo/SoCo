@@ -319,7 +319,7 @@ class TestGetCurrentTrackInfo:
     )
 
     def test_get(self, soco):
-        """Test is the return value is a dictinary and contains the following
+        """Test that the return value is a dictionary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position.
         """
@@ -339,7 +339,7 @@ class TestGetCurrentMediaInfo:
     )
 
     def test_get(self, soco):
-        """Test that the return value is a dictinary and contains the expected
+        """Test that the return value is a dictionary and contains the expected
         keys.
         """
         info = soco.get_current_media_info()
