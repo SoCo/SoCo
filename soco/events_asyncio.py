@@ -248,7 +248,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
                 break
             # pylint: disable=invalid-name
             except socket.error as e:
-                log.warning(e)
+                log.warning("Could not bind to %s:%s: %s", ip_address, port_number, e)
                 continue
 
         if not self.port:
