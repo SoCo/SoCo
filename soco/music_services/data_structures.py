@@ -89,7 +89,7 @@ def get_class(class_key):
                 # So MediaMetadataTrack turns into MSTrack
                 class_name = "MS" + class_key.replace(basecls.__name__, "")
                 CLASSES[class_key] = type(class_name, (basecls,), {})
-                _LOG.info("Class %s created", CLASSES[class_key])
+                _LOG.debug("Class %s created", CLASSES[class_key])
     return CLASSES[class_key]
 
 
