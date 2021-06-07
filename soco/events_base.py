@@ -551,8 +551,6 @@ class SubscriptionBase:
         if self.time_left == 0:
             return None
 
-        self._cancel_subscription()
-
         # Send an unsubscribe request like this:
         # UNSUBSCRIBE publisher path HTTP/1.1
         # HOST: publisher host:publisher port
@@ -566,6 +564,7 @@ class SubscriptionBase:
                 self.service.base_url + self.service.event_subscription_url,
                 self.sid,
             )
+            self._cancel_subscription()
 
         return self._request(
             "UNSUBSCRIBE",
