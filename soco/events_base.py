@@ -546,12 +546,12 @@ class SubscriptionBase:
         if self._has_been_unsubscribed or not self.is_subscribed:
             return None
 
-        self._cancel_subscription()
-
         # If the subscription has timed out, an attempt to
         # unsubscribe from it will fail silently.
         if self.time_left == 0:
             return None
+
+        self._cancel_subscription()
 
         # Send an unsubscribe request like this:
         # UNSUBSCRIBE publisher path HTTP/1.1
