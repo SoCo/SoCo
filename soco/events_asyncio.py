@@ -474,7 +474,7 @@ class Subscription(SubscriptionBase):
             self._auto_renew_task = None
 
     # pylint: disable=no-self-use, too-many-branches, too-many-arguments
-    def _request(self, method, url, headers, success, unconditional=None):
+    def _request(self, method, url, headers, success):
         """Sends an HTTP request.
 
         Args:
@@ -485,9 +485,6 @@ class Subscription(SubscriptionBase):
             success (function): A function to be called if the
                 request succeeds. The function will be called with a dict
                 of response headers as its only parameter.
-            unconditional (function): An optional function to be called after
-                the request is complete, regardless of its success. Takes
-                no parameters.
 
         """
 
@@ -497,8 +494,6 @@ class Subscription(SubscriptionBase):
             )
             if response.ok:
                 success(response.headers)
-            if unconditional:
-                unconditional()
 
         return _async_make_request()
 

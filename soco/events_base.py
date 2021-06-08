@@ -546,6 +546,8 @@ class SubscriptionBase:
         if self._has_been_unsubscribed or not self.is_subscribed:
             return None
 
+        self._cancel_subscription()
+
         # If the subscription has timed out, an attempt to
         # unsubscribe from it will fail silently.
         if self.time_left == 0:
@@ -570,7 +572,6 @@ class SubscriptionBase:
             self.service.base_url + self.service.event_subscription_url,
             headers,
             success,
-            self._cancel_subscription,
         )
 
     def send_event(self, event):
@@ -620,7 +621,7 @@ class SubscriptionBase:
         raise NotImplementedError
 
     # pylint: disable=missing-docstring, too-many-arguments
-    def _request(self, method, url, headers, success, unconditional=None):
+    def _request(self, method, url, headers, success):
         """Send a HTTP request
 
         Args:
@@ -631,9 +632,6 @@ class SubscriptionBase:
             success (function): A function to be called if the
                 request succeeds. The function will be called with a dict
                 of response headers as its only parameter.
-            unconditional (function): An optional function to be called after
-                the request is complete, regardless of its success. Takes
-                no parameters.
 
         Note:
             This method must be overridden in the class that inherits from
