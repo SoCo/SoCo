@@ -370,7 +370,7 @@ class Subscription(SubscriptionBase):
         self._auto_renew_thread_flag.set()
 
     # pylint: disable=no-self-use, too-many-arguments
-    def _request(self, method, url, headers, success):
+    def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 
         Args:
@@ -381,6 +381,9 @@ class Subscription(SubscriptionBase):
             success (function): A function to be called if the
                 request succeeds. The function will be called with a dict
                 of response headers as its only parameter.
+            unconditional (function): An optional function to be called after
+                the request is complete, regardless of its success. Takes
+                no parameters.
 
         """
         response = None
@@ -399,6 +402,8 @@ class Subscription(SubscriptionBase):
 
         if success:
             success(response.headers)
+        if unconditional:
+            unconditional()
 
     # pylint: disable=inconsistent-return-statements
     def _wrap(self, method, strict, *args, **kwargs):
