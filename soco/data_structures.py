@@ -359,6 +359,7 @@ class DidlResource:
         if remove_nones:
             # delete any elements that have a value of None to optimize size
             # of the returned structure
+            # pylint: disable=C0206
             nones = [k for k in content if content[k] is None]
             for k in nones:
                 del content[k]
