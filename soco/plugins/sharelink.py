@@ -18,7 +18,7 @@ class ShareClass:
         """Recognize a share link and return its canonical representation.
 
         Args:
-            uri (str): A URI like `https://tidal.com/browse/album/157273956`.
+            uri (str): A URI like "https://tidal.com/browse/album/157273956".
 
         Returns:
             str: The canonical URI or None if not recognized.
@@ -145,11 +145,11 @@ class ShareLinkPlugin(SoCoPlugin):
         files.
 
         Args:
-            uri (str): A URI like `spotify:album:6wiUBliPe76YAVpNEdidpY`.
+            uri (str): A URI like "spotify:album:6wiUBliPe76YAVpNEdidpY".
             position (int): The index (1-based) at which the URI should be
                 added. Default is 0 (add URI at the end of the queue).
             as_next (bool): Whether this URI should be played as the next
-                track in shuffle mode. This only works if `play_mode=SHUFFLE`.
+                track in shuffle mode. This only works if "play_mode=SHUFFLE".
 
         Returns:
             int: The index of the new item in the queue.
