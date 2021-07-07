@@ -1080,6 +1080,9 @@ class SoCo(_SocoSingletonBase):
 
         While the variable is available on non-soundbar devices,
         it is likely always 0 for devices without audio inputs.
+
+        See also :func:`soundbar_audio_input_format` for obtaining a
+        human-readable description of the format.
         """
         if not self.is_soundbar:
             return None
@@ -1092,11 +1095,15 @@ class SoCo(_SocoSingletonBase):
         """Return a string presentation of the audio input format.
 
         Returns None when the device is not a soundbar.
+        Otherwise, this will return the string presentation of the currently
+        active sound format (e.g., "Dolby 5.1" or "No input")
+
+        See also :func:`soundbar_audio_input_format_code` for the raw value.
         """
         if not self.is_soundbar:
             return None
 
-        value_map = {
+        format_to_str = {
             0: "No input connected",
             2: "Stereo",
             7: "Dolby 2.0",
@@ -1109,13 +1116,14 @@ class SoCo(_SocoSingletonBase):
             84934713: "Dolby 5.1",
         }
 
-        pretty_format = self.soundbar_audio_input_format_code()
+        format_code = self.soundbar_audio_input_format_code()
 
-        if pretty_format not in value_map:
-            logging.warning("Unknown audio input format: %s", pretty_format)
+        if format_code not in format_to_str:
+            logging.warning("Unknown audio input format: %s", format_code)
 
-        format_str = value_map.get(pretty_format,
-                                   "Unknown audio format: %s" % pretty_format)
+        format_str = format_to_str.get(
+            format_code, "Unknown audio format: %s" % format_code
+        )
 
         return format_str
 
