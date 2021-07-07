@@ -3,7 +3,7 @@ import pytest
 import requests_mock
 
 from soco import SoCo
-from soco.data_structures import DidlMusicTrack, to_didl_string
+from soco.data_structures import to_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
@@ -37,7 +37,7 @@ def moco():
     with mock.patch(
         "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
     ) as is_coord:
-        is_coord = True
+        is_coord = True  # noqa: F841
         yield SoCo(IP_ADDR)
     for patch in reversed(patchers):
         patch.stop()
@@ -411,7 +411,7 @@ class TestSoco:
     @pytest.mark.parametrize("bad_ip_addr", ["not_ip", "555.555.555.555"])
     def test_soco_bad_ip(self, bad_ip_addr):
         with pytest.raises(ValueError):
-            speaker = SoCo(bad_ip_addr)
+            _ = SoCo(bad_ip_addr)
 
     def test_soco_init(self, moco):
         assert moco.ip_address == IP_ADDR
@@ -1097,7 +1097,7 @@ class TestAVTransport:
     @pytest.mark.parametrize("bad_sleep_time", ["BadTime", "00:43:23", "4200s", ""])
     def test_set_sleep_timer_bad_sleep_time(self, moco, bad_sleep_time):
         with pytest.raises(ValueError):
-            result = moco.set_sleep_timer(bad_sleep_time)
+            _ = moco.set_sleep_timer(bad_sleep_time)
 
     def test_get_sleep_timer(self, moco):
         moco.avTransport.reset_mock()

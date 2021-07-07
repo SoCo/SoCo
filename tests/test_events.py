@@ -76,7 +76,7 @@ def test_event_object():
     assert dummy_event.zone == "kitchen"
     # Should not access non-existent attributes
     with pytest.raises(AttributeError):
-        var = dummy_event.non_existent
+        _ = dummy_event.non_existent
     # Should be read only
     with pytest.raises(TypeError):
         dummy_event.new_var = 4
