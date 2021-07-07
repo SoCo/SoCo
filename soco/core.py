@@ -11,9 +11,9 @@ import socket
 from functools import wraps
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
+from typing import Optional
 import warnings
 import xmltodict
-from typing import Optional
 
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -1109,12 +1109,13 @@ class SoCo(_SocoSingletonBase):
             84934713: "Dolby 5.1",
         }
 
-        format = self.soundbar_audio_input_format_code()
+        pretty_format = self.soundbar_audio_input_format_code()
 
-        if format not in value_map:
-            logging.warning("Unknown audio input format: %s", format)
+        if pretty_format not in value_map:
+            logging.warning("Unknown audio input format: %s", pretty_format)
 
-        format_str = value_map.get(format, "Unknown audio format: %s" % format)
+        format_str = value_map.get(pretty_format,
+                                   "Unknown audio format: %s" % pretty_format)
 
         return format_str
 
