@@ -16,7 +16,7 @@ import sys
 import os
 import shlex
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath(".."))
 import soco
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -27,39 +27,39 @@ import soco
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-needs_sphinx = '1.3'
+needs_sphinx = "1.3"
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.inheritance_diagram',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.inheritance_diagram",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.napoleon",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'SoCo'
-copyright = '2015-2021, The SoCo Team'
+project = "SoCo"
+copyright = "2015-2021, The SoCo Team"
 author = "`The SoCo Team"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -76,7 +76,7 @@ release = soco.__version__
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = 'en'
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -86,11 +86,11 @@ language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ["_build"]
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
-default_role = 'any'
+default_role = "any"
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
@@ -104,10 +104,10 @@ default_role = 'any'
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
-modindex_common_prefix = ['soco.', 'soco.music_services.']
+modindex_common_prefix = ["soco.", "soco.music_services."]
 
 # If true, keep warnings as "system message" paragraphs in the built documents.
 keep_warnings = True
@@ -117,40 +117,44 @@ todo_include_todos = True
 
 # Allow auto links into the Python and Requests docs
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3', None),
-    'requests': ('https://requests.readthedocs.io/en/master/', None)
+    "python": ("https://docs.python.org/3", None),
+    "requests": ("https://requests.readthedocs.io/en/master/", None),
 }
 
 # Shortcuts to Github Issues etc. Use them like this:
 # :issue:`123` (which will generate a link to issue 123)
 extlinks = {
-    'issue': ('https://github.com/SoCo/SoCo/issues/%s', '#'),
-    'PR': ('https://github.com/SoCo/SoCo/pull/%s', '#')
+    "issue": ("https://github.com/SoCo/SoCo/issues/%s", "#"),
+    "PR": ("https://github.com/SoCo/SoCo/pull/%s", "#"),
 }
 
 # Document members by default, and in source order. This allows the stub files
 # in the api directory to be much shorter.
-autodoc_default_flags = ['members']
-autodoc_member_order = 'bysource'
+autodoc_default_flags = ["members"]
+autodoc_member_order = "bysource"
 
 # Concatenate the class and __init__ docstrings
-autoclass_content = 'both'
+autoclass_content = "both"
 
 # Nicer inheritance graphs for RTD theme.  NB the image map does not rescale
 # properly, so we have had to add some javascript to handle it.  See
 # _templates and _static
 inheritance_node_attrs = dict(
-    fontsize=14, height=0.75, color='dodgerblue', style='rounded',
+    fontsize=14,
+    height=0.75,
+    color="dodgerblue",
+    style="rounded",
 )
 inheritance_graph_attrs = dict(
-    rankdir="LR", size='""',
+    rankdir="LR",
+    size='""',
 )
 
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -179,7 +183,7 @@ html_theme = 'sphinx_rtd_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -242,20 +246,17 @@ html_static_path = ['_static']
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'socodoc'
+htmlhelp_basename = "socodoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     # 'papersize': 'letterpaper',
-
     # The font size ('10pt', '11pt' or '12pt').
     # 'pointsize': '10pt',
-
     # Additional stuff for the LaTeX preamble.
     # 'preamble': '',
-
     # Latex figure (float) alignment
     # 'figure_align': 'htbp',
 }
@@ -264,8 +265,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'soco.tex', 'soco Documentation',
-     'Author', 'manual'),
+    (master_doc, "soco.tex", "soco Documentation", "Author", "manual"),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -293,10 +293,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'soco', 'soco Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, "soco", "soco Documentation", [author], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False
@@ -308,9 +305,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'soco', 'soco Documentation',
-     author, 'soco', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        master_doc,
+        "soco",
+        "soco Documentation",
+        author,
+        "soco",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -372,7 +375,7 @@ epub_copyright = copyright
 # epub_post_files = []
 
 # A list of files that should not be packed into the epub file.
-epub_exclude_files = ['search.html']
+epub_exclude_files = ["search.html"]
 
 # The depth of the table of contents in toc.ncx.
 # epub_tocdepth = 3

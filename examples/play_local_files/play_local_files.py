@@ -17,7 +17,6 @@ supply the zone name. The local machine IP should be autodetected.
 """
 
 
-
 import os
 import sys
 import time
