@@ -1210,8 +1210,10 @@ class SoCo(_SocoSingletonBase):
         # and the set of all members
         self._all_zones.clear()
         self._visible_zones.clear()
+        # Compatibilty fix for pre-10.1 firmwares
+        tree = tree.find("ZoneGroups") or tree
         # Loop over each ZoneGroup Element
-        for group_element in tree.find("ZoneGroups").findall("ZoneGroup"):
+        for group_element in tree.findall("ZoneGroup"):
             coordinator_uid = group_element.attrib["Coordinator"]
             group_uid = group_element.attrib["ID"]
             group_coordinator = None
