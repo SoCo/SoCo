@@ -1210,7 +1210,8 @@ class SoCo(_SocoSingletonBase):
         # and the set of all members
         self._all_zones.clear()
         self._visible_zones.clear()
-        # Compatibilty fix for pre-10.1 firmwares
+        # Compatibility fallback for pre-10.1 firmwares
+        # where a "ZoneGroups" element is not used
         tree = tree.find("ZoneGroups") or tree
         # Loop over each ZoneGroup Element
         for group_element in tree.findall("ZoneGroup"):
