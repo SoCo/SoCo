@@ -12,6 +12,39 @@ on:
       - 'v0.22.fixes'
 
 jobs:
+  SoCo-Check-Jobs-Py_3-10:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.10.0-beta.4
+      - name: Install dependencies
+        run: |
+          sudo apt-get install graphviz
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Lint with flake8 and pylint
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 soco
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          pylint soco
+      - name: Test with pytest
+        run: |
+          pytest --cov-config .coveragerc --cov soco .
+      - name: Test formatting with Black
+        run: |
+          black --check soco tests
+      - name: Test documentation build
+        run: |
+          make docs
+
   SoCo-Check-Jobs-Py_3-9:
 
     runs-on: ubuntu-latest
