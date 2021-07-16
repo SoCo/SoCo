@@ -3,16 +3,11 @@
 import re
 
 from ..plugins import SoCoPlugin
-from ..music_services import MusicService
 from ..exceptions import SoCoException
 
 
 class ShareClass:
     """Base class for supported services."""
-
-    def __init__(self, soco):
-        """Initialize the share object."""
-        self.soco = soco
 
     def canonical_uri(self, uri):
         """Recognize a share link and return its canonical representation.
@@ -25,22 +20,13 @@ class ShareClass:
         """
         raise NotImplementedError
 
-    def service_name(self):
-        """Return the service name.
-
-        Returns:
-            int: A name identifying the supported music service.
-        """
-        raise NotImplementedError
-
     def service_number(self):
         """Return the service number.
 
         Returns:
-            int: An ID matching the service_name().
+            int: A number identifying the supported music service.
         """
-        service = MusicService.get_data_for_name(self.service_name())
-        return service["ServiceType"]
+        raise NotImplementedError
 
     @staticmethod
     def magic():
@@ -87,14 +73,21 @@ class SpotifyShare(ShareClass):
 
         return None
 
-    def service_name(self):
-        return "Spotify"
+    def service_number(self):
+        return 2311
 
     def extract(self, uri):
         spotify_uri = self.canonical_uri(uri)
         share_type = spotify_uri.split(":")[1]
         encoded_uri = spotify_uri.replace(":", "%3a")
         return (share_type, encoded_uri)
+
+
+class SpotifyUSShare(SpotifyShare):
+    """Spotify US share class."""
+
+    def service_number(self):
+        return 3079
 
 
 class TIDALShare(ShareClass):
@@ -107,8 +100,8 @@ class TIDALShare(ShareClass):
 
         return None
 
-    def service_name(self):
-        return "TIDAL"
+    def service_number(self):
+        return 44551
 
     def extract(self, uri):
         tidal_uri = self.canonical_uri(uri)
@@ -123,7 +116,11 @@ class ShareLinkPlugin(SoCoPlugin):
     def __init__(self, soco):
         """Initialize the plugin."""
         super().__init__(soco)
-        self.services = [SpotifyShare(soco), TIDALShare(soco)]
+        self.services = [
+            SpotifyShare(),
+            SpotifyUSShare(),
+            TIDALShare(),
+        ]
 
     @property
     def name(self):
@@ -154,6 +151,8 @@ class ShareLinkPlugin(SoCoPlugin):
         Returns:
             int: The index of the new item in the queue.
         """
+        fault = SoCoException("Unsupported URI: " + uri)
+
         for service in self.services:
             if service.canonical_uri(uri):
                 (share_type, encoded_uri) = service.extract(uri)
@@ -179,16 +178,22 @@ class ShareLinkPlugin(SoCoPlugin):
                     sn=service.service_number(),
                 )
 
-                response = self.soco.avTransport.AddURIToQueue(
-                    [
-                        ("InstanceID", 0),
-                        ("EnqueuedURI", enqueue_uri),
-                        ("EnqueuedURIMetaData", metadata),
-                        ("DesiredFirstTrackNumberEnqueued", position),
-                        ("EnqueueAsNext", int(as_next)),
-                    ]
-                )
-                qnumber = response["FirstTrackNumberEnqueued"]
-                return int(qnumber)
+                try:
+                    response = self.soco.avTransport.AddURIToQueue(
+                        [
+                            ("InstanceID", 0),
+                            ("EnqueuedURI", enqueue_uri),
+                            ("EnqueuedURIMetaData", metadata),
+                            ("DesiredFirstTrackNumberEnqueued", position),
+                            ("EnqueueAsNext", int(as_next)),
+                        ]
+                    )
 
-        raise SoCoException("Unsupported URI: " + uri)
+                    qnumber = response["FirstTrackNumberEnqueued"]
+                    return int(qnumber)
+                except SoCoException as err:
+                    # Try remaining services on failure but keep the exception
+                    # around in case nothing succeeds.
+                    fault = err
+
+        raise fault
