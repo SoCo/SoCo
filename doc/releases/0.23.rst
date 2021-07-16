@@ -1,0 +1,23 @@
+SoCo 0.23 release notes
+***********************
+
+**SoCo 0.23** (Released on 2021-07-16), contains a number of new features as well as internal improvements.
+
+New Features and Improvements
+=============================
+
+* Add a `contactable()` function to filter out devices that are not reachable.
+* Add `end_direct_control_session()` method to stop remote control sessions (e.g., Spotify Connect).
+* Add `get_current_media_info()` method, useful for determining details of radio streams.
+* Add plugin for playback of Spotify and Tidal ShareLinks (experimental).
+* Restore compatibility for Sonos S1 systems running firmware versions earlier than 10.1.
+
+Developer/Code Improvements
+===========================
+
+* Logging severity has been adjusted in some areas to reduce the volume of logging output.
+
+Complete list of significant changes since v0.22
+================================================
+
+See: https://github.com/SoCo/SoCo/milestone/19?closed=1
