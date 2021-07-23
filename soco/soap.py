@@ -164,7 +164,7 @@ class SoapMessage(object):
 
         headers = {"Content-Type": 'text/xml; charset="utf-8"'}
         if soap_action is not None:
-            # FIXME The successful auth was with SOAP-Action 
+            # FIXME The successful auth was with SOAP-Action
             headers.update({"SOAPACTION": '"{}"'.format(soap_action)})
         if http_headers is not None:
             headers.update(http_headers)
@@ -281,7 +281,9 @@ class SoapMessage(object):
         """
 
         headers, data = self.prepare()
-        headers["Accept-Language"] = "en-US"
+        # Here could potentially go a Accept-Language header. See e.g. here for a
+        # description of how to do that for a music service: https://developer.sonos.com/
+        # build/content-service-get-started/soap-requests-and-responses/
 
         # Check log level before logging XML, since prettifying it is
         # expensive

@@ -426,7 +426,7 @@ class MusicService(object):
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
             token_store (`TokenStoreBase`): An token store instance. If none
-                is given, it will defauly to an instance of the
+                is given, it will default to an instance of the
                 `JsonFileTokenStore` using the 'default' token collection.
             device (SoCo): (Optional) If provided this device will be used for the
                 communication, if not the device returned by `discovery.any_soco` will be
@@ -979,62 +979,62 @@ class MusicService(object):
 # works. Think about another way to do it.
 
 
-def desc_from_uri(uri):
-    """Create the content of DIDL desc element from a uri.
-
-    Args:
-        uri (str): A uri, eg:
-            ``'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4'``
-
-    Returns:
-        str: The content of a desc element for that uri, eg
-            ``'SA_RINCON519_email@example.com'``
-    """
-    # FIXME
-    return "FAKE_DESC"
-    #
-    # If there is an sn parameter (which is the serial number of an account),
-    # we can obtain all the information we need from that, because we can find
-    # the relevant service_id in the account database (it is the same as the
-    # service_type). Consequently, the sid parameter is unneeded. But if sn is
-    # missing, we need the sid (service_type) parameter to find a relevant
-    # account
-
-    # urlparse does not work consistently with custom URI schemes such as
-    # those used by Sonos. This is especially broken in Python 2.6 and
-    # early versions of 2.7: http://bugs.python.org/issue9374
-    # As a workaround, we split off the scheme manually, and then parse
-    # the uri as if it were http
-    if ":" in uri:
-        _, uri = uri.split(":", 1)
-    query_string = parse_qs(urlparse(uri, "http").query)
-    # Is there an account serial number?
-    if query_string.get("sn"):
-        account_serial_number = query_string["sn"][0]
-        try:
-            account = Account.get_accounts()[account_serial_number]
-            desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
-            return desc
-        except KeyError:
-            # There is no account matching this serial number. Fall back to
-            # using the service id to find an account
-            pass
-    if query_string.get("sid"):
-        service_id = query_string["sid"][0]
-        for service in MusicService._get_music_services_data().values():
-            if service_id == service["ServiceID"]:
-                service_type = service["ServiceType"]
-                account = Account.get_accounts_for_service(service_type)
-                if not account:
-                    break
-                # Use the first account we find
-                account = account[0]
-                desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
-                return desc
-    # Nothing found. Default to the standard desc value. Is this the right
-    # thing to do?
-    desc = "RINCON_AssociatedZPUDN"
-    return desc
+# def desc_from_uri(uri):
+#     """Create the content of DIDL desc element from a uri.
+#
+#     Args:
+#         uri (str): A uri, eg:
+#             ``'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4'``
+#
+#     Returns:
+#         str: The content of a desc element for that uri, eg
+#             ``'SA_RINCON519_email@example.com'``
+#     """
+#     # FIXME
+#     return "FAKE_DESC"
+#     #
+#     # If there is an sn parameter (which is the serial number of an account),
+#     # we can obtain all the information we need from that, because we can find
+#     # the relevant service_id in the account database (it is the same as the
+#     # service_type). Consequently, the sid parameter is unneeded. But if sn is
+#     # missing, we need the sid (service_type) parameter to find a relevant
+#     # account
+#
+#     # urlparse does not work consistently with custom URI schemes such as
+#     # those used by Sonos. This is especially broken in Python 2.6 and
+#     # early versions of 2.7: http://bugs.python.org/issue9374
+#     # As a workaround, we split off the scheme manually, and then parse
+#     # the uri as if it were http
+#     if ":" in uri:
+#         _, uri = uri.split(":", 1)
+#     query_string = parse_qs(urlparse(uri, "http").query)
+#     # Is there an account serial number?
+#     if query_string.get("sn"):
+#         account_serial_number = query_string["sn"][0]
+#         try:
+#             account = Account.get_accounts()[account_serial_number]
+#             desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
+#             return desc
+#         except KeyError:
+#             # There is no account matching this serial number. Fall back to
+#             # using the service id to find an account
+#             pass
+#     if query_string.get("sid"):
+#         service_id = query_string["sid"][0]
+#         for service in MusicService._get_music_services_data().values():
+#             if service_id == service["ServiceID"]:
+#                 service_type = service["ServiceType"]
+#                 account = Account.get_accounts_for_service(service_type)
+#                 if not account:
+#                     break
+#                 # Use the first account we find
+#                 account = account[0]
+#                 desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
+#                 return desc
+#     # Nothing found. Default to the standard desc value. Is this the right
+#     # thing to do?
+#     desc = "RINCON_AssociatedZPUDN"
+#     return desc
 
 
 # Saved old auth code from MusicServiceSoapClient.get_soap_header, that should be kept around
