@@ -41,7 +41,7 @@ import requests
 from .cache import Cache
 from . import events
 from . import config
-from .exceptions import SoCoUPnPException, UnknownSoCoException
+from .exceptions import NotSupportedException, SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 from .xml import XML, illegal_xml_re
 
@@ -496,6 +496,10 @@ class Service:
             # error, since we would want to try a network call again.
             cache.put(result, action, args, timeout=cache_timeout)
             return result
+        elif status == 405:
+            raise NotSupportedException(
+                "{} not supported on {}".format(action, self.soco.ip_address)
+            )
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
             # device does not like the action for some reason. The returned
