@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme
-
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
 
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
 """
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
+
+from urllib.parse import quote as quote_url
+from urllib.parse import urlparse, parse_qs
 
 import requests
 import time
@@ -21,7 +19,6 @@ from xmltodict import parse
 from .. import discovery
 from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException, MusicServiceAuthException
-
 # from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem
 from .token_store import JsonFileTokenStore
@@ -33,7 +30,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-instance-attributes, protected-access
-class MusicServiceSoapClient(object):
+class MusicServiceSoapClient:
 
     """A SOAP client for accessing Music Services.
 
@@ -302,7 +299,7 @@ class MusicServiceSoapClient(object):
 
 
 # pylint: disable=too-many-instance-attributes
-class MusicService(object):
+class MusicService:
 
     """The MusicService class provides access to third party music services.
 
@@ -469,7 +466,7 @@ class MusicService(object):
         )
 
     def __repr__(self):
-        return "<{0} '{1}' at {2}>".format(
+        return "<{} '{}' at {}>".format(
             self.__class__.__name__, self.service_name, hex(id(self))
         )
 

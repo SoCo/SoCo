@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance
 
@@ -9,9 +7,11 @@ The Music Library is the collection of music stored on your local network.
 For access to third party music streaming services, see the
 `music_service` module."""
 
-from __future__ import unicode_literals
 
 import logging
+
+from urllib.parse import quote as quote_url
+
 import xmltodict
 
 from . import discovery
@@ -19,12 +19,11 @@ from .data_structures import SearchResult, DidlResource, DidlObject, DidlMusicAl
 from .data_structures_entry import from_didl_string
 from .exceptions import SoCoUPnPException
 from .utils import url_escape_path, really_unicode, camel_to_underscore
-from .compat import quote_url
 
 _LOG = logging.getLogger(__name__)
 
 
-class MusicLibrary(object):
+class MusicLibrary:
     """The Music Library."""
 
     # Key words used when performing searches

@@ -1,11 +1,4 @@
-# -*- coding: utf-8 -*-
-
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
-
 """This module contains classes relating to Sonos Alarms."""
-
-from __future__ import unicode_literals
 
 import logging
 import re
@@ -24,7 +17,7 @@ def is_valid_recurrence(text):
     """Check that ``text`` is a valid recurrence string.
 
     A valid recurrence string is  ``DAILY``, ``ONCE``, ``WEEKDAYS``,
-    ``WEEKENDS`` or of the form ``ON_DDDDDD`` where ``D`` is a number from 0-7
+    ``WEEKENDS`` or of the form ``ON_DDDDDD`` where ``D`` is a number from 0-6
     representing a day of the week (Sunday is 0), e.g. ``ON_034`` meaning
     Sunday, Wednesday and Thursday
 
@@ -43,7 +36,7 @@ def is_valid_recurrence(text):
         False
         >>> is_valid_recurrence('ON_132')  # Mon, Tue, Wed
         True
-        >>> is_valid_recurrence('ON_777')  # Sat
+        >>> is_valid_recurrence('ON_666')  # Sat
         True
         >>> is_valid_recurrence('ON_3421') # Mon, Tue, Wed, Thur
         True
@@ -52,10 +45,10 @@ def is_valid_recurrence(text):
     """
     if text in ("DAILY", "ONCE", "WEEKDAYS", "WEEKENDS"):
         return True
-    return re.search(r"^ON_[0-7]{1,7}$", text) is not None
+    return re.search(r"^ON_[0-6]{1,7}$", text) is not None
 
 
-class Alarm(object):
+class Alarm:
 
     """A class representing a Sonos Alarm.
 
@@ -115,7 +108,7 @@ class Alarm(object):
             recurrence (str, optional): A string representing how
                 often the alarm should be triggered. Can be ``DAILY``,
                 ``ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
-                ``ON_DDDDDD`` where ``D`` is a number from 0-7 representing a
+                ``ON_DDDDDD`` where ``D`` is a number from 0-6 representing a
                 day of the week (Sunday is 0), e.g. ``ON_034`` meaning Sunday,
                 Wednesday and Thursday. Defaults to ``DAILY``.
             enabled (bool, optional): `True` if alarm is enabled, `False`
@@ -158,7 +151,7 @@ class Alarm(object):
 
     def __repr__(self):
         middle = str(self.start_time.strftime(TIME_FORMAT))
-        return "<{0} id:{1}@{2} at {3}>".format(
+        return "<{} id:{}@{} at {}>".format(
             self.__class__.__name__, self._alarm_id, middle, hex(id(self))
         )
 
@@ -214,6 +207,9 @@ class Alarm(object):
     def save(self):
         """Save the alarm to the Sonos system.
 
+        Returns:
+            str: The alarm ID, or `None` if no alarm was saved.
+
         Raises:
             ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
                 because there
@@ -246,6 +242,7 @@ class Alarm(object):
             # The alarm has been saved before. Update it instead.
             args.insert(0, ("ID", self._alarm_id))
             self.zone.alarmClock.UpdateAlarm(args)
+        return self._alarm_id
 
     def remove(self):
         """Remove the alarm from the Sonos system.
@@ -260,6 +257,11 @@ class Alarm(object):
         except KeyError:
             pass
         self._alarm_id = None
+
+    @property
+    def alarm_id(self):
+        """`str`: The ID of the alarm, or `None`."""
+        return self._alarm_id
 
 
 def get_alarms(zone=None):
@@ -343,3 +345,23 @@ def get_alarms(zone=None):
 
         result.add(instance)
     return result
+
+
+def remove_alarm_by_id(zone, alarm_id):
+    """Remove an alarm from the Sonos system by its ID.
+
+    Args:
+        zone (`SoCo`): A SoCo instance, which can be any zone that belongs
+            to the Sonos system in which the required alarm is defined.
+        alarm_id (str): The ID of the alarm to be removed.
+
+    Returns:
+        bool: `True` if the alarm is found and removed, `False` otherwise.
+    """
+    alarms = get_alarms(zone)
+    for alarm in alarms:
+        if alarm.alarm_id == alarm_id:
+            alarm.remove()
+            return True
+
+    return False

@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=not-context-manager
 
 # NOTE: The pylint not-content-manager warning is disabled pending the fix of
 # a bug in pylint. See https://github.com/PyCQA/pylint/issues/782
-
-# Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance
 
 
 """Classes to handle Sonos UPnP Events and Subscriptions.
@@ -20,11 +16,7 @@ Example:
 
     Run this code, and change your volume, tracks etc::
 
-        from __future__ import print_function
-        try:
-            from queue import Empty
-        except:  # Py2.7
-            from Queue import Empty
+        from queue import Empty
 
         import logging
         logging.basicConfig()
@@ -58,15 +50,17 @@ Example:
 
 """
 
-from __future__ import unicode_literals
 
 import errno
 import logging
+import socketserver
 import threading
 
-import requests
+from http.server import BaseHTTPRequestHandler
+from urllib.error import URLError
+from urllib.request import urlopen
 
-from .compat import BaseHTTPRequestHandler, URLError, socketserver, urlopen
+import requests
 
 # Event is imported so that 'from events import Events' still works
 # pylint: disable=unused-import
@@ -116,7 +110,7 @@ class EventNotifyHandler(BaseHTTPRequestHandler, EventNotifyHandlerBase):
 
     # pylint: disable=no-self-use, missing-docstring
     def log_event(self, seq, service_id, timestamp):
-        log.info(
+        log.debug(
             "Event %s received for %s service on thread %s at %s",
             seq,
             service_id,
@@ -151,7 +145,7 @@ class EventServerThread(threading.Thread):
         Handling of requests is delegated to an instance of the
         `EventNotifyHandler` class.
         """
-        log.info("Event listener running on %s", self.server.server_address)
+        log.debug("Event listener running on %s", self.server.server_address)
         # Listen for events until told to stop
         while not self.stop_flag.is_set():
             self.server.handle_request()
@@ -225,7 +219,8 @@ class EventListener(EventListenerBase):
         self._listener_thread.stop()
         # Send a dummy request in case the http server is currently listening
         try:
-            urlopen("http://%s:%s/" % (address[0], address[1]))
+            # pylint: disable=R1732
+            urlopen("http://{}:{}/".format(address[0], address[1]))
         except URLError:
             # If the server is already shut down, we receive a socket error,
             # which we ignore.
@@ -376,7 +371,7 @@ class Subscription(SubscriptionBase):
         self._auto_renew_thread_flag.set()
 
     # pylint: disable=no-self-use, too-many-arguments
-    def _request(self, method, url, headers, success):
+    def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 
         Args:
@@ -387,13 +382,31 @@ class Subscription(SubscriptionBase):
             success (function): A function to be called if the
                 request succeeds. The function will be called with a dict
                 of response headers as its only parameter.
+            unconditional (function): An optional function to be called after
+                the request is complete, regardless of its success. Takes
+                no parameters.
 
         """
-        response = requests.request(method, url, headers=headers)
-        response.raise_for_status()
+        response = None
+        try:
+            response = requests.request(method, url, headers=headers, timeout=3)
+        except requests.exceptions.RequestException:
+            # Ignore timeout for unsubscribe since we are leaving anyway.
+            if method != "UNSUBSCRIBE":
+                raise
+
+        # Ignore "412 Client Error: Precondition Failed for url:" from
+        # rebooted speakers. The reboot will have unsubscribed us which is
+        # what we are trying to do.
+        if response and response.status_code != 412:
+            response.raise_for_status()
+
         if success:
             success(response.headers)
+        if unconditional:
+            unconditional()
 
+    # pylint: disable=inconsistent-return-statements
     def _wrap(self, method, strict, *args, **kwargs):
 
         """This is a wrapper for `Subscription.subscribe`, `Subscription.renew`

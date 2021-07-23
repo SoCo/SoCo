@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the SoCoSingletonBase and _ArgsSingleton classes in core."""
 
-from __future__ import unicode_literals
 
 import pytest
 

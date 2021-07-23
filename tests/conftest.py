@@ -14,7 +14,7 @@ THISDIR = path.dirname(path.abspath(__file__))
 
 
 def pytest_addoption(parser):
-    """ Add the --ip commandline option """
+    """Add the --ip commandline option"""
     parser.addoption(
         "--ip",
         type=str,
@@ -31,7 +31,7 @@ def pytest_runtest_setup(item):
         pytest.skip("use --ip and an ip address to run integration tests.")
 
 
-class Helpers(object):
+class Helpers:
     """Test helper functions"""
 
     @staticmethod

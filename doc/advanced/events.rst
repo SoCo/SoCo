@@ -7,6 +7,7 @@ Events
    :maxdepth: 1
 
    events_twisted
+   events_asyncio
 
 You can receive events about changes on the Sonos network.
 
@@ -26,6 +27,9 @@ event.
 See :ref:`the events_twisted module <events_twisted>` page for more
 information about :mod:`soco.events_twisted`.
 
+See :ref:`the events_asyncio module <events_asyncio>` page for more
+information about :mod:`soco.events_asyncio`.
+
 Example: setting up
 -------------------
 
@@ -34,10 +38,7 @@ Example: setting up
 
 .. code-block:: python
 
-    try:
-        from queue import Empty
-    except:  # Py2.7
-        from Queue import Empty
+    from queue import Empty
 
     import soco
     from soco.events import event_listener
@@ -98,6 +99,11 @@ Example: setting up
     if __name__=='__main__':
         reactor.callWhenRunning(main)
         reactor.run()
+
+:mod:`soco.events_asyncio`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+See :mod:`soco.events_asyncio` for a setup example.
 
 Examples: specific features
 ---------------------------

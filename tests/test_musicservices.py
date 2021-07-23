@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """Tests for the music_service module."""
 
-from __future__ import unicode_literals
 
-import mock
+from unittest import mock
 import pytest
 
 import soco.soap

@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the alarms module."""
 
-from __future__ import unicode_literals
 
 from soco.alarms import is_valid_recurrence
 

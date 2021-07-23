@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable-msg=too-few-public-methods, redefined-outer-name, no-self-use
 
 """This file contains the classes used to perform integration tests on the
@@ -16,7 +15,6 @@ interrupted at every unit test!
 PLEASE RESPECT THIS.
 """
 
-from __future__ import unicode_literals
 
 import time
 
@@ -39,7 +37,7 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.yield_fixture(scope="session")
+@pytest.fixture(scope="session")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
@@ -87,12 +85,12 @@ def wait(interval=0.1):
     time.sleep(interval)
 
 
-class TestVolume(object):
+class TestVolume:
     """Integration tests for the volume property."""
 
     valid_values = range(101)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_volume(self, soco):
         """A fixture which restores volume after each test in the class is
         run."""
@@ -133,7 +131,7 @@ class TestVolume(object):
         assert soco.volume == 0
 
 
-class TestBass(object):
+class TestBass:
     """Integration tests for the bass property.
 
     This class implements a full boundary value test.
@@ -141,7 +139,7 @@ class TestBass(object):
 
     valid_values = range(-10, 11)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_bass(self, soco):
         """A fixture which restores bass EQ after each test in the class is
         run."""
@@ -171,7 +169,7 @@ class TestBass(object):
         assert soco.bass == self.valid_values[-1]
 
 
-class TestTreble(object):
+class TestTreble:
     """Integration tests for the treble property.
 
     This class implements a full boundary value test.
@@ -179,7 +177,7 @@ class TestTreble(object):
 
     valid_values = range(-10, 11)
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_treble(self, soco):
         """A fixture which restores treble EQ after each test in the class is
         run."""
@@ -209,7 +207,7 @@ class TestTreble(object):
         assert soco.treble == self.valid_values[-1]
 
 
-class TestMute(object):
+class TestMute:
     """Integration test for the mute method."""
 
     def test(self, soco):
@@ -227,7 +225,7 @@ class TestMute(object):
         assert soco.mute is False
 
 
-class TestGetCurrentTransportInfo(object):
+class TestGetCurrentTransportInfo:
     """Integration test for the get_current_transport_info method."""
 
     # The values in this list must be kept up to date with the values in
@@ -253,7 +251,7 @@ class TestGetCurrentTransportInfo(object):
             assert value is not None
 
 
-class TestTransport(object):
+class TestTransport:
     """Integration tests for transport methods (play, pause etc)."""
 
     def test_pause_and_play(self, soco):
@@ -303,7 +301,7 @@ class TestTransport(object):
                 soco.seek(string)
 
 
-class TestGetCurrentTrackInfo(object):
+class TestGetCurrentTrackInfo:
     """Integration test for the get_current_track_info method."""
 
     info_keys = sorted(
@@ -321,7 +319,7 @@ class TestGetCurrentTrackInfo(object):
     )
 
     def test_get(self, soco):
-        """Test is the return value is a dictinary and contains the following
+        """Test that the return value is a dictionary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position.
         """
@@ -330,7 +328,26 @@ class TestGetCurrentTrackInfo(object):
         assert sorted(info.keys()) == self.info_keys
 
 
-class TestGetSpeakerInfo(object):
+class TestGetCurrentMediaInfo:
+    """Integration test for the get_current_media_info method."""
+
+    info_keys = sorted(
+        [
+            "uri",
+            "channel",
+        ]
+    )
+
+    def test_get(self, soco):
+        """Test that the return value is a dictionary and contains the expected
+        keys.
+        """
+        info = soco.get_current_media_info()
+        assert isinstance(info, dict)
+        assert sorted(info.keys()) == self.info_keys
+
+
+class TestGetSpeakerInfo:
     """Integration test for the get_speaker_info method."""
 
     # The values in this list must be kept up to date with the values in
@@ -362,7 +379,7 @@ class TestGetSpeakerInfo(object):
 # TODO: test GetSpeakersIp
 
 
-class TestGetQueue(object):
+class TestGetQueue:
     """Integration test for the get_queue method."""
 
     # The values in this list must be kept up to date with the values in
@@ -384,7 +401,7 @@ class TestGetQueue(object):
                 assert getattr(item, key)
 
 
-class TestAddToQueue(object):
+class TestAddToQueue:
     """Integration test for the add_to_queue method."""
 
     def test_add_to_queue(self, soco):
@@ -401,7 +418,7 @@ class TestAddToQueue(object):
         assert (new_queue[-1].title) == (new_queue[-2].title)
 
 
-class TestRemoveFromQueue(object):
+class TestRemoveFromQueue:
     """Integration test for the remove_from_queue method."""
 
     def test(self, soco):
@@ -416,13 +433,13 @@ class TestRemoveFromQueue(object):
         assert len(new_queue) == len(old_queue) - 1
 
 
-class TestSonosPlaylist(object):
+class TestSonosPlaylist:
     """Integration tests for Sonos Playlist Management."""
 
     existing_playlists = None
     playlist_name = "zSocoTestPlayList42"
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_sonos_playlists(self, soco):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
@@ -494,12 +511,12 @@ class TestSonosPlaylist(object):
             soco.remove_sonos_playlist("SQ:{}".format(hpl_i + 1))
 
 
-class TestTimer(object):
+class TestTimer:
     """Integration tests for timers on Sonos"""
 
     existing_timer = None
 
-    @pytest.yield_fixture(autouse=True)
+    @pytest.fixture(autouse=True)
     def restore_timer(self, soco):
         """A fixture which cleans up after each timer test."""
         existing_timer = soco.get_sleep_timer()
@@ -518,7 +535,7 @@ class TestTimer(object):
             )
 
 
-class TestReorderSonosPlaylist(object):
+class TestReorderSonosPlaylist:
     """Integration tests for Sonos Playlist Management."""
 
     existing_playlists = None
@@ -526,7 +543,7 @@ class TestReorderSonosPlaylist(object):
     test_playlist = None
     queue_length = None
 
-    @pytest.yield_fixture(autouse=True, scope="class")
+    @pytest.fixture(autouse=True, scope="class")
     def restore_sonos_playlists(self, soco):
         """A fixture which cleans up after each sonos playlist test."""
         if self.existing_playlists is None:
@@ -914,7 +931,7 @@ class TestReorderSonosPlaylist(object):
             soco.get_sonos_playlist_by_attr("item_id", "wilma")
 
 
-class TestMusicLibrary(object):
+class TestMusicLibrary:
     """The the music library methods"""
 
     search_types = list(MusicLibrary.SEARCH_TRANSLATION.keys())

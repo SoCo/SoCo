@@ -1,19 +1,22 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-import mock
+from unittest import mock
 import pytest
+import requests_mock
 
 from soco import SoCo
 from soco.data_structures import DidlMusicTrack, to_didl_string
-from soco.exceptions import SoCoSlaveException, SoCoUPnPException
+from soco.exceptions import (
+    SoCoSlaveException,
+    SoCoUPnPException,
+    SoCoNotVisibleException,
+    NotSupportedException,
+)
 from soco.groups import ZoneGroup
 from soco.xml import XML
 
 IP_ADDR = "192.168.1.101"
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco():
     """A mock soco with fake services and hardcoded is_coordinator.
 
@@ -40,7 +43,7 @@ def moco():
         patch.stop()
 
 
-@pytest.yield_fixture()
+@pytest.fixture()
 def moco_only_on_master():
     """A mock soco with fake services.
 
@@ -184,7 +187,7 @@ ZGS = (
 )
 
 
-@pytest.yield_fixture
+@pytest.fixture()
 def moco_zgs(moco):
     """A mock soco with zone group state."""
     moco.zoneGroupTopology.GetZoneGroupState.return_value = {"ZoneGroupState": ZGS}
@@ -429,6 +432,8 @@ class TestSoco:
             ("Sonos Beam", True),
             ("Sonos Playbar", True),
             ("Sonos Playbase", True),
+            ("Sonos Arc", True),
+            ("Sonos Arc SL", True),
         ),
     )
     def test_soco_is_soundbar(self, moco, model_name):
@@ -570,6 +575,22 @@ class TestAVTransport:
             [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
         )
 
+    def test_available_actions(self, moco):
+        moco.avTransport.GetCurrentTransportActions.return_value = {
+            "Actions": "Set, Stop, Pause, Play, X_DLNA_SeekTime, X_DLNA_SeekTrackNr"
+        }
+        assert moco.available_actions == [
+            "Set",
+            "Stop",
+            "Pause",
+            "Play",
+            "SeekTime",
+            "SeekTrackNr",
+        ]
+        moco.avTransport.GetCurrentTransportActions.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+
     def test_soco_cross_fade2(self, moco):
         moco.avTransport.GetCrossfadeMode.return_value = {"CrossfadeMode": "1"}
         assert moco.cross_fade
@@ -686,6 +707,12 @@ class TestAVTransport:
     def test_soco_stop(self, moco):
         moco.stop()
         moco.avTransport.Stop.assert_called_once_with([("InstanceID", 0), ("Speed", 1)])
+
+    def test_soco_end_direct_control_session(self, moco):
+        moco.end_direct_control_session()
+        moco.avTransport.EndDirectControlSession.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
 
     def test_soco_next(self, moco):
         moco.next()
@@ -996,6 +1023,52 @@ class TestAVTransport:
             [("InstanceID", 0), ("CrossfadeMode", "0")]
         )
 
+    def test_shuffle(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.shuffle is False
+        moco.avTransport.GetTransportSettings.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.shuffle = True
+        moco.avTransport.SetPlayMode.assert_called_once_with(
+            [("InstanceID", 0), ("NewPlayMode", "SHUFFLE_NOREPEAT")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {
+            "PlayMode": "SHUFFLE_NOREPEAT"
+        }
+        assert moco.shuffle is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.shuffle = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+    def test_repeat(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.repeat is False
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = True
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ALL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ALL"}
+        assert moco.repeat is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ONE"}
+        assert moco.repeat == "ONE"
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = "ONE"
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ONE")]
+        )
+
     def test_set_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
         moco.avTransport.ConfigureSleepTimer.return_value = None
@@ -1148,6 +1221,79 @@ class TestRenderingControl:
             [("InstanceID", 0), ("Channel", "Master"), ("DesiredLoudness", "0")]
         )
 
+    def test_soco_trueplay(self, moco):
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "0",
+            "RoomCalibrationEnabled": "0",
+        }
+        assert moco.trueplay is None
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetRoomCalibrationStatus.return_value = {
+            "RoomCalibrationAvailable": "1",
+            "RoomCalibrationEnabled": "1",
+        }
+        assert moco.trueplay
+        moco.renderingControl.GetRoomCalibrationStatus.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        # Setter tests for 'is_visible' property, so this needs to be
+        # mocked.
+        with mock.patch(
+            "soco.SoCo.is_visible", new_callable=mock.PropertyMock
+        ) as mock_is_visible:
+            mock_is_visible.return_value = True
+            moco.trueplay = False
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "0"),
+                ]
+            )
+            moco.trueplay = True
+            moco.renderingControl.SetRoomCalibrationStatus.assert_called_with(
+                [
+                    ("InstanceID", 0),
+                    ("RoomCalibrationEnabled", "1"),
+                ]
+            )
+            # Check for exception if attempt to set the property on a
+            # non-visible speaker.
+            mock_is_visible.return_value = False
+            with pytest.raises(SoCoNotVisibleException):
+                moco.trueplay = True
+
+    def test_soco_fixed_volume(self, moco):
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "1"
+        }
+        assert moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetSupportsOutputFixed.return_value = {
+            "CurrentSupportsFixed": "0"
+        }
+        assert not moco.supports_fixed_volume
+        moco.renderingControl.GetSupportsOutputFixed.assert_called_with(
+            [("InstanceID", 0)]
+        )
+        moco.renderingControl.GetOutputFixed.return_value = {"CurrentFixed": "1"}
+        assert moco.fixed_volume
+        moco.renderingControl.GetOutputFixed.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.fixed_volume = False
+        moco.renderingControl.SetOutputFixed.assert_called_once_with(
+            [("InstanceID", 0), ("DesiredFixed", "0")]
+        )
+        moco.renderingControl.SetOutputFixed.side_effect = SoCoUPnPException(
+            None, None, None
+        )
+        with pytest.raises(NotSupportedException):
+            moco.fixed_volume = True
+
     def test_soco_balance(self, moco):
         # GetVolume is called twice, once for each of the left
         # and right channels
@@ -1189,6 +1335,36 @@ class TestDeviceProperties:
             [("DesiredLEDState", "On")]
         )
 
+    def test_buttons_enabled(self, moco):
+        moco.deviceProperties.GetButtonLockState.return_value = {
+            "CurrentButtonLockState": "On"
+        }
+        assert not moco.buttons_enabled
+        moco.deviceProperties.GetButtonLockState.return_value = {
+            "CurrentButtonLockState": "Off"
+        }
+        assert moco.buttons_enabled
+        moco.deviceProperties.GetButtonLockState.assert_called_with()
+        # Setter tests for 'is_visible' property, so this needs to be
+        # mocked.
+        with mock.patch(
+            "soco.SoCo.is_visible", new_callable=mock.PropertyMock
+        ) as mock_is_visible:
+            mock_is_visible.return_value = True
+            moco.buttons_enabled = False
+            moco.deviceProperties.SetButtonLockState.assert_called_once_with(
+                [("DesiredButtonLockState", "On")]
+            )
+            moco.buttons_enabled = True
+            moco.deviceProperties.SetButtonLockState.assert_called_with(
+                [("DesiredButtonLockState", "Off")]
+            )
+            # Check for exception if attempt to set the property on a
+            # non-visible speaker.
+            mock_is_visible.return_value = False
+            with pytest.raises(SoCoNotVisibleException):
+                moco.buttons_enabled = True
+
     def test_soco_set_player_name(self, moco):
         moco.player_name = "μИⅠℂ☺ΔЄ💋"
         moco.deviceProperties.SetZoneAttributes.assert_called_once_with(
@@ -1218,6 +1394,44 @@ class TestDeviceProperties:
         moco.deviceProperties.RemoveBondedZones.assert_called_once_with(
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
+
+    def test_get_battery_info(self, moco):
+        url = "http://" + moco.ip_address + ":1400/status/batterystatus"
+
+        # A speaker that returns battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n<?xml-stylesheet type="text/xsl"'
+                + 'href="/xml/review.xsl"?><ZPSupportInfo><LocalBatteryStatus>\n'
+                + '<Data name="Health">GREEN</Data>\n<Data name="Level">100</Data>\n'
+                + '<Data name="Temperature">NORMAL</Data>\n'
+                + '<Data name="PowerSource">SONOS_CHARGING_RING</Data>\n'
+                + "</LocalBatteryStatus></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            assert moco.get_battery_info() == {
+                "Health": "GREEN",
+                "Level": 100,
+                "Temperature": "NORMAL",
+                "PowerSource": "SONOS_CHARGING_RING",
+            }
+
+        # A speaker that doesn't have battery information
+        with requests_mock.Mocker() as m:
+            response_text = (
+                '<?xml version="1.0" ?>\n'
+                + '<?xml-stylesheet type="text/xsl" href="/xml/review.xsl"?>'
+                + "<ZPSupportInfo></ZPSupportInfo>"
+            )
+            m.get(url, text=response_text)
+            with pytest.raises(NotSupportedException):
+                moco.get_battery_info()
+
+        # A network request that fails
+        with requests_mock.Mocker() as m:
+            m.get(url, status_code=404)
+            with pytest.raises(ConnectionError):
+                moco.get_battery_info()
 
 
 class TestZoneGroupTopology:

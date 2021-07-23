@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 # This illustrates how to use SoCo plugins
 # an example plugin is provided in soco.plugins.example.ExamplePlugin
 
-from __future__ import print_function
 import time
 
 from soco import SoCo

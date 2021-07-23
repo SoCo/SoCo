@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 #
 # soco documentation build configuration file, created by
 # sphinx-quickstart on Mon Sep 14 08:03:37 2015.

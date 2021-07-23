@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """This module implements 'quirks' for the DIDL-Lite data structures
 
 A quirk, in this context, means that a specific music service does not follow

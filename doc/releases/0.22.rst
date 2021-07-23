@@ -1,0 +1,23 @@
+SoCo 0.22 release notes
+***********************
+
+**SoCo 0.22** (Released on 2021-04-17), contains a number of new features as well as internal improvements.
+
+New Features and Improvements
+=============================
+
+* Add an **available_actions** property to determine what actions are currently permitted on a player.
+* Add the ability to **remove alarms** from the system by **Alarm ID**.
+* Add **shuffle** and **repeat** as directly gettable/settable properties of a player.
+* Add the ability to specify a track number when using **seek**.
+* Add events handling using **asyncio**, as an alternative to the standard and Twisted events approaches.
+
+Developer/Code Improvements
+===========================
+
+* We've made a broad set of changes to remove legacy code related to Python 2 compatibility.
+
+Complete list of significant changes since v0.21
+================================================
+
+See: https://github.com/SoCo/SoCo/milestone/18?closed=1

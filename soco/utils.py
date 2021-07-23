@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance,import-outside-toplevel
 
 """This class contains utility functions used internally by SoCo."""
 
-from __future__ import absolute_import, print_function, unicode_literals
 
 import functools
 import re
 import warnings
+from urllib.parse import quote as quote_url
 
-from .compat import StringType, UnicodeType, quote_url
 from .xml import XML
 
 
@@ -30,7 +27,7 @@ def really_unicode(in_string):
     Raises:
         ValueError
     """
-    if isinstance(in_string, StringType):
+    if isinstance(in_string, bytes):
         for args in (("utf-8",), ("latin-1",), ("ascii", "replace")):
             try:
                 # pylint: disable=star-args
@@ -38,7 +35,7 @@ def really_unicode(in_string):
                 break
             except UnicodeDecodeError:
                 continue
-    if not isinstance(in_string, UnicodeType):
+    if not isinstance(in_string, str):
         raise ValueError("%s is not a string at all." % in_string)
     return in_string
 
@@ -115,7 +112,7 @@ def show_xml(xml):
     print(prettify(string))
 
 
-class deprecated(object):
+class deprecated:
 
     """A decorator for marking deprecated objects.
 

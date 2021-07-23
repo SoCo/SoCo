@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=fixme
 
 # Disable while we have Python 2.x compatability
@@ -27,7 +26,6 @@ services.
 # Some is the same as that in services.py.
 # TODO: refactor services.py to depend on this code
 
-from __future__ import absolute_import, unicode_literals
 
 import logging
 from xml.sax.saxutils import escape
@@ -61,7 +59,7 @@ class SoapFault(SoCoException):
         super().__init__(faultcode, faultstring)
 
     def __str__(self):
-        return "%s: %s" % (self.faultcode, self.faultstring)
+        return "{}: {}".format(self.faultcode, self.faultstring)
 
     def __repr__(self):
         return "SoapFault(faultcode={}, faultstring={}, detail={})".format(
@@ -98,7 +96,7 @@ class SoapFault(SoCoException):
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 
 
-class SoapMessage(object):
+class SoapMessage:
 
     """A SOAP Message representing a remote procedure call.
 

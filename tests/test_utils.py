@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 """Tests for the utils module."""
 
-from __future__ import unicode_literals
 
 from soco.utils import deprecated
 

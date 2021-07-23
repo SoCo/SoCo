@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # pylint: disable=R0201,E0711
 
 # Disable while we have Python 2.x compatability
@@ -16,7 +15,7 @@ import importlib
 _LOG = logging.getLogger(__name__)
 
 
-class SoCoPlugin(object):
+class SoCoPlugin:
 
     """The base class for SoCo plugins."""
 
@@ -27,7 +26,7 @@ class SoCoPlugin(object):
 
     @property
     def name(self):
-        """ human-readable name of the plugin """
+        """Human-readable name of the plugin"""
         raise NotImplementedError("Plugins should overwrite the name property")
 
     @classmethod
