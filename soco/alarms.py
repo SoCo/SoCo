@@ -95,7 +95,7 @@ class Alarms(_SocoSingletonBase):
 
     def __init__(self) -> None:
         """Initialize the instance."""
-        self.alarms: Dict[int, Alarm] = {}
+        self.alarms: Dict[int, 'Alarm'] = {}
         self._last_zone_used: Optional[SoCo] = None
         self._last_alarm_list_version: Optional[str] = None
         self.last_uid: Optional[str] = None
@@ -191,10 +191,10 @@ class Alarm:
         self,
         zone: SoCo,
         start_time: Optional[datetime.time] = None,
-        duration: datetime.time | None = None,
+        duration: Optional[datetime.time] = None,
         recurrence: str = "DAILY",
         enabled: bool = True,
-        program_uri: str = None,
+        program_uri: Optional[str] = None,
         program_metadata: str = "",
         play_mode: str = "NORMAL",
         volume: int = 20,
@@ -372,7 +372,7 @@ class Alarm:
         return self._alarm_id
 
 
-def get_alarms(zone: Optional[SoCo] = None) -> Set[Alarm]:
+def get_alarms(zone: Optional[SoCo] = None) -> Set['Alarm']:
     """Get a set of all alarms known to the Sonos system.
 
     Args:
