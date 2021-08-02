@@ -1,10 +1,8 @@
 """This module contains classes relating to Sonos Alarms."""
-from __future__ import annotations
-
 import logging
 import re
 from datetime import datetime
-from typing import Any, Iterable
+from typing import Any, Dict, Iterable, Optional, Set, Union
 
 from . import discovery
 from .core import _SocoSingletonBase, PLAY_MODES, SoCo
@@ -97,10 +95,10 @@ class Alarms(_SocoSingletonBase):
 
     def __init__(self) -> None:
         """Initialize the instance."""
-        self.alarms: dict[int, Alarm] = {}
-        self._last_zone_used: SoCo | None = None
-        self._last_alarm_list_version: str | None = None
-        self.last_uid: str | None = None
+        self.alarms: Dict[int, Alarm] = {}
+        self._last_zone_used: Optional[SoCo] = None
+        self._last_alarm_list_version: Optional[str] = None
+        self.last_uid: Optional[str] = None
         self.last_id: int = 0
 
     @property
@@ -120,15 +118,15 @@ class Alarms(_SocoSingletonBase):
         for alarm in list(self.alarms.values()):
             yield alarm
 
-    def __getitem__(self, alarm_id: int) -> Alarm:
+    def __getitem__(self, alarm_id: int) -> 'Alarm':
         """Return the alarm by ID."""
         return self.alarms[alarm_id]
 
-    def get(self, alarm_id: int) -> Alarm | None:
+    def get(self, alarm_id: int) -> Optional['Alarm']:
         """Return the alarm by ID or None."""
         return self.alarms.get(alarm_id)
 
-    def update(self, zone: SoCo | None = None) -> None:
+    def update(self, zone: Optional[SoCo]) -> None:
         """Update all alarms and current alarm list version.
 
         Raises:
@@ -192,7 +190,7 @@ class Alarm:
     def __init__(
         self,
         zone: SoCo,
-        start_time: datetime.time | None = None,
+        start_time: Optional[datetime.time] = None,
         duration: datetime.time | None = None,
         recurrence: str = "DAILY",
         enabled: bool = True,
@@ -233,7 +231,7 @@ class Alarm:
                 otherwise. Defaults to `False`.
         """
 
-        self._alarm_id: int | None = None
+        self._alarm_id: Optional[int] = None
         self.zone = zone
         if start_time is None:
             start_time = datetime.now().time().replace(microsecond=0)
@@ -284,7 +282,7 @@ class Alarm:
         return self._volume
 
     @volume.setter
-    def volume(self, volume: int | str):
+    def volume(self, volume: Union[int, str]):
         """See `volume`."""
         # max 100
         volume = int(volume)
@@ -309,7 +307,7 @@ class Alarm:
 
         self._recurrence = recurrence
 
-    def save(self) -> int | None:
+    def save(self) -> Optional[int]:
         """Save the alarm to the Sonos system.
 
         Returns:
@@ -369,12 +367,12 @@ class Alarm:
         return result
 
     @property
-    def alarm_id(self) -> int | None:
+    def alarm_id(self) -> Optional[int]:
         """Return the ID of the alarm or None."""
         return self._alarm_id
 
 
-def get_alarms(zone: SoCo | None = None) -> set[Alarm]:
+def get_alarms(zone: Optional[SoCo] = None) -> Set[Alarm]:
     """Get a set of all alarms known to the Sonos system.
 
     Args:
@@ -408,7 +406,7 @@ def remove_alarm_by_id(zone: SoCo, alarm_id: int) -> bool:
     return alarm.remove()
 
 
-def parse_alarm_payload(payload: str, zone: SoCo) -> dict[int : dict[str:Any]]:
+def parse_alarm_payload(payload: str, zone: SoCo) -> Dict[int : Dict[str:Any]]:
     """Parse the XML payload response and return a dict of `Alarm` kwargs."""
     alarm_list = payload["CurrentAlarmList"]
     tree = XML.fromstring(alarm_list.encode("utf-8"))
