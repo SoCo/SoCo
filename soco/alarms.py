@@ -235,12 +235,12 @@ class Alarm:
             start_time = datetime.now().time().replace(microsecond=0)
         self.start_time = start_time
         self.duration = duration
-        self._recurrence = recurrence
+        self.recurrence = recurrence
         self.enabled = enabled
         self.program_uri = program_uri
         self.program_metadata = program_metadata
-        self._play_mode = play_mode
-        self._volume = volume
+        self.play_mode = play_mode
+        self.volume = volume
         self.include_linked_zones = include_linked_zones
         self._alarm_id = None
 
