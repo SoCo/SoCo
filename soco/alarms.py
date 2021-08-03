@@ -2,10 +2,9 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, Iterable, Optional, Set, Union
 
 from . import discovery
-from .core import _SocoSingletonBase, PLAY_MODES, SoCo
+from .core import _SocoSingletonBase, PLAY_MODES
 from .exceptions import SoCoException
 from .xml import XML
 
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 TIME_FORMAT = "%H:%M:%S"
 
 
-def is_valid_recurrence(text) -> bool:
+def is_valid_recurrence(text):
     """Check that ``text`` is a valid recurrence string.
 
     A valid recurrence string is  ``DAILY``, ``ONCE``, ``WEEKDAYS``,
@@ -93,40 +92,40 @@ class Alarms(_SocoSingletonBase):
 
     _class_group = "Alarms"
 
-    def __init__(self) -> None:
+    def __init__(self):
         """Initialize the instance."""
-        self.alarms: Dict[int, 'Alarm'] = {}
-        self._last_zone_used: Optional[SoCo] = None
-        self._last_alarm_list_version: Optional[str] = None
-        self.last_uid: Optional[str] = None
-        self.last_id: int = 0
+        self.alarms = {}
+        self._last_zone_used = None
+        self._last_alarm_list_version = None
+        self.last_uid = None
+        self.last_id = 0
 
     @property
-    def last_alarm_list_version(self) -> str:
+    def last_alarm_list_version(self):
         """Return last seen alarm list version."""
         return self._last_alarm_list_version
 
     @last_alarm_list_version.setter
-    def last_alarm_list_version(self, alarm_list_version: str):
+    def last_alarm_list_version(self, alarm_list_version):
         """Store alarm list version and store UID/ID values."""
         self.last_uid, last_id = alarm_list_version.split(":")
         self.last_id = int(last_id)
         self._last_alarm_list_version = alarm_list_version
 
-    def __iter__(self) -> Iterable:
+    def __iter__(self):
         """Return an interator for all alarms."""
         for alarm in list(self.alarms.values()):
             yield alarm
 
-    def __getitem__(self, alarm_id: int) -> 'Alarm':
+    def __getitem__(self, alarm_id):
         """Return the alarm by ID."""
         return self.alarms[alarm_id]
 
-    def get(self, alarm_id: int) -> Optional['Alarm']:
+    def get(self, alarm_id):
         """Return the alarm by ID or None."""
         return self.alarms.get(alarm_id)
 
-    def update(self, zone: Optional[SoCo]) -> None:
+    def update(self, zone=None):
         """Update all alarms and current alarm list version.
 
         Raises:
@@ -189,17 +188,17 @@ class Alarm:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        zone: SoCo,
-        start_time: Optional[datetime.time] = None,
-        duration: Optional[datetime.time] = None,
-        recurrence: str = "DAILY",
-        enabled: bool = True,
-        program_uri: Optional[str] = None,
-        program_metadata: str = "",
-        play_mode: str = "NORMAL",
-        volume: int = 20,
-        include_linked_zones: bool = False,
-    ) -> None:
+        zone,
+        start_time=None,
+        duration=None,
+        recurrence="DAILY",
+        enabled=True,
+        program_uri=None,
+        program_metadata="",
+        play_mode="NORMAL",
+        volume=20,
+        include_linked_zones=False,
+    ):
         """
         Args:
             zone (`SoCo`): The soco instance which will play the alarm.
@@ -231,7 +230,6 @@ class Alarm:
                 otherwise. Defaults to `False`.
         """
 
-        self._alarm_id: Optional[int] = None
         self.zone = zone
         if start_time is None:
             start_time = datetime.now().time().replace(microsecond=0)
@@ -244,14 +242,15 @@ class Alarm:
         self._play_mode = play_mode
         self._volume = volume
         self.include_linked_zones = include_linked_zones
+        self._alarm_id = None
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         middle = str(self.start_time.strftime(TIME_FORMAT))
         return "<{} id:{}@{} at {}>".format(
             self.__class__.__name__, self.alarm_id, middle, hex(id(self))
         )
 
-    def update(self, **kwargs) -> None:
+    def update(self, **kwargs):
         """Update an existing Alarm instance using the same arguments as __init__."""
         for attr, value in kwargs.items():
             if not hasattr(self, attr):
@@ -259,7 +258,7 @@ class Alarm:
             setattr(self, attr, value)
 
     @property
-    def play_mode(self) -> str:
+    def play_mode(self):
         """
         `str`: The play mode for the alarm.
 
@@ -269,7 +268,7 @@ class Alarm:
         return self._play_mode
 
     @play_mode.setter
-    def play_mode(self, play_mode: str):
+    def play_mode(self, play_mode):
         """See `playmode`."""
         play_mode = play_mode.upper()
         if play_mode not in PLAY_MODES:
@@ -277,19 +276,19 @@ class Alarm:
         self._play_mode = play_mode
 
     @property
-    def volume(self) -> int:
+    def volume(self):
         """`int`: The alarm's volume (0-100)."""
         return self._volume
 
     @volume.setter
-    def volume(self, volume: Union[int, str]):
+    def volume(self, volume):
         """See `volume`."""
         # max 100
         volume = int(volume)
         self._volume = max(0, min(volume, 100))  # Coerce in range
 
     @property
-    def recurrence(self) -> str:
+    def recurrence(self):
         """`str`: How often the alarm should be triggered.
 
         Can be ``DAILY``, ``ONCE``, ``WEEKDAYS``, ``WEEKENDS`` or of the form
@@ -300,14 +299,14 @@ class Alarm:
         return self._recurrence
 
     @recurrence.setter
-    def recurrence(self, recurrence: str):
+    def recurrence(self, recurrence):
         """See `recurrence`."""
         if not is_valid_recurrence(recurrence):
             raise KeyError("'%s' is not a valid recurrence value" % recurrence)
 
         self._recurrence = recurrence
 
-    def save(self) -> Optional[int]:
+    def save(self):
         """Save the alarm to the Sonos system.
 
         Returns:
@@ -351,7 +350,7 @@ class Alarm:
             self.zone.alarmClock.UpdateAlarm(args)
         return self.alarm_id
 
-    def remove(self) -> bool:
+    def remove(self):
         """Remove the alarm from the Sonos system.
 
         There is no need to call `save`. The Python instance is not deleted,
@@ -367,12 +366,12 @@ class Alarm:
         return result
 
     @property
-    def alarm_id(self) -> Optional[int]:
+    def alarm_id(self):
         """Return the ID of the alarm or None."""
         return self._alarm_id
 
 
-def get_alarms(zone: Optional[SoCo] = None) -> Set['Alarm']:
+def get_alarms(zone=None):
     """Get a set of all alarms known to the Sonos system.
 
     Args:
@@ -387,7 +386,7 @@ def get_alarms(zone: Optional[SoCo] = None) -> Set['Alarm']:
     return set(alarms.alarms.values())
 
 
-def remove_alarm_by_id(zone: SoCo, alarm_id: int) -> bool:
+def remove_alarm_by_id(zone, alarm_id):
     """Remove an alarm from the Sonos system by its ID.
 
     Args:
@@ -406,7 +405,7 @@ def remove_alarm_by_id(zone: SoCo, alarm_id: int) -> bool:
     return alarm.remove()
 
 
-def parse_alarm_payload(payload: str, zone: SoCo) -> Dict[int : Dict[str:Any]]:
+def parse_alarm_payload(payload, zone):
     """Parse the XML payload response and return a dict of `Alarm` kwargs."""
     alarm_list = payload["CurrentAlarmList"]
     tree = XML.fromstring(alarm_list.encode("utf-8"))
