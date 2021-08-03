@@ -98,7 +98,7 @@ class Alarms(_SocoSingletonBase):
         self._last_zone_used = None
         self._last_alarm_list_version = None
         self.last_uid = None
-        self.last_id = 0
+        self.last_id = "0"
 
     @property
     def last_alarm_list_version(self):
@@ -108,8 +108,7 @@ class Alarms(_SocoSingletonBase):
     @last_alarm_list_version.setter
     def last_alarm_list_version(self, alarm_list_version):
         """Store alarm list version and store UID/ID values."""
-        self.last_uid, last_id = alarm_list_version.split(":")
-        self.last_id = int(last_id)
+        self.last_uid, self.last_id = alarm_list_version.split(":")
         self._last_alarm_list_version = alarm_list_version
 
     def __iter__(self):
@@ -153,7 +152,7 @@ class Alarms(_SocoSingletonBase):
                         )
                     )
 
-            if int(alarm_list_id) <= self.last_id:
+            if alarm_list_id <= self.last_id:
                 return
 
         self.last_alarm_list_version = current_alarm_list_version
@@ -310,7 +309,7 @@ class Alarm:
         """Save the alarm to the Sonos system.
 
         Returns:
-            int: The alarm ID, or `None` if no alarm was saved.
+            str: The alarm ID, or `None` if no alarm was saved.
 
         Raises:
             ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
@@ -337,9 +336,9 @@ class Alarm:
         ]
         if self.alarm_id is None:
             response = self.zone.alarmClock.CreateAlarm(args)
-            self._alarm_id = int(response["AssignedID"])
+            self._alarm_id = response["AssignedID"]
             alarms = Alarms()
-            if alarms.last_id == self.alarm_id - 1:
+            if int(alarms.last_id) == int(self.alarm_id) - 1:
                 alarms.last_alarm_list_version = "{}:{}".format(
                     alarms.last_uid, self.alarm_id
                 )
@@ -367,7 +366,7 @@ class Alarm:
 
     @property
     def alarm_id(self):
-        """Return the ID of the alarm or None."""
+        """`str`: The ID of the alarm, or `None`."""
         return self._alarm_id
 
 
@@ -430,7 +429,7 @@ def parse_alarm_payload(payload, zone):
     alarm_args = {}
     for alarm in alarms:
         values = alarm.attrib
-        alarm_id = int(values["ID"])
+        alarm_id = values["ID"]
 
         alarm_zone = next(
             (z for z in zone.all_zones if z.uid == values["RoomUUID"]), None
