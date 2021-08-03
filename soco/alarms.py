@@ -98,7 +98,7 @@ class Alarms(_SocoSingletonBase):
         self._last_zone_used = None
         self._last_alarm_list_version = None
         self.last_uid = None
-        self.last_id = "0"
+        self.last_id = 0
 
     @property
     def last_alarm_list_version(self):
@@ -108,7 +108,8 @@ class Alarms(_SocoSingletonBase):
     @last_alarm_list_version.setter
     def last_alarm_list_version(self, alarm_list_version):
         """Store alarm list version and store UID/ID values."""
-        self.last_uid, self.last_id = alarm_list_version.split(":")
+        self.last_uid, last_id = alarm_list_version.split(":")
+        self.last_id = int(last_id)
         self._last_alarm_list_version = alarm_list_version
 
     def __iter__(self):
@@ -152,7 +153,7 @@ class Alarms(_SocoSingletonBase):
                         )
                     )
 
-            if alarm_list_id <= self.last_id:
+            if int(alarm_list_id) <= self.last_id:
                 return
 
         self.last_alarm_list_version = current_alarm_list_version
@@ -338,7 +339,7 @@ class Alarm:
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response["AssignedID"]
             alarms = Alarms()
-            if int(alarms.last_id) == int(self.alarm_id) - 1:
+            if alarms.last_id == int(self.alarm_id) - 1:
                 alarms.last_alarm_list_version = "{}:{}".format(
                     alarms.last_uid, self.alarm_id
                 )
