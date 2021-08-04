@@ -117,6 +117,10 @@ class Alarms(_SocoSingletonBase):
         for alarm in list(self.alarms.values()):
             yield alarm
 
+    def __len__(self):
+        """Return the number of alarms."""
+        return len(self.alarms)
+
     def __getitem__(self, alarm_id):
         """Return the alarm by ID."""
         return self.alarms[alarm_id]
