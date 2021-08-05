@@ -293,6 +293,7 @@ class SoCo(_SocoSingletonBase):
 
         # Some private attributes
         self._all_zones = set()
+        self._boot_seqnum = None
         self._groups = set()
         self._is_bridge = None
         self._is_coordinator = False
@@ -311,6 +312,12 @@ class SoCo(_SocoSingletonBase):
 
     def __repr__(self):
         return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
+
+    @property
+    def boot_seqnum(self):
+        """int: The boot sequence number."""
+        self._parse_zone_group_state()
+        return int(self._boot_seqnum)
 
     @property
     def player_name(self):
@@ -1186,6 +1193,7 @@ class SoCo(_SocoSingletonBase):
             # the zone is as yet unseen.
             zone._uid = member_attribs["UUID"]
             zone._player_name = member_attribs["ZoneName"]
+            zone._boot_seqnum = member_attribs["BootSeq"]
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
             is_visible = member_attribs.get("Invisible") != "1"
