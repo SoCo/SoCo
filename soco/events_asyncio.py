@@ -452,6 +452,7 @@ class Subscription(SubscriptionBase):
                 return
             await unsub
         except Exception as exc:  # pylint: disable=broad-except
+            self._cancel_subscription(exc)
             if strict:
                 raise
             self._log_exception(exc)
