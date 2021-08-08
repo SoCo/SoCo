@@ -1447,6 +1447,9 @@ class TestZoneGroupTopology:
     def test_soco_is_coordinator(self, moco_zgs):
         assert moco_zgs.is_coordinator
 
+    def test_boot_seqnum(self, moco_zgs):
+        assert moco_zgs.boot_seqnum == 162
+
     def test_all_groups(self, moco_zgs):
         groups = moco_zgs.all_groups
         assert len(groups) == 3
