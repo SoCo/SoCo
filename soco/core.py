@@ -237,6 +237,7 @@ class SoCo(_SocoSingletonBase):
         create_stereo_pair
         separate_stereo_pair
         get_battery_info
+        boot_seqnum
 
     .. warning::
 
