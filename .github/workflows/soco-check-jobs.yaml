@@ -60,19 +60,23 @@ jobs:
       - name: Lint with flake8 and pylint
         run: |
           # stop the build if there are Python syntax errors or undefined names
+          . venv/bin/activate
           flake8 soco
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           pylint soco
 
       - name: Test with pytest
         run: |
+          . venv/bin/activate
           pytest --cov-config .coveragerc --cov soco .
 
       - name: Test formatting with Black
         run: |
+          . venv/bin/activate
           black --check soco tests
 
       - name: Test documentation build
         if: matrix.python-version == 3.9
         run: |
+          . venv/bin/activate
           make docs
