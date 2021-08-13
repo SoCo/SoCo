@@ -6,7 +6,8 @@ ifaddr==0.1.7
 importlib-metadata<5; python_version == "3.7"
 pylint; python_version == "3.5"
 pylint==2.9.5; python_version >= "3.6"
-pytest==6.2.4
+pytest; python_version == "3.5"
+pytest==6.2.4; python_version >= "3.6"
 pytest-cov==2.12.1
 requests==2.25.1; python_version == "3.5"
 requests==2.26.0; python_version >= "3.6"
