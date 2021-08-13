@@ -54,8 +54,8 @@ jobs:
           python -m venv venv
           . venv/bin/activate
           pip install -U pip
-          pip install -r requirements-dev.txt
           pip install -e .
+          pip install -r requirements-dev.txt
 
       - name: Lint with flake8 and pylint
         run: |
