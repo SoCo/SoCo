@@ -1,4 +1,4 @@
-black==21.7b0
+black==21.7b0; python_version >= "3.6"
 coveralls==3.2.0
 flake8==3.9.2
 graphviz==0.17
@@ -7,7 +7,8 @@ importlib-metadata<5; python_version == "3.7"
 pylint==2.9.5
 pytest==6.2.4
 pytest-cov==2.12.1
-requests==2.26.0
+requests==2.25.1; python_version == "3.5"
+requests==2.26.0; python_version >= "3.6"
 requests-mock==1.9.3
 sphinx==4.5.0
 sphinx-rtd-theme==0.5.2
