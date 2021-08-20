@@ -60,7 +60,7 @@ DIDL_UPGRADE_NAMES_TO_IGNORE = [
     "DidlChapter",
     "DidlFavorite",
     "DidlItem",
-    "DidlPodcast"
+    "DidlPodcast",
 ]
 
 
