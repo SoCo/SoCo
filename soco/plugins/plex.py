@@ -112,7 +112,7 @@ class PlexPlugin(SoCoPlugin):
         position -= 1
         self.soco.play_from_queue(position)
 
-    def add_to_queue(self, plex_media, add_next=False):
+    def add_to_queue(self, plex_media, add_next=False):  # pylint: disable=too-many-locals
         """Add the provided media to the speaker's playback queue.
 
         Arguments:
@@ -125,7 +125,7 @@ class PlexPlugin(SoCoPlugin):
         Returns:
             int: The index of the new item in the queue.
         """
-        plex_server = plex_media._server
+        plex_server = plex_media._server  # pylint: disable=protected-access
         try:
             base_id = "{}:{}".format(
                 plex_server.machineIdentifier, plex_media.librarySectionID
