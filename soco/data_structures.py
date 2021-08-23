@@ -1082,28 +1082,6 @@ class DidlMusicAlbumCompilation(DidlMusicAlbum):
     tag = "container"
 
 
-class DidlMusicAlbumTitleSummary(DidlMusicAlbum):
-
-    """Class that represents a Sonos music library album, used by Plex service.
-
-    This class is not part of the DIDL spec and is Sonos specific.
-    """
-
-    # the DIDL Lite class for this object.
-    item_class = "object.container.album.musicAlbum.#titleSummary"
-    # Despite the fact that the item derives from object.container, it's
-    # XML does not include a <container> tag, but an <item> tag. This seems
-    # to be an error by Sonos.
-    tag = "item"
-    _translation = DidlMusicAlbum._translation.copy()
-    _translation.update(
-        {
-            "description": ("r", "description"),
-            "album": ("upnp", "album"),
-        }
-    )
-
-
 class DidlPerson(DidlContainer):
 
     """A content directory class representing a person."""
