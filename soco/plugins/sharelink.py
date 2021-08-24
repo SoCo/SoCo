@@ -113,7 +113,7 @@ class DeezerShare(ShareClass):
     """Deezer share class."""
 
     def canonical_uri(self, uri):
-        match = re.search(r"https://deezer.*[:/](album|track|playlist)[:/]([\w-]+)", uri)
+        match = re.search(r"deezer.*[:/](album|track|playlist)[:/]([\w-]+)", uri)
         if match:
             return "deezer:" + match.group(1) + ":" + match.group(2)
 
