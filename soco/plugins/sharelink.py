@@ -109,6 +109,24 @@ class TIDALShare(ShareClass):
         encoded_uri = tidal_uri.replace("tidal:", "").replace(":", "%2f")
         return (share_type, encoded_uri)
 
+class DeezerShare(ShareClass):
+    """Deezer share class."""
+
+    def canonical_uri(self, uri):
+        match = re.search(r"https://deezer.*[:/](album|track|playlist)[:/]([\w-]+)", uri)
+        if match:
+            return "deezer:" + match.group(1) + ":" + match.group(2)
+
+        return None
+
+    def service_number(self):
+        return 519
+
+    def extract(self, uri):
+        deezer_uri = self.canonical_uri(uri)
+        share_type = deezer_uri.split(":")[1]
+        encoded_uri = deezer_uri.replace("deezer:", "").replace(":", "-")
+        return (share_type, encoded_uri)
 
 class ShareLinkPlugin(SoCoPlugin):
     """A SoCo plugin for playing Spotify/Tidal share links."""
@@ -120,6 +138,7 @@ class ShareLinkPlugin(SoCoPlugin):
             SpotifyShare(),
             SpotifyUSShare(),
             TIDALShare(),
+            DeezerShare(),
         ]
 
     @property
