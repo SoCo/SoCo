@@ -53,9 +53,15 @@ def from_didl_string(string):
     return items
 
 
-# Obviously imcomplete, but missing entries will not result in error, but just
+# Obviously incomplete, but missing entries will not result in error, but just
 # a logged warning and no upgrade of the data structure
 DIDL_NAME_TO_QUALIFIED_MS_NAME = {"DidlMusicTrack": "MediaMetadataTrack"}
+DIDL_UPGRADE_NAMES_TO_IGNORE = [
+    "DidlChapter",
+    "DidlFavorite",
+    "DidlItem",
+    "DidlPodcast",
+]
 
 
 def attempt_datastructure_upgrade(didl_item):
@@ -97,14 +103,15 @@ def attempt_datastructure_upgrade(didl_item):
             # missing from DIDL_NAME_TO_QUALIFIED_MS_NAME. Log this as a
             # warning.
             class_name = didl_item.__class__.__name__
-            if class_name not in ["DidlFavorite"]:
-                _LOG.warning(
-                    "DATA STRUCTURE UPGRADE FAIL. Unable to upgrade music library "
-                    "data structure to music service data structure because an "
-                    "entry is missing for %s in DIDL_NAME_TO_QUALIFIED_MS_NAME. "
-                    "This should be reported as a bug.",
-                    class_name,
-                )
+            message = (
+                "DATA STRUCTURE UPGRADE FAIL. Unable to upgrade music library "
+                "data structure to music service data structure because an "
+                "entry is missing for %s in DIDL_NAME_TO_QUALIFIED_MS_NAME."
+            )
+            if class_name in DIDL_UPGRADE_NAMES_TO_IGNORE:
+                _LOG.debug(message, class_name)
+            else:
+                _LOG.warning(message, class_name)
             return didl_item
 
         upgraded_item = cls(
