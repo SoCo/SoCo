@@ -133,7 +133,7 @@ class Alarms(_SocoSingletonBase):
         """Update all alarms and current alarm list version.
 
         Raises:
-            SoCoException: If the `CurrentAlarmListVersion` value is unexpected.
+            SoCoException: If the 'CurrentAlarmListVersion' value is unexpected.
                 May occur if the provided zone is from a different household.
         """
         if zone is None:
@@ -223,7 +223,7 @@ class Alarm:
             program_uri(str, optional): The uri to play. If `None`, the
                 built-in Sonos chime sound will be used. Defaults to `None`.
             program_metadata (str, optional): The metadata associated with
-                `program_uri`. Defaults to ''.
+                'program_uri'. Defaults to ''.
             play_mode(str, optional): The play mode for the alarm. Can be one
                 of ``NORMAL``, ``SHUFFLE_NOREPEAT``, ``SHUFFLE``,
                 ``REPEAT_ALL``, ``REPEAT_ONE``, ``SHUFFLE_REPEAT_ONE``.

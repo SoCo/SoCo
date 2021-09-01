@@ -1,0 +1,7 @@
+SoCo 0.24 Release Notes
+***********************
+
+**SoCo 0.24.0** (Released on 2021-09-01), contains new features as well as internal improvements.
+
+Please see the GitHub release for further details:
+https://github.com/SoCo/SoCo/releases/tag/v0.24.0
