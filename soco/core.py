@@ -9,6 +9,7 @@ import logging
 import re
 import socket
 from functools import wraps
+import urllib.parse
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
 import warnings
@@ -1571,8 +1572,8 @@ class SoCo(_SocoSingletonBase):
             index = trackinfo.find(" - ")
 
             if index > -1:
-                radio_track["artist"] = trackinfo[:index]
-                radio_track["title"] = trackinfo[index + 3 :]
+                radio_track["artist"] = trackinfo[:index].strip()
+                radio_track["title"] = trackinfo[index + 3 :].strip()
             elif "TYPE=SNG|" in trackinfo:
                 # Examples from services:
                 #  Apple Music radio:
@@ -1588,11 +1589,14 @@ class SoCo(_SocoSingletonBase):
                     radio_track["album"] = tags["ALBUM"]
             else:
                 # Might find some kind of title anyway in metadata
-                radio_track["title"] = metadata.findtext(
+                title = metadata.findtext(
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
-                if not radio_track["title"]:
+                # Avoid using URIs as the title
+                if title in track["uri"] or title in urllib.parse.unquote(track["uri"]):
                     radio_track["title"] = trackinfo
+                else:
+                    radio_track["title"] = title
 
             return radio_track
 
