@@ -199,6 +199,8 @@ class SoCo(_SocoSingletonBase):
         dialog_mode
         supports_fixed_volume
         fixed_volume
+        soundbar_audio_input_format
+        soundbar_audio_input_format_code
         trueplay
         status_light
         buttons_enabled
@@ -1073,6 +1075,7 @@ class SoCo(_SocoSingletonBase):
             ]
         )
 
+    @property
     def soundbar_audio_input_format_code(self) -> Optional[int]:
         """Return audio input format code as reported by the device.
 
@@ -1091,6 +1094,7 @@ class SoCo(_SocoSingletonBase):
 
         return int(response["HTAudioIn"])
 
+    @property
     def soundbar_audio_input_format(self) -> Optional[str]:
         """Return a string presentation of the audio input format.
 
@@ -1116,13 +1120,13 @@ class SoCo(_SocoSingletonBase):
             84934713: "Dolby 5.1",
         }
 
-        format_code = self.soundbar_audio_input_format_code()
+        format_code = self.soundbar_audio_input_format_code
 
         if format_code not in format_to_str:
             logging.warning("Unknown audio input format: %s", format_code)
 
         format_str = format_to_str.get(
-            format_code, "Unknown audio format: %s" % format_code
+            format_code, "Unknown audio input format: %s" % format_code
         )
 
         return format_str
