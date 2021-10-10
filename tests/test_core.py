@@ -1273,6 +1273,7 @@ class TestRenderingControl:
         assert "Unknown audio input format: 12345" in moco.soundbar_audio_input_format
 
         moco._is_soundbar = False
+        assert moco.soundbar_audio_input_format_code is None
         assert moco.soundbar_audio_input_format is None
 
     def test_soco_fixed_volume(self, moco):
