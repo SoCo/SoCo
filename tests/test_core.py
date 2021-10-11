@@ -1259,17 +1259,13 @@ class TestRenderingControl:
                 moco.trueplay = True
 
     def test_soco_soundbar_audio_input_format(self, moco):
-        moco.deviceProperties.GetZoneInfo.return_value = {
-            "HTAudioIn": "0"
-        }
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "0"}
         assert moco.soundbar_audio_input_format_code == 0
         assert moco.soundbar_audio_input_format == "No input connected"
 
-        moco.deviceProperties.GetZoneInfo.assert_called()
+        moco.deviceProperties.GetZoneInfo.assert_called_with()
 
-        moco.deviceProperties.GetZoneInfo.return_value = {
-            "HTAudioIn": "12345"
-        }
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "12345"}
         assert "Unknown audio input format: 12345" in moco.soundbar_audio_input_format
 
         moco._is_soundbar = False
