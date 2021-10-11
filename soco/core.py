@@ -201,6 +201,8 @@ class SoCo(_SocoSingletonBase):
         dialog_mode
         supports_fixed_volume
         fixed_volume
+        soundbar_audio_input_format
+        soundbar_audio_input_format_code
         trueplay
         status_light
         buttons_enabled
@@ -1087,6 +1089,62 @@ class SoCo(_SocoSingletonBase):
                 ("RoomCalibrationEnabled", trueplay_value),
             ]
         )
+
+    @property
+    def soundbar_audio_input_format_code(self):
+        """Return audio input format code as reported by the device.
+
+        Returns None when the device is not a soundbar.
+
+        While the variable is available on non-soundbar devices,
+        it is likely always 0 for devices without audio inputs.
+
+        See also :func:`soundbar_audio_input_format` for obtaining a
+        human-readable description of the format.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.deviceProperties.GetZoneInfo()
+
+        return int(response["HTAudioIn"])
+
+    @property
+    def soundbar_audio_input_format(self):
+        """Return a string presentation of the audio input format.
+
+        Returns None when the device is not a soundbar.
+        Otherwise, this will return the string presentation of the currently
+        active sound format (e.g., "Dolby 5.1" or "No input")
+
+        See also :func:`soundbar_audio_input_format_code` for the raw value.
+        """
+        if not self.is_soundbar:
+            return None
+
+        format_to_str = {
+            0: "No input connected",
+            2: "Stereo",
+            7: "Dolby 2.0",
+            18: "Dolby 5.1",
+            21: "No input",
+            22: "No audio",
+            33554434: "PCM 2.0",
+            33554454: "PCM 2.0 no audio",
+            33554488: "Dolby 2.0",
+            84934713: "Dolby 5.1",
+        }
+
+        format_code = self.soundbar_audio_input_format_code
+
+        if format_code not in format_to_str:
+            logging.warning("Unknown audio input format: %s", format_code)
+
+        format_str = format_to_str.get(
+            format_code, "Unknown audio input format: %s" % format_code
+        )
+
+        return format_str
 
     @property
     def supports_fixed_volume(self):
