@@ -11,7 +11,6 @@ import socket
 from functools import wraps
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
-from typing import Optional
 import warnings
 import xmltodict
 
@@ -1076,7 +1075,7 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
-    def soundbar_audio_input_format_code(self) -> Optional[int]:
+    def soundbar_audio_input_format_code(self):
         """Return audio input format code as reported by the device.
 
         Returns None when the device is not a soundbar.
@@ -1095,7 +1094,7 @@ class SoCo(_SocoSingletonBase):
         return int(response["HTAudioIn"])
 
     @property
-    def soundbar_audio_input_format(self) -> Optional[str]:
+    def soundbar_audio_input_format(self):
         """Return a string presentation of the audio input format.
 
         Returns None when the device is not a soundbar.
