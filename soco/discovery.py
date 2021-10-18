@@ -93,35 +93,52 @@ def discover(
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
-    _sockets = []
-    # Use the specified interface, if any
-    if interface_addr is not None:
+    if interface_addr is not None:  # Use the specified interface, if any
         try:
-            address = socket.inet_aton(interface_addr)
+            _ = socket.inet_aton(interface_addr)
+            addresses = {interface_addr}
+            _LOG.debug(
+                "Sending discovery packets on specified interface %s", interface_addr
+            )
         except OSError as e:
             raise ValueError(
                 "{} is not a valid IP address string".format(interface_addr)
             ) from e
-        _sockets.append(create_socket(interface_addr))
-        _LOG.debug("Sending discovery packets on specified interface")
-    else:
-        # Use all relevant network interfaces
-        for address in _find_ipv4_addresses():
-            try:
-                _sockets.append(create_socket(address))
-            except OSError as e:
-                _LOG.warning(
-                    "Can't make a discovery socket for %s: %s: %s",
-                    address,
-                    e.__class__.__name__,
-                    e,
-                )
-        _LOG.debug("Sending discovery packets on %s", _sockets)
+    else:  # Use all qualified, discovered network interfaces
+        addresses = _find_ipv4_addresses()
+        if len(addresses) == 0:
+            _LOG.debug("No interfaces available for discovery")
+            return None
+        _LOG.debug("Sending discovery packets on discovered interface(s) %s", addresses)
 
+    # Create sockets
+    _sockets = []
+    for address in addresses:
+        try:
+            _sock = create_socket(address)
+            _sockets.append(_sock)
+            _LOG.debug("Created socket %s for %s", _sock, address)
+        except OSError as e:
+            _LOG.warning(
+                "Can't make a discovery socket for %s: %s: %s",
+                address,
+                e.__class__.__name__,
+                e,
+            )
+
+    # Send a few times to each socket. UDP is unreliable
     for _ in range(0, 3):
-        # Send a few times to each socket. UDP is unreliable
-        for _sock in _sockets:
-            _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+        for _sock in _sockets[:]:  # Copy the list, because items may be removed
+            _LOG.debug("Sending discovery packet on %s", _sock)
+            try:
+                _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+            except OSError as e:
+                _LOG.debug("Sending failed %s: removing %s from sockets list", e, _sock)
+                _sockets.remove(_sock)
+
+    if len(_sockets) == 0:
+        _LOG.debug("Sending failed on all interfaces")
+        return None
 
     t0 = time.time()
     while True:
