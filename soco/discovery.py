@@ -17,7 +17,7 @@ from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
-# pylint: disable=too-many-locals, too-many-branches
+# pylint: disable=too-many-locals, too-many-branches, too-many-statements
 
 
 def discover(
@@ -135,10 +135,18 @@ def discover(
             except OSError as e:
                 _LOG.debug("Sending failed %s: removing %s from sockets list", e, _sock)
                 _sockets.remove(_sock)
+                _LOG.debug("Closing socket %s", _sock)
+                _sock.close()
 
     if len(_sockets) == 0:
         _LOG.debug("Sending failed on all interfaces")
         return None
+
+    def close_sockets():
+        """Helper function to close all remaining open sockets"""
+        for _sock in _sockets:
+            _LOG.debug("Closing socket %s", _sock)
+            _sock.close()
 
     t0 = time.time()
     while True:
@@ -150,7 +158,9 @@ def discover(
         # is no monotonic timer available before Python 3.3.
         t1 = time.time()
         if t1 - t0 > timeout:
-            return None
+            _LOG.debug("Discovery timeout")
+            close_sockets()
+            break
 
         # The timeout of the select call is set to be no greater than
         # 100ms, so as not to exceed (too much) the required timeout
@@ -187,16 +197,18 @@ def discover(
                     # Player's ability to find the others, than to wait for
                     # query responses from them ourselves.
                     zone = config.SOCO_CLASS(addr[0])
+                    close_sockets()
                     if include_invisible:
                         return zone.all_zones
                     else:
                         return zone.visible_zones
-        elif allow_network_scan:
-            _LOG.debug("Falling back to network scan discovery")
-            return scan_network(
-                include_invisible=include_invisible,
-                **network_scan_kwargs,
-            )
+
+    if allow_network_scan:
+        _LOG.debug("Falling back to network scan discovery")
+        return scan_network(
+            include_invisible=include_invisible,
+            **network_scan_kwargs,
+        )
 
 
 def any_soco(allow_network_scan=False, **network_scan_kwargs):
@@ -734,6 +746,8 @@ def _sonos_scan_worker_thread(
             # Put the address back on the list and drop out of this thread.
             ip_set.add(ip_addr)
             break
+
+        _LOG.debug("Scanning port %s:1400", ip_address)
 
         if check:
             _LOG.debug("Found open port 1400 at IP '%s'", ip_address)
