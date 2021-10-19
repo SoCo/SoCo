@@ -96,14 +96,14 @@ def discover(
     if interface_addr is not None:  # Use the specified interface, if any
         try:
             _ = socket.inet_aton(interface_addr)
-            addresses = {interface_addr}
-            _LOG.debug(
-                "Sending discovery packets on specified interface %s", interface_addr
-            )
         except OSError as e:
             raise ValueError(
                 "{} is not a valid IP address string".format(interface_addr)
             ) from e
+        addresses = {interface_addr}
+        _LOG.debug(
+            "Sending discovery packets on specified interface %s", interface_addr
+        )
     else:  # Use all qualified, discovered network interfaces
         addresses = _find_ipv4_addresses()
         if len(addresses) == 0:
