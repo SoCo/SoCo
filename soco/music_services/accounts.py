@@ -7,8 +7,6 @@
 import logging
 import weakref
 
-import requests
-
 from .. import discovery
 from ..xml import XML
 
@@ -76,7 +74,7 @@ class Account:
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
         settings_url = "http://{}:1400/status/accounts".format(device.ip_address)
-        result = requests.get(settings_url).content
+        result = soco.session.get(settings_url).content
         log.debug("Account data: %s", result)
         return result
 

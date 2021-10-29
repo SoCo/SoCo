@@ -295,6 +295,8 @@ class SoCo(_SocoSingletonBase):
 
         self.music_library = MusicLibrary(self)
 
+        self.session = requests.Session()
+
         # Some private attributes
         self._all_zones = set()
         self._boot_seqnum = None
@@ -1738,7 +1740,7 @@ class SoCo(_SocoSingletonBase):
         if self.speaker_info and refresh is False:
             return self.speaker_info
         else:
-            response = requests.get(
+            response = self.session.get(
                 "http://" + self.ip_address + ":1400/xml/device_description.xml",
                 timeout=timeout,
             )
@@ -2566,7 +2568,7 @@ class SoCo(_SocoSingletonBase):
 
         # Retrieve information from the speaker's status URL
         try:
-            response = requests.get(
+            response = self.session.get(
                 "http://" + self.ip_address + ":1400/status/batterystatus",
                 timeout=timeout,
             )

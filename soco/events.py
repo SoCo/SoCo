@@ -248,6 +248,7 @@ class Subscription(SubscriptionBase):
                 created and used.
         """
         super().__init__(service, event_queue)
+        self.session = requests.Session()
         # Used to keep track of the auto_renew thread
         self._auto_renew_thread = None
         self._auto_renew_thread_flag = threading.Event()
@@ -389,7 +390,7 @@ class Subscription(SubscriptionBase):
         """
         response = None
         try:
-            response = requests.request(method, url, headers=headers, timeout=3)
+            response = self.session.request(method, url, headers=headers, timeout=3)
         except requests.exceptions.RequestException:
             # Ignore timeout for unsubscribe since we are leaving anyway.
             if method != "UNSUBSCRIBE":

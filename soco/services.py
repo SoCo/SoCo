@@ -36,8 +36,6 @@ import logging
 from collections import namedtuple
 from xml.sax.saxutils import escape
 
-import requests
-
 from .cache import Cache
 from . import events
 from . import config
@@ -476,7 +474,7 @@ class Service:
         log.debug("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
         # Convert the body to bytes, and send it.
-        response = requests.post(
+        response = self.soco.session.post(
             self.base_url + self.control_url,
             headers=headers,
             data=body.encode("utf-8"),
@@ -692,7 +690,9 @@ class Service:
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree
         # which likes to receive bytes
-        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).content
+        scpd_body = self.soco.session.get(
+            self.base_url + self.scpd_url, timeout=10
+        ).content
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
@@ -752,7 +752,9 @@ class Service:
 
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
-        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).text
+        scpd_body = self.soco.session.get(
+            self.base_url + self.scpd_url, timeout=10
+        ).text
         tree = XML.fromstring(scpd_body.encode("utf-8"))
         # parse the state variables to get the relevant variable types
         statevars = tree.findall("{}stateVariable".format(ns))

@@ -441,32 +441,27 @@ class TestSoco:
         moco.speaker_info["model_name"] = model_name[0]
         assert moco.is_soundbar == model_name[1]
 
-    @mock.patch("soco.core.requests")
     @pytest.mark.parametrize("refresh", [None, False, True])
-    def test_soco_get_speaker_info_speaker_not_set_refresh(
-        self, mocr, moco_zgs, refresh
-    ):
+    def test_soco_get_speaker_info_speaker_not_set_refresh(self, moco_zgs, refresh):
         """Internal speaker_info not set; Refresh all values (default, False,
         True)
 
         => should update
         """
-        response = mock.MagicMock()
-        mocr.get.return_value = response
-        response.content = self.device_description
-        # save old state
-        old = moco_zgs.speaker_info
-        moco_zgs.speaker_info = {}
-        if refresh is None:
-            res = moco_zgs.get_speaker_info()
-        else:
-            res = moco_zgs.get_speaker_info(refresh)
-        # restore original value
-        moco_zgs.speaker_info = old
-        mocr.get.assert_called_once_with(
-            "http://" + IP_ADDR + ":1400/xml/device_description.xml",
-            timeout=None,
-        )
+        with requests_mock.Mocker() as m:
+            m.get(
+                "http://" + IP_ADDR + ":1400/xml/device_description.xml",
+                text=self.device_description,
+            )
+            # save old state
+            old = moco_zgs.speaker_info
+            moco_zgs.speaker_info = {}
+            if refresh is None:
+                res = moco_zgs.get_speaker_info()
+            else:
+                res = moco_zgs.get_speaker_info(refresh)
+            # restore original value
+            moco_zgs.speaker_info = old
         should = {
             "zone_name": "Room",
             "player_icon": "/img/icon-S3.png",
@@ -481,50 +476,45 @@ class TestSoco:
         }
         assert should == res
 
-    @mock.patch("soco.core.requests")
     @pytest.mark.parametrize("refresh", [None, False])
-    def test_soco_get_speaker_info_speaker_set_no_refresh(
-        self, mocr, moco_zgs, refresh
-    ):
+    def test_soco_get_speaker_info_speaker_set_no_refresh(self, moco_zgs, refresh):
         """Internal speaker_info set; No refresh (default, False)
 
         => should not update
         """
         should = {"info": "yes"}
-        # save old state
-        old = moco_zgs.speaker_info
-        moco_zgs.speaker_info = should
-        if refresh is None:
-            res = moco_zgs.get_speaker_info()
-        else:
-            res = moco_zgs.get_speaker_info(refresh)
-        # restore original value
-        moco_zgs.speaker_info = old
-        # got 'should' returned
-        assert res is should
-        # no network request performed
-        assert not mocr.get.called
+        with requests_mock.Mocker() as m:
+            # save old state
+            old = moco_zgs.speaker_info
+            moco_zgs.speaker_info = should
+            if refresh is None:
+                res = moco_zgs.get_speaker_info()
+            else:
+                res = moco_zgs.get_speaker_info(refresh)
+            # restore original value
+            moco_zgs.speaker_info = old
+            # got 'should' returned
+            assert res is should
+            # no network request performed
+        assert not m.called
 
-    @mock.patch("soco.core.requests")
     @pytest.mark.parametrize("should", [{}, {"info": "yes"}])
-    def test_soco_get_speaker_info_speaker_set_refresh(self, mocr, moco_zgs, should):
+    def test_soco_get_speaker_info_speaker_set_refresh(self, moco_zgs, should):
         """Internal speaker_info not set/set; Refresh True.
 
         => should update
         """
-        response = mock.MagicMock()
-        mocr.get.return_value = response
-        response.content = self.device_description
-        # save old state
-        old = moco_zgs.speaker_info
-        moco_zgs.speaker_info = should
-        res = moco_zgs.get_speaker_info(True)
-        # restore original value
-        moco_zgs.speaker_info = old
-        mocr.get.assert_called_once_with(
-            "http://" + IP_ADDR + ":1400/xml/device_description.xml",
-            timeout=None,
-        )
+        with requests_mock.Mocker() as m:
+            m.get(
+                "http://" + IP_ADDR + ":1400/xml/device_description.xml",
+                text=self.device_description,
+            )
+            # save old state
+            old = moco_zgs.speaker_info
+            moco_zgs.speaker_info = should
+            res = moco_zgs.get_speaker_info(True)
+            # restore original value
+            moco_zgs.speaker_info = old
         # get_speaker_info only updates internal speaker_info and does not
         # replace it
         should.update(

@@ -4,6 +4,9 @@
 
 
 import pytest
+import requests
+import requests_mock
+
 
 from soco.exceptions import SoCoUPnPException
 from soco.services import Service, Action, Argument, Vartype
@@ -92,6 +95,7 @@ def service():
 
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
+    mock_soco.session = requests.Session()
     mock_service = Service(mock_soco)
     return mock_service
 
@@ -223,11 +227,12 @@ def test_build_command(service):
 def test_send_command(service):
     """Calling a command should result in a http request, unless the cache is
     hit."""
-    response = mock.MagicMock()
-    response.headers = {}
-    response.status_code = 200
-    response.text = DUMMY_VALID_RESPONSE
-    with mock.patch("requests.post", return_value=response) as fake_post:
+    with requests_mock.Mocker() as m:
+        m.post(
+            "http://192.168.1.101:1400/Service/Control",
+            headers={"Content-type": "text/xml; charset=utf-8"},
+            content=DUMMY_VALID_RESPONSE.encode("utf-8"),
+        )
         result = service.send_command(
             "SetAVTransportURI",
             [
@@ -239,14 +244,9 @@ def test_send_command(service):
             cache_timeout=2,
         )
         assert result == {"CurrentLEDState": "On", "Unicode": "μИⅠℂ☺ΔЄ💋"}
-        fake_post.assert_called_once_with(
-            "http://192.168.1.101:1400/Service/Control",
-            headers=mock.ANY,
-            data=DUMMY_VALID_ACTION.encode("utf-8"),
-            timeout=20,
-        )
+
         # Now the cache should be primed, so try it again
-        fake_post.reset_mock()
+        m.reset_mock()
         result = service.send_command(
             "SetAVTransportURI",
             [
@@ -258,9 +258,9 @@ def test_send_command(service):
             cache_timeout=0,
         )
         # The cache should be hit, so there should be no http request
-        assert not fake_post.called
+        assert not m.called
         # but this should not affefct a call with different params
-        fake_post.reset_mock()
+        m.reset_mock()
         result = service.send_command(
             "SetAVTransportURI",
             [
@@ -270,9 +270,9 @@ def test_send_command(service):
                 ("Unicode", "μИⅠℂ☺ΔЄ💋"),
             ],
         )
-        assert fake_post.called
+        assert m.called
         # calling again after the time interval will avoid the cache
-        fake_post.reset_mock()
+        m.reset_mock()
         import time
 
         time.sleep(2)
@@ -285,7 +285,7 @@ def test_send_command(service):
                 ("Unicode", "μИⅠℂ☺ΔЄ💋"),
             ],
         )
-        assert fake_post.called
+        assert m.called
 
 
 def test_handle_upnp_error(service):
