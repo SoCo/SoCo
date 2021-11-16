@@ -427,7 +427,9 @@ class Service:
         # is set over the network
         return (headers, body)
 
-    def send_command(self, action, args=None, cache=None, cache_timeout=None, **kwargs):
+    def send_command(
+        self, action, args=None, cache=None, cache_timeout=None, timeout=5, **kwargs
+    ):
         """Send a command to a Sonos device.
 
         Args:
@@ -480,7 +482,7 @@ class Service:
             self.base_url + self.control_url,
             headers=headers,
             data=body.encode("utf-8"),
-            timeout=20,
+            timeout=timeout,
         )
 
         log.debug("Received %s, %s", response.headers, response.text)
