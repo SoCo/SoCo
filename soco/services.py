@@ -429,7 +429,7 @@ class Service:
 
     def send_command(
         self, action, args=None, cache=None, cache_timeout=None, timeout=5, **kwargs
-    ):
+    ):  # pylint: disable=too-many-arguments
         """Send a command to a Sonos device.
 
         Args:
