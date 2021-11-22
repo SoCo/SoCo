@@ -57,7 +57,7 @@ class MusicServiceSoapClient:
         self.timeout = timeout
         self.music_service = music_service
         self.namespace = "http://www.sonos.com/Services/1.1"
-
+        self.token_store = token_store
         self._cached_soap_header = None
 
         # Spotify uses gzip. Others may do so as well. Unzipping is handled
