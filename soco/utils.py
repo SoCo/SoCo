@@ -93,7 +93,7 @@ def prettify(unicode_text):
     """
     import xml.dom.minidom
 
-    reparsed = xml.dom.minidom.parseString(unicode_text.encode("utf-8"))
+    reparsed = xml.dom.minidom.parseString(unicode_text)
     return reparsed.toprettyxml(indent="  ", newl="\n")
 
 
