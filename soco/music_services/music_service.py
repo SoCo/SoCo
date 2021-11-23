@@ -5,25 +5,18 @@
 This module provides the MusicService class and related functionality.
 """
 
-
+import json
 import logging
-
+import requests
 from urllib.parse import quote as quote_url
 from urllib.parse import urlparse, parse_qs
-
-import requests
-import time
-import json
-
 from xmltodict import parse
-
 from .. import discovery
 from ..exceptions import MusicServiceException, MusicServiceAuthException
 from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem
 from .token_store import JsonFileTokenStore
 from ..soap import SoapFault, SoapMessage
-from ..utils import show_xml, prettify
 from ..xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -115,7 +108,8 @@ class MusicServiceSoapClient:
 
             login_token = XML.Element("loginToken")
             # If no existing authentication are known, we do not add 'token' and 'key'
-            # elements and the only operation the service can perform is to authenticate.
+            # elements and the only operation the service can perform is to
+            # authenticate.
             if self.token_store.has_token(
                 self.music_service.service_id, self._device.household_id
             ):
@@ -258,7 +252,7 @@ class MusicServiceSoapClient:
                 "getAppLinkResult"
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
-            return auth_parts["regUrl"], auth_parts["linkCode"]
+            return auth_parts["regUrl"], auth_parts["linkCode"], None
 
     def device_or_app_link_auth_part2(self, link_code, link_device_id=None):
         """Perform part 2 of a Device or App Link authentication session
@@ -409,8 +403,8 @@ class MusicService:
                 is given, it will default to an instance of the
                 `JsonFileTokenStore` using the 'default' token collection.
             device (SoCo): (Optional) If provided this device will be used for the
-                communication, if not the device returned by `discovery.any_soco` will be
-                used
+                communication, if not the device returned by `discovery.any_soco` will
+                be used.
         Raises:
             `MusicServiceException`
         """
