@@ -9,10 +9,9 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.music_services.music_service import (
     MusicService,
-    MusicServiceSoapClient,
     desc_from_uri,
 )
-
+from soco.music_services.token_store import JsonFileTokenStore
 
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
 ACCOUNT_DATA = """<?xml version="1.0" ?>
@@ -257,14 +256,14 @@ def test_get_subscribed_names():
 
 
 def test_create_music_service():
+    # Normal instantiation, default token store
     ms = MusicService("Spotify")
-    assert ms.account.username == "12345678"
-    with pytest.raises(MusicServiceException) as excinfo:
-        unknown = MusicService("Unknown Music Service")
-    assert "Unknown music service" in str(excinfo.value)
-    with pytest.raises(MusicServiceException) as excinfo:
-        soundcloud = MusicService("SoundCloud")
-    assert "No account found" in str(excinfo.value)
+    assert ms.service_name == "Spotify"
+    assert isinstance(ms.token_store, JsonFileTokenStore)
+    # Custom token store
+    obj = object()
+    ms = MusicService("Spotify", token_store=obj)
+    assert ms.token_store is obj
 
 
 def test_tunein():
@@ -273,7 +272,6 @@ def test_tunein():
     assert tunein
     assert tunein.service_id == "254"
     assert tunein.service_type == "65031"
-    assert tunein.account.serial_number == "0"
 
 
 def test_search():
@@ -297,23 +295,23 @@ def test_sonos_uri_from_id():
     track = "spotify:track:2qs5ZcLByNTctJKbhAZ9JE"
     assert (
         spotify.sonos_uri_from_id(track)
-        == "soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=9&sn=1"
+        == "soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=9&sn=0"
     )
     # Check for escaping with a few difficult characters
     track = "spotify: track\2qc%ünicøde?"
     assert (
         spotify.sonos_uri_from_id(track)
-        == "soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=9&sn=1"
+        == "soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=9&sn=0"
     )
     # and a different service
     spreaker = MusicService("Spreaker")
     track = "spreaker12345678"
-    assert spreaker.sonos_uri_from_id(track) == "soco://spreaker12345678?sid=163&sn=3"
+    assert spreaker.sonos_uri_from_id(track) == "soco://spreaker12345678?sid=163&sn=0"
 
 
 def test_desc():
     spotify = MusicService("Spotify")
-    assert spotify.desc == "SA_RINCON2311_12345678"
+    assert spotify.desc == "SA_RINCON2311_X_#Svc2311-0-Token"
     spreaker = MusicService("Spreaker")
     assert spreaker.desc == "SA_RINCON41735_"
 
