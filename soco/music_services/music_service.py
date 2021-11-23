@@ -268,7 +268,7 @@ class MusicServiceSoapClient:
                 "getAppLinkResult"
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
-            return auth_parts["regUrl"], auth_parts["linkCode"]
+            return auth_parts["regUrl"], auth_parts["linkCode"], None
         raise MusicServiceAuthException(
             "device_or_app_link_auth_part1 is not implemented "
             "for auth type {}".format(self.music_service.auth_type)
