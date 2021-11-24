@@ -433,6 +433,7 @@ class MusicService:
         self._search_prefix_map = None
         self.service_type = data["ServiceType"]
 
+
         self.soap_client = MusicServiceSoapClient(
             endpoint=self.secure_uri,
             timeout=9,
@@ -706,11 +707,7 @@ class MusicService:
         # quote_url will break if given unicode on Py2.6, and early 2.7. So
         # we need to encode.
         item_id = quote_url(item_id.encode("utf-8"))
-        # Add the account info to the end as query params
-        account = self.account
-        result = "soco://{}?sid={}&sn={}".format(
-            item_id, self.service_id, account.serial_number
-        )
+        result = "soco://{}?sid={}&sn={}".format(item_id, self.service_id, 0)
         return result
 
     @property
