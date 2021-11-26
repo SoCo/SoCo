@@ -22,7 +22,7 @@ from ..xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-# pylint: disable=too-many-instance-attributes, protected-access
+# pylint: disable=too-many-instance-attributes, protected-access, too-many-arguments
 class MusicServiceSoapClient:
 
     """A SOAP client for accessing Music Services.
@@ -31,7 +31,6 @@ class MusicServiceSoapClient:
     third party music services. You are unlikely to need to use it
     yourself.
     """
-
     def __init__(self, endpoint, timeout, music_service, token_store, device=None):
         """
         Args:
@@ -259,6 +258,7 @@ class MusicServiceSoapClient:
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
             return auth_parts["regUrl"], auth_parts["linkCode"], None
+        return
 
     def get_device_auth_token(self, link_code, link_device_id=None):
         """Perform the second part of a DeviceLink or AppLink authentication
