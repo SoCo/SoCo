@@ -31,6 +31,7 @@ class MusicServiceSoapClient:
     third party music services. You are unlikely to need to use it
     yourself.
     """
+
     def __init__(self, endpoint, timeout, music_service, token_store, device=None):
         """
         Args:
