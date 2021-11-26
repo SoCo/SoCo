@@ -250,7 +250,7 @@ class MusicServiceSoapClient:
             )["getDeviceLinkCodeResult"]
             return result["regUrl"], result["linkCode"], result["linkDeviceId"]
         elif self.music_service.auth_type == "AppLink":
-            log.info("First part of a AppLink auth (getDeviceLinkCode)")
+            log.debug("First part of a AppLink auth (getDeviceLinkCode)")
             result = self.call("getAppLink", [("householdId", self._household_id)])[
                 "getAppLinkResult"
             ]
