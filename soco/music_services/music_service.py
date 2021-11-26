@@ -171,7 +171,7 @@ class MusicServiceSoapClient:
                     raise MusicServiceAuthException(
                         "Token-refresh not supported for music service auth type: "
                         + self.music_service.auth_type
-                    )
+                    ) from exc
 
                 # Remove any cached value for the SOAP header
                 self._cached_soap_header = None
@@ -218,11 +218,11 @@ class MusicServiceSoapClient:
                     exc.faultstring,
                 )
                 raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
-        except XML.ParseError:
+        except XML.ParseError as exc:
             raise MusicServiceAuthException(
                 "Got empty response to request, likely because the service is not "
                 "authenticated"
-            )
+            ) from exc
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
