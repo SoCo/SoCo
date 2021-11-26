@@ -236,29 +236,35 @@ class MusicServiceSoapClient:
 
         return result if result is not None else {}
 
-    def device_or_app_link_auth_part1(self):
-        """Perform part 1 of a Device or App Link authentication session
-        See `MusicService.device_or_app_link_auth_part1` for details
+    def get_device_link_code(self):
+        """Perform the first part of a DeviceLink or AppLink authentication
+        session. This step provides the information required by the second
+        part of the authentication process.
+
+        See `MusicService.get_device_link_code` for details
         """
         if self.music_service.auth_type == "DeviceLink":
-            log.info("Perform DeviceLink auth part 1 (getDeviceLinkCode)")
+            log.debug("First part of a DeviceLink auth (getDeviceLinkCode)")
             result = self.call(
                 "getDeviceLinkCode", [("householdId", self._household_id)]
             )["getDeviceLinkCodeResult"]
             return result["regUrl"], result["linkCode"], result["linkDeviceId"]
         elif self.music_service.auth_type == "AppLink":
-            log.info("Perform AppLink auth part 1")
+            log.info("First part of a AppLink auth (getDeviceLinkCode)")
             result = self.call("getAppLink", [("householdId", self._household_id)])[
                 "getAppLinkResult"
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
             return auth_parts["regUrl"], auth_parts["linkCode"], None
 
-    def device_or_app_link_auth_part2(self, link_code, link_device_id=None):
-        """Perform part 2 of a Device or App Link authentication session
-        See `MusicService.device_or_app_link_auth_part2` for details
+    def get_device_auth_token(self, link_code, link_device_id=None):
+        """Perform the second part of a DeviceLink or AppLink authentication
+        session. This step provides the information required to authenticate to
+        a music service.
+
+        See `MusicService.get_device_auth_token` for details
         """
-        log.info("Perform DeviceLink or AppLink auth part 2 (getDeviceAuthToken)")
+        log.debug("Second part of a DeviceLink/AppLink auth (getDeviceAuthToken)")
         result = self.call(
             "getDeviceAuthToken",
             [
@@ -432,8 +438,6 @@ class MusicService:
         self.manifest_data = None
         self._search_prefix_map = None
         self.service_type = data["ServiceType"]
-
-
         self.soap_client = MusicServiceSoapClient(
             endpoint=self.secure_uri,
             timeout=9,
@@ -727,22 +731,32 @@ class MusicService:
             desc = "SA_RINCON{service_type}_".format(service_type=self.service_type)
         return desc
 
-    def device_or_app_link_auth_part1(self):
-        """Perform part 1 of a device link authentication session
+    def get_device_link_code(self):
+        """Perform the first part of a DeviceLink or AppLink authentication
+        session.
+
+        This step provides the information required by the second
+        part of the authentication process.
+
         Returns:
-            tuple: Returns device link authentication information pair in the
-            form of information: (registration_URL, link_code)
+            tuple: Returns device link authentication information in the
+            form of information: (regUrl, linkCode, linkDeviceId). For AppLink
+            linkDeviceId will return None.
         """
+        return self.soap_client.get_device_link_code()
 
-        return self.soap_client.device_or_app_link_auth_part1()
+    def get_device_auth_token(self, linkcode, linkdeviceid=None):
+        """Perform the second part of a DeviceLink or AppLink authentication
+        session. This step provides the information required to authenticate to
+        a music service.
 
-    def device_or_app_link_auth_part2(self, linkcode, linkdeviceid=None):
-        """Perform part 2 of the device link authentication session
         Args:
-            linkcode (str): The link code and link device ID (if available) returned
-                in part1
+            linkcode (str): The link code returned in the first part of the
+                authentication `get_device_link_code()`.
+            linkdeviceid (str): The link device ID (if available) returned
+                in the first part of the authentication `get_device_link_code()`.
         """
-        return self.soap_client.device_or_app_link_auth_part2(linkcode, linkdeviceid)
+        return self.soap_client.get_device_auth_token(linkcode, linkdeviceid)
 
     ########################################################################
     #                                                                      #
