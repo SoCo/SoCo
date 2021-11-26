@@ -248,7 +248,10 @@ class MusicServiceSoapClient:
             result = self.call(
                 "getDeviceLinkCode", [("householdId", self._household_id)]
             )["getDeviceLinkCodeResult"]
-            return result["regUrl"], result["linkCode"], result["linkDeviceId"]
+            link_device_id = None
+            if "linkDeviceId" in result:
+                link_device_id = result["linkDeviceId"]
+            return result["regUrl"], result["linkCode"], link_device_id
         elif self.music_service.auth_type == "AppLink":
             log.debug("First part of a AppLink auth (getDeviceLinkCode)")
             result = self.call("getAppLink", [("householdId", self._household_id)])[
@@ -521,6 +524,7 @@ class MusicService:
             # Get presentation map
             presentation_element = service.find(".//PresentationMap")
             if presentation_element is not None:
+                result_value["PresentationMapUri"] = presentation_element.get("Uri")
                 # FIXME these strings seems to have definitions of
                 # custom search categories, check whether it is
                 # implemented
