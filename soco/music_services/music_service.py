@@ -7,9 +7,9 @@ This module provides the MusicService class and related functionality.
 
 import json
 import logging
-import requests
 from urllib.parse import quote as quote_url
 from urllib.parse import urlparse, parse_qs
+import requests
 from xmltodict import parse
 from .. import discovery
 from ..exceptions import MusicServiceException, MusicServiceAuthException
