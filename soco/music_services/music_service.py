@@ -258,7 +258,7 @@ class MusicServiceSoapClient:
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
             return auth_parts["regUrl"], auth_parts["linkCode"], None
-        return
+        return None
 
     def get_device_auth_token(self, link_code, link_device_id=None):
         """Perform the second part of a DeviceLink or AppLink authentication
@@ -682,7 +682,7 @@ class MusicService:
         """
         return list(self._get_search_prefix_map().keys())
 
-    def sonos_uri_from_id(self, item_id):
+    def f(self, item_id):
         """Get a uri which can be sent for playing.
 
         Args:
