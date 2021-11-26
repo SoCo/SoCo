@@ -34,6 +34,8 @@ class TokenStoreBase:
 
 
 class JsonFileTokenStore(TokenStoreBase):
+    """JSON file token store class"""
+
     def __init__(self, filepath, token_collection="default"):
         """Instantiate instance variables
         Args:
@@ -43,7 +45,7 @@ class JsonFileTokenStore(TokenStoreBase):
         super().__init__(token_collection=token_collection)
         self.filepath = filepath
         try:
-            with open(self.filepath) as file_:
+            with open(self.filepath, encoding="utf-8") as file_:
                 self._token_store = json.load(file_)
         except FileNotFoundError:
             self._token_store = {}
@@ -64,7 +66,7 @@ class JsonFileTokenStore(TokenStoreBase):
         folder = path.dirname(self.filepath)
         if not path.exists(folder):
             makedirs(folder)
-        with open(self.filepath, "w") as file_:
+        with open(self.filepath, "w", encoding="utf-8") as file_:
             json.dump(self._token_store, file_, indent=4)
 
     def save_token_pair(self, music_service_id, household_id, token_pair):
