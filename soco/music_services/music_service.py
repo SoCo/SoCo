@@ -682,7 +682,7 @@ class MusicService:
         """
         return list(self._get_search_prefix_map().keys())
 
-    def f(self, item_id):
+    def sonos_uri_from_id(self, item_id):
         """Get a uri which can be sent for playing.
 
         Args:
