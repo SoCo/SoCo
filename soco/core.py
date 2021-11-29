@@ -435,7 +435,7 @@ class SoCo(_SocoSingletonBase):
     def is_subwoofer(self):
         """bool: Is this zone a subwoofer?"""
         self._parse_zone_group_state()
-        if zone._surround_location == "SW":
+        if self._surround_location == "SW":
             return True
         return False
 
