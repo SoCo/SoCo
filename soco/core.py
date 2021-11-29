@@ -449,7 +449,7 @@ class SoCo(_SocoSingletonBase):
         if not self._ht_sat_chan_map:
             return False
 
-        if ":SW" in self._ht_sat_chan_map:  # pylint: disable=unsupported-membership-test
+        if ":SW" in self._ht_sat_chan_map:  # pylint: disable=E1135
             return True
         return False
 
