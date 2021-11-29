@@ -9,6 +9,7 @@ Submodules
    soco.plugins.example
    soco.plugins.spotify
    soco.plugins.wimp
+   soco.plugins.sharelink
    soco.plugins.plex
 
 Module contents

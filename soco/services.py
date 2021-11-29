@@ -41,7 +41,7 @@ import requests
 from .cache import Cache
 from . import events
 from . import config
-from .exceptions import SoCoUPnPException, UnknownSoCoException
+from .exceptions import NotSupportedException, SoCoUPnPException, UnknownSoCoException
 from .utils import prettify
 from .xml import XML, illegal_xml_re
 
@@ -427,7 +427,9 @@ class Service:
         # is set over the network
         return (headers, body)
 
-    def send_command(self, action, args=None, cache=None, cache_timeout=None, **kwargs):
+    def send_command(
+        self, action, args=None, cache=None, cache_timeout=None, timeout=5, **kwargs
+    ):  # pylint: disable=too-many-arguments
         """Send a command to a Sonos device.
 
         Args:
@@ -473,15 +475,19 @@ class Service:
             return result
         # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
-        log.info("Sending %s %s to %s", action, args, self.soco.ip_address)
+        log.debug("Sending %s %s to %s", action, args, self.soco.ip_address)
         log.debug("Sending %s, %s", headers, prettify(body))
         # Convert the body to bytes, and send it.
         response = requests.post(
-            self.base_url + self.control_url, headers=headers, data=body.encode("utf-8")
+            self.base_url + self.control_url,
+            headers=headers,
+            data=body.encode("utf-8"),
+            timeout=timeout,
         )
+
         log.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code
-        log.info("Received status %s from %s", status, self.soco.ip_address)
+        log.debug("Received status %s from %s", status, self.soco.ip_address)
         if status == 200:
             # The response is good. Get the output params, and return them.
             # NB an empty dict is a valid result. It just means that no
@@ -492,6 +498,10 @@ class Service:
             # error, since we would want to try a network call again.
             cache.put(result, action, args, timeout=cache_timeout)
             return result
+        elif status == 405:
+            raise NotSupportedException(
+                "{} not supported on {}".format(action, self.soco.ip_address)
+            )
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
             # device does not like the action for some reason. The returned
@@ -684,7 +694,7 @@ class Service:
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree
         # which likes to receive bytes
-        scpd_body = requests.get(self.base_url + self.scpd_url).content
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).content
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
@@ -744,7 +754,7 @@ class Service:
 
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
-        scpd_body = requests.get(self.base_url + self.scpd_url).text
+        scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).text
         tree = XML.fromstring(scpd_body.encode("utf-8"))
         # parse the state variables to get the relevant variable types
         statevars = tree.findall("{}stateVariable".format(ns))

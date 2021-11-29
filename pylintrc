@@ -7,7 +7,7 @@
 # progress
 disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods,
     bad-option-value,no-else-return,cyclic-import,too-many-public-methods,
-    bad-continuation
+    bad-continuation, consider-using-f-string
 
 
 [REPORTS]
@@ -25,5 +25,4 @@ max-line-length=88
 # List of module names for which member attributes should not be checked
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus extisting member attributes cannot be deduced by static analysis
-ignored-modules=pytest
-
+ignored-modules=pytest,socket,struct,select,xml.parsers.expat

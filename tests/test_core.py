@@ -575,6 +575,22 @@ class TestAVTransport:
             [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
         )
 
+    def test_available_actions(self, moco):
+        moco.avTransport.GetCurrentTransportActions.return_value = {
+            "Actions": "Set, Stop, Pause, Play, X_DLNA_SeekTime, X_DLNA_SeekTrackNr"
+        }
+        assert moco.available_actions == [
+            "Set",
+            "Stop",
+            "Pause",
+            "Play",
+            "SeekTime",
+            "SeekTrackNr",
+        ]
+        moco.avTransport.GetCurrentTransportActions.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+
     def test_soco_cross_fade2(self, moco):
         moco.avTransport.GetCrossfadeMode.return_value = {"CrossfadeMode": "1"}
         assert moco.cross_fade
@@ -691,6 +707,12 @@ class TestAVTransport:
     def test_soco_stop(self, moco):
         moco.stop()
         moco.avTransport.Stop.assert_called_once_with([("InstanceID", 0), ("Speed", 1)])
+
+    def test_soco_end_direct_control_session(self, moco):
+        moco.end_direct_control_session()
+        moco.avTransport.EndDirectControlSession.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
 
     def test_soco_next(self, moco):
         moco.next()
@@ -1001,6 +1023,52 @@ class TestAVTransport:
             [("InstanceID", 0), ("CrossfadeMode", "0")]
         )
 
+    def test_shuffle(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.shuffle is False
+        moco.avTransport.GetTransportSettings.assert_called_once_with(
+            [("InstanceID", 0)]
+        )
+        moco.shuffle = True
+        moco.avTransport.SetPlayMode.assert_called_once_with(
+            [("InstanceID", 0), ("NewPlayMode", "SHUFFLE_NOREPEAT")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {
+            "PlayMode": "SHUFFLE_NOREPEAT"
+        }
+        assert moco.shuffle is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.shuffle = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+    def test_repeat(self, moco):
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "NORMAL"}
+        assert moco.repeat is False
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = True
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ALL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ALL"}
+        assert moco.repeat is True
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = False
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "NORMAL")]
+        )
+
+        moco.avTransport.GetTransportSettings.return_value = {"PlayMode": "REPEAT_ONE"}
+        assert moco.repeat == "ONE"
+        moco.avTransport.GetTransportSettings.assert_called_with([("InstanceID", 0)])
+        moco.repeat = "ONE"
+        moco.avTransport.SetPlayMode.assert_called_with(
+            [("InstanceID", 0), ("NewPlayMode", "REPEAT_ONE")]
+        )
+
     def test_set_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
         moco.avTransport.ConfigureSleepTimer.return_value = None
@@ -1196,6 +1264,20 @@ class TestRenderingControl:
             with pytest.raises(SoCoNotVisibleException):
                 moco.trueplay = True
 
+    def test_soco_soundbar_audio_input_format(self, moco):
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "0"}
+        assert moco.soundbar_audio_input_format_code == 0
+        assert moco.soundbar_audio_input_format == "No input connected"
+
+        moco.deviceProperties.GetZoneInfo.assert_called_with()
+
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "12345"}
+        assert "Unknown audio input format: 12345" in moco.soundbar_audio_input_format
+
+        moco._is_soundbar = False
+        assert moco.soundbar_audio_input_format_code is None
+        assert moco.soundbar_audio_input_format is None
+
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
@@ -1378,6 +1460,9 @@ class TestZoneGroupTopology:
 
     def test_soco_is_coordinator(self, moco_zgs):
         assert moco_zgs.is_coordinator
+
+    def test_boot_seqnum(self, moco_zgs):
+        assert moco_zgs.boot_seqnum == 162
 
     def test_all_groups(self, moco_zgs):
         groups = moco_zgs.all_groups

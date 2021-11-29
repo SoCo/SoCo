@@ -9,6 +9,7 @@ import logging
 import re
 import socket
 from functools import wraps
+import urllib.parse
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
 import warnings
@@ -143,16 +144,20 @@ class SoCo(_SocoSingletonBase):
         play_uri
         pause
         stop
+        end_direct_control_session
         seek
         next
         previous
         mute
         volume
         play_mode
+        shuffle
+        repeat
         cross_fade
         ramp_to_volume
         set_relative_volume
         get_current_track_info
+        get_current_media_info
         get_speaker_info
         get_current_transport_info
 
@@ -196,6 +201,8 @@ class SoCo(_SocoSingletonBase):
         dialog_mode
         supports_fixed_volume
         fixed_volume
+        soundbar_audio_input_format
+        soundbar_audio_input_format_code
         trueplay
         status_light
         buttons_enabled
@@ -227,11 +234,13 @@ class SoCo(_SocoSingletonBase):
         is_playing_line_in
         switch_to_line_in
         switch_to_tv
+        available_actions
         set_sleep_timer
         get_sleep_timer
         create_stereo_pair
         separate_stereo_pair
         get_battery_info
+        boot_seqnum
 
     .. warning::
 
@@ -288,6 +297,7 @@ class SoCo(_SocoSingletonBase):
 
         # Some private attributes
         self._all_zones = set()
+        self._boot_seqnum = None
         self._groups = set()
         self._is_bridge = None
         self._is_coordinator = False
@@ -306,6 +316,12 @@ class SoCo(_SocoSingletonBase):
 
     def __repr__(self):
         return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
+
+    @property
+    def boot_seqnum(self):
+        """int: The boot sequence number."""
+        self._parse_zone_group_state()
+        return int(self._boot_seqnum)
 
     @property
     def player_name(self):
@@ -446,10 +462,41 @@ class SoCo(_SocoSingletonBase):
     def play_mode(self, playmode):
         """Set the speaker's mode."""
         playmode = playmode.upper()
-        if playmode not in PLAY_MODES:
+        if playmode not in PLAY_MODES.keys():
             raise KeyError("'%s' is not a valid play mode" % playmode)
 
         self.avTransport.SetPlayMode([("InstanceID", 0), ("NewPlayMode", playmode)])
+
+    @property
+    def shuffle(self):
+        """bool: The queue's shuffle option.
+
+        True if enabled, False otherwise.
+        """
+        return PLAY_MODES[self.play_mode][0]
+
+    @shuffle.setter
+    def shuffle(self, shuffle):
+        """Set the queue's shuffle option."""
+        repeat = self.repeat
+        self.play_mode = PLAY_MODE_BY_MEANING[(shuffle, repeat)]
+
+    @property
+    def repeat(self):
+        """bool: The queue's repeat option.
+
+        True if enabled, False otherwise.
+
+        Can also be the string ``'ONE'`` for play mode
+        ``'REPEAT_ONE'``.
+        """
+        return PLAY_MODES[self.play_mode][1]
+
+    @repeat.setter
+    def repeat(self, repeat):
+        """Set the queue's repeat option"""
+        shuffle = self.shuffle
+        self.play_mode = PLAY_MODE_BY_MEANING[(shuffle, repeat)]
 
     @property
     @only_on_master  # Only for symmetry with the setter
@@ -683,19 +730,60 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Stop([("InstanceID", 0), ("Speed", 1)])
 
     @only_on_master
-    def seek(self, timestamp):
-        """Seek to a given timestamp in the current track, specified in the
-        format of HH:MM:SS or H:MM:SS.
+    def end_direct_control_session(self):
+        """Ends all third-party controlled streaming sessions."""
+        self.avTransport.EndDirectControlSession([("InstanceID", 0)])
+
+    @only_on_master
+    def seek(self, position=None, track=None):
+        """Seek to a given position.
+
+        You can seek both a relative position in the current track and a track
+        number in the queue.
+        It is even possible to seek to a tuple or dict containing the absolute
+        position (relative pos. and track nr.)::
+
+            t = ('0:00:00', 0)
+            player.seek(*t)
+            d = {'position': '0:00:00', 'track': 0}
+            player.seek(**d)
+
+        Args:
+            position (str): The desired timestamp in the current track,
+                specified in the format of HH:MM:SS or H:MM:SS
+            track (int): The (zero-based) track index in the queue
 
         Raises:
-            ValueError: if the given timestamp is invalid.
-        """
-        if not re.match(r"^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$", timestamp):
-            raise ValueError("invalid timestamp, use HH:MM:SS format")
+            ValueError: If neither position nor track are specified.
+            SoCoUPnPException: UPnP Error 701 if seeking is not supported,
+                UPnP Error 711 if the target is invalid.
 
-        self.avTransport.Seek(
-            [("InstanceID", 0), ("Unit", "REL_TIME"), ("Target", timestamp)]
-        )
+        Note:
+            The 'track' parameter can only be used if the queue is currently
+            playing. If not, use :py:meth:`play_from_queue`.
+
+        This is currently faster than :py:meth:`play_from_queue` if already
+        using the queue, as it does not reinstate the queue.
+
+        If speaker is already playing it will continue to play after
+        seek. If paused it will remain paused.
+        """
+
+        if track is None and position is None:
+            raise ValueError("No position or track information given")
+
+        if track is not None:
+            self.avTransport.Seek(
+                [("InstanceID", 0), ("Unit", "TRACK_NR"), ("Target", track + 1)]
+            )
+
+        if position is not None:
+            if not re.match(r"^[0-9][0-9]?:[0-9][0-9]:[0-9][0-9]$", position):
+                raise ValueError("invalid timestamp, use HH:MM:SS format")
+
+            self.avTransport.Seek(
+                [("InstanceID", 0), ("Unit", "REL_TIME"), ("Target", position)]
+            )
 
     @only_on_master
     def next(self):
@@ -1003,6 +1091,62 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def soundbar_audio_input_format_code(self):
+        """Return audio input format code as reported by the device.
+
+        Returns None when the device is not a soundbar.
+
+        While the variable is available on non-soundbar devices,
+        it is likely always 0 for devices without audio inputs.
+
+        See also :func:`soundbar_audio_input_format` for obtaining a
+        human-readable description of the format.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.deviceProperties.GetZoneInfo()
+
+        return int(response["HTAudioIn"])
+
+    @property
+    def soundbar_audio_input_format(self):
+        """Return a string presentation of the audio input format.
+
+        Returns None when the device is not a soundbar.
+        Otherwise, this will return the string presentation of the currently
+        active sound format (e.g., "Dolby 5.1" or "No input")
+
+        See also :func:`soundbar_audio_input_format_code` for the raw value.
+        """
+        if not self.is_soundbar:
+            return None
+
+        format_to_str = {
+            0: "No input connected",
+            2: "Stereo",
+            7: "Dolby 2.0",
+            18: "Dolby 5.1",
+            21: "No input",
+            22: "No audio",
+            33554434: "PCM 2.0",
+            33554454: "PCM 2.0 no audio",
+            33554488: "Dolby 2.0",
+            84934713: "Dolby 5.1",
+        }
+
+        format_code = self.soundbar_audio_input_format_code
+
+        if format_code not in format_to_str:
+            logging.warning("Unknown audio input format: %s", format_code)
+
+        format_str = format_to_str.get(
+            format_code, "Unknown audio input format: %s" % format_code
+        )
+
+        return format_str
+
+    @property
     def supports_fixed_volume(self):
         """bool: Whether the device supports fixed volume output."""
 
@@ -1109,6 +1253,7 @@ class SoCo(_SocoSingletonBase):
             # the zone is as yet unseen.
             zone._uid = member_attribs["UUID"]
             zone._player_name = member_attribs["ZoneName"]
+            zone._boot_seqnum = member_attribs["BootSeq"]
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
             is_visible = member_attribs.get("Invisible") != "1"
@@ -1133,8 +1278,11 @@ class SoCo(_SocoSingletonBase):
         # and the set of all members
         self._all_zones.clear()
         self._visible_zones.clear()
+        # Compatibility fallback for pre-10.1 firmwares
+        # where a "ZoneGroups" element is not used
+        tree = tree.find("ZoneGroups") or tree
         # Loop over each ZoneGroup Element
-        for group_element in tree.find("ZoneGroups").findall("ZoneGroup"):
+        for group_element in tree.findall("ZoneGroup"):
             coordinator_uid = group_element.attrib["Coordinator"]
             group_uid = group_element.attrib["ID"]
             group_coordinator = None
@@ -1469,10 +1617,10 @@ class SoCo(_SocoSingletonBase):
         # Store the entire Metadata entry in the track, this can then be
         # used if needed by the client to restart a given URI
         track["metadata"] = metadata
-        # Duration seems to be '0:00:00' when listening to radio
-        if metadata != "" and track["duration"] == "0:00:00":
-            metadata = XML.fromstring(really_utf8(metadata))
-            # Try parse trackinfo
+
+        def _parse_radio_metadata(metadata):
+            """Try to parse trackinfo from radio metadata."""
+            radio_track = {}
             trackinfo = (
                 metadata.findtext(
                     ".//{urn:schemas-rinconnetworks-com:" "metadata-1-0/}streamContent"
@@ -1482,15 +1630,38 @@ class SoCo(_SocoSingletonBase):
             index = trackinfo.find(" - ")
 
             if index > -1:
-                track["artist"] = trackinfo[:index]
-                track["title"] = trackinfo[index + 3 :]
+                radio_track["artist"] = trackinfo[:index].strip()
+                radio_track["title"] = trackinfo[index + 3 :].strip()
+            elif "TYPE=SNG|" in trackinfo:
+                # Examples from services:
+                #  Apple Music radio:
+                #   "TYPE=SNG|TITLE Couleurs|ARTIST M83|ALBUM Saturdays = Youth"
+                #  SiriusXM:
+                #   "BR P|TYPE=SNG|TITLE 7.15.17 LA|ARTIST Eagles|ALBUM "
+                tags = dict([p.split(" ", 1) for p in trackinfo.split("|") if " " in p])
+                if tags.get("TITLE"):
+                    radio_track["title"] = tags["TITLE"]
+                if tags.get("ARTIST"):
+                    radio_track["artist"] = tags["ARTIST"]
+                if tags.get("ALBUM"):
+                    radio_track["album"] = tags["ALBUM"]
             else:
                 # Might find some kind of title anyway in metadata
-                track["title"] = metadata.findtext(
+                title = metadata.findtext(
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
-                if not track["title"]:
-                    track["title"] = trackinfo
+                # Avoid using URIs as the title
+                if title in track["uri"] or title in urllib.parse.unquote(track["uri"]):
+                    radio_track["title"] = trackinfo
+                else:
+                    radio_track["title"] = title
+
+            return radio_track
+
+        # Duration seems to be '0:00:00' when listening to radio
+        if metadata != "" and track["duration"] == "0:00:00":
+            metadata = XML.fromstring(really_utf8(metadata))
+            track.update(_parse_radio_metadata(metadata))
 
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
@@ -1524,6 +1695,31 @@ class SoCo(_SocoSingletonBase):
                 )
 
         return track
+
+    def get_current_media_info(self):
+        """Get information about the currently playing media.
+
+        Returns:
+            dict: A dictionary containing information about the currently
+            playing media: uri, channel.
+
+        If we're unable to return data for a field, we'll return an empty
+        string.
+        """
+        response = self.avTransport.GetMediaInfo([("InstanceID", 0)])
+        media = {"uri": "", "channel": ""}
+
+        media["uri"] = response["CurrentURI"]
+
+        metadata = response.get("CurrentURIMetaData")
+        if metadata:
+            metadata = XML.fromstring(really_utf8(metadata))
+            md_title = metadata.findtext(".//{http://purl.org/dc/elements/1.1/}title")
+
+            if md_title:
+                media["channel"] = md_title
+
+        return media
 
     def get_speaker_info(self, refresh=False, timeout=None):
         """Get information about the Sonos speaker.
@@ -1621,6 +1817,24 @@ class SoCo(_SocoSingletonBase):
 
         return playstate
 
+    @property
+    @only_on_master
+    def available_actions(self):
+        """The transport actions that are currently available on the
+        speaker.
+
+        :returns: list: A list of strings representing the available actions, such as
+                    ['Set', 'Stop', 'Play'].
+
+        Possible list items are: 'Set', 'Stop', 'Pause', 'Play',
+        'Next', 'Previous', 'SeekTime', 'SeekTrackNr'.
+        """
+        result = self.avTransport.GetCurrentTransportActions([("InstanceID", 0)])
+        actions = result["Actions"]
+        # The actions might look like 'X_DLNA_SeekTime', but we only want the
+        # last part
+        return [action.split("_")[-1] for action in actions.split(", ")]
+
     def get_queue(self, start=0, max_items=100, full_album_art_uri=False):
         """Get information about the queue.
 
@@ -1630,7 +1844,7 @@ class SoCo(_SocoSingletonBase):
             IP address
         :returns: A :py:class:`~.soco.data_structures.Queue` object
 
-        This method is heavly based on Sam Soffes (aka soffes) ruby
+        This method is heavily based on Sam Soffes (aka soffes) ruby
         implementation
         """
         queue = []
@@ -2393,15 +2607,17 @@ NS = {
     "": "{urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/}",
 }
 
-# Valid play modes
-PLAY_MODES = (
-    "NORMAL",
-    "SHUFFLE_NOREPEAT",
-    "SHUFFLE",
-    "REPEAT_ALL",
-    "SHUFFLE_REPEAT_ONE",
-    "REPEAT_ONE",
-)
+# Valid play modes and their meanings as (shuffle, repeat) tuples
+PLAY_MODES = {
+    "NORMAL": (False, False),
+    "SHUFFLE_NOREPEAT": (True, False),
+    "SHUFFLE": (True, True),
+    "REPEAT_ALL": (False, True),
+    "SHUFFLE_REPEAT_ONE": (True, "ONE"),
+    "REPEAT_ONE": (False, "ONE"),
+}
+# Inverse mapping of PLAY_MODES
+PLAY_MODE_BY_MEANING = {meaning: mode for mode, meaning in PLAY_MODES.items()}
 
 # Music source names
 MUSIC_SRC_LIBRARY = "LIBRARY"
@@ -2431,7 +2647,6 @@ SOURCES = {
 
 # Soundbar product names
 SOUNDBARS = ("playbase", "playbar", "beam", "sonos amp", "arc", "arc sl")
-
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo

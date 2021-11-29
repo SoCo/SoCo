@@ -9,3 +9,4 @@ pytest-cov<2.6.0
 wheel
 black >= 20.0b0; python_version >= "3.6" and implementation_name == "cpython"
 requests-mock
+twine

@@ -319,11 +319,30 @@ class TestGetCurrentTrackInfo:
     )
 
     def test_get(self, soco):
-        """Test is the return value is a dictinary and contains the following
+        """Test that the return value is a dictionary and contains the following
         keys: album, artist, title, uri, playlist_position, duration,
         album_art and position.
         """
         info = soco.get_current_track_info()
+        assert isinstance(info, dict)
+        assert sorted(info.keys()) == self.info_keys
+
+
+class TestGetCurrentMediaInfo:
+    """Integration test for the get_current_media_info method."""
+
+    info_keys = sorted(
+        [
+            "uri",
+            "channel",
+        ]
+    )
+
+    def test_get(self, soco):
+        """Test that the return value is a dictionary and contains the expected
+        keys.
+        """
+        info = soco.get_current_media_info()
         assert isinstance(info, dict)
         assert sorted(info.keys()) == self.info_keys
 
