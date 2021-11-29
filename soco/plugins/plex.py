@@ -1,35 +1,33 @@
-"""Plex Plugin.
-
-This plugin supports playback from a linked Plex music service.
+"""This plugin supports playback from a linked Plex music service.
 See: https://support.plex.tv/articles/218168898-installing-plex-for-sonos/
 
 Requires:
     * Plex music service must be linked in the Sonos app
-    * Use of `plexapi` library (https://github.com/pkkid/python-plexapi)
-    * Plex server URI used in `plexapi` must be reachable from Sonos speakers
+    * Use of 'plexapi' library (https://github.com/pkkid/python-plexapi)
+    * Plex server URI used in 'plexapi' must be reachable from Sonos speakers
 
     Example usage:
 
-        > from plexapi.server import PlexServer
-        > from soco import SoCo
-        > from soco.plugins.plex import PlexPlugin
-
-        > s = SoCo("<SPEAKER_IP>")
-        > plugin = PlexPlugin(s)
-
-        > plex_uri = "http://1.2.3.4:32400"
-        > plex_token = "<YOUR_PLEX_TOKEN>"
-        > plex = PlexServer(plex_uri, token=plex_token)
-        > music = plex.library.section("Music")
-        > artist = music.get("Stevie Wonder")
-        > album = artist.album("Innervisions")
-        > track = album.tracks()[4]
-        > playlist = plex.playlist("My Playlist")
-
-        > plugin.play_now(track)    # Play a single track
-        > plugin.play_now(album)    # Play a complete album
-        > plugin.play_now(artist)   # Play all music from an artist
-        > plugin.play_now(playlist) # Play an existing playlist
+        >>> from plexapi.server import PlexServer
+        >>> from soco import SoCo
+        >>> from soco.plugins.plex import PlexPlugin
+        >>>
+        >>> s = SoCo("<SPEAKER_IP>")
+        >>> plugin = PlexPlugin(s)
+        >>>
+        >>> plex_uri = "http://1.2.3.4:32400"
+        >>> plex_token = "<YOUR_PLEX_TOKEN>"
+        >>> plex = PlexServer(plex_uri, token=plex_token)
+        >>> music = plex.library.section("Music")
+        >>> artist = music.get("Stevie Wonder")
+        >>> album = artist.album("Innervisions")
+        >>> track = album.tracks()[4]
+        >>> playlist = plex.playlist("My Playlist")
+        >>>
+        >>> plugin.play_now(track)    # Play a single track
+        >>> plugin.play_now(album)    # Play a complete album
+        >>> plugin.play_now(artist)   # Play all music from an artist
+        >>> plugin.play_now(playlist) # Play an existing playlist
 """
 
 from urllib.parse import quote
@@ -117,10 +115,11 @@ class PlexPlugin(SoCoPlugin):
     ):  # pylint: disable=too-many-locals
         """Add the provided media to the speaker's playback queue.
 
-        Arguments:
-            plex_media (`plexapi.audio.Track` or `plexapi.audio.Album` or
-                `plexapi.audio.Artist` or `plexapi.playlist.Playlist`):
-                The `plexapi` object representing the Plex media to be enqueued.
+        Args:
+            plex_media (plexapi): The plexapi object representing the Plex media
+                to be enqueued. Can be one of plexapi.audio.Track,
+                plexapi.audio.Album, plexapi.audio.Artist or
+                plexapi.playlist.Playlist.
             add_next (bool): True if media should be enqueued after the
                 currently selected track, False to add to the end of the queue.
 
