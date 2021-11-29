@@ -299,8 +299,11 @@ class SoCo(_SocoSingletonBase):
         self._all_zones = set()
         self._boot_seqnum = None
         self._groups = set()
+        self._ht_sat_chan_map = None
         self._is_bridge = None
         self._is_coordinator = False
+        self._is_satellite = False
+        self._surround_location = None
         self._is_soundbar = None
         self._player_name = None
         self._uid = None
@@ -421,6 +424,43 @@ class SoCo(_SocoSingletonBase):
         # zone group topology, to capitalise on any caching.
         self._parse_zone_group_state()
         return self._is_coordinator
+
+    @property
+    def is_satellite(self):
+        """bool: Is this zone a satellite in a home theater configuration?"""
+        self._parse_zone_group_state()
+        return self._is_satellite
+
+    @property
+    def is_subwoofer(self):
+        """bool: Is this zone a subwoofer?"""
+        self._parse_zone_group_state()
+        if zone._surround_location == "SW":
+            return True
+        return False
+
+    @property
+    def has_subwoofer(self):
+        """bool: Is this zone configured with a subwoofer?
+
+        Note: Only provides reliable results when called on the soundbar or subwoofer.
+        """
+        self._parse_zone_group_state()
+        if not self._ht_sat_chan_map:
+            return False
+
+        if ":SW" in self._ht_sat_chan_map:
+            return True
+        return False
+
+    @property
+    def surround_location(self):
+        """str: Location of this zone in a home theater setup.
+
+        Can be one of "LF,RF", "LR", "RR", "SW", or None.
+        """
+        self._parse_zone_group_state()
+        return self._surround_location
 
     @property
     def is_soundbar(self):
@@ -932,6 +972,74 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def surround_enabled(self):
+        """bool: Reports if the home theater surround speakers are enabled.
+
+        Should only be called on the primary device in a home theater setup.
+
+        True if on, False if off, None if not supported.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SurroundEnable")]
+        )
+        return bool(int(response["CurrentValue"]))
+
+    @surround_enabled.setter
+    def surround_enabled(self, enable):
+        """Enable/disable the connected surround speakers.
+
+        :param enable: Enable or disable surround speakers
+        :type enable: bool
+        """
+        if not self.is_soundbar:
+            message = "This device does not support surrounds"
+            raise NotSupportedException(message)
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SurroundEnable"),
+                ("DesiredValue", int(enable)),
+            ]
+        )
+
+    @property
+    def sub_enabled(self):
+        """bool: Reports if the subwoofer is enabled.
+
+        True if on, False if off, None if not supported.
+        """
+        if not self.has_subwoofer:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SubEnable")]
+        )
+        return bool(int(response["CurrentValue"]))
+
+    @sub_enabled.setter
+    def sub_enabled(self, enable):
+        """Enable/disable the connected subwoofer.
+
+        :param enable: Enable or disable the subwoofer
+        :type enable: bool
+        """
+        if not self.has_subwoofer:
+            message = "This group does not have a subwoofer"
+            raise NotSupportedException(message)
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SubEnable"),
+                ("DesiredValue", int(enable)),
+            ]
+        )
+
+    @property
     def balance(self):
         """The left/right balance for the speaker(s).
 
@@ -1254,6 +1362,11 @@ class SoCo(_SocoSingletonBase):
             zone._uid = member_attribs["UUID"]
             zone._player_name = member_attribs["ZoneName"]
             zone._boot_seqnum = member_attribs["BootSeq"]
+            zone._ht_sat_chan_map = member_attribs.get("HTSatChanMapSet")
+            if zone._ht_sat_chan_map:
+                for channel in zone._ht_sat_chan_map.split(";"):
+                    if channel.startswith(zone._uid):
+                        zone._surround_location = channel.split(":")[-1]
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
             is_visible = member_attribs.get("Invisible") != "1"
@@ -1289,6 +1402,7 @@ class SoCo(_SocoSingletonBase):
             members = set()
             for member_element in group_element.findall("ZoneGroupMember"):
                 zone = parse_zone_group_member(member_element)
+                zone._is_satellite = False
                 # Perform extra processing relevant to direct zone group
                 # members
                 #
@@ -1309,6 +1423,7 @@ class SoCo(_SocoSingletonBase):
                 # ZoneGroup elements
                 for satellite_element in member_element.findall("Satellite"):
                     zone = parse_zone_group_member(satellite_element)
+                    zone._is_satellite = True
                     # Assume a satellite can't be a bridge or coordinator, so
                     # no need to check.
                     #
