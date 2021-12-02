@@ -7,23 +7,16 @@ This module provides the MusicService class and related functionality.
 
 
 import logging
-
 from urllib.parse import quote as quote_url
-from urllib.parse import urlparse, parse_qs
-
-import requests
-import time
 import json
+import requests
 from xmltodict import parse
 
 from .. import discovery
-from ..compat import parse_qs, quote_url, urlparse
 from ..exceptions import MusicServiceException, MusicServiceAuthException
-# from ..music_services.accounts import Account
 from .data_structures import parse_response, MusicServiceItem
 from .token_store import JsonFileTokenStore
 from ..soap import SoapFault, SoapMessage
-from ..utils import show_xml, prettify
 from ..xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -39,18 +32,21 @@ class MusicServiceSoapClient:
     yourself.
     """
 
-    def __init__(self, endpoint, timeout, music_service, token_store, device=None):
+    def __init__(
+        self, endpoint, timeout, music_service, token_store, device=None
+    ):  # pylint: disable=too-many-arguments
         """
         Args:
             endpoint (str): The SOAP endpoint. A url.
             timeout (int): Timeout the connection after this number of
-                seconds.
+                seconds
             music_service (`MusicService`): The MusicService object to which
                 this client belongs.
-            token_store (`TokenStoreBase`): An token store instance.
+            token_store (`TokenStoreBase`): A token store instance. The token store is an
+                instance of a sub class of `TokenStoreBase`
             device (SoCo): (Optional) If provided this device will be used for the
-                communication, if not the device returned by `discovery.any_soco` will be
-                used
+                communication, if not the device returned by `discovery.any_soco` will
+                be used
         """
 
         self.endpoint = endpoint
@@ -114,16 +110,17 @@ class MusicServiceSoapClient:
             context = XML.Element("context")
             # Add timezone offset e.g. "+01:00"
             timezone = XML.SubElement(context, "timezone")
-            offset = (
-                time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
-            ) * -1
-            hours, minutes = offset / 3600, (offset % 3600) / 60
+            # FIXME this could be re-enabled once it has received more testing
+            # offset = (
+            #     time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
+            # ) * -1
+            # hours, minutes = offset / 3600, (offset % 3600) / 60
             timezone.text = "+01:00"  # "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
             credentials_header.append(context)
 
             login_token = XML.Element("loginToken")
             # If no existing authentication are known, we do not add 'token' and 'key'
-            # elements and the only operation the service can perform is to authenticate.
+            # elements and the only operation the service can perform is to authenticate
             if self.token_store.has_token(
                 self.music_service.service_id, self._device.household_id
             ):
@@ -165,8 +162,6 @@ class MusicServiceSoapClient:
             `MusicServiceException`: containing details of the error
                 returned by the music service.
         """
-        print(method, args)
-        print(prettify(self.get_soap_header()))
         message = SoapMessage(
             endpoint=self.endpoint,
             method=method,
@@ -190,7 +185,7 @@ class MusicServiceSoapClient:
                     raise MusicServiceAuthException(
                         "Token-refresh not supported for music service auth type: "
                         + self.music_service.auth_type
-                    )
+                    ) from exc
 
                 # Remove any cached value for the SOAP header
                 self._cached_soap_header = None
@@ -237,11 +232,11 @@ class MusicServiceSoapClient:
                     exc.faultstring,
                 )
                 raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
-        except XML.ParseError:
+        except XML.ParseError as parse_exc:
             raise MusicServiceAuthException(
                 "Got empty response to request, likely because the service is not "
                 "authenticated"
-            )
+            ) from parse_exc
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
@@ -274,6 +269,10 @@ class MusicServiceSoapClient:
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
             return auth_parts["regUrl"], auth_parts["linkCode"]
+        raise MusicServiceAuthException(
+            f"device_or_app_link_auth_part1 is not implemented "
+            f"for auth type {self.music_service.auth_type}"
+        )
 
     def device_or_app_link_auth_part2(self, link_code):
         """Perform part 2 of a Device or App Link authentication session
@@ -314,11 +313,6 @@ class MusicService:
          ...
          ]
 
-        Or just those to which you are subscribed:
-
-        >>> print(MusicService.get_subscribed_services_names())
-        ['Spotify', 'radioPup', 'Spreaker']
-
         Interact with TuneIn:
 
         >>> tunein = MusicService('TuneIn')
@@ -326,46 +320,21 @@ class MusicService:
         <MusicService 'TuneIn' at 0x10ad84e10>
 
         Browse an item. By default, the root item is used. An
-        :class:`~collections.OrderedDict` is returned:
+        :class:`~soco.data_structures.SearchResult` is returned (the output of print is
+        here indented for easier reading):
 
-        >>> from json import dumps # Used for pretty printing ordereddicts
-        >>> print(dumps(tunein.get_metadata(), indent=4))
-        {
-            "index": "0",
-            "count": "7",
-            "total": "7",
-            "mediaCollection": [
-                {
-                    "id": "featured:c100000150",
-                    "title": "Blue Note on SONOS",
-                    "itemType": "container",
-                    "authRequired": "false",
-                    "canPlay": "false",
-                    "canEnumerate": "true",
-                    "canCache": "true",
-                    "homogeneous": "false",
-                    "canAddToFavorite": "false",
-                    "canScroll": "false",
-                    "albumArtURI":
-                    "http://cdn-albums.tunein.com/sonos/channel_legacy.png"
-                },
-                {
-                    "id": "y1",
-                    "title": "Music",
-                    "itemType": "container",
-                    "authRequired": "false",
-                    "canPlay": "false",
-                    "canEnumerate": "true",
-                    "canCache": "true",
-                    "homogeneous": "false",
-                    "canAddToFavorite": "false",
-                    "canScroll": "false",
-                    "albumArtURI": "http://cdn-albums.tunein.com/sonos...
-                    .png"
-                },
-         ...
-            ]
-        }
+        >>> print(tunein.get_metadata())
+        SearchResult(
+          items=[
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038ac10>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a340>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a6d0>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a310>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a100>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a910>
+          ],
+          search_type='browse'
+        )
 
 
         Interact with Spotify (assuming you are subscribed):
@@ -422,12 +391,13 @@ class MusicService:
         Args:
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
-            token_store (`TokenStoreBase`): An token store instance. If none
-                is given, it will default to an instance of the
-                `JsonFileTokenStore` using the 'default' token collection.
+            token_store (`TokenStoreBase`): A token store instance. If none is given,
+                it will default to an instance of the `JsonFileTokenStore` using the
+                'default' token collection. The token store must be an instance of a
+                sub class of `TokenStoreBase`.
             device (SoCo): (Optional) If provided this device will be used for the
-                communication, if not the device returned by `discovery.any_soco` will be
-                used
+                communication, if not the device returned by `discovery.any_soco` will
+                be used
 
         Raises:
             `MusicServiceException`
@@ -1034,8 +1004,8 @@ class MusicService:
 #     return desc
 
 
-# Saved old auth code from MusicServiceSoapClient.get_soap_header, that should be kept around
-# for reference until the remaining auth method work
+# Saved old auth code from MusicServiceSoapClient.get_soap_header, that should be kept
+# around for reference until the remaining auth method work
 #
 # if music_service.account.oa_device_id:
 #     # OAuth account credentials are present. We must use them to

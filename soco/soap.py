@@ -280,8 +280,9 @@ class SoapMessage:
 
         headers, data = self.prepare()
         # Here could potentially go a Accept-Language header. See e.g. here for a
-        # description of how to do that for a music service: https://developer.sonos.com/
-        # build/content-service-get-started/soap-requests-and-responses/
+        # description of how to do that for a music service:
+        # https://developer.sonos.com/build/content-service-get-started/
+        # soap-requests-and-responses/
 
         # Check log level before logging XML, since prettifying it is
         # expensive
@@ -298,7 +299,6 @@ class SoapMessage:
         status = response.status_code
         if status == 200:
             # The response is good. Extract the Body
-            print(response.content)
             tree = XML.fromstring(response.content)
             # Get the first child of the <Body> tag. NB There should only be
             # one if the RPC standard is followed.

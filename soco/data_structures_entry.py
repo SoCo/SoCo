@@ -5,13 +5,10 @@ objects from both music library and music service data structures
 
 
 import logging
-from urllib.parse import urlparse
 
-from .xml import XML, ns_tag
 from .data_structures import didl_class_to_soco_class
 from .exceptions import DIDLMetadataError
-from .music_services.data_structures import get_class
-
+from .xml import XML, ns_tag
 
 _LOG = logging.getLogger(__name__)
 _LOG.addHandler(logging.NullHandler())

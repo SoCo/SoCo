@@ -33,10 +33,12 @@ class TokenStoreBase:
 
     def has_token(self, music_service_id, household_id):
         """Return True if a token is stored for the music service and household ID"""
-        raise NotImplemented
+        raise NotImplementedError
 
 
 class JsonFileTokenStore(TokenStoreBase):
+    """Implementation of a token store around a JSON file"""
+
     def __init__(self, filepath, token_collection="default"):
         """Instantiate instance variables
 
@@ -104,6 +106,6 @@ class JsonFileTokenStore(TokenStoreBase):
 if __name__ == "__main__":
     ts = JsonFileTokenStore.from_config_file()
     print(ts)
-    print(ts._token_store)
+    # print(ts._token_store)
     # ts.load_token_pair("714")
     # ts.save_token_pair("714", ("jjjj", "kkkk"))
