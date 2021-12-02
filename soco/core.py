@@ -193,8 +193,10 @@ class SoCo(_SocoSingletonBase):
         is_bridge
         is_coordinator
         is_soundbar
+        surround_enabled
         is_satellite
         has_satellites
+        sub_enabled
         is_subwoofer
         has_subwoofer
         channel
