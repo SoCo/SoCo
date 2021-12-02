@@ -661,7 +661,7 @@ class SubscriptionBase:
         # Cancel any auto renew
         self._auto_renew_cancel()
         if msg:
-            log.info(msg)
+            log.debug(msg)
 
     @property
     def time_left(self):

@@ -1264,6 +1264,20 @@ class TestRenderingControl:
             with pytest.raises(SoCoNotVisibleException):
                 moco.trueplay = True
 
+    def test_soco_soundbar_audio_input_format(self, moco):
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "0"}
+        assert moco.soundbar_audio_input_format_code == 0
+        assert moco.soundbar_audio_input_format == "No input connected"
+
+        moco.deviceProperties.GetZoneInfo.assert_called_with()
+
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "12345"}
+        assert "Unknown audio input format: 12345" in moco.soundbar_audio_input_format
+
+        moco._is_soundbar = False
+        assert moco.soundbar_audio_input_format_code is None
+        assert moco.soundbar_audio_input_format is None
+
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
@@ -1446,6 +1460,9 @@ class TestZoneGroupTopology:
 
     def test_soco_is_coordinator(self, moco_zgs):
         assert moco_zgs.is_coordinator
+
+    def test_boot_seqnum(self, moco_zgs):
+        assert moco_zgs.boot_seqnum == 162
 
     def test_all_groups(self, moco_zgs):
         groups = moco_zgs.all_groups

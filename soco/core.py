@@ -9,6 +9,7 @@ import logging
 import re
 import socket
 from functools import wraps
+import urllib.parse
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
 import warnings
@@ -200,6 +201,8 @@ class SoCo(_SocoSingletonBase):
         dialog_mode
         supports_fixed_volume
         fixed_volume
+        soundbar_audio_input_format
+        soundbar_audio_input_format_code
         trueplay
         status_light
         buttons_enabled
@@ -237,6 +240,7 @@ class SoCo(_SocoSingletonBase):
         create_stereo_pair
         separate_stereo_pair
         get_battery_info
+        boot_seqnum
 
     .. warning::
 
@@ -293,6 +297,7 @@ class SoCo(_SocoSingletonBase):
 
         # Some private attributes
         self._all_zones = set()
+        self._boot_seqnum = None
         self._groups = set()
         self._is_bridge = None
         self._is_coordinator = False
@@ -311,6 +316,12 @@ class SoCo(_SocoSingletonBase):
 
     def __repr__(self):
         return '{}("{}")'.format(self.__class__.__name__, self.ip_address)
+
+    @property
+    def boot_seqnum(self):
+        """int: The boot sequence number."""
+        self._parse_zone_group_state()
+        return int(self._boot_seqnum)
 
     @property
     def player_name(self):
@@ -1080,6 +1091,62 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def soundbar_audio_input_format_code(self):
+        """Return audio input format code as reported by the device.
+
+        Returns None when the device is not a soundbar.
+
+        While the variable is available on non-soundbar devices,
+        it is likely always 0 for devices without audio inputs.
+
+        See also :func:`soundbar_audio_input_format` for obtaining a
+        human-readable description of the format.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.deviceProperties.GetZoneInfo()
+
+        return int(response["HTAudioIn"])
+
+    @property
+    def soundbar_audio_input_format(self):
+        """Return a string presentation of the audio input format.
+
+        Returns None when the device is not a soundbar.
+        Otherwise, this will return the string presentation of the currently
+        active sound format (e.g., "Dolby 5.1" or "No input")
+
+        See also :func:`soundbar_audio_input_format_code` for the raw value.
+        """
+        if not self.is_soundbar:
+            return None
+
+        format_to_str = {
+            0: "No input connected",
+            2: "Stereo",
+            7: "Dolby 2.0",
+            18: "Dolby 5.1",
+            21: "No input",
+            22: "No audio",
+            33554434: "PCM 2.0",
+            33554454: "PCM 2.0 no audio",
+            33554488: "Dolby 2.0",
+            84934713: "Dolby 5.1",
+        }
+
+        format_code = self.soundbar_audio_input_format_code
+
+        if format_code not in format_to_str:
+            logging.warning("Unknown audio input format: %s", format_code)
+
+        format_str = format_to_str.get(
+            format_code, "Unknown audio input format: %s" % format_code
+        )
+
+        return format_str
+
+    @property
     def supports_fixed_volume(self):
         """bool: Whether the device supports fixed volume output."""
 
@@ -1186,6 +1253,7 @@ class SoCo(_SocoSingletonBase):
             # the zone is as yet unseen.
             zone._uid = member_attribs["UUID"]
             zone._player_name = member_attribs["ZoneName"]
+            zone._boot_seqnum = member_attribs["BootSeq"]
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
             is_visible = member_attribs.get("Invisible") != "1"
@@ -1562,8 +1630,8 @@ class SoCo(_SocoSingletonBase):
             index = trackinfo.find(" - ")
 
             if index > -1:
-                radio_track["artist"] = trackinfo[:index]
-                radio_track["title"] = trackinfo[index + 3 :]
+                radio_track["artist"] = trackinfo[:index].strip()
+                radio_track["title"] = trackinfo[index + 3 :].strip()
             elif "TYPE=SNG|" in trackinfo:
                 # Examples from services:
                 #  Apple Music radio:
@@ -1579,11 +1647,14 @@ class SoCo(_SocoSingletonBase):
                     radio_track["album"] = tags["ALBUM"]
             else:
                 # Might find some kind of title anyway in metadata
-                radio_track["title"] = metadata.findtext(
+                title = metadata.findtext(
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
-                if not radio_track["title"]:
+                # Avoid using URIs as the title
+                if title in track["uri"] or title in urllib.parse.unquote(track["uri"]):
                     radio_track["title"] = trackinfo
+                else:
+                    radio_track["title"] = title
 
             return radio_track
 
