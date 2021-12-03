@@ -177,6 +177,12 @@ SoCo supports the following controls amongst others:
 -  Get or set alarms
 -  Get or set sleep timers
 
+-  Enable or disable surround speakers or subwoofer
+-  Get information regarding a home theater setup:
+
+   - If surround speakers or a subwoofer are paired
+   - Which audio channel a given speaker handles
+
 -  Get or set the speaker’s bass and treble EQ
 -  Toggle the speaker’s loudness compensation, night mode and dialog mode
 -  Toggle the white status light on the unit
