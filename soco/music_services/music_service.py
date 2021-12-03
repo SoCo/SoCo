@@ -42,8 +42,8 @@ class MusicServiceSoapClient:
                 seconds
             music_service (`MusicService`): The MusicService object to which
                 this client belongs.
-            token_store (`TokenStoreBase`): A token store instance. The token store is an
-                instance of a sub class of `TokenStoreBase`
+            token_store (`TokenStoreBase`): A token store instance. The token store is
+                an instance of a sub class of `TokenStoreBase`
             device (SoCo): (Optional) If provided this device will be used for the
                 communication, if not the device returned by `discovery.any_soco` will
                 be used
@@ -270,8 +270,8 @@ class MusicServiceSoapClient:
             auth_parts = result["authorizeAccount"]["deviceLink"]
             return auth_parts["regUrl"], auth_parts["linkCode"]
         raise MusicServiceAuthException(
-            f"device_or_app_link_auth_part1 is not implemented "
-            f"for auth type {self.music_service.auth_type}"
+            "device_or_app_link_auth_part1 is not implemented "
+            "for auth type {}".format(self.music_service.auth_type)
         )
 
     def device_or_app_link_auth_part2(self, link_code):
