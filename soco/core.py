@@ -1264,7 +1264,9 @@ class SoCo(_SocoSingletonBase):
             33554434: "PCM 2.0",
             33554454: "PCM 2.0 no audio",
             33554488: "Dolby 2.0",
+            33554494: "Dolby Multichannel PCM 2.0",
             84934713: "Dolby 5.1",
+            84934714: "Dolby Digital Plus 5.1",
         }
 
         format_code = self.soundbar_audio_input_format_code
