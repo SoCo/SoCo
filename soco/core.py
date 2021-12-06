@@ -526,7 +526,7 @@ class SoCo(_SocoSingletonBase):
     def play_mode(self, playmode):
         """Set the speaker's mode."""
         playmode = playmode.upper()
-        if playmode not in PLAY_MODES.keys():
+        if playmode not in PLAY_MODES:
             raise KeyError("'%s' is not a valid play mode" % playmode)
 
         self.avTransport.SetPlayMode([("InstanceID", 0), ("NewPlayMode", playmode)])
