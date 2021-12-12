@@ -205,7 +205,7 @@ class SoCo(_SocoSingletonBase):
         loudness
         balance
         night_mode
-        dialog_mode
+        dialog_level
         supports_fixed_volume
         fixed_volume
         soundbar_audio_input_format
@@ -1143,7 +1143,17 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def dialog_mode(self):
-        """bool: The speaker's dialog mode.
+        """Compatability wrapper for dialog_level getter."""
+        return self.dialog_level
+
+    @dialog_mode.setter
+    def dialog_mode(self, dialog_mode):
+        """Compatability wrapper for dialog_level setter."""
+        self.dialog_level = dialog_mode
+
+    @property
+    def dialog_level(self):
+        """bool: The speaker's dialog level.
 
         True if on, False if off, None if not supported.
         """
@@ -1155,24 +1165,24 @@ class SoCo(_SocoSingletonBase):
         )
         return bool(int(response["CurrentValue"]))
 
-    @dialog_mode.setter
-    def dialog_mode(self, dialog_mode):
-        """Switch on/off the speaker's dialog mode.
+    @dialog_level.setter
+    def dialog_level(self, dialog_level):
+        """Switch on/off the speaker's dialog level.
 
-        :param dialog_mode: Enable or disable dialog mode
-        :type dialog_mode: bool
+        :param dialog_level: Enable or disable dialog level
+        :type dialog_level: bool
         :raises NotSupportedException: If the device does not support
-        dialog mode.
+        dialog level.
         """
         if not self.is_soundbar:
-            message = "This device does not support dialog mode"
+            message = "This device does not support dialog level"
             raise NotSupportedException(message)
 
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
                 ("EQType", "DialogLevel"),
-                ("DesiredValue", int(dialog_mode)),
+                ("DesiredValue", int(dialog_level)),
             ]
         )
 
