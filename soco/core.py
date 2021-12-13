@@ -1273,7 +1273,7 @@ class SoCo(_SocoSingletonBase):
         format_code = self.soundbar_audio_input_format_code
 
         if format_code not in format_to_str:
-            logging.warning("Unknown audio input format: %s", format_code)
+            logging.debug("Unknown audio input format: %s", format_code)
 
         format_str = format_to_str.get(
             format_code, "Unknown audio input format: %s" % format_code
