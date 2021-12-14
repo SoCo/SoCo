@@ -52,6 +52,23 @@ from .services import (
 from .utils import really_utf8, camel_to_underscore, deprecated
 from .xml import XML
 
+AUDIO_INPUT_FORMATS = {
+    0: "No input connected",
+    2: "Stereo",
+    7: "Dolby 2.0",
+    18: "Dolby 5.1",
+    21: "No input",
+    22: "No audio",
+    63: "Dolby Atmos",
+    33554434: "PCM 2.0",
+    33554454: "PCM 2.0 no audio",
+    33554488: "Dolby 2.0",
+    33554494: "Dolby Multichannel PCM 2.0",
+    84934658: "Multichannel PCM 5.1",
+    84934713: "Dolby 5.1",
+    84934714: "Dolby Digital Plus 5.1",
+}
+
 _LOG = logging.getLogger(__name__)
 
 
@@ -1254,33 +1271,14 @@ class SoCo(_SocoSingletonBase):
         if not self.is_soundbar:
             return None
 
-        format_to_str = {
-            0: "No input connected",
-            2: "Stereo",
-            7: "Dolby 2.0",
-            18: "Dolby 5.1",
-            21: "No input",
-            22: "No audio",
-            63: "Dolby Atmos",
-            33554434: "PCM 2.0",
-            33554454: "PCM 2.0 no audio",
-            33554488: "Dolby 2.0",
-            33554494: "Dolby Multichannel PCM 2.0",
-            84934658: "Multichannel PCM 5.1",
-            84934713: "Dolby 5.1",
-            84934714: "Dolby Digital Plus 5.1",
-        }
-
         format_code = self.soundbar_audio_input_format_code
 
-        if format_code not in format_to_str:
-            logging.debug("Unknown audio input format: %s", format_code)
+        if format_code not in AUDIO_INPUT_FORMATS:
+            error_message = "Unknown audio input format: {}".format(format_code)
+            logging.debug(error_message)
+            return error_message
 
-        format_str = format_to_str.get(
-            format_code, "Unknown audio input format: %s" % format_code
-        )
-
-        return format_str
+        return AUDIO_INPUT_FORMATS[format_code]
 
     @property
     def supports_fixed_volume(self):
