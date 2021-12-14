@@ -242,7 +242,6 @@ class SoCo(_SocoSingletonBase):
         is_bridge
         is_coordinator
         is_soundbar
-        surround_enabled
         is_satellite
         has_satellites
         sub_enabled
@@ -256,6 +255,7 @@ class SoCo(_SocoSingletonBase):
         audio_delay
         night_mode
         dialog_mode
+        surround_enabled
         surround_music_playback
         surround_volume_tv
         surround_volume_music
@@ -1070,16 +1070,13 @@ class SoCo(_SocoSingletonBase):
         return bool(int(response["CurrentValue"]))
 
     @surround_enabled.setter
+    @only_on_soundbars
     def surround_enabled(self, enable):
         """Enable/disable the connected surround speakers.
 
         :param enable: Enable or disable surround speakers
         :type enable: bool
         """
-        if not self.is_soundbar:
-            message = "This device does not support surrounds"
-            raise NotSupportedException(message)
-
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
