@@ -1261,6 +1261,7 @@ class SoCo(_SocoSingletonBase):
             18: "Dolby 5.1",
             21: "No input",
             22: "No audio",
+            63: "Dolby Atmos",
             33554434: "PCM 2.0",
             33554454: "PCM 2.0 no audio",
             33554488: "Dolby 2.0",
