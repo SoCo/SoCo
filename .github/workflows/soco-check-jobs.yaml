@@ -6,10 +6,12 @@ on:
     branches:
       - master
       - 'v0.24.fixes'
+      - 'v0.25.fixes'
   pull_request:
     branches:
       - master
       - 'v0.24.fixes'
+      - 'v0.25.fixes'
 
 jobs:
   SoCo-Check-Jobs:
