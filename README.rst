@@ -75,9 +75,9 @@ set containing them:
 
 .. code:: python
 
-    >>> import soco
-    >>> for zone in soco.discover():
-    ...        print zone.player_name
+    >>> from soco import discover
+    >>> for zone in discover():
+    ...        print(zone.player_name)
     Living Room
     Kitchen
 
@@ -86,7 +86,7 @@ If you prefer a list to a set:
 
 .. code:: python
 
-    >>> zone_list = list(soco.discover())
+    >>> zone_list = list(discover())
     >>> zone_list
     [SoCo("192.168.1.101"), SoCo("192.168.1.102")]
     >>> zone_list[0].mute = True
@@ -109,7 +109,7 @@ Of course, you can also play music!
 
         track = sonos.get_current_track_info()
 
-        print track['title']
+        print(track['title'])
 
         sonos.pause()
 
