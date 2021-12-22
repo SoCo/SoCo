@@ -95,7 +95,7 @@ Of course, you can also play music!
 
 .. code:: python
 
-    #!/usr/bin/python3
+    #!/usr/bin/env python
     from soco import SoCo
 
     if __name__ == '__main__':
@@ -109,7 +109,7 @@ Of course, you can also play music!
 
         track = sonos.get_current_track_info()
 
-        print track['title']
+        print(track['title'])
 
         sonos.pause()
 
