@@ -1196,6 +1196,16 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def dialog_level(self):
+        """Convenience wrapper for dialog_mode getter to match raw Sonos API."""
+        return self.dialog_mode
+
+    @dialog_level.setter
+    def dialog_level(self, dialog_level):
+        """Convenience wrapper for dialog_mode setter to match raw Sonos API."""
+        self.dialog_mode = dialog_level
+
+    @property
     def trueplay(self):
         """bool: Whether Trueplay is enabled on this device.
         True if on, False if off.
