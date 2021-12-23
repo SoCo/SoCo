@@ -205,7 +205,7 @@ class SoCo(_SocoSingletonBase):
         loudness
         balance
         night_mode
-        dialog_level
+        dialog_mode
         supports_fixed_volume
         fixed_volume
         soundbar_audio_input_format
@@ -1143,17 +1143,7 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def dialog_mode(self):
-        """Compatability wrapper for dialog_level getter."""
-        return self.dialog_level
-
-    @dialog_mode.setter
-    def dialog_mode(self, dialog_mode):
-        """Compatability wrapper for dialog_level setter."""
-        self.dialog_level = dialog_mode
-
-    @property
-    def dialog_level(self):
-        """bool: The speaker's dialog level.
+        """bool: The speaker's dialog mode.
 
         True if on, False if off, None if not supported.
         """
@@ -1165,26 +1155,36 @@ class SoCo(_SocoSingletonBase):
         )
         return bool(int(response["CurrentValue"]))
 
-    @dialog_level.setter
-    def dialog_level(self, dialog_level):
-        """Switch on/off the speaker's dialog level.
+    @dialog_mode.setter
+    def dialog_mode(self, dialog_mode):
+        """Switch on/off the speaker's dialog mode.
 
-        :param dialog_level: Enable or disable dialog level
-        :type dialog_level: bool
+        :param dialog_mode: Enable or disable dialog mode
+        :type dialog_mode: bool
         :raises NotSupportedException: If the device does not support
-        dialog level.
+        dialog mode.
         """
         if not self.is_soundbar:
-            message = "This device does not support dialog level"
+            message = "This device does not support dialog mode"
             raise NotSupportedException(message)
 
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
                 ("EQType", "DialogLevel"),
-                ("DesiredValue", int(dialog_level)),
+                ("DesiredValue", int(dialog_mode)),
             ]
         )
+
+    @property
+    def dialog_level(self):
+        """Convenience wrapper for dialog_mode getter to match raw Sonos API."""
+        return self.dialog_mode
+
+    @dialog_level.setter
+    def dialog_level(self, dialog_level):
+        """Convenience wrapper for dialog_mode setter to match raw Sonos API."""
+        self.dialog_mode = dialog_level
 
     @property
     def trueplay(self):
