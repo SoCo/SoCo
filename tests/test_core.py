@@ -1278,6 +1278,18 @@ class TestRenderingControl:
         assert moco.soundbar_audio_input_format_code is None
         assert moco.soundbar_audio_input_format is None
 
+    def test_soco_audio_delay(self, moco):
+        moco._is_soundbar = True
+        moco.renderingControl.GetEQ.return_value = {"CurrentValue": "2"}
+        assert moco.audio_delay == 2
+        moco.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay")]
+        )
+        moco.audio_delay = 1
+        moco.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay"), ("DesiredValue", 1)]
+        )
+
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
