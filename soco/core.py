@@ -223,6 +223,7 @@ class SoCo(_SocoSingletonBase):
         treble
         loudness
         balance
+        audio_delay
         night_mode
         dialog_mode
         supports_fixed_volume
@@ -1123,6 +1124,45 @@ class SoCo(_SocoSingletonBase):
         )
         self.renderingControl.SetVolume(
             [("InstanceID", 0), ("Channel", "RF"), ("DesiredVolume", right)]
+        )
+
+    @property
+    def audio_delay(self):
+        """int: The TV Dialog Sync audio delay.
+
+        Returns the current value or None if not supported.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "AudioDelay")]
+        )
+        return int(response["CurrentValue"])
+
+    @audio_delay.setter
+    def audio_delay(self, delay):
+        """Control the delay added to incoming audio sources. Also called
+        TV Dialog Sync in Home Theater settings.
+
+        :param delay: Delay to apply to audio in the range of 0 to 5
+        :type delay: int
+        :raises NotSupportedException: If device does not support audio delay.
+        :raises ValueError: If provided delay is not an acceptable value.
+        """
+        if not self.is_soundbar:
+            message = "This device does not support audio delay"
+            raise NotSupportedException(message)
+
+        if not 0 <= delay <= 5:
+            raise ValueError("invalid value, must be integer between 0 and 5 inclusive")
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "AudioDelay"),
+                ("DesiredValue", int(delay)),
+            ]
         )
 
     @property
