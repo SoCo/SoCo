@@ -75,7 +75,7 @@ except ImportError as error:
     Use of the SoCo events_asyncio module requires the 'aiohttp'
     package and its dependencies to be installed. aiohttp is not
     installed with SoCo by default due to potential issues installing
-    the dependencies 'mutlidict' and 'yarl' on some platforms.
+    the dependencies 'multidict' and 'yarl' on some platforms.
     See: https://github.com/SoCo/SoCo/issues/819""".format(
             error
         )
