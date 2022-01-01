@@ -1279,7 +1279,18 @@ class TestRenderingControl:
         assert moco.soundbar_audio_input_format is None
 
     def test_soco_audio_delay(self, moco):
+        moco._is_soundbar = False
+        assert moco.audio_delay == None
+        assert not moco.renderingControl.GetEQ.called
+
+        with pytest.raises(NotSupportedException):
+            moco.audio_delay = 1
+
         moco._is_soundbar = True
+
+        with pytest.raises(ValueError):
+            moco.audio_delay = 6
+
         moco.renderingControl.GetEQ.return_value = {"CurrentValue": "2"}
         assert moco.audio_delay == 2
         moco.renderingControl.GetEQ.assert_called_once_with(
