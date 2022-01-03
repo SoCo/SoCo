@@ -65,3 +65,9 @@ The default of None means the :mod:`soco.events` module will be used.
 See also:
     The :mod:`soco.events` and :mod:`soco.events_twisted` modules.
 """
+
+REQUEST_TIMEOUT = 20.0
+"""The timeout to be used when sending commands to a Sonos device.
+
+If this is set to 'None', the call will wait indefinitely.
+"""

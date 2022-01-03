@@ -428,7 +428,7 @@ class Service:
         return (headers, body)
 
     def send_command(
-        self, action, args=None, cache=None, cache_timeout=None, timeout=20, **kwargs
+        self, action, args=None, cache=None, cache_timeout=None, **kwargs
     ):  # pylint: disable=too-many-arguments
         """Send a command to a Sonos device.
 
@@ -465,6 +465,16 @@ class Service:
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
+        # Determine the timeout for the request; if 'timeout' is not
+        # set as a kwarg by the caller, use the value from
+        # config.REQUEST_TIMEOUT instead.
+        try:
+            timeout = kwargs.pop("timeout")
+            log.debug("Using timeout set by caller")
+        except KeyError:
+            timeout = config.REQUEST_TIMEOUT
+            log.debug("Using timeout from config.REQUEST_TIMEOUT")
+
         if args is None:
             args = self.compose_args(action, kwargs)
         if cache is None:
