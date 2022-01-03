@@ -1379,7 +1379,7 @@ class SoCo(_SocoSingletonBase):
         except SoCoUPnPException as error:
             raise NotSupportedException from error
 
-    def _parse_zone_group_state(self):
+    def _parse_zone_group_state(self):  # pylint: disable=too-many-statements
         """The Zone Group State contains a lot of useful information.
 
         Retrieve and parse it, and populate the relevant properties.
