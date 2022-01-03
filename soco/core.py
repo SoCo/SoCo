@@ -233,6 +233,7 @@ class SoCo(_SocoSingletonBase):
         trueplay
         status_light
         buttons_enabled
+        mic_enabled
 
     ..  rubric:: Playlists and Favorites
     ..  autosummary::
@@ -334,6 +335,8 @@ class SoCo(_SocoSingletonBase):
         self._has_satellites = False
         self._channel = None
         self._is_soundbar = None
+        self._voice_config_state = None
+        self._mic_enabled = None
         self._player_name = None
         self._uid = None
         self._household_id = None
@@ -1440,6 +1443,13 @@ class SoCo(_SocoSingletonBase):
             zone._uid = member_attribs["UUID"]
             zone._player_name = member_attribs["ZoneName"]
             zone._boot_seqnum = member_attribs["BootSeq"]
+            voice_config_state = member_attribs.get("VoiceConfigState")
+            if voice_config_state:
+                zone._voice_config_state = int(voice_config_state)
+                if zone._voice_config_state > 0:
+                    zone._mic_enabled = bool(int(member_attribs["MicEnabled"]))
+                else:
+                    zone._mic_enabled = None
             zone._channel_map = member_attribs.get("ChannelMapSet")
             zone._ht_sat_chan_map = member_attribs.get("HTSatChanMapSet")
             if zone._channel_map:
@@ -1780,6 +1790,17 @@ class SoCo(_SocoSingletonBase):
                 ("DesiredButtonLockState", lock_state),
             ]
         )
+
+    @property
+    def mic_enabled(self):
+        """bool: Is the device's microphone enabled?
+
+        .. note:: Returns None if the device does not have a microphone
+            or if a voice service is not configured.
+
+        """
+        self._parse_zone_group_state()
+        return self._mic_enabled
 
     def get_current_track_info(self):
         """Get information about the currently playing track.
