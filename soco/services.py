@@ -427,9 +427,7 @@ class Service:
         # is set over the network
         return (headers, body)
 
-    def send_command(
-        self, action, args=None, cache=None, cache_timeout=None, **kwargs
-    ):  # pylint: disable=too-many-arguments
+    def send_command(self, action, args=None, cache=None, cache_timeout=None, **kwargs):
         """Send a command to a Sonos device.
 
         Args:
