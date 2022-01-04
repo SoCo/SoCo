@@ -67,7 +67,12 @@ See also:
 """
 
 REQUEST_TIMEOUT = 20.0
-"""The timeout to be used when sending commands to a Sonos device.
+"""The timeout in seconds to be used when sending commands to a Sonos device.
 
-If this is set to 'None', the call will wait indefinitely.
+Can be a float, an int, or None. If set to 'None', calls can potentially
+wait indefinitely.
+
+This variable can be set dynamically during program execution to adjust the
+timeout in use. It can also be overridden for specific calls by using the
+'timeout' kwarg.
 """
