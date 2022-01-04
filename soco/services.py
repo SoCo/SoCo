@@ -466,12 +466,7 @@ class Service:
         # Determine the timeout for the request; if 'timeout' is not
         # set as a kwarg by the caller, use the value from
         # config.REQUEST_TIMEOUT instead.
-        try:
-            timeout = kwargs.pop("timeout")
-            log.debug("Using timeout set by caller")
-        except KeyError:
-            timeout = config.REQUEST_TIMEOUT
-            log.debug("Using timeout from config.REQUEST_TIMEOUT")
+        timeout = kwargs.pop("timeout", config.REQUEST_TIMEOUT)
 
         if args is None:
             args = self.compose_args(action, kwargs)
@@ -481,6 +476,7 @@ class Service:
         if result is not None:
             log.debug("Cache hit")
             return result
+
         # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.debug("Sending %s %s to %s", action, args, self.soco.ip_address)
