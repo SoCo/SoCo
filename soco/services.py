@@ -463,10 +463,12 @@ class Service:
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
-        # Determine the timeout for the request; if 'timeout' is not
-        # set as a kwarg by the caller, use the value from
-        # config.REQUEST_TIMEOUT instead.
+        # Determine the timeout for the request: use the value of
+        # config.REQUEST_TIMEOUT unless overridden by 'timeout'
+        # being provided as a kwarg by the caller, in which case
+        # use this and remove it from kwargs.
         timeout = kwargs.pop("timeout", config.REQUEST_TIMEOUT)
+        log.debug("Request timeout set to %s", timeout)
 
         if args is None:
             args = self.compose_args(action, kwargs)
