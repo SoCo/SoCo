@@ -427,9 +427,7 @@ class Service:
         # is set over the network
         return (headers, body)
 
-    def send_command(
-        self, action, args=None, cache=None, cache_timeout=None, timeout=20, **kwargs
-    ):  # pylint: disable=too-many-arguments
+    def send_command(self, action, args=None, cache=None, cache_timeout=None, **kwargs):
         """Send a command to a Sonos device.
 
         Args:
@@ -465,6 +463,13 @@ class Service:
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
+        # Determine the timeout for the request: use the value of
+        # config.REQUEST_TIMEOUT unless overridden by 'timeout'
+        # being provided as a kwarg by the caller, in which case
+        # use this and remove it from kwargs.
+        timeout = kwargs.pop("timeout", config.REQUEST_TIMEOUT)
+        log.debug("Request timeout set to %s", timeout)
+
         if args is None:
             args = self.compose_args(action, kwargs)
         if cache is None:
@@ -473,6 +478,7 @@ class Service:
         if result is not None:
             log.debug("Cache hit")
             return result
+
         # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.debug("Sending %s %s to %s", action, args, self.soco.ip_address)
