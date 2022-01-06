@@ -1854,7 +1854,9 @@ class SoCo(_SocoSingletonBase):
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
                 # Avoid using URIs as the title
-                if title in track["uri"] or title in urllib.parse.unquote(track["uri"]):
+                if title and (
+                    title in track["uri"] or title in urllib.parse.unquote(track["uri"])
+                ):
                     radio_track["title"] = trackinfo
                 else:
                     radio_track["title"] = title
