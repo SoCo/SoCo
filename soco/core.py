@@ -77,7 +77,9 @@ ZGS_ATTRIB_MAPPING = {
     "BootSeq": "_boot_seqnum",
     "ChannelMapSet": "_channel_map",
     "HTSatChanMapSet": "_ht_sat_chan_map",
+    "MicEnabled": "_mic_enabled",
     "UUID": "_uid",
+    "VoiceConfigState": "_voice_config_state",
     "ZoneName": "_player_name",
 }
 
@@ -243,6 +245,7 @@ class SoCo(_SocoSingletonBase):
         trueplay
         status_light
         buttons_enabled
+        voice_service_configured
         mic_enabled
 
     ..  rubric:: Playlists and Favorites
@@ -1453,14 +1456,6 @@ class SoCo(_SocoSingletonBase):
             for key, attrib in ZGS_ATTRIB_MAPPING.items():
                 setattr(zone, attrib, member_attribs.get(key))
 
-            voice_config_state = member_attribs.get("VoiceConfigState")
-            if voice_config_state:
-                zone._voice_config_state = int(voice_config_state)
-                if zone._voice_config_state > 0:
-                    zone._mic_enabled = bool(int(member_attribs["MicEnabled"]))
-                else:
-                    zone._mic_enabled = None
-
             for channel_map in list(
                 filter(None, [zone._channel_map, zone._ht_sat_chan_map])
             ):
@@ -1799,6 +1794,14 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def voice_service_configured(self):
+        """bool: Is a voice service configured on this device?"""
+        self._parse_zone_group_state()
+        if self._voice_config_state is None:
+            return None
+        return bool(int(self._voice_config_state))
+
+    @property
     def mic_enabled(self):
         """bool: Is the device's microphone enabled?
 
@@ -1807,7 +1810,9 @@ class SoCo(_SocoSingletonBase):
 
         """
         self._parse_zone_group_state()
-        return self._mic_enabled
+        if not self.voice_service_configured:
+            return None
+        return bool(int(self._mic_enabled))
 
     def get_current_track_info(self):
         """Get information about the currently playing track.
