@@ -641,11 +641,17 @@ class MusicService:
         categories = pmap_root.findall(".//SearchCategories/Category")
         if categories is None:
             return self._search_prefix_map
-        for cat in categories:
-            self._search_prefix_map[cat.get("id")] = cat.get("mappedId")
+        for category in categories:
+            # The latter part `or cat.get("id")` is added as a workaround for a
+            # Navidrome + bonob setup, where the category ids are delivered on this key
+            # instead of `mappedId` like for most other services. Reference:
+            # https://github.com/SoCo/SoCo/pull/869#issuecomment-991353397
+            self._search_prefix_map[category.get("id")] = category.get(
+                "mappedId"
+            ) or category.get("id")
         custom_categories = pmap_root.findall(".//SearchCategories/CustomCategory")
-        for cat in custom_categories:
-            self._search_prefix_map[cat.get("stringId")] = cat.get("mappedId")
+        for category in custom_categories:
+            self._search_prefix_map[category.get("stringId")] = category.get("mappedId")
         return self._search_prefix_map
 
     @property
