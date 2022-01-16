@@ -3,6 +3,26 @@
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
+
+Known problems:
+
+1. Not all music services follow the pattern layout for the
+   authentication information completely. This means that it might be
+   necessary to tweak the code for individual services. This is an
+   unfortunate result of Sonos not enforcing data hygiene of its
+   services. The implications for SoCo is that bringing all services
+   to work will require more work and the kind of broader testing we
+   will only get by putting the code out there. Hence, if you are an
+   early adopter of the music service code (added in version 0.26)
+   consider yourselves guinea pigs.
+2. There currently is no way to reset an authentication. At least when
+   authentication has been performed for TIDAL (which is device link
+   authentication), after it has been done once for a particular
+   household ID, it fails on subsequent attempts. What this might mean
+   is that if you loose the authentication tokens for such a service,
+   it may not be possible to generate new ones. Obviously, some method
+   must exist to reset this, but it is not presently implemented.
+
 """
 
 
