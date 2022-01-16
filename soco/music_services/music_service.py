@@ -256,6 +256,7 @@ class MusicServiceSoapClient:
         See `MusicService.device_or_app_link_auth_part1` for details
 
         """
+        print(self.music_service.auth_type)
         if self.music_service.auth_type == "DeviceLink":
             log.info("Perform DeviceLink auth part 1")
             result = self.call(
@@ -740,8 +741,8 @@ class MusicService:
         """Perform part 1 of a device link authentication session
 
         Returns:
-            tuple: Returns device link authentication information pair in the
-            form of information: (registration_URL, link_code)
+            tuple: Returns device link authentication information tuple on the
+            form: (registration_URL, link_code, device_id)
 
         """
 
