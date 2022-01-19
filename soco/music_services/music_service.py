@@ -762,7 +762,11 @@ class MusicService:
             str: Registration URL used for service linking.
 
         """
-        reg_url, self.link_code, self.link_device_id =  self.soap_client.device_or_app_link_auth_part1()
+        (
+            reg_url,
+            self.link_code,
+            self.link_device_id,
+        ) = self.soap_client.device_or_app_link_auth_part1()
         return reg_url
 
     def device_or_app_link_auth_part2(self, link_code=None, link_device_id=None):
