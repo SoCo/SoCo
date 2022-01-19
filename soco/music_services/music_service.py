@@ -30,6 +30,7 @@ import logging
 from urllib.parse import quote as quote_url
 import json
 import requests
+import time
 from xmltodict import parse
 
 from .. import discovery
@@ -115,7 +116,7 @@ class MusicServiceSoapClient:
 
         # According to the SONOS SMAPI, this header must be sent with all
         # SOAP requests. Building this is an expensive operation (though
-        # occasionally necessary), so f we have a cached value, return it
+        # occasionally necessary), so if we have a cached value, return it
         if self._cached_soap_header is not None:
             return self._cached_soap_header
         music_service = self.music_service
@@ -130,12 +131,11 @@ class MusicServiceSoapClient:
             context = XML.Element("context")
             # Add timezone offset e.g. "+01:00"
             timezone = XML.SubElement(context, "timezone")
-            # FIXME this could be re-enabled once it has received more testing
-            # offset = (
-            #     time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
-            # ) * -1
-            # hours, minutes = offset / 3600, (offset % 3600) / 60
-            timezone.text = "+01:00"  # "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
+            offset = (
+                time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
+            ) * -1
+            hours, minutes = offset / 3600, (offset % 3600) / 60
+            timezone.text = "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
             credentials_header.append(context)
 
             login_token = XML.Element("loginToken")
@@ -276,41 +276,43 @@ class MusicServiceSoapClient:
         See `MusicService.device_or_app_link_auth_part1` for details
 
         """
-        print(self.music_service.auth_type)
+        link_device_id = None
+
         if self.music_service.auth_type == "DeviceLink":
-            log.info("Perform DeviceLink auth part 1")
+            log.debug("Perform DeviceLink auth part 1")
             result = self.call(
                 "getDeviceLinkCode", [("householdId", self._household_id)]
             )["getDeviceLinkCodeResult"]
-            link_device_id = None
             if "linkDeviceId" in result:
                 link_device_id = result["linkDeviceId"]
             return result["regUrl"], result["linkCode"], link_device_id
         elif self.music_service.auth_type == "AppLink":
-            log.info("Perform AppLink auth part 1")
+            log.debug("Perform AppLink auth part 1")
             result = self.call("getAppLink", [("householdId", self._household_id)])[
                 "getAppLinkResult"
             ]
             auth_parts = result["authorizeAccount"]["deviceLink"]
-            return auth_parts["regUrl"], auth_parts["linkCode"], None
+            if "linkDeviceId" in auth_parts:
+                link_device_id = auth_parts["linkDeviceId"]
+            return auth_parts["regUrl"], auth_parts["linkCode"], link_device_id
         raise MusicServiceAuthException(
             "device_or_app_link_auth_part1 is not implemented "
             "for auth type {}".format(self.music_service.auth_type)
         )
 
-    def device_or_app_link_auth_part2(self, link_code):
+    def device_or_app_link_auth_part2(self, link_code, link_device_id=None):
         """Perform part 2 of a Device or App Link authentication session
 
         See `MusicService.device_or_app_link_auth_part2` for details
 
         """
-        log.info("Perform DeviceLink or AppLink auth part 2")
+        log.debug("Perform DeviceLink or AppLink auth part 2")
         result = self.call(
             "getDeviceAuthToken",
             [
                 ("householdId", self._household_id),
                 ("linkCode", link_code),
-                ("linkDeviceId", self._device_id),
+                ("linkDeviceId", link_device_id or self._device_id),
             ],
         )["getDeviceAuthTokenResult"]
         token_pair = (result["authToken"], result["privateKey"])
@@ -450,6 +452,10 @@ class MusicService:
         self.manifest_data = None
         self._search_prefix_map = None
         self.service_type = data["ServiceType"]
+
+        # Cached values used between part1 and part2
+        self.link_code = None
+        self.link_device_id = None
 
         self.soap_client = MusicServiceSoapClient(
             endpoint=self.secure_uri,
@@ -743,21 +749,26 @@ class MusicService:
         """Perform part 1 of a device link authentication session
 
         Returns:
-            tuple: Returns device link authentication information tuple on the
-            form: (registration_URL, link_code, device_id)
+            str: Registration URL used for service linking.
 
         """
+        reg_url, self.link_code, self.link_device_id =  self.soap_client.device_or_app_link_auth_part1()
+        return reg_url
 
-        return self.soap_client.device_or_app_link_auth_part1()
-
-    def device_or_app_link_auth_part2(self, linkcode):
+    def device_or_app_link_auth_part2(self, link_code=None, link_device_id=None):
         """Perform part 2 of the device link authentication session
 
         Args:
-            linkcode (str): The link code returned in part1
+            link_code (str, optional): A link code generated from part1.
+                If not provided, cached code from part1 will be used.
+            link_device_id (str, optional): A link device ID generated from part1.
+                If not provided, cached device ID from part1 will be used.
 
         """
-        return self.soap_client.device_or_app_link_auth_part2(linkcode)
+        _link_code = link_code or self.link_code
+        _link_device_id = link_device_id or self.link_device_id
+        self.soap_client.device_or_app_link_auth_part2(_link_code, _link_device_id)
+        self.link_code = self.link_device_id = None
 
     ########################################################################
     #                                                                      #
