@@ -227,12 +227,8 @@ class MusicServiceSoapClient:
                 #     <ms:privateKey>yyyyyy</ms:privateKey>
                 #   </ms:RefreshAuthTokenResult>
                 # </detail>
-                auth_token = exc.detail.find(
-                    ".//xmlns:authToken", {"xmlns": self.namespace}
-                ).text
-                private_key = exc.detail.find(
-                    ".//xmlns:privateKey", {"xmlns": self.namespace}
-                ).text
+                auth_token = exc.detail.findtext(".//authToken")
+                private_key = exc.detail.findtext(".//privateKey")
 
                 # Create new token pair and save it
                 token_pair = (auth_token, private_key)
