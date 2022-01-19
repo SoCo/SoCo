@@ -196,9 +196,19 @@ class MusicServiceSoapClient:
         try:
             result_elt = message.call()
         except SoapFault as exc:
+            if "Client.AuthTokenExpired" in exc.faultcode:
+                raise MusicServiceAuthException(
+                    "Authorization for {} expired or invalid: [{} / {} / {}]".format(
+                        self.music_service.service_name,
+                        exc.faultcode,
+                        exc.faultstring,
+                        exc.detail,
+                    )
+                ) from exc
+
             if "Client.TokenRefreshRequired" in exc.faultcode:
-                log.info(
-                    "Auth token for %s expired. Attempt to refresh.",
+                log.debug(
+                    "Auth token for %s expired, attempting to refresh",
                     self.music_service.service_name,
                 )
                 if self.music_service.auth_type not in ("DeviceLink", "AppLink"):
