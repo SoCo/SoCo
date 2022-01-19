@@ -643,7 +643,7 @@ class MusicService:
         if self.presentation_map_uri is None:
             # Assume not searchable?
             return self._search_prefix_map
-        log.info("Fetching presentation map from %s", self.presentation_map_uri)
+        log.debug("Fetching presentation map from %s", self.presentation_map_uri)
         pmap = requests.get(self.presentation_map_uri, timeout=9)
         pmap_root = XML.fromstring(pmap.content)
         # Search translations can appear in Category or CustomCategory elements
