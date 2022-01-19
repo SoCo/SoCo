@@ -111,7 +111,6 @@ def parse_response(service, response, search_type):
         service,
         search_type,
     )
-
     items = []
     # The result to be parsed is in either searchResult or getMetadataResult
     if "searchResult" in response:
