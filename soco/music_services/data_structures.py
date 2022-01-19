@@ -61,7 +61,6 @@ from urllib.parse import quote as quote_url
 import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
-from ..exceptions import MusicServiceAuthException
 from ..utils import camel_to_underscore
 
 
@@ -112,13 +111,6 @@ def parse_response(service, response, search_type):
         service,
         search_type,
     )
-    if "faultcode" in response:
-        raise MusicServiceAuthException(
-            "{}: {}".format(
-                response["faultcode"],
-                response.get("faultstring"),
-            )
-        )
 
     items = []
     # The result to be parsed is in either searchResult or getMetadataResult
