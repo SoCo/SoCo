@@ -29,8 +29,8 @@ Known problems:
 import logging
 from urllib.parse import quote as quote_url
 import json
-import requests
 import time
+import requests
 from xmltodict import parse
 
 from .. import discovery
