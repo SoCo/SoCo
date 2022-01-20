@@ -300,6 +300,13 @@ class SoapMessage:
         if status == 200:
             # The response is good. Extract the Body
             tree = XML.fromstring(response.content)
+            # Check for faults in the content
+            fault = tree.find(".//{http://schemas.xmlsoap.org/soap/envelope/}Fault")
+            if fault:
+                faultcode = fault.findtext("faultcode")
+                faultstring = fault.findtext("faultstring")
+                faultdetail = fault.find("detail")
+                raise SoapFault(faultcode, faultstring, faultdetail)
             # Get the first child of the <Body> tag. NB There should only be
             # one if the RPC standard is followed.
             body = tree.find("{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
