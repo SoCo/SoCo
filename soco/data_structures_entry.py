@@ -19,7 +19,7 @@ _LOG.addHandler(logging.NullHandler())
 _LOG.debug("%s imported", __name__)
 
 
-@lru_cache
+@lru_cache()
 def from_didl_string(string):
     """Convert a unicode xml string to a list of `DIDLObjects <DidlObject>`.
 
