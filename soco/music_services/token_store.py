@@ -1,7 +1,7 @@
 """This module implements token stores for the music services
 
 A user can provide their own token store depending on how that person
-wish to save the tokens, or use the builtin token store (the default)
+wishes to save the tokens, or use the builtin token store (the default)
 which saves the tokens in a config file.
 
 """
@@ -19,7 +19,7 @@ class TokenStoreBase:
 
         Args:
             token_collection (str): The name of the token collection to use. This may be
-                used to store different token collections for different client programs
+                used to store different token collections for different client programs.
         """
         self.token_collection = token_collection
 
@@ -28,7 +28,7 @@ class TokenStoreBase:
         raise NotImplementedError
 
     def load_token_pair(self, music_service_id, household_id):
-        """Load a token pair (token, key) which is a (2 item sequence)"""
+        """Load a token pair (token, key) which is a 2 item sequence"""
         raise NotImplementedError
 
     def has_token(self, music_service_id, household_id):
@@ -44,7 +44,7 @@ class JsonFileTokenStore(TokenStoreBase):
 
         Args:
             token_collection (str): The name of the token collection to use. This may be
-                used to store different token collections for different client programs
+                used to store different token collections for different client programs.
 
         """
         super().__init__(token_collection=token_collection)
@@ -61,7 +61,7 @@ class JsonFileTokenStore(TokenStoreBase):
 
         Args:
             token_collection (str): The name of the token collection to use. This may be
-                used to store different token collections for different client programs
+                used to store different token collections for different client programs.
         """
         config_dir = appdirs.user_config_dir("SoCo", "SoCoGroup")
         config_file = path.join(config_dir, "token_store.json")
@@ -85,7 +85,7 @@ class JsonFileTokenStore(TokenStoreBase):
         self.save_collection()
 
     def load_token_pair(self, music_service_id, household_id):
-        """Load a token pair (token, key) which is a (2 item sequence)"""
+        """Load a token pair (token, key) which is a 2 item sequence"""
         return self._token_store.get(self.token_collection, {})[
             self._create_jsonable_key(music_service_id, household_id)
         ]
@@ -98,7 +98,7 @@ class JsonFileTokenStore(TokenStoreBase):
 
     @staticmethod
     def _create_jsonable_key(music_service_id, household_id):
-        """Return a JSON-able key dictionary key created from music_service_if and
+        """Return a JSON-able dictionary key created from music_service_id and
         household_id"""
         return str(music_service_id) + "#" + str(household_id)
 
@@ -106,6 +106,3 @@ class JsonFileTokenStore(TokenStoreBase):
 if __name__ == "__main__":
     ts = JsonFileTokenStore.from_config_file()
     print(ts)
-    # print(ts._token_store)
-    # ts.load_token_pair("714")
-    # ts.save_token_pair("714", ("jjjj", "kkkk"))

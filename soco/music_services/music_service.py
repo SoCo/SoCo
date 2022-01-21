@@ -10,16 +10,16 @@ Known problems:
    authentication information completely. This means that it might be
    necessary to tweak the code for individual services. This is an
    unfortunate result of Sonos not enforcing data hygiene of its
-   services. The implications for SoCo is that bringing all services
-   to work will require more work and the kind of broader testing we
+   services. The implication for SoCo is that getting all services
+   to work will require more effort and the kind of broader testing we
    will only get by putting the code out there. Hence, if you are an
    early adopter of the music service code (added in version 0.26)
    consider yourselves guinea pigs.
-2. There currently is no way to reset an authentication. At least when
-   authentication has been performed for TIDAL (which is device link
+2. There currently is no way to reset an authentication, at least when
+   authentication has been performed for TIDAL (which uses device link
    authentication), after it has been done once for a particular
    household ID, it fails on subsequent attempts. What this might mean
-   is that if you loose the authentication tokens for such a service,
+   is that if you lose the authentication tokens for such a service,
    it may not be possible to generate new ones. Obviously, some method
    must exist to reset this, but it is not presently implemented.
 
@@ -64,9 +64,9 @@ class MusicServiceSoapClient:
             music_service (`MusicService`): The MusicService object to which
                 this client belongs.
             token_store (`TokenStoreBase`): A token store instance. The token store is
-                an instance of a sub class of `TokenStoreBase`
+                an instance of a subclass of `TokenStoreBase`
             device (SoCo): (Optional) If provided this device will be used for the
-                communication, if not the device returned by `discovery.any_soco` will
+                communication; if not, the device returned by `discovery.any_soco` will
                 be used
         """
 
@@ -116,7 +116,7 @@ class MusicServiceSoapClient:
 
         # According to the SONOS SMAPI, this header must be sent with all
         # SOAP requests. Building this is an expensive operation (though
-        # occasionally necessary), so if we have a cached value, return it
+        # occasionally necessary), so if we have a cached value, return it.
         if self._cached_soap_header is not None:
             return self._cached_soap_header
         music_service = self.music_service
@@ -139,7 +139,7 @@ class MusicServiceSoapClient:
             credentials_header.append(context)
 
             login_token = XML.Element("loginToken")
-            # If no existing authentication are known, we do not add 'token' and 'key'
+            # If no existing authentication is known, we do not add 'token' and 'key'
             # elements and the only operation the service can perform is to authenticate
             if self.token_store.has_token(
                 self.music_service.service_id, self._device.household_id
@@ -426,7 +426,7 @@ class MusicService:
             token_store (`TokenStoreBase`): A token store instance. If none is given,
                 it will default to an instance of the `JsonFileTokenStore` using the
                 'default' token collection. The token store must be an instance of a
-                sub class of `TokenStoreBase`.
+                subclass of `TokenStoreBase`.
             device (SoCo): (Optional) If provided this device will be used for the
                 communication, if not the device returned by `discovery.any_soco` will
                 be used
@@ -452,8 +452,8 @@ class MusicService:
         self.auth_type = data["Auth"]
         self.presentation_map_uri = data.get("PresentationMapUri")
         # Certain music services doesn't have a PresentationMapUri element, but
-        # delivers it instead through a manifest. Get the URI for it to prepare
-        # for parsing
+        # deliver it instead through a manifest. Get the URI for it to prepare
+        # for parsing.
         self.manifest_uri = data.get("ManifestUri")
         self.manifest_data = None
         self._search_prefix_map = None
@@ -505,7 +505,7 @@ class MusicService:
             dict: Each key is a service_type, and each value is a
             `dict` containing relevant data.
         """
-        # Return from cache if we have it.
+        # Return from cache if we have it
         if cls._music_services_data is not None:
             return cls._music_services_data
 
@@ -569,7 +569,7 @@ class MusicService:
             result_value["ServiceType"] = service_type
             result[service_type] = result_value
 
-        # Cache this so we don't need to do it again.
+        # Cache this so we don't need to do it again
         cls._music_services_data = result
         return result
 
@@ -908,7 +908,7 @@ class MusicService:
            You should not need to use this directly. It is used by the Sonos
            players (not the controllers) to obtain the uri of the media
            stream. If you want to have a player play a media item,
-           you should add add it to the queue using its id and let the
+           you should add it to the queue using its id and let the
            player work out where to get the stream from (see `On Demand
            Playback <http://musicpartners.sonos.com/node/421>`_ and
            `Programmed Radio <http://musicpartners.sonos.com/node/422>`_)
