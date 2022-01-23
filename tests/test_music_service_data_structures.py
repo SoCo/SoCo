@@ -5,7 +5,6 @@ from collections import OrderedDict
 import pytest
 from unittest.mock import PropertyMock, Mock, patch
 from soco.music_services import data_structures
-from soco.data_structures import DidlResource
 
 # DATA
 RESPONSES = []
@@ -192,7 +191,7 @@ def test_form_uri():
     assert non_track_uri == "x-rincon-cpcontainer:dummy_id"
 
     # Test track uri
-    track_uri = data_structures.form_uri("dummy_id", music_service, True)
+    _ = data_structures.form_uri("dummy_id", music_service, True)
     music_service.sonos_uri_from_id.assert_called_once_with("dummy_id")
 
 

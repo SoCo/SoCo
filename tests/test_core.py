@@ -3,7 +3,7 @@ import pytest
 import requests_mock
 
 from soco import SoCo
-from soco.data_structures import DidlMusicTrack, to_didl_string
+from soco.data_structures import to_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
@@ -37,7 +37,7 @@ def moco():
     with mock.patch(
         "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
     ) as is_coord:
-        is_coord = True
+        is_coord = True  # noqa: F841
         yield SoCo(IP_ADDR)
     for patch in reversed(patchers):
         patch.stop()
@@ -146,7 +146,7 @@ ZGS = (
               Orientation="0"
               RoomCalibrationState="4"
               SecureRegState="3"
-              VoiceConfigState="0"
+              VoiceConfigState="2"
               MicEnabled="0"
               AirPlayEnabled="0"
               IdleState="1"
@@ -175,8 +175,8 @@ ZGS = (
               Orientation="0"
               RoomCalibrationState="4"
               SecureRegState="3"
-              VoiceConfigState="0"
-              MicEnabled="0"
+              VoiceConfigState="2"
+              MicEnabled="1"
               AirPlayEnabled="0"
               IdleState="0"
               MoreInfo=""/>
@@ -411,7 +411,7 @@ class TestSoco:
     @pytest.mark.parametrize("bad_ip_addr", ["not_ip", "555.555.555.555"])
     def test_soco_bad_ip(self, bad_ip_addr):
         with pytest.raises(ValueError):
-            speaker = SoCo(bad_ip_addr)
+            _ = SoCo(bad_ip_addr)
 
     def test_soco_init(self, moco):
         assert moco.ip_address == IP_ADDR
@@ -1097,7 +1097,7 @@ class TestAVTransport:
     @pytest.mark.parametrize("bad_sleep_time", ["BadTime", "00:43:23", "4200s", ""])
     def test_set_sleep_timer_bad_sleep_time(self, moco, bad_sleep_time):
         with pytest.raises(ValueError):
-            result = moco.set_sleep_timer(bad_sleep_time)
+            _ = moco.set_sleep_timer(bad_sleep_time)
 
     def test_get_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
@@ -1277,6 +1277,29 @@ class TestRenderingControl:
         moco._is_soundbar = False
         assert moco.soundbar_audio_input_format_code is None
         assert moco.soundbar_audio_input_format is None
+
+    def test_soco_audio_delay(self, moco):
+        moco._is_soundbar = False
+        assert moco.audio_delay == None
+        assert not moco.renderingControl.GetEQ.called
+
+        with pytest.raises(NotSupportedException):
+            moco.audio_delay = 1
+
+        moco._is_soundbar = True
+
+        with pytest.raises(ValueError):
+            moco.audio_delay = 6
+
+        moco.renderingControl.GetEQ.return_value = {"CurrentValue": "2"}
+        assert moco.audio_delay == 2
+        moco.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay")]
+        )
+        moco.audio_delay = 1
+        moco.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay"), ("DesiredValue", 1)]
+        )
 
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
@@ -1555,6 +1578,15 @@ class TestZoneGroupTopology:
             [("InstanceID", 0), ("Adjustment", 25)]
         )
         assert new_volume == 75
+
+    def test_mic_enabled(self, moco_zgs):
+        for zone in moco_zgs.all_zones:
+            if zone.uid == "RINCON_000E58A53FAE01400":
+                assert zone.mic_enabled is False
+            elif zone.uid == "RINCON_000E5884455C01400":
+                assert zone.mic_enabled is True
+            else:
+                assert zone.mic_enabled is None
 
 
 def test_only_on_master_true(moco_only_on_master):
