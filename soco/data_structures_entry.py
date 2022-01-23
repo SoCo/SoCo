@@ -3,7 +3,7 @@ objects from both music library and music service data structures
 
 """
 
-
+from functools import lru_cache
 import logging
 from urllib.parse import urlparse
 
@@ -19,6 +19,7 @@ _LOG.addHandler(logging.NullHandler())
 _LOG.debug("%s imported", __name__)
 
 
+@lru_cache()
 def from_didl_string(string):
     """Convert a unicode xml string to a list of `DIDLObjects <DidlObject>`.
 

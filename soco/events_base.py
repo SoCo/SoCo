@@ -9,6 +9,7 @@
 
 
 import atexit
+from functools import lru_cache
 import logging
 import socket
 import time
@@ -26,6 +27,7 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 # pylint: disable=too-many-branches
+@lru_cache()
 def parse_event_xml(xml_event):
     """Parse the body of a UPnP event.
 
