@@ -1,8 +1,6 @@
 """Tests for the SoCoSingletonBase and _ArgsSingleton classes in core."""
 
 
-import pytest
-
 from soco.core import _SocoSingletonBase as Base
 
 

@@ -67,7 +67,7 @@ class TestResource:
 
     def test_create_didl_resource_with_no_params(self):
         with pytest.raises(TypeError):
-            res = data_structures.DidlResource()
+            _ = data_structures.DidlResource()
 
     def test_create_didl_resource(self):
         res = data_structures.DidlResource("a%20uri", "a:protocol:info:xx")
@@ -136,11 +136,11 @@ class TestDidlObject:
 
     def test_create_didl_object_with_no_params(self):
         with pytest.raises(TypeError):
-            didl_object = data_structures.DidlObject()
+            _ = data_structures.DidlObject()
 
     def test_create_didl_object_with_disallowed_params(self):
         with pytest.raises(ValueError) as excinfo:
-            didl_object = data_structures.DidlObject(
+            _ = data_structures.DidlObject(
                 title="a_title", parent_id="pid", item_id="iid", bad_args="other"
             )
         assert "not allowed" in str(excinfo.value)
@@ -165,7 +165,7 @@ class TestDidlObject:
         # Using the wrong element
         elt = XML.fromstring("""<res>URI</res>""")
         with pytest.raises(DIDLMetadataError) as excinfo:
-            didl_object = data_structures.DidlObject.from_element(elt)
+            _ = data_structures.DidlObject.from_element(elt)
         assert "Wrong element. Expected <item> or <container>, "
         "got <res> for class object" in str(excinfo.value)
 
@@ -207,7 +207,7 @@ class TestDidlObject:
         """
         )
         with pytest.raises(DIDLMetadataError) as excinfo:
-            didl_object = data_structures.DidlObject.from_element(bad_elt1)
+            _ = data_structures.DidlObject.from_element(bad_elt1)
         assert ("UPnP class is incorrect. Expected 'object', got 'object.item'") in str(
             excinfo.value
         )

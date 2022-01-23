@@ -27,7 +27,7 @@ def moco():
     with mock.patch(
         "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
     ) as is_coord:
-        is_coord = True
+        is_coord = True  # noqa: F841
         yield SoCo(IP_ADDR)
     for patch in reversed(patchers):
         patch.stop()

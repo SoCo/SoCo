@@ -1,0 +1,27 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.0.1
+  hooks:
+  - id: check-yaml
+  - id: check-json
+  - id: debug-statements
+  - id: check-ast
+
+- repo: https://github.com/psf/black
+  rev: 21.6b0
+  hooks:
+  - id: black
+    language_version: python3
+
+- repo: https://gitlab.com/pycqa/flake8
+  rev: 3.9.2
+  hooks:
+  - id: flake8
+
+- repo: https://github.com/pycqa/pylint
+  rev: v2.9.3
+  hooks:
+  - id: pylint
+    args: [--rcfile, "pylintrc"]
+    exclude: tests|doc|examples|setup.py|dev_tools
+    additional_dependencies: ["requests", "xmltodict", "ifaddr"]

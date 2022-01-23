@@ -9,7 +9,6 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.music_services.music_service import (
     MusicService,
-    MusicServiceSoapClient,
     desc_from_uri,
 )
 
@@ -260,10 +259,10 @@ def test_create_music_service():
     ms = MusicService("Spotify")
     assert ms.account.username == "12345678"
     with pytest.raises(MusicServiceException) as excinfo:
-        unknown = MusicService("Unknown Music Service")
+        _ = MusicService("Unknown Music Service")
     assert "Unknown music service" in str(excinfo.value)
     with pytest.raises(MusicServiceException) as excinfo:
-        soundcloud = MusicService("SoundCloud")
+        _ = MusicService("SoundCloud")
     assert "No account found" in str(excinfo.value)
 
 
