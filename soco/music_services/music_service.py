@@ -231,6 +231,13 @@ class MusicServiceSoapClient:
                 auth_token = exc.detail.findtext(".//authToken")
                 private_key = exc.detail.findtext(".//privateKey")
 
+                # If we didn't find the tokens, raise
+                if auth_token is None or private_key is None:
+                    raise MusicServiceAuthException(
+                        "Got a TokenRefreshRequired but no new token was found in the"
+                        " reply: {}".format(exc.detail)
+                    ) from exc
+
                 # Create new token pair and save it
                 token_pair = (auth_token, private_key)
                 self.token_store.save_token_pair(
