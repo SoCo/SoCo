@@ -71,6 +71,18 @@ AUDIO_INPUT_FORMATS = {
     84934714: "Dolby Digital Plus 5.1",
 }
 
+# XML to zone attribute mappings for ZoneGroupState contents
+# Used by SoCo._parse_zone_group_state()
+ZGS_ATTRIB_MAPPING = {
+    "BootSeq": "_boot_seqnum",
+    "ChannelMapSet": "_channel_map",
+    "HTSatChanMapSet": "_ht_sat_chan_map",
+    "MicEnabled": "_mic_enabled",
+    "UUID": "_uid",
+    "VoiceConfigState": "_voice_config_state",
+    "ZoneName": "_player_name",
+}
+
 _LOG = logging.getLogger(__name__)
 
 
@@ -233,6 +245,7 @@ class SoCo(_SocoSingletonBase):
         trueplay
         status_light
         buttons_enabled
+        voice_service_configured
         mic_enabled
 
     ..  rubric:: Playlists and Favorites
@@ -1379,7 +1392,7 @@ class SoCo(_SocoSingletonBase):
         except SoCoUPnPException as error:
             raise NotSupportedException from error
 
-    def _parse_zone_group_state(self):  # pylint: disable=too-many-statements
+    def _parse_zone_group_state(self):
         """The Zone Group State contains a lot of useful information.
 
         Retrieve and parse it, and populate the relevant properties.
@@ -1440,30 +1453,19 @@ class SoCo(_SocoSingletonBase):
             zone._zgs_cache = self._zgs_cache
             # uid doesn't change, but it's not harmful to (re)set it, in case
             # the zone is as yet unseen.
-            zone._uid = member_attribs["UUID"]
-            zone._player_name = member_attribs["ZoneName"]
-            zone._boot_seqnum = member_attribs["BootSeq"]
-            voice_config_state = member_attribs.get("VoiceConfigState")
-            if voice_config_state:
-                zone._voice_config_state = int(voice_config_state)
-                if zone._voice_config_state > 0:
-                    zone._mic_enabled = bool(int(member_attribs["MicEnabled"]))
-                else:
-                    zone._mic_enabled = None
-            zone._channel_map = member_attribs.get("ChannelMapSet")
-            zone._ht_sat_chan_map = member_attribs.get("HTSatChanMapSet")
-            if zone._channel_map:
-                for channel in zone._channel_map.split(";"):
+            for key, attrib in ZGS_ATTRIB_MAPPING.items():
+                setattr(zone, attrib, member_attribs.get(key))
+
+            for channel_map in list(
+                filter(None, [zone._channel_map, zone._ht_sat_chan_map])
+            ):
+                for channel in channel_map.split(";"):
                     if channel.startswith(zone._uid):
                         zone._channel = channel.split(":")[-1]
-            if zone._ht_sat_chan_map:
-                for channel in zone._ht_sat_chan_map.split(";"):
-                    if channel.startswith(zone._uid):
-                        zone._channel = channel.split(":")[-1]
+
             # add the zone to the set of all members, and to the set
             # of visible members if appropriate
-            is_visible = member_attribs.get("Invisible") != "1"
-            if is_visible:
+            if member_attribs.get("Invisible") != "1":
                 self._visible_zones.add(zone)
             self._all_zones.add(zone)
             return zone
@@ -1479,11 +1481,8 @@ class SoCo(_SocoSingletonBase):
             return
         self._zgs_result = zgs
         tree = XML.fromstring(zgs.encode("utf-8"))
-        # Empty the set of all zone_groups
-        self._groups.clear()
-        # and the set of all members
-        self._all_zones.clear()
-        self._visible_zones.clear()
+        # Empty the sets of all zone groups
+        self.clear_zone_groups()
         # Compatibility fallback for pre-10.1 firmwares
         # where a "ZoneGroups" element is not used
         tree = tree.find("ZoneGroups") or tree
@@ -1515,10 +1514,7 @@ class SoCo(_SocoSingletonBase):
                 # Loop over Satellite elements if present, and process as for
                 # ZoneGroup elements
                 satellite_elements = member_element.findall("Satellite")
-                if satellite_elements:
-                    zone._has_satellites = True
-                else:
-                    zone._has_satellites = False
+                zone._has_satellites = bool(satellite_elements)
                 for satellite_element in satellite_elements:
                     zone = parse_zone_group_member(satellite_element)
                     zone._is_satellite = True
@@ -1572,6 +1568,12 @@ class SoCo(_SocoSingletonBase):
         """set of :class:`soco.groups.ZoneGroup`: All visible zones."""
         self._parse_zone_group_state()
         return self._visible_zones.copy()
+
+    def clear_zone_groups(self):
+        """Clear all known group sets for this zone."""
+        self._groups.clear()
+        self._all_zones.clear()
+        self._visible_zones.clear()
 
     def partymode(self):
         """Put all the speakers in the network in the same group, a.k.a Party
@@ -1792,6 +1794,14 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def voice_service_configured(self):
+        """bool: Is a voice service configured on this device?"""
+        self._parse_zone_group_state()
+        if self._voice_config_state is None:
+            return None
+        return bool(int(self._voice_config_state))
+
+    @property
     def mic_enabled(self):
         """bool: Is the device's microphone enabled?
 
@@ -1800,7 +1810,9 @@ class SoCo(_SocoSingletonBase):
 
         """
         self._parse_zone_group_state()
-        return self._mic_enabled
+        if not self.voice_service_configured:
+            return None
+        return bool(int(self._mic_enabled))
 
     def get_current_track_info(self):
         """Get information about the currently playing track.
