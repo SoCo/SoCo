@@ -284,10 +284,10 @@ class MusicServiceSoapClient:
 
         return result if result is not None else {}
 
-    def device_or_app_link_auth_part1(self):
-        """Perform part 1 of a Device or App Link authentication session
+    def begin_authentication(self):
+        """Perform the first part of a Device or App Link authentication session
 
-        See `MusicService.device_or_app_link_auth_part1` for details
+        See `begin_authentication` for details
 
         """
         link_device_id = None
@@ -314,10 +314,10 @@ class MusicServiceSoapClient:
             "for auth type {}".format(self.music_service.auth_type)
         )
 
-    def device_or_app_link_auth_part2(self, link_code, link_device_id=None):
-        """Perform part 2 of a Device or App Link authentication session
+    def complete_authentication(self, link_code, link_device_id=None):
+        """Completes a previously initiated authentication session
 
-        See `MusicService.device_or_app_link_auth_part2` for details
+        See `complete_authentication` for details
 
         """
         log.debug("Perform DeviceLink or AppLink auth part 2")
@@ -759,8 +759,17 @@ class MusicService:
             desc = "SA_RINCON{service_type}_".format(service_type=self.service_type)
         return desc
 
-    def device_or_app_link_auth_part1(self):
-        """Perform part 1 of a device link authentication session
+    def begin_authentication(self):
+        """Perform the first part of a Device or App Link authentication session
+
+        This result of this is an authentication URL, which a user needs visit and
+        complete the necessary authentication on and then proceed to
+        `complete_authentication`
+
+        .. note::
+           The `begin_authentication` and `complete_authentication` methods must be
+           completed **on the same MusicService object** i.e. it will not work if the
+           Python session has ended and a new one started
 
         Returns:
             str: Registration URL used for service linking.
@@ -770,11 +779,14 @@ class MusicService:
             reg_url,
             self.link_code,
             self.link_device_id,
-        ) = self.soap_client.device_or_app_link_auth_part1()
+        ) = self.soap_client.begin_authentication()
         return reg_url
 
-    def device_or_app_link_auth_part2(self, link_code=None, link_device_id=None):
-        """Perform part 2 of the device link authentication session
+    def complete_authentication(self, link_code=None, link_device_id=None):
+        """Completes a previously initiated device or app link authentication session
+
+        This method is the second part of a two-step authentication process, see
+        `begin_authentication` for details on the first part.
 
         Args:
             link_code (str, optional): A link code generated from part1.
@@ -785,7 +797,7 @@ class MusicService:
         """
         _link_code = link_code or self.link_code
         _link_device_id = link_device_id or self.link_device_id
-        self.soap_client.device_or_app_link_auth_part2(_link_code, _link_device_id)
+        self.soap_client.complete_authentication(_link_code, _link_device_id)
         self.link_code = self.link_device_id = None
 
     ########################################################################
