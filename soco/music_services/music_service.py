@@ -775,6 +775,9 @@ class MusicService:
             str: Registration URL used for service linking.
 
         """
+        log.debug(
+            "Begin authentication on music service '%s' with id %i", self, id(self)
+        )
         (
             reg_url,
             self.link_code,
@@ -795,6 +798,9 @@ class MusicService:
                 If not provided, cached device ID from part1 will be used.
 
         """
+        log.debug(
+            "Complete authentication on music service '%s' with id %i", self, id(self)
+        )
         _link_code = link_code or self.link_code
         _link_device_id = link_device_id or self.link_device_id
         self.soap_client.complete_authentication(_link_code, _link_device_id)
