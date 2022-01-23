@@ -198,7 +198,8 @@ class MusicServiceSoapClient:
         except SoapFault as exc:
             if "Client.AuthTokenExpired" in exc.faultcode:
                 raise MusicServiceAuthException(
-                    "Authorization for {} expired or invalid: [{} / {} / {}]".format(
+                    "Authorization for {} expired, is invalid or has not yet been "
+                    "completed: [{} / {} / {}]".format(
                         self.music_service.service_name,
                         exc.faultcode,
                         exc.faultstring,
