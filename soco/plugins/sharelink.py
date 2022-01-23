@@ -46,6 +46,11 @@ class ShareClass:
                 "key": "00032020",
                 "class": "object.item.audioItem.musicTrack",
             },
+            "song": {
+                "prefix": "",
+                "key": "10032020",
+                "class": "object.item.audioItem.musicTrack",
+            },
             "playlist": {
                 "prefix": "x-rincon-cpcontainer:1006206c",
                 "key": "1006206c",
@@ -132,8 +137,43 @@ class DeezerShare(ShareClass):
         return (share_type, encoded_uri)
 
 
+class AppleMusicShare(ShareClass):
+    """Apple Music share class."""
+
+    def canonical_uri(self, uri):
+        # https://music.apple.com/dk/album/black-velvet/217502930?i=217503142
+        match = re.search(
+            r"https://music\.apple\.com/\w+/album/[^/]+/\d+\?i=(\d+)", uri
+        )
+        if match:
+            return "song:" + match.group(1)
+
+        # https://music.apple.com/dk/album/amused-to-death/975952384
+        match = re.search(r"https://music\.apple\.com/\w+/album/[^/]+/(\d+)", uri)
+        if match:
+            return "album:" + match.group(1)
+
+        # https://music.apple.com/dk/playlist/power-ballads-essentials/pl.92e04ee75ed64804b9df468b5f45a161
+        match = re.search(
+            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[a-f\d]+)", uri
+        )
+        if match:
+            return "playlist:" + match.group(1)
+
+        return None
+
+    def service_number(self):
+        return 52231
+
+    def extract(self, uri):
+        uri = self.canonical_uri(uri)
+        share_type = uri.split(":")[0]
+        encoded_uri = uri.replace(":", "%3a")
+        return (share_type, encoded_uri)
+
+
 class ShareLinkPlugin(SoCoPlugin):
-    """A SoCo plugin for playing Spotify/Tidal share links."""
+    """A SoCo plugin for playing music service share links."""
 
     def __init__(self, soco):
         """Initialize the plugin."""
@@ -143,6 +183,7 @@ class ShareLinkPlugin(SoCoPlugin):
             SpotifyUSShare(),
             TIDALShare(),
             DeezerShare(),
+            AppleMusicShare(),
         ]
 
     @property
