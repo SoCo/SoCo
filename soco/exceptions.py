@@ -68,6 +68,10 @@ class MusicServiceException(SoCoException):
     """An error relating to a third party music service."""
 
 
+class MusicServiceAuthException(MusicServiceException):
+    """An error relating to authentication of a third party music service"""
+
+
 class UnknownXMLStructure(SoCoException):
 
     """Raised if XML with an unknown or unexpected structure is returned."""

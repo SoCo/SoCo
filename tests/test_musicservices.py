@@ -9,11 +9,13 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.music_services.music_service import (
     MusicService,
-    desc_from_uri,
+    MusicServiceSoapClient,
 )
 
 
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
+from soco.music_services.token_store import JsonFileTokenStore
+
 ACCOUNT_DATA = """<?xml version="1.0" ?>
 <ZPSupportInfo type="User">
     <Accounts
@@ -249,21 +251,16 @@ def test_get_names():
     assert "Deezer" in names
 
 
-def test_get_subscribed_names():
-    names = MusicService.get_subscribed_services_names()
-    assert len(names) == 4
-    assert set(names) == {"TuneIn", "Spotify", "Spreaker", "radioPup"}
-
-
 def test_create_music_service():
+
+    # Normal instantiation, default token store
     ms = MusicService("Spotify")
-    assert ms.account.username == "12345678"
-    with pytest.raises(MusicServiceException) as excinfo:
-        _ = MusicService("Unknown Music Service")
-    assert "Unknown music service" in str(excinfo.value)
-    with pytest.raises(MusicServiceException) as excinfo:
-        _ = MusicService("SoundCloud")
-    assert "No account found" in str(excinfo.value)
+    assert ms.service_name == "Spotify"
+    assert isinstance(ms.token_store, JsonFileTokenStore)
+    # Custom token store
+    obj = object()
+    ms = MusicService("Spotify", token_store=obj)
+    assert ms.token_store is obj
 
 
 def test_tunein():
@@ -272,7 +269,6 @@ def test_tunein():
     assert tunein
     assert tunein.service_id == "254"
     assert tunein.service_type == "65031"
-    assert tunein.account.serial_number == "0"
 
 
 def test_search():
@@ -296,39 +292,39 @@ def test_sonos_uri_from_id():
     track = "spotify:track:2qs5ZcLByNTctJKbhAZ9JE"
     assert (
         spotify.sonos_uri_from_id(track)
-        == "soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=9&sn=1"
+        == "soco://spotify%3Atrack%3A2qs5ZcLByNTctJKbhAZ9JE?sid=9&sn=0"
     )
     # Check for escaping with a few difficult characters
     track = "spotify: track\2qc%ünicøde?"
     assert (
         spotify.sonos_uri_from_id(track)
-        == "soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=9&sn=1"
+        == "soco://spotify%3A%20track%02qc%25%C3%BCnic%C3%B8de%3F?sid=9&sn=0"
     )
     # and a different service
     spreaker = MusicService("Spreaker")
     track = "spreaker12345678"
-    assert spreaker.sonos_uri_from_id(track) == "soco://spreaker12345678?sid=163&sn=3"
+    assert spreaker.sonos_uri_from_id(track) == "soco://spreaker12345678?sid=163&sn=0"
 
 
 def test_desc():
     spotify = MusicService("Spotify")
-    assert spotify.desc == "SA_RINCON2311_12345678"
+    assert spotify.desc == "SA_RINCON2311_X_#Svc2311-0-Token"
     spreaker = MusicService("Spreaker")
     assert spreaker.desc == "SA_RINCON41735_"
 
 
-def test_desc_from_uri():
-    URI = "x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=1"
-    assert desc_from_uri(URI) == "SA_RINCON2311_12345678"
-    SID_ONLY = "x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32"
-    assert desc_from_uri(SID_ONLY) == "SA_RINCON2311_12345678"
-    TUNEIN_URI = "x-sonosapi-stream:s49815?sid=254&amp;flags=8224&amp;sn=0"
-    assert desc_from_uri(TUNEIN_URI) == "SA_RINCON65031_"
-    UNKNOWN_AC_WITH_SID = (
-        "x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32&amp;sn=400"
-    )
-    assert desc_from_uri(UNKNOWN_AC_WITH_SID) == "SA_RINCON2311_12345678"
-    NO_DATA = "x-sonos-http:track%3a3402413.mp3?flags=32"
-    assert desc_from_uri(NO_DATA) == "RINCON_AssociatedZPUDN"
-    HTTP = "http://archive.org/download/TenD/TenD2005-07-16t10Wonderboy_64kb.mp3"
-    assert desc_from_uri(HTTP) == "RINCON_AssociatedZPUDN"
+# def test_desc_from_uri():
+#     URI = "x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=1"
+#     assert desc_from_uri(URI) == "SA_RINCON2311_12345678"
+#     SID_ONLY = "x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32"
+#     assert desc_from_uri(SID_ONLY) == "SA_RINCON2311_12345678"
+#     TUNEIN_URI = "x-sonosapi-stream:s49815?sid=254&amp;flags=8224&amp;sn=0"
+#     assert desc_from_uri(TUNEIN_URI) == "SA_RINCON65031_"
+#     UNKNOWN_AC_WITH_SID = (
+#         "x-sonos-http:track%3a3402413.mp3?sid=9&amp;flags=32&amp;sn=400"
+#     )
+#     assert desc_from_uri(UNKNOWN_AC_WITH_SID) == "SA_RINCON2311_12345678"
+#     NO_DATA = "x-sonos-http:track%3a3402413.mp3?flags=32"
+#     assert desc_from_uri(NO_DATA) == "RINCON_AssociatedZPUDN"
+#     HTTP = "http://archive.org/download/TenD/TenD2005-07-16t10Wonderboy_64kb.mp3"
+#     assert desc_from_uri(HTTP) == "RINCON_AssociatedZPUDN"

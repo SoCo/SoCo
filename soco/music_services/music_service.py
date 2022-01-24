@@ -3,22 +3,40 @@
 """Sonos Music Services interface.
 
 This module provides the MusicService class and related functionality.
+
+Known problems:
+
+1. Not all music services follow the pattern layout for the
+   authentication information completely. This means that it might be
+   necessary to tweak the code for individual services. This is an
+   unfortunate result of Sonos not enforcing data hygiene of its
+   services. The implication for SoCo is that getting all services
+   to work will require more effort and the kind of broader testing we
+   will only get by putting the code out there. Hence, if you are an
+   early adopter of the music service code (added in version 0.26)
+   consider yourselves guinea pigs.
+2. There currently is no way to reset an authentication, at least when
+   authentication has been performed for TIDAL (which uses device link
+   authentication), after it has been done once for a particular
+   household ID, it fails on subsequent attempts. What this might mean
+   is that if you lose the authentication tokens for such a service,
+   it may not be possible to generate new ones. Obviously, some method
+   must exist to reset this, but it is not presently implemented.
+
 """
 
 
 import logging
-
 from urllib.parse import quote as quote_url
-from urllib.parse import urlparse, parse_qs
-
+import json
+import time
 import requests
-
 from xmltodict import parse
 
 from .. import discovery
-from ..exceptions import MusicServiceException
-from ..music_services.accounts import Account
+from ..exceptions import MusicServiceException, MusicServiceAuthException
 from .data_structures import parse_response, MusicServiceItem
+from .token_store import JsonFileTokenStore
 from ..soap import SoapFault, SoapMessage
 from ..xml import XML
 
@@ -35,19 +53,27 @@ class MusicServiceSoapClient:
     yourself.
     """
 
-    def __init__(self, endpoint, timeout, music_service):
+    def __init__(
+        self, endpoint, timeout, music_service, token_store, device=None
+    ):  # pylint: disable=too-many-arguments
         """
         Args:
-             endpoint (str): The SOAP endpoint. A url.
-             timeout (int): Timeout the connection after this number of
-                 seconds.
-             music_service (MusicService): The MusicService object to which
-                 this client belongs.
+            endpoint (str): The SOAP endpoint. A url.
+            timeout (int): Timeout the connection after this number of
+                seconds
+            music_service (`MusicService`): The MusicService object to which
+                this client belongs.
+            token_store (`TokenStoreBase`): A token store instance. The token store is
+                an instance of a subclass of `TokenStoreBase`
+            device (SoCo): (Optional) If provided this device will be used for the
+                communication; if not, the device returned by `discovery.any_soco` will
+                be used
         """
 
         self.endpoint = endpoint
         self.timeout = timeout
         self.music_service = music_service
+        self.token_store = token_store
         self.namespace = "http://www.sonos.com/Services/1.1"
 
         self._cached_soap_header = None
@@ -64,12 +90,19 @@ class MusicServiceSoapClient:
 
         self.http_headers = {
             "Accept-Encoding": "gzip, deflate",
-            "User-Agent": "Linux UPnP/1.0 Sonos/26.99-12345",
+            "User-Agent": (
+                "Linux UPnP/1.0 Sonos/29.3-87071 (ICRU_iPhone7,1); "
+                "iOS/Version 8.2 (Build 12D508)"
+            )
+            # "Linux UPnP/1.0 Sonos/26.99-12345",
         }
-        self._device = discovery.any_soco()
+        self._device = device or discovery.any_soco()
         self._device_id = self._device.systemProperties.GetString(
             [("VariableName", "R_TrialZPSerial")]
         )["StringValue"]
+        self._household_id = self._device.deviceProperties.GetHouseholdID()[
+            "CurrentHouseholdID"
+        ]
 
     def get_soap_header(self):
         """Generate the SOAP authentication header for the related service.
@@ -83,41 +116,49 @@ class MusicServiceSoapClient:
 
         # According to the SONOS SMAPI, this header must be sent with all
         # SOAP requests. Building this is an expensive operation (though
-        # occasionally necessary), so f we have a cached value, return it
+        # occasionally necessary), so if we have a cached value, return it.
         if self._cached_soap_header is not None:
             return self._cached_soap_header
         music_service = self.music_service
-        credentials_header = XML.Element(
-            "credentials", {"xmlns": "http://www.sonos.com/Services/1.1"}
-        )
+        credentials_header = XML.Element("credentials", {"xmlns": self.namespace})
         device_id = XML.SubElement(credentials_header, "deviceId")
         device_id.text = self._device_id
         device_provider = XML.SubElement(credentials_header, "deviceProvider")
         device_provider.text = "Sonos"
-        if music_service.account.oa_device_id:
-            # OAuth account credentials are present. We must use them to
-            # authenticate.
+
+        if music_service.auth_type in ("DeviceLink", "AppLink"):
+            # Add context
+            context = XML.Element("context")
+            # Add timezone offset e.g. "+01:00"
+            timezone = XML.SubElement(context, "timezone")
+            offset = (
+                time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
+            ) * -1
+            hours, minutes = offset / 3600, (offset % 3600) / 60
+            timezone.text = "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
+            credentials_header.append(context)
+
             login_token = XML.Element("loginToken")
-            token = XML.SubElement(login_token, "token")
-            token.text = music_service.account.oa_device_id
-            key = XML.SubElement(login_token, "key")
-            key.text = music_service.account.key
+            # If no existing authentication is known, we do not add 'token' and 'key'
+            # elements and the only operation the service can perform is to authenticate
+            if self.token_store.has_token(
+                self.music_service.service_id, self._device.household_id
+            ):
+                # Fill in from saved tokens
+                token_pair = self.token_store.load_token_pair(
+                    self.music_service.service_id, self._device.household_id
+                )
+                token = XML.SubElement(login_token, "token")
+                key = XML.SubElement(login_token, "key")
+                token.text = token_pair[0]
+                key.text = token_pair[1]
+
             household_id = XML.SubElement(login_token, "householdId")
-            household_id.text = self._device.household_id
+            household_id.text = self._household_id
             credentials_header.append(login_token)
 
-        # otherwise, perhaps use DeviceLink or UserId auth
-        elif music_service.auth_type in ["DeviceLink", "UserId"]:
-            # We need a session ID from Sonos
-            session_id = self._device.musicServices.GetSessionId(
-                [
-                    ("ServiceId", music_service.service_id),
-                    ("Username", music_service.account.username),
-                ]
-            )["SessionId"]
-            session_elt = XML.Element("sessionId")
-            session_elt.text = session_id
-            credentials_header.append(session_elt)
+        # TODO Implement UserID with user provided account, since we can't get the
+        # accounts from the device anymore
 
         # Anonymous auth. No need for anything further.
         self._cached_soap_header = XML.tostring(
@@ -146,7 +187,7 @@ class MusicServiceSoapClient:
             method=method,
             parameters=[] if args is None else args,
             http_headers=self.http_headers,
-            soap_action="http://www.sonos.com/Services/1" ".1#{}".format(method),
+            soap_action="http://www.sonos.com/Services/1.1#{0}".format(method),
             soap_header=self.get_soap_header(),
             namespace=self.namespace,
             timeout=self.timeout,
@@ -155,37 +196,81 @@ class MusicServiceSoapClient:
         try:
             result_elt = message.call()
         except SoapFault as exc:
+            if "Client.AuthTokenExpired" in exc.faultcode:
+                raise MusicServiceAuthException(
+                    "Authorization for {} expired, is invalid or has not yet been "
+                    "completed: [{} / {} / {}]".format(
+                        self.music_service.service_name,
+                        exc.faultcode,
+                        exc.faultstring,
+                        exc.detail,
+                    )
+                ) from exc
+
             if "Client.TokenRefreshRequired" in exc.faultcode:
-                log.debug("Token refresh required. Trying again")
+                log.debug(
+                    "Auth token for %s expired, attempting to refresh",
+                    self.music_service.service_name,
+                )
+                if self.music_service.auth_type not in ("DeviceLink", "AppLink"):
+                    raise MusicServiceAuthException(
+                        "Token-refresh not supported for music service auth type: "
+                        + self.music_service.auth_type
+                    ) from exc
+
                 # Remove any cached value for the SOAP header
                 self._cached_soap_header = None
 
-                # <detail>
-                #   <refreshAuthTokenResult>
-                #       <authToken>xxxxxxx</authToken>
-                #       <privateKey>zzzzzz</privateKey>
-                #   </refreshAuthTokenResult>
+                # Extract new token and key from the error message
+                # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
+                #   <ms:RefreshAuthTokenResult>
+                #     <ms:authToken>xxxxxxx</ms:authToken>
+                #     <ms:privateKey>yyyyyy</ms:privateKey>
+                #   </ms:RefreshAuthTokenResult>
                 # </detail>
                 auth_token = exc.detail.findtext(".//authToken")
                 private_key = exc.detail.findtext(".//privateKey")
-                # We have new details - update the account
-                self.music_service.account.oa_device_id = auth_token
-                self.music_service.account.key = private_key
+
+                # If we didn't find the tokens, raise
+                if auth_token is None or private_key is None:
+                    raise MusicServiceAuthException(
+                        "Got a TokenRefreshRequired but no new token was found in the"
+                        " reply: {}".format(exc.detail)
+                    ) from exc
+
+                # Create new token pair and save it
+                token_pair = (auth_token, private_key)
+                self.token_store.save_token_pair(
+                    self.music_service.service_id,
+                    self._device.household_id,
+                    token_pair,
+                )
+
+                # With the new token pair in hand, attempt a new call
                 message = SoapMessage(
                     endpoint=self.endpoint,
                     method=method,
-                    parameters=args,
+                    parameters=[] if args is None else args,
                     http_headers=self.http_headers,
-                    soap_action="http://www.sonos.com/Services/1"
-                    ".1#{}".format(method),
+                    soap_action="http://www.sonos.com/Services/1.1#{0}".format(method),
                     soap_header=self.get_soap_header(),
                     namespace=self.namespace,
                     timeout=self.timeout,
                 )
                 result_elt = message.call()
-
             else:
+                log.exception(
+                    "Unhandled SOAP Fault. Code: %s. Detail: %s. String: %s",
+                    exc.faultcode,
+                    exc.detail,
+                    exc.faultstring,
+                )
                 raise MusicServiceException(exc.faultstring, exc.faultcode) from exc
+        except XML.ParseError as parse_exc:
+            raise MusicServiceAuthException(
+                "Got empty response to request, likely because the service is not "
+                "authenticated"
+            ) from parse_exc
 
         # The top key in the OrderedDict will be the methodResult. Its
         # value may be None if no results were returned.
@@ -193,11 +278,63 @@ class MusicServiceSoapClient:
             parse(
                 XML.tostring(result_elt),
                 process_namespaces=True,
-                namespaces={"http://www.sonos.com/Services/1.1": None},
+                namespaces={self.namespace: None},
             ).values()
         )[0]
 
         return result if result is not None else {}
+
+    def begin_authentication(self):
+        """Perform the first part of a Device or App Link authentication session
+
+        See `begin_authentication` for details
+
+        """
+        link_device_id = None
+
+        if self.music_service.auth_type == "DeviceLink":
+            log.debug("Beginning DeviceLink authentication")
+            result = self.call(
+                "getDeviceLinkCode", [("householdId", self._household_id)]
+            )["getDeviceLinkCodeResult"]
+            if "linkDeviceId" in result:
+                link_device_id = result["linkDeviceId"]
+            return result["regUrl"], result["linkCode"], link_device_id
+        elif self.music_service.auth_type == "AppLink":
+            log.debug("Beginning AppLink authentication")
+            result = self.call("getAppLink", [("householdId", self._household_id)])[
+                "getAppLinkResult"
+            ]
+            auth_parts = result["authorizeAccount"]["deviceLink"]
+            if "linkDeviceId" in auth_parts:
+                link_device_id = auth_parts["linkDeviceId"]
+            return auth_parts["regUrl"], auth_parts["linkCode"], link_device_id
+        raise MusicServiceAuthException(
+            "begin_authentication() is not implemented "
+            "for auth type {}".format(self.music_service.auth_type)
+        )
+
+    def complete_authentication(self, link_code, link_device_id=None):
+        """Completes a previously initiated authentication session
+
+        See `complete_authentication` for details
+
+        """
+        log.debug("Attempting to complete DeviceLink or AppLink authentication")
+        result = self.call(
+            "getDeviceAuthToken",
+            [
+                ("householdId", self._household_id),
+                ("linkCode", link_code),
+                ("linkDeviceId", link_device_id or self._device_id),
+            ],
+        )["getDeviceAuthTokenResult"]
+        token_pair = (result["authToken"], result["privateKey"])
+        self.token_store.save_token_pair(
+            self.music_service.service_id, self._device.household_id, token_pair
+        )
+        # Delete the soap header, which will force it to rebuild
+        self._cached_soap_header = None
 
 
 # pylint: disable=too-many-instance-attributes
@@ -216,11 +353,6 @@ class MusicService:
          ...
          ]
 
-        Or just those to which you are subscribed:
-
-        >>> print(MusicService.get_subscribed_services_names())
-        ['Spotify', 'radioPup', 'Spreaker']
-
         Interact with TuneIn:
 
         >>> tunein = MusicService('TuneIn')
@@ -228,46 +360,21 @@ class MusicService:
         <MusicService 'TuneIn' at 0x10ad84e10>
 
         Browse an item. By default, the root item is used. An
-        :class:`~collections.OrderedDict` is returned:
+        :class:`~soco.data_structures.SearchResult` is returned (the output of print is
+        here indented for easier reading):
 
-        >>> from json import dumps # Used for pretty printing ordereddicts
-        >>> print(dumps(tunein.get_metadata(), indent=4))
-        {
-            "index": "0",
-            "count": "7",
-            "total": "7",
-            "mediaCollection": [
-                {
-                    "id": "featured:c100000150",
-                    "title": "Blue Note on SONOS",
-                    "itemType": "container",
-                    "authRequired": "false",
-                    "canPlay": "false",
-                    "canEnumerate": "true",
-                    "canCache": "true",
-                    "homogeneous": "false",
-                    "canAddToFavorite": "false",
-                    "canScroll": "false",
-                    "albumArtURI":
-                    "http://cdn-albums.tunein.com/sonos/channel_legacy.png"
-                },
-                {
-                    "id": "y1",
-                    "title": "Music",
-                    "itemType": "container",
-                    "authRequired": "false",
-                    "canPlay": "false",
-                    "canEnumerate": "true",
-                    "canCache": "true",
-                    "homogeneous": "false",
-                    "canAddToFavorite": "false",
-                    "canScroll": "false",
-                    "albumArtURI": "http://cdn-albums.tunein.com/sonos...
-                    .png"
-                },
-         ...
-            ]
-        }
+        >>> print(tunein.get_metadata())
+        SearchResult(
+          items=[
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038ac10>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a340>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a6d0>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a310>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a100>,
+            <soco.music_services.data_structures.MSContainer object at 0x7f58b038a910>
+          ],
+          search_type='browse'
+        )
 
 
         Interact with Spotify (assuming you are subscribed):
@@ -319,20 +426,28 @@ class MusicService:
 
     _music_services_data = None
 
-    def __init__(self, service_name, account=None):
+    def __init__(self, service_name, token_store=None, device=None):
         """
         Args:
             service_name (str): The name of the music service, as returned by
                 `get_all_music_services_names()`, eg 'Spotify', or 'TuneIn'
-            account (Account): The account to use to access this service.
-                If none is specified, one will be chosen automatically if
-                possible. Defaults to `None`.
+            token_store (`TokenStoreBase`): A token store instance. If none is given,
+                it will default to an instance of the `JsonFileTokenStore` using the
+                'default' token collection. The token store must be an instance of a
+                subclass of `TokenStoreBase`.
+            device (SoCo): (Optional) If provided this device will be used for the
+                communication, if not the device returned by `discovery.any_soco` will
+                be used
 
         Raises:
             `MusicServiceException`
         """
 
         self.service_name = service_name
+        if token_store:
+            self.token_store = token_store
+        else:
+            self.token_store = JsonFileTokenStore.from_config_file()
         # Look up the data for this service
         data = self.get_data_for_name(service_name)
         self.uri = data["Uri"]
@@ -341,26 +456,27 @@ class MusicService:
         self.version = data["Version"]
         self.container_type = data["ContainerType"]
         self.service_id = data["Id"]
-        # Auth_type can be 'Anonymous', 'UserId, 'DeviceLink'
+        # Auth_type can be 'Anonymous', 'UserId, 'DeviceLink' and 'AppLink'
         self.auth_type = data["Auth"]
-        self.presentation_map_uri = data.get("PresentationMapUri", None)
+        self.presentation_map_uri = data.get("PresentationMapUri")
+        # Certain music services doesn't have a PresentationMapUri element, but
+        # deliver it instead through a manifest. Get the URI for it to prepare
+        # for parsing.
+        self.manifest_uri = data.get("ManifestUri")
+        self.manifest_data = None
         self._search_prefix_map = None
         self.service_type = data["ServiceType"]
-        if account is not None:
-            self.account = account
-        else:
-            # try to find an account for this service
-            for acct in Account.get_accounts().values():
-                if acct.service_type == self.service_type:
-                    self.account = acct
-                    break
-            else:
-                raise MusicServiceException(
-                    "No account found for service: '%s'" % service_name
-                )
+
+        # Cached values used between begin_authentication and complete_authentication
+        self.link_code = None
+        self.link_device_id = None
 
         self.soap_client = MusicServiceSoapClient(
-            endpoint=self.secure_uri, timeout=9, music_service=self  # The default is 60
+            endpoint=self.secure_uri,
+            timeout=9,
+            music_service=self,  # The default is 60
+            token_store=self.token_store,
+            device=device,
         )
 
     def __repr__(self):
@@ -377,7 +493,7 @@ class MusicService:
 
         Args:
             soco (SoCo): a SoCo instance to query. If none is specified, a
-            random device will be used. Defaults to `None`.
+                random device will be used. Defaults to `None`.
 
         Returns:
             str: a string containing the music services data xml
@@ -397,7 +513,7 @@ class MusicService:
             dict: Each key is a service_type, and each value is a
             `dict` containing relevant data.
         """
-        # Return from cache if we have it.
+        # Return from cache if we have it
         if cls._music_services_data is not None:
             return cls._music_services_data
 
@@ -434,9 +550,22 @@ class MusicService:
             auth_element = service.find("Policy")
             auth = auth_element.attrib
             result_value.update(auth)
+
+            # Get presentation map
             presentation_element = service.find(".//PresentationMap")
             if presentation_element is not None:
                 result_value["PresentationMapUri"] = presentation_element.get("Uri")
+                # FIXME these strings seems to have definitions of
+                # custom search categories, check whether it is
+                # implemented
+                # FIXME is this right, or are we getting the same element twice?
+                result_value["StringsUri"] = presentation_element.get("Uri")
+
+            # Get manifest information if available
+            manifest_element = service.find("Manifest")
+            if manifest_element is not None:
+                result_value["ManifestUri"] = manifest_element.get("Uri")
+
             result_value["ServiceID"] = service.get("Id")
             # ServiceType is used elsewhere in Sonos, eg to form tokens,
             # and get_subscribed_music_services() below. It is also the
@@ -447,7 +576,8 @@ class MusicService:
             service_type = str(int(service.get("Id")) * 256 + 7)
             result_value["ServiceType"] = service_type
             result[service_type] = result_value
-        # Cache this so we don't need to do it again.
+
+        # Cache this so we don't need to do it again
         cls._music_services_data = result
         return result
 
@@ -461,24 +591,6 @@ class MusicService:
             list: A list of strings.
         """
         return [service["Name"] for service in cls._get_music_services_data().values()]
-
-    @classmethod
-    def get_subscribed_services_names(cls):
-        """Get a list of the names of all subscribed music services.
-
-        Returns:
-            list: A list of strings.
-        """
-        # This is very inefficient - loops within loops within loops, and
-        # many network requests
-        # Optimise it?
-        accounts_for_service = Account.get_accounts_for_service
-        service_data = cls._get_music_services_data().values()
-        return [
-            service["Name"]
-            for service in service_data
-            if len(accounts_for_service(service["ServiceType"])) > 0
-        ]
 
     @classmethod
     def get_data_for_name(cls, service_name):
@@ -528,21 +640,41 @@ class MusicService:
                 "hosts": "search:host",
             }
             return self._search_prefix_map
+
+        # Certain music services delivers the presentation map not in an
+        # information field of its own, but in a JSON 'manifest'. Get it
+        # and extract the needed values.
+        if (
+            self.presentation_map_uri is None
+            and self.manifest_uri is not None
+            and self.manifest_data is None
+        ):
+            manifest = requests.get(self.manifest_uri, timeout=9)
+            self.manifest_data = json.loads(manifest.content)
+            pmap_element = self.manifest_data.get("presentationMap")
+            if pmap_element:
+                self.presentation_map_uri = pmap_element.get("uri")
         if self.presentation_map_uri is None:
             # Assume not searchable?
             return self._search_prefix_map
-        log.info("Fetching presentation map from %s", self.presentation_map_uri)
+        log.debug("Fetching presentation map from %s", self.presentation_map_uri)
         pmap = requests.get(self.presentation_map_uri, timeout=9)
         pmap_root = XML.fromstring(pmap.content)
         # Search translations can appear in Category or CustomCategory elements
         categories = pmap_root.findall(".//SearchCategories/Category")
         if categories is None:
             return self._search_prefix_map
-        for cat in categories:
-            self._search_prefix_map[cat.get("id")] = cat.get("mappedId")
+        for category in categories:
+            # The latter part `or cat.get("id")` is added as a workaround for a
+            # Navidrome + bonob setup, where the category ids are delivered on this key
+            # instead of `mappedId` like for most other services. Reference:
+            # https://github.com/SoCo/SoCo/pull/869#issuecomment-991353397
+            self._search_prefix_map[category.get("id")] = category.get(
+                "mappedId"
+            ) or category.get("id")
         custom_categories = pmap_root.findall(".//SearchCategories/CustomCategory")
-        for cat in custom_categories:
-            self._search_prefix_map[cat.get("stringId")] = cat.get("mappedId")
+        for category in custom_categories:
+            self._search_prefix_map[category.get("stringId")] = category.get("mappedId")
         return self._search_prefix_map
 
     @property
@@ -565,7 +697,7 @@ class MusicService:
 
 
         """
-        return self._get_search_prefix_map().keys()
+        return list(self._get_search_prefix_map().keys())
 
     def sonos_uri_from_id(self, item_id):
         """Get a uri which can be sent for playing.
@@ -601,10 +733,13 @@ class MusicService:
         # we need to encode.
         item_id = quote_url(item_id.encode("utf-8"))
         # Add the account info to the end as query params
-        account = self.account
-        result = "soco://{}?sid={}&sn={}".format(
-            item_id, self.service_id, account.serial_number
-        )
+
+        # FIXME we no longer have accounts, so for now the serial
+        # numbers is assumed to be 0. Originally it was read from
+        # account.serial_numbers
+        # account = self.account
+
+        result = "soco://{}?sid={}&sn={}".format(item_id, self.service_id, 0)
         return result
 
     @property
@@ -612,10 +747,68 @@ class MusicService:
         """str: The Sonos descriptor to use for this service.
 
         The Sonos descriptor is used as the content of the <desc> tag in
-        DIDL metadata, to indicate the relevant music service id and username.
+        DIDL metadata, to indicate the relevant music service id.
         """
-        desc = "SA_RINCON{}_{}".format(self.account.service_type, self.account.username)
+        if self.auth_type == "DeviceLink":
+            # It used to be that the second part (after the second _ was the username
+            desc = "SA_RINCON{service_type}_X_#Svc{service_type}-0-Token".format(
+                service_type=self.service_type
+            )
+        else:
+            # This seems to at least be the case for TuneIn
+            desc = "SA_RINCON{service_type}_".format(service_type=self.service_type)
         return desc
+
+    def begin_authentication(self):
+        """Perform the first part of a Device or App Link authentication session
+
+        This result of this is an authentication URL, which a user needs visit and
+        complete the necessary authentication on and then proceed to
+        `complete_authentication`
+
+        .. note::
+           The `begin_authentication` and `complete_authentication` methods must be
+           completed **on the same `MusicService` instance** unless the `link_code`
+           and `link_device_id` values are passed to `complete_authentication`. These
+           two values can be found as attributes on the `MusicService` instance after
+           `begin_authentication` has been executed.
+
+        Returns:
+            str: Registration URL used for service linking.
+
+        """
+        log.debug(
+            "Begin authentication on music service '%s' with id %i", self, id(self)
+        )
+        (
+            reg_url,
+            self.link_code,
+            self.link_device_id,
+        ) = self.soap_client.begin_authentication()
+        return reg_url
+
+    def complete_authentication(self, link_code=None, link_device_id=None):
+        """Completes a previously initiated device or app link authentication session
+
+        This method is the second part of a two-step authentication process, see
+        `begin_authentication` for details on the first part.
+
+        Args:
+            link_code (str, optional): A link code generated from begin_authentication.
+                If not provided, cached code will be used.
+            link_device_id (str, optional): A link device ID generated from
+                begin_authentication. If not provided, cached device ID will be used.
+
+        """
+        log.debug(
+            "Complete authentication on music service '%s' with id %i", self, id(self)
+        )
+        _link_code = link_code or self.link_code
+        if not _link_code:
+            raise MusicServiceAuthException("link_code not provided or cached")
+        _link_device_id = link_device_id or self.link_device_id
+        self.soap_client.complete_authentication(_link_code, _link_device_id)
+        self.link_code = self.link_device_id = None
 
     ########################################################################
     #                                                                      #
@@ -745,7 +938,7 @@ class MusicService:
            You should not need to use this directly. It is used by the Sonos
            players (not the controllers) to obtain the uri of the media
            stream. If you want to have a player play a media item,
-           you should add add it to the queue using its id and let the
+           you should add it to the queue using its id and let the
            player work out where to get the stream from (see `On Demand
            Playback <http://musicpartners.sonos.com/node/421>`_ and
            `Programmed Radio <http://musicpartners.sonos.com/node/422>`_)
@@ -810,62 +1003,3 @@ class MusicService:
             "getExtendedMetadataText", [("id", item_id), ("type", metadata_type)]
         )
         return response.get("getExtendedMetadataTextResult", None)
-
-
-def desc_from_uri(uri):
-    """Create the content of DIDL desc element from a uri.
-
-    Args:
-        uri (str): A uri, eg:
-            ``'x-sonos-http:track%3a3402413.mp3?sid=2&amp;flags=32&amp;sn=4'``
-
-    Returns:
-        str: The content of a desc element for that uri, eg
-            ``'SA_RINCON519_email@example.com'``
-    """
-    #
-    # If there is an sn parameter (which is the serial number of an account),
-    # we can obtain all the information we need from that, because we can find
-    # the relevant service_id in the account database (it is the same as the
-    # service_type). Consequently, the sid parameter is unneeded. But if sn is
-    # missing, we need the sid (service_type) parameter to find a relevant
-    # account
-
-    # urlparse does not work consistently with custom URI schemes such as
-    # those used by Sonos. This is especially broken in Python 2.6 and
-    # early versions of 2.7: http://bugs.python.org/issue9374
-    # As a workaround, we split off the scheme manually, and then parse
-    # the uri as if it were http
-    if ":" in uri:
-        _, uri = uri.split(":", 1)
-    # Remove 'amp;' from uri, leaving '&' as the separator
-    # See: https://github.com/SoCo/SoCo/issues/810
-    uri = uri.replace("amp;", "")
-    query_string = parse_qs(urlparse(uri, "http").query)
-    # Is there an account serial number?
-    if query_string.get("sn"):
-        account_serial_number = query_string["sn"][0]
-        try:
-            account = Account.get_accounts()[account_serial_number]
-            desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
-            return desc
-        except KeyError:
-            # There is no account matching this serial number. Fall back to
-            # using the service id to find an account
-            pass
-    if query_string.get("sid"):
-        service_id = query_string["sid"][0]
-        for service in MusicService._get_music_services_data().values():
-            if service_id == service["ServiceID"]:
-                service_type = service["ServiceType"]
-                account = Account.get_accounts_for_service(service_type)
-                if not account:
-                    break
-                # Use the first account we find
-                account = account[0]
-                desc = "SA_RINCON{}_{}".format(account.service_type, account.username)
-                return desc
-    # Nothing found. Default to the standard desc value. Is this the right
-    # thing to do?
-    desc = "RINCON_AssociatedZPUDN"
-    return desc

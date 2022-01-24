@@ -162,6 +162,7 @@ class SoapMessage:
 
         headers = {"Content-Type": 'text/xml; charset="utf-8"'}
         if soap_action is not None:
+            # FIXME The successful auth was with SOAP-Action
             headers.update({"SOAPACTION": '"{}"'.format(soap_action)})
         if http_headers is not None:
             headers.update(http_headers)
@@ -273,10 +274,15 @@ class SoapMessage:
         Raises:
              SoapFault: if a SOAP error occurs.
              ~requests.exceptions.HTTPError: if an http error occurs.
+             xml.etree.ElementTree.ParseError: If the response cannot be parsed as XML
 
         """
 
         headers, data = self.prepare()
+        # Here could potentially go a Accept-Language header. See e.g. here for a
+        # description of how to do that for a music service:
+        # https://developer.sonos.com/build/content-service-get-started/
+        # soap-requests-and-responses/
 
         # Check log level before logging XML, since prettifying it is
         # expensive
@@ -294,6 +300,13 @@ class SoapMessage:
         if status == 200:
             # The response is good. Extract the Body
             tree = XML.fromstring(response.content)
+            # Check for faults in the content
+            fault = tree.find(".//{http://schemas.xmlsoap.org/soap/envelope/}Fault")
+            if fault:
+                faultcode = fault.findtext("faultcode")
+                faultstring = fault.findtext("faultstring")
+                faultdetail = fault.find("detail")
+                raise SoapFault(faultcode, faultstring, faultdetail)
             # Get the first child of the <Body> tag. NB There should only be
             # one if the RPC standard is followed.
             body = tree.find("{http://schemas.xmlsoap.org/soap/envelope/}Body")[0]
