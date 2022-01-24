@@ -796,8 +796,8 @@ class MusicService:
         Args:
             link_code (str, optional): A link code generated from begin_authentication.
                 If not provided, cached code will be used.
-            link_device_id (str, optional): A link device ID generated from begin_authentication.
-                If not provided, cached device ID will be used.
+            link_device_id (str, optional): A link device ID generated from
+                begin_authentication. If not provided, cached device ID will be used.
 
         """
         log.debug(
