@@ -34,8 +34,10 @@ Sonos has changed the way music service account information is available. This m
 
 Issue #557 is a meta issue for this problem and you can use that to track progress on solving the issues, but
 *please refrain from posting "me too" comments* in there. Also, there is no need to open any more separate issue about this.
-
 If you have another music service that should be on the list, comment in #557
+
+**As of v0.26.0, nascent music service support has been reinstated, with some known issues. Testing and issue reporting
+would be appreciated.**
 
 Installation
 ------------
