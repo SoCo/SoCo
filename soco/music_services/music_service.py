@@ -293,7 +293,7 @@ class MusicServiceSoapClient:
         link_device_id = None
 
         if self.music_service.auth_type == "DeviceLink":
-            log.debug("Perform DeviceLink auth part 1")
+            log.debug("Beginning DeviceLink authentication")
             result = self.call(
                 "getDeviceLinkCode", [("householdId", self._household_id)]
             )["getDeviceLinkCodeResult"]
@@ -301,7 +301,7 @@ class MusicServiceSoapClient:
                 link_device_id = result["linkDeviceId"]
             return result["regUrl"], result["linkCode"], link_device_id
         elif self.music_service.auth_type == "AppLink":
-            log.debug("Perform AppLink auth part 1")
+            log.debug("Beginning AppLink authentication")
             result = self.call("getAppLink", [("householdId", self._household_id)])[
                 "getAppLinkResult"
             ]
@@ -310,7 +310,7 @@ class MusicServiceSoapClient:
                 link_device_id = auth_parts["linkDeviceId"]
             return auth_parts["regUrl"], auth_parts["linkCode"], link_device_id
         raise MusicServiceAuthException(
-            "device_or_app_link_auth_part1 is not implemented "
+            "begin_authentication() is not implemented "
             "for auth type {}".format(self.music_service.auth_type)
         )
 
@@ -320,7 +320,7 @@ class MusicServiceSoapClient:
         See `complete_authentication` for details
 
         """
-        log.debug("Perform DeviceLink or AppLink auth part 2")
+        log.debug("Attempting to complete DeviceLink or AppLink authentication")
         result = self.call(
             "getDeviceAuthToken",
             [
@@ -467,7 +467,7 @@ class MusicService:
         self._search_prefix_map = None
         self.service_type = data["ServiceType"]
 
-        # Cached values used between part1 and part2
+        # Cached values used between begin_authentication and complete_authentication
         self.link_code = None
         self.link_device_id = None
 
@@ -768,8 +768,10 @@ class MusicService:
 
         .. note::
            The `begin_authentication` and `complete_authentication` methods must be
-           completed **on the same MusicService object** i.e. it will not work if the
-           Python session has ended and a new one started
+           completed **on the same `MusicService` instance** unless the `link_code`
+           and `link_device_id` values are passed to `complete_authentication`. These
+           two values can be found as attributes on the `MusicService` instance after
+           `begin_authentication` has been executed.
 
         Returns:
             str: Registration URL used for service linking.
@@ -792,16 +794,18 @@ class MusicService:
         `begin_authentication` for details on the first part.
 
         Args:
-            link_code (str, optional): A link code generated from part1.
-                If not provided, cached code from part1 will be used.
-            link_device_id (str, optional): A link device ID generated from part1.
-                If not provided, cached device ID from part1 will be used.
+            link_code (str, optional): A link code generated from begin_authentication.
+                If not provided, cached code will be used.
+            link_device_id (str, optional): A link device ID generated from begin_authentication.
+                If not provided, cached device ID will be used.
 
         """
         log.debug(
             "Complete authentication on music service '%s' with id %i", self, id(self)
         )
         _link_code = link_code or self.link_code
+        if not _link_code:
+            raise MusicServiceAuthException("link_code not provided or cached")
         _link_device_id = link_device_id or self.link_device_id
         self.soap_client.complete_authentication(_link_code, _link_device_id)
         self.link_code = self.link_device_id = None
