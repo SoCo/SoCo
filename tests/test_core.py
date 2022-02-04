@@ -1546,10 +1546,16 @@ class TestZoneGroupTopology:
         c = moco_zgs.group.coordinator
         c.groupRenderingControl.GetGroupVolume.return_value = {"CurrentVolume": 50}
         assert g.volume == 50
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.GetGroupVolume.assert_called_once_with(
             [("InstanceID", 0)]
         )
         g.volume = 75
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.SetGroupVolume.assert_called_once_with(
             [("InstanceID", 0), ("DesiredVolume", 75)]
         )
@@ -1574,6 +1580,9 @@ class TestZoneGroupTopology:
             "NewVolume": "75"
         }
         new_volume = g.set_relative_volume(25)
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.SetRelativeGroupVolume.assert_called_once_with(
             [("InstanceID", 0), ("Adjustment", 25)]
         )
