@@ -153,9 +153,12 @@ class AppleMusicShare(ShareClass):
         if match:
             return "album:" + match.group(1)
 
+        # Apple-created playlist
         # https://music.apple.com/dk/playlist/power-ballads-essentials/pl.92e04ee75ed64804b9df468b5f45a161
+        # User-created playlist
+        # https://music.apple.com/de/playlist/unnamed-playlist/pl.u-rR2PCrLdLJk
         match = re.search(
-            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[a-f\d]+)", uri
+            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[a-zA-Z\-0-9\d]+)", uri
         )
         if match:
             return "playlist:" + match.group(1)
