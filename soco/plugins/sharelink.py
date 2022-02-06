@@ -158,7 +158,7 @@ class AppleMusicShare(ShareClass):
         # User-created playlist
         # https://music.apple.com/de/playlist/unnamed-playlist/pl.u-rR2PCrLdLJk
         match = re.search(
-            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[a-zA-Z\-0-9\d]+)", uri
+            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[-a-zA-Z0-9]+)", uri
         )
         if match:
             return "playlist:" + match.group(1)
