@@ -129,9 +129,6 @@ class MusicServiceSoapClient:
             context = XML.Element("context")
             credentials_header.append(context)
 
-        # TODO Implement UserID with user provided account, since we can't get the
-        # accounts from the device anymore
-
         # Anonymous auth. No need for anything further.
         self._cached_soap_header = XML.tostring(
             credentials_header, encoding="utf-8"
