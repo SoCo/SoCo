@@ -125,7 +125,7 @@ class MusicServiceSoapClient:
         device_provider.text = "Sonos"
 
         if music_service.auth_type in ("DeviceLink", "AppLink"):
-            # Add context
+            # Add context.
             context = XML.Element("context")
             credentials_header.append(context)
 
