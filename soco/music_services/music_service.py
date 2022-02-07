@@ -128,13 +128,6 @@ class MusicServiceSoapClient:
         if music_service.auth_type in ("DeviceLink", "AppLink"):
             # Add context
             context = XML.Element("context")
-            # Add timezone offset e.g. "+01:00"
-            timezone = XML.SubElement(context, "timezone")
-            offset = (
-                time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
-            ) * -1
-            hours, minutes = offset / 3600, (offset % 3600) / 60
-            timezone.text = "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
             credentials_header.append(context)
 
             login_token = XML.Element("loginToken")
