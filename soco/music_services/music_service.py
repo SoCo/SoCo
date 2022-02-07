@@ -130,25 +130,6 @@ class MusicServiceSoapClient:
             context = XML.Element("context")
             credentials_header.append(context)
 
-            login_token = XML.Element("loginToken")
-            # If no existing authentication is known, we do not add 'token' and 'key'
-            # elements and the only operation the service can perform is to authenticate
-            if self.token_store.has_token(
-                self.music_service.service_id, self._device.household_id
-            ):
-                # Fill in from saved tokens
-                token_pair = self.token_store.load_token_pair(
-                    self.music_service.service_id, self._device.household_id
-                )
-                token = XML.SubElement(login_token, "token")
-                key = XML.SubElement(login_token, "key")
-                token.text = token_pair[0]
-                key.text = token_pair[1]
-
-            household_id = XML.SubElement(login_token, "householdId")
-            household_id.text = self._household_id
-            credentials_header.append(login_token)
-
         # TODO Implement UserID with user provided account, since we can't get the
         # accounts from the device anymore
 
