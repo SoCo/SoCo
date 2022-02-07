@@ -29,7 +29,6 @@ Known problems:
 import logging
 from urllib.parse import quote as quote_url
 import json
-import time
 import requests
 from xmltodict import parse
 
