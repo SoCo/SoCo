@@ -92,7 +92,7 @@ class MusicServiceSoapClient:
             "User-Agent": (
                 "Linux UPnP/1.0 Sonos/29.3-87071 (ICRU_iPhone7,1); "
                 "iOS/Version 8.2 (Build 12D508)"
-            )
+            ),
         }
         self._device = device or discovery.any_soco()
         self._device_id = self._device.systemProperties.GetString(
