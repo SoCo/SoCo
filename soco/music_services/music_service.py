@@ -129,6 +129,24 @@ class MusicServiceSoapClient:
             context = XML.Element("context")
             credentials_header.append(context)
 
+            # If no existing authentication is known, we do not add 'token' and 'key'
+            # elements and the only operation the service can perform is to authenticate
+            if self.token_store.has_token(
+                self.music_service.service_id, self._device.household_id
+            ):
+                login_token = XML.Element("loginToken")
+
+                # Fill in from saved tokens
+                token_pair = self.token_store.load_token_pair(
+                    self.music_service.service_id, self._device.household_id
+                )
+                token = XML.SubElement(login_token, "token")
+                key = XML.SubElement(login_token, "key")
+                token.text = token_pair[0]
+                key.text = token_pair[1]
+
+                credentials_header.append(login_token)
+
         # Anonymous auth. No need for anything further.
         self._cached_soap_header = XML.tostring(
             credentials_header, encoding="utf-8"
