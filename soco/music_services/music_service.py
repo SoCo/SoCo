@@ -222,6 +222,12 @@ class MusicServiceSoapClient:
                 self._cached_soap_header = None
 
                 # Extract new token and key from the error message
+                # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
+                #   <ms:RefreshAuthTokenResult>
+                #     <ms:authToken>xxxxxxx</ms:authToken>
+                #     <ms:privateKey>yyyyyy</ms:privateKey>
+                #   </ms:RefreshAuthTokenResult>
+                # </detail>
                 auth_token = exc.detail.find(
                     ".//xmlns:authToken", {"xmlns": self.namespace}
                 ).text
@@ -231,12 +237,6 @@ class MusicServiceSoapClient:
 
                 # If we didn't find the tokens, raise
                 if auth_token is None or private_key is None:
-                    # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
-                    #   <ms:RefreshAuthTokenResult>
-                    #     <ms:authToken>xxxxxxx</ms:authToken>
-                    #     <ms:privateKey>yyyyyy</ms:privateKey>
-                    #   </ms:RefreshAuthTokenResult>
-                    # </detail>
                     auth_token = exc.detail.findtext(".//authToken")
                     private_key = exc.detail.findtext(".//privateKey")
 
