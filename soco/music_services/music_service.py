@@ -222,21 +222,30 @@ class MusicServiceSoapClient:
                 self._cached_soap_header = None
 
                 # Extract new token and key from the error message
-                # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
-                #   <ms:RefreshAuthTokenResult>
-                #     <ms:authToken>xxxxxxx</ms:authToken>
-                #     <ms:privateKey>yyyyyy</ms:privateKey>
-                #   </ms:RefreshAuthTokenResult>
-                # </detail>
-                auth_token = exc.detail.findtext(".//authToken")
-                private_key = exc.detail.findtext(".//privateKey")
+                auth_token = exc.detail.find(
+                    ".//xmlns:authToken", {"xmlns": self.namespace}
+                ).text
+                private_key = exc.detail.find(
+                    ".//xmlns:privateKey", {"xmlns": self.namespace}
+                ).text
 
                 # If we didn't find the tokens, raise
                 if auth_token is None or private_key is None:
-                    raise MusicServiceAuthException(
-                        "Got a TokenRefreshRequired but no new token was found in the"
-                        " reply: {}".format(exc.detail)
-                    ) from exc
+                    # <detail xmlns:ms="http://www.sonos.com/Services/1.1">
+                    #   <ms:RefreshAuthTokenResult>
+                    #     <ms:authToken>xxxxxxx</ms:authToken>
+                    #     <ms:privateKey>yyyyyy</ms:privateKey>
+                    #   </ms:RefreshAuthTokenResult>
+                    # </detail>
+                    auth_token = exc.detail.findtext(".//authToken")
+                    private_key = exc.detail.findtext(".//privateKey")
+
+                    if auth_token is None or private_key is None:
+                        # If we didn't find the tokens, raise
+                        raise MusicServiceAuthException(
+                            "Got a TokenRefreshRequired but no new token was"
+                            " found in the reply: {}".format(exc.detail)
+                        ) from exc
 
                 # Create new token pair and save it
                 token_pair = (auth_token, private_key)
