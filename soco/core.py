@@ -1896,16 +1896,21 @@ class SoCo(_SocoSingletonBase):
 
             return radio_track
 
-        # Duration seems to be '0:00:00' when listening to radio
-        if metadata != "" and track["duration"] == "0:00:00":
-            metadata = XML.fromstring(really_utf8(metadata))
-            track.update(_parse_radio_metadata(metadata))
-
         # If the speaker is playing from the line-in source, querying for track
         # metadata will return "NOT_IMPLEMENTED".
-        elif metadata not in ("", "NOT_IMPLEMENTED", None):
+        if metadata in ("", "NOT_IMPLEMENTED", None):
+            return track
+
+        metadata = XML.fromstring(really_utf8(metadata))
+
+        # Duration seems to be '0:00:00' when listening to radio
+        if track["duration"] == "0:00:00":
+            track.update(_parse_radio_metadata(metadata))
+
+        # Track may have been processed as radio, but metadata may still be incomplete.
+        # This is necessary on Sonos Radio as it encodes metadata as a "regular" track.
+        if not track["artist"]:
             # Track metadata is returned in DIDL-Lite format
-            metadata = XML.fromstring(really_utf8(metadata))
             md_title = metadata.findtext(".//{http://purl.org/dc/elements/1.1/}title")
             md_artist = metadata.findtext(
                 ".//{http://purl.org/dc/elements/1.1/}creator"
@@ -1914,15 +1919,10 @@ class SoCo(_SocoSingletonBase):
                 ".//{urn:schemas-upnp-org:metadata-1-0/upnp/}album"
             )
 
-            track["title"] = ""
-            if md_title:
-                track["title"] = md_title
-            track["artist"] = ""
-            if md_artist:
-                track["artist"] = md_artist
-            track["album"] = ""
-            if md_album:
-                track["album"] = md_album
+            # Preserve existing values if already processed
+            track["title"] = track["title"] or md_title or ""
+            track["artist"] = track["artist"] or md_artist or ""
+            track["album"] = track["album"] or md_album or ""
 
             album_art_url = metadata.findtext(
                 ".//{urn:schemas-upnp-org:metadata-1-0/upnp/}albumArtURI"
