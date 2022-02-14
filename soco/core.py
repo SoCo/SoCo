@@ -2875,6 +2875,7 @@ SOURCES = {
     r"^x-sonosapi-stream:": MUSIC_SRC_RADIO,
     r"^x-sonosapi-radio:": MUSIC_SRC_RADIO,
     r"^x-sonosapi-hls:": MUSIC_SRC_RADIO,
+    r"^x-sonos-http:sonos": MUSIC_SRC_RADIO,
     r"^aac:": MUSIC_SRC_RADIO,
     r"^hls-radio:": MUSIC_SRC_RADIO,
     r"^https?:": MUSIC_SRC_WEB_FILE,
