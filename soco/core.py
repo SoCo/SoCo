@@ -2864,6 +2864,7 @@ MUSIC_SRC_WEB_FILE = "WEB_FILE"
 MUSIC_SRC_LINE_IN = "LINE_IN"
 MUSIC_SRC_TV = "TV"
 MUSIC_SRC_AIRPLAY = "AIRPLAY"
+MUSIC_SRC_SPOTIFY_CONNECT = "SPOTIFY_CONNECT"
 MUSIC_SRC_UNKNOWN = "UNKNOWN"
 MUSIC_SRC_NONE = "NONE"
 
@@ -2881,6 +2882,7 @@ SOURCES = {
     r"^x-rincon-stream:": MUSIC_SRC_LINE_IN,
     r"^x-sonos-htastream:": MUSIC_SRC_TV,
     r"^x-sonos-vli:.*,airplay:": MUSIC_SRC_AIRPLAY,
+    r"^x-sonos-vli:.*,spotify:": MUSIC_SRC_SPOTIFY_CONNECT,
 }
 
 # Soundbar product names
