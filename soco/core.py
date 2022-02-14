@@ -1854,6 +1854,11 @@ class SoCo(_SocoSingletonBase):
         # used if needed by the client to restart a given URI
         track["metadata"] = metadata
 
+        def _title_in_uri(title):
+            return title and (
+                title in track["uri"] or title in urllib.parse.unquote(track["uri"])
+            )
+
         def _parse_radio_metadata(metadata):
             """Try to parse trackinfo from radio metadata."""
             radio_track = {}
@@ -1887,9 +1892,7 @@ class SoCo(_SocoSingletonBase):
                     ".//{http://purl.org/dc/" "elements/1.1/}title"
                 )
                 # Avoid using URIs as the title
-                if title and (
-                    title in track["uri"] or title in urllib.parse.unquote(track["uri"])
-                ):
+                if _title_in_uri(title):
                     radio_track["title"] = trackinfo
                 else:
                     radio_track["title"] = title
@@ -1912,6 +1915,8 @@ class SoCo(_SocoSingletonBase):
         if not track["artist"]:
             # Track metadata is returned in DIDL-Lite format
             md_title = metadata.findtext(".//{http://purl.org/dc/elements/1.1/}title")
+            if _title_in_uri(md_title):
+                md_title = None
             md_artist = metadata.findtext(
                 ".//{http://purl.org/dc/elements/1.1/}creator"
             )
