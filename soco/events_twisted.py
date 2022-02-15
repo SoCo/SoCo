@@ -355,7 +355,7 @@ class Subscription(SubscriptionBase):
         agent = BrowserLikeRedirectAgent(Agent(reactor))
 
         if headers:
-            for k in headers.keys():
+            for k in list(headers.keys()):
                 header = headers[k]
                 del headers[k]
                 if isinstance(header, (list,)):
