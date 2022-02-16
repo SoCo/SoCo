@@ -235,7 +235,6 @@ class MusicServiceSoapClient:
                     ".//xmlns:privateKey", {"xmlns": self.namespace}
                 ).text
 
-                # If we didn't find the tokens, raise
                 if auth_token is None or private_key is None:
                     auth_token = exc.detail.findtext(".//authToken")
                     private_key = exc.detail.findtext(".//privateKey")
