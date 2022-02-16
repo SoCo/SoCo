@@ -24,4 +24,4 @@ repos:
   - id: pylint
     args: [--rcfile, "pylintrc"]
     exclude: tests|doc|examples|setup.py|dev_tools
-    additional_dependencies: ["requests", "xmltodict", "ifaddr"]
+    additional_dependencies: ["requests", "xmltodict", "ifaddr", "appdirs"]
