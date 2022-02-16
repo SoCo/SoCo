@@ -1265,12 +1265,12 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
-    def surround_music_playback(self) -> Optional[int]:
-        """Return the music playback mode (ambient, full volume) for surrounds.
+    def surround_ambient_enabled(self) -> Optional[bool]:
+        """Return the True if surround ambient mode is enabled.
+
+        If False, the playback on surround speakers uses full volume.
 
         Note: this does not apply to the TV mode.
-
-        TODO: enumize this?
 
         0: ambient
         1: full
@@ -1281,25 +1281,20 @@ class SoCo(_SocoSingletonBase):
         response = self.renderingControl.GetEQ(
             [("InstanceID", 0), ("EQType", "SurroundMode")]
         )
-        return int(response["CurrentValue"])
+        return not int(response["CurrentValue"])
 
-    @surround_music_playback.setter
+    @surround_ambient_enabled.setter
     @only_on_soundbars
-    def surround_music_playback(self, value: int):
-        """Set the music playback mode (ambient, full volume) for surrounds.
+    def surround_ambient_enabled(self, value: bool):
+        """Set the surround music playback mode to ambient.
 
         Note: this does not apply to the TV mode.
-
-        TODO: enumize this?
-
-        0: ambient
-        1: full
         """
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
                 ("EQType", "SurroundMode"),
-                ("DesiredValue", value),
+                ("DesiredValue", int(not value)),
             ]
         )
 
