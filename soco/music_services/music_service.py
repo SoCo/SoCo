@@ -231,12 +231,12 @@ class MusicServiceSoapClient:
                 auth_token = exc.detail.find(
                     ".//xmlns:authToken", {"xmlns": self.namespace}
                 )
-                if auth_token:
+                if auth_token is not None:
                     auth_token = auth_token.text
                 private_key = exc.detail.find(
                     ".//xmlns:privateKey", {"xmlns": self.namespace}
                 )
-                if private_key:
+                if private_key is not None:
                     private_key = private_key.text
 
                 if auth_token is None or private_key is None:
