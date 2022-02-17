@@ -93,8 +93,7 @@ class MusicServiceSoapClient:
             "User-Agent": (
                 "Linux UPnP/1.0 Sonos/29.3-87071 (ICRU_iPhone7,1); "
                 "iOS/Version 8.2 (Build 12D508)"
-            )
-            # "Linux UPnP/1.0 Sonos/26.99-12345",
+            ),
         }
         self._device = device or discovery.any_soco()
         self._device_id = self._device.systemProperties.GetString(
@@ -129,21 +128,15 @@ class MusicServiceSoapClient:
         if music_service.auth_type in ("DeviceLink", "AppLink"):
             # Add context
             context = XML.Element("context")
-            # Add timezone offset e.g. "+01:00"
-            timezone = XML.SubElement(context, "timezone")
-            offset = (
-                time.timezone if (time.localtime().tm_isdst == 0) else time.altzone
-            ) * -1
-            hours, minutes = offset / 3600, (offset % 3600) / 60
-            timezone.text = "{:0=+3.0f}:{:0>2.0f}".format(hours, minutes)
             credentials_header.append(context)
 
-            login_token = XML.Element("loginToken")
             # If no existing authentication is known, we do not add 'token' and 'key'
             # elements and the only operation the service can perform is to authenticate
             if self.token_store.has_token(
                 self.music_service.service_id, self._device.household_id
             ):
+                login_token = XML.Element("loginToken")
+
                 # Fill in from saved tokens
                 token_pair = self.token_store.load_token_pair(
                     self.music_service.service_id, self._device.household_id
@@ -153,9 +146,9 @@ class MusicServiceSoapClient:
                 token.text = token_pair[0]
                 key.text = token_pair[1]
 
-            household_id = XML.SubElement(login_token, "householdId")
-            household_id.text = self._household_id
-            credentials_header.append(login_token)
+                household_id = XML.SubElement(login_token, "householdId")
+                household_id.text = self._household_id
+                credentials_header.append(login_token)
 
         # TODO Implement UserID with user provided account, since we can't get the
         # accounts from the device anymore
