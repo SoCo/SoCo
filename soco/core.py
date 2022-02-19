@@ -256,7 +256,7 @@ class SoCo(_SocoSingletonBase):
         night_mode
         dialog_mode
         surround_enabled
-        surround_music_playback
+        surround_ambient_enabled
         surround_volume_tv
         surround_volume_music
         soundbar_audio_input_format
@@ -1266,14 +1266,12 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def surround_ambient_enabled(self) -> Optional[bool]:
-        """Return the True if surround ambient mode is enabled.
+        """Return True if surround ambient mode is enabled for surround music
+        playback.
 
-        If False, the playback on surround speakers uses full volume.
+        If False, playback on surround speakers uses full volume.
 
-        Note: this does not apply to the TV mode.
-
-        0: ambient
-        1: full
+        Note: does not apply to TV playback.
         """
         if not self.is_soundbar:
             return None
@@ -1286,9 +1284,9 @@ class SoCo(_SocoSingletonBase):
     @surround_ambient_enabled.setter
     @only_on_soundbars
     def surround_ambient_enabled(self, value: bool):
-        """Set the surround music playback mode to ambient.
+        """Toggle surround music playback mode. True = ambient mode.
 
-        Note: this does not apply to the TV mode.
+        Note: this does not apply to TV playback.
         """
         self.renderingControl.SetEQ(
             [
@@ -1300,7 +1298,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def surround_volume_tv(self) -> Optional[int]:
-        """Return the relative volume [-15,15] for surround speakers in the TV mode."""
+        """Get the relative volume for surround speakers in TV
+        playback mode. Ranges from -15 to +15."""
         if not self.is_soundbar:
             return None
 
@@ -1312,9 +1311,8 @@ class SoCo(_SocoSingletonBase):
     @surround_volume_tv.setter
     @only_on_soundbars
     def surround_volume_tv(self, relative_volume: int):
-        """Set the relative volume for surround speakers in the TV mode.
-
-        Range [-15,15]
+        """Set the relative volume for surround speakers in TV playback mode,
+        in the range -15 to +15.
         """
         if not -15 <= relative_volume <= 15:
             raise ValueError("Value must be [-15, 15]")
@@ -1329,9 +1327,8 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def surround_volume_music(self) -> Optional[int]:
-        """Return the relative volume for surround speakers in the music mode.
-
-        Range: [-15,15]
+        """Return the relative volume for surround speakers in music mode,
+        in the range -15 to +15.
         """
         if not self.is_soundbar:
             return None
@@ -1344,7 +1341,8 @@ class SoCo(_SocoSingletonBase):
     @surround_volume_music.setter
     @only_on_soundbars
     def surround_volume_music(self, relative_volume: int):
-        """Set the relative volume [-15,15] for surround speakers in the music mode."""
+        """Set the relative volume for surround speakers in music mode,
+        in the range -15 to +15."""
         if not -15 <= relative_volume <= 15:
             raise ValueError("Value must be [-15, 15]")
 
