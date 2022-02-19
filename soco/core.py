@@ -12,7 +12,6 @@ from functools import wraps
 import urllib.parse
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
-from typing import Optional
 import warnings
 import xmltodict
 
@@ -1265,7 +1264,7 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
-    def surround_ambient_enabled(self) -> Optional[bool]:
+    def surround_ambient_enabled(self):
         """Return True if surround ambient mode is enabled for surround music
         playback.
 
@@ -1283,7 +1282,7 @@ class SoCo(_SocoSingletonBase):
 
     @surround_ambient_enabled.setter
     @only_on_soundbars
-    def surround_ambient_enabled(self, value: bool):
+    def surround_ambient_enabled(self, value):
         """Toggle surround music playback mode. True = ambient mode.
 
         Note: this does not apply to TV playback.
@@ -1297,7 +1296,7 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
-    def surround_volume_tv(self) -> Optional[int]:
+    def surround_volume_tv(self):
         """Get the relative volume for surround speakers in TV
         playback mode. Ranges from -15 to +15."""
         if not self.is_soundbar:
@@ -1310,7 +1309,7 @@ class SoCo(_SocoSingletonBase):
 
     @surround_volume_tv.setter
     @only_on_soundbars
-    def surround_volume_tv(self, relative_volume: int):
+    def surround_volume_tv(self, relative_volume):
         """Set the relative volume for surround speakers in TV playback mode,
         in the range -15 to +15.
         """
@@ -1326,7 +1325,7 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
-    def surround_volume_music(self) -> Optional[int]:
+    def surround_volume_music(self):
         """Return the relative volume for surround speakers in music mode,
         in the range -15 to +15.
         """
@@ -1340,7 +1339,7 @@ class SoCo(_SocoSingletonBase):
 
     @surround_volume_music.setter
     @only_on_soundbars
-    def surround_volume_music(self, relative_volume: int):
+    def surround_volume_music(self, relative_volume):
         """Set the relative volume for surround speakers in music mode,
         in the range -15 to +15."""
         if not -15 <= relative_volume <= 15:
