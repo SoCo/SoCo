@@ -1280,7 +1280,7 @@ class TestRenderingControl:
 
     def test_soco_audio_delay(self, moco):
         moco._is_soundbar = False
-        assert moco.audio_delay == None
+        assert moco.audio_delay is None
         assert not moco.renderingControl.GetEQ.called
 
         with pytest.raises(NotSupportedException):
@@ -1354,6 +1354,72 @@ class TestRenderingControl:
         moco.renderingControl.SetVolume.assert_any_call(
             [("InstanceID", 0), ("Channel", "RF"), ("DesiredVolume", 100)]
         )
+
+    @pytest.mark.parametrize(
+        "prop,variable,type,min,max",
+        [
+            ("surround_enabled", "SurroundEnable", bool, None, None),
+            ("surround_ambient_enabled", "SurroundMode", bool, None, None),
+            ("surround_volume_tv", "SurroundLevel", int, -15, 15),
+            ("surround_volume_music", "MusicSurroundLevel", int, -15, 15),
+        ],
+    )
+    def test_soco_surround_settings(self, moco, prop, variable, type, min, max):
+        """Test the surround settings.
+
+        This performs the following checks:
+        * For boolean values, check toggling and payloads
+        * For ranged int values, check the ranges and payloads.
+        """
+
+        def _assert_seteq_call(prop, variable, value, type):
+            desired_value = value
+            setattr(moco, prop, value)
+
+            if variable == "SurroundMode":  # negate desired value for surround mode
+                desired_value = not value
+
+            moco.renderingControl.SetEQ.assert_any_call(
+                [
+                    ("InstanceID", 0),
+                    ("EQType", variable),
+                    ("DesiredValue", int(desired_value)),
+                ]
+            )
+
+            moco.renderingControl.GetEQ.return_value = {
+                "CurrentValue": int(desired_value)
+            }
+            if type == bool:
+                assert getattr(moco, prop) == bool(value)
+            elif type == int:
+                assert getattr(moco, prop) == value
+
+            moco.renderingControl.GetEQ.assert_any_call(
+                [("InstanceID", 0), ("EQType", variable)]
+            )
+            moco.renderingControl.SetEQ.reset_mock()
+            moco.renderingControl.GetEQ.reset_mock()
+
+        with mock.patch(
+            "soco.SoCo.is_soundbar", new_callable=mock.PropertyMock
+        ) as mock_is_soundbar:
+            mock_is_soundbar = True  # noqa: F841
+
+            if type == bool:
+                for target in [True, False]:
+                    _assert_seteq_call(prop, variable, target, type)
+
+            elif type == int:
+                for target in [min, max]:
+                    _assert_seteq_call(prop, variable, target, type)
+
+                for target in [min - 5, max + 5]:
+                    with pytest.raises(ValueError):
+                        setattr(moco, prop, target)
+
+            else:
+                raise Exception("unhandled type %s" % type)
 
 
 class TestDeviceProperties:

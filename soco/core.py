@@ -15,6 +15,7 @@ from xml.parsers.expat import ExpatError
 import warnings
 import xmltodict
 
+
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from requests.exceptions import ConnectTimeout, ReadTimeout
@@ -156,6 +157,22 @@ def only_on_master(function):
     return inner_function
 
 
+def only_on_soundbars(function):
+    """Decorator to raise an exception on soundbar property access on non-soundbars."""
+
+    @wraps(function)
+    def inner_function(self, *args, **kwargs):
+        if not self.is_soundbar:
+            raise NotSupportedException(
+                "The device is not a soundbar and doesn't support %s."
+                % function.__name__
+            )
+
+        return function(self, *args, **kwargs)
+
+    return inner_function
+
+
 # pylint: disable=R0904,too-many-instance-attributes
 class SoCo(_SocoSingletonBase):
 
@@ -224,7 +241,6 @@ class SoCo(_SocoSingletonBase):
         is_bridge
         is_coordinator
         is_soundbar
-        surround_enabled
         is_satellite
         has_satellites
         sub_enabled
@@ -238,6 +254,11 @@ class SoCo(_SocoSingletonBase):
         audio_delay
         night_mode
         dialog_mode
+        surround_enabled
+        surround_ambient_enabled
+        surround_volume_tv
+        surround_volume_music
+        soundbar_audio_input_format
         supports_fixed_volume
         fixed_volume
         soundbar_audio_input_format
@@ -1048,16 +1069,13 @@ class SoCo(_SocoSingletonBase):
         return bool(int(response["CurrentValue"]))
 
     @surround_enabled.setter
+    @only_on_soundbars
     def surround_enabled(self, enable):
         """Enable/disable the connected surround speakers.
 
         :param enable: Enable or disable surround speakers
         :type enable: bool
         """
-        if not self.is_soundbar:
-            message = "This device does not support surrounds"
-            raise NotSupportedException(message)
-
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
@@ -1196,6 +1214,7 @@ class SoCo(_SocoSingletonBase):
         return bool(int(response["CurrentValue"]))
 
     @night_mode.setter
+    @only_on_soundbars
     def night_mode(self, night_mode):
         """Switch on/off the speaker's night mode.
 
@@ -1204,10 +1223,6 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         night mode.
         """
-        if not self.is_soundbar:
-            message = "This device does not support night mode"
-            raise NotSupportedException(message)
-
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
@@ -1231,6 +1246,7 @@ class SoCo(_SocoSingletonBase):
         return bool(int(response["CurrentValue"]))
 
     @dialog_mode.setter
+    @only_on_soundbars
     def dialog_mode(self, dialog_mode):
         """Switch on/off the speaker's dialog mode.
 
@@ -1239,15 +1255,101 @@ class SoCo(_SocoSingletonBase):
         :raises NotSupportedException: If the device does not support
         dialog mode.
         """
-        if not self.is_soundbar:
-            message = "This device does not support dialog mode"
-            raise NotSupportedException(message)
-
         self.renderingControl.SetEQ(
             [
                 ("InstanceID", 0),
                 ("EQType", "DialogLevel"),
                 ("DesiredValue", int(dialog_mode)),
+            ]
+        )
+
+    @property
+    def surround_ambient_enabled(self):
+        """Return True if surround ambient mode is enabled for surround music
+        playback.
+
+        If False, playback on surround speakers uses full volume.
+
+        Note: does not apply to TV playback.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SurroundMode")]
+        )
+        return not int(response["CurrentValue"])
+
+    @surround_ambient_enabled.setter
+    @only_on_soundbars
+    def surround_ambient_enabled(self, value):
+        """Toggle surround music playback mode. True = ambient mode.
+
+        Note: this does not apply to TV playback.
+        """
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SurroundMode"),
+                ("DesiredValue", int(not value)),
+            ]
+        )
+
+    @property
+    def surround_volume_tv(self):
+        """Get the relative volume for surround speakers in TV
+        playback mode. Ranges from -15 to +15."""
+        if not self.is_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SurroundLevel")]
+        )
+        return int(response["CurrentValue"])
+
+    @surround_volume_tv.setter
+    @only_on_soundbars
+    def surround_volume_tv(self, relative_volume):
+        """Set the relative volume for surround speakers in TV playback mode,
+        in the range -15 to +15.
+        """
+        if not -15 <= relative_volume <= 15:
+            raise ValueError("Value must be [-15, 15]")
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SurroundLevel"),
+                ("DesiredValue", relative_volume),
+            ]
+        )
+
+    @property
+    def surround_volume_music(self):
+        """Return the relative volume for surround speakers in music mode,
+        in the range -15 to +15.
+        """
+        if not self.is_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "MusicSurroundLevel")]
+        )
+        return int(response["CurrentValue"])
+
+    @surround_volume_music.setter
+    @only_on_soundbars
+    def surround_volume_music(self, relative_volume):
+        """Set the relative volume for surround speakers in music mode,
+        in the range -15 to +15."""
+        if not -15 <= relative_volume <= 15:
+            raise ValueError("Value must be [-15, 15]")
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "MusicSurroundLevel"),
+                ("DesiredValue", relative_volume),
             ]
         )
 
