@@ -41,10 +41,20 @@ class ShareClass:
                 "key": "00040000",
                 "class": "object.container.album.musicAlbum",
             },
+            "episode": {
+                "prefix": "",
+                "key": "00032020",
+                "class": "object.item.audioItem.musicTrack",
+            },
             "track": {
                 "prefix": "",
                 "key": "00032020",
                 "class": "object.item.audioItem.musicTrack",
+            },
+            "show": {
+                "prefix": "x-rincon-cpcontainer:1006206c",
+                "key": "1006206c",
+                "class": "object.container.playlistContainer",
             },
             "song": {
                 "prefix": "",
@@ -72,7 +82,7 @@ class SpotifyShare(ShareClass):
     """Spotify share class."""
 
     def canonical_uri(self, uri):
-        match = re.search(r"spotify.*[:/](album|track|playlist)[:/](\w+)", uri)
+        match = re.search(r"spotify.*[:/](album|episode|playlist|show|track)[:/](\w+)", uri)
         if match:
             return "spotify:" + match.group(1) + ":" + match.group(2)
 
