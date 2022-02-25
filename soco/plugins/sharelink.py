@@ -82,7 +82,9 @@ class SpotifyShare(ShareClass):
     """Spotify share class."""
 
     def canonical_uri(self, uri):
-        match = re.search(r"spotify.*[:/](album|episode|playlist|show|track)[:/](\w+)", uri)
+        match = re.search(
+            r"spotify.*[:/](album|episode|playlist|show|track)[:/](\w+)", uri
+        )
         if match:
             return "spotify:" + match.group(1) + ":" + match.group(2)
 
