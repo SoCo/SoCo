@@ -1,0 +1,23 @@
+{
+    "input": {
+        "Track": "1",
+        "TrackDuration": "0:00:00",
+        "TrackMetaData": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"sonos.com-hls-radio:*:audio/mpegurl:*\">hls-radio://http://n30a-e2.revma.ihrhls.com/zc000/hls.m3u8?TGT=TuneIn&amp;maxServers=2&amp;partnertok=somesuperlongtoken&amp;rj-ttl=5&amp;DIST=TuneIn&amp;rj-tok=000000000000000000000_0000</res><r:streamContent>TYPE=SNG|TITLE text=&quot;Spot Block End&quot; amgTrackId=&quot;1234567&quot;|ARTIST |ALBUM </r:streamContent><dc:title>hls.m3u8?TGT=TuneIn&amp;maxServers=2&amp;partnertok=somesuperlongtoken&amp;rj-ttl=5&amp;DIST=TuneIn&amp;rj-tok=000000000000000000000_0000</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>",
+        "TrackURI": "hls-radio://http://n30a-e2.revma.ihrhls.com/zc000/hls.m3u8?TGT=TuneIn&maxServers=2&partnertok=somesuperlongtoken&rj-ttl=5&DIST=TuneIn&rj-tok=000000000000000000000_0000",
+        "RelTime": "0:04:14",
+        "AbsTime": "NOT_IMPLEMENTED",
+        "RelCount": "2147483647",
+        "AbsCount": "2147483647"
+    },
+    "result": {
+        "title": "text=\"Spot Block End\" amgTrackId=\"1234567\"",
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "0:04:14",
+        "playlist_position": "1",
+        "duration": "0:00:00",
+        "uri": "hls-radio://http://n30a-e2.revma.ihrhls.com/zc000/hls.m3u8?TGT=TuneIn&maxServers=2&partnertok=somesuperlongtoken&rj-ttl=5&DIST=TuneIn&rj-tok=000000000000000000000_0000",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"sonos.com-hls-radio:*:audio/mpegurl:*\">hls-radio://http://n30a-e2.revma.ihrhls.com/zc000/hls.m3u8?TGT=TuneIn&amp;maxServers=2&amp;partnertok=somesuperlongtoken&amp;rj-ttl=5&amp;DIST=TuneIn&amp;rj-tok=000000000000000000000_0000</res><r:streamContent>TYPE=SNG|TITLE text=&quot;Spot Block End&quot; amgTrackId=&quot;1234567&quot;|ARTIST |ALBUM </r:streamContent><dc:title>hls.m3u8?TGT=TuneIn&amp;maxServers=2&amp;partnertok=somesuperlongtoken&amp;rj-ttl=5&amp;DIST=TuneIn&amp;rj-tok=000000000000000000000_0000</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>"
+    }
+}

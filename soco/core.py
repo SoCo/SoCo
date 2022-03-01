@@ -1956,10 +1956,29 @@ class SoCo(_SocoSingletonBase):
         # used if needed by the client to restart a given URI
         track["metadata"] = metadata
 
+        def _string_has_uri_components(string):
+            """Returns True if the string contains common URI components."""
+            if string.endswith(".m3u8"):
+                return True
+            try:
+                result = urllib.parse.urlparse(string)
+                return all([result.path, result.query])
+            except ValueError:
+                return False
+
         def _title_in_uri(title):
-            return title and (
-                title in track["uri"] or title in urllib.parse.unquote(track["uri"])
-            )
+            """Returns True if the title contains URI components
+            and the track title is repeated inside the track URI.
+
+            Used to avoid using invalid values in title metadata.
+            """
+            if not title:
+                return False
+
+            if not _string_has_uri_components(title):
+                return False
+
+            return title in track["uri"] or title in urllib.parse.unquote(track["uri"])
 
         def _parse_radio_metadata(metadata):
             """Try to parse trackinfo from radio metadata."""
