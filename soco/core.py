@@ -50,7 +50,12 @@ from .services import (
     AudioIn,
     GroupRenderingControl,
 )
-from .utils import really_utf8, camel_to_underscore, deprecated
+from .utils import (
+    camel_to_underscore,
+    deprecated,
+    really_utf8,
+    string_has_uri_components,
+)
 from .xml import XML
 
 AUDIO_INPUT_FORMATS = {
@@ -1956,16 +1961,6 @@ class SoCo(_SocoSingletonBase):
         # used if needed by the client to restart a given URI
         track["metadata"] = metadata
 
-        def _string_has_uri_components(string):
-            """Returns True if the string contains common URI components."""
-            if string.endswith(".m3u8"):
-                return True
-            try:
-                result = urllib.parse.urlparse(string)
-                return all([result.path, result.query])
-            except ValueError:
-                return False
-
         def _title_in_uri(title):
             """Returns True if the title contains URI components
             and the track title is repeated inside the track URI.
@@ -1975,7 +1970,7 @@ class SoCo(_SocoSingletonBase):
             if not title:
                 return False
 
-            if not _string_has_uri_components(title):
+            if not string_has_uri_components(title):
                 return False
 
             return title in track["uri"] or title in urllib.parse.unquote(track["uri"])
