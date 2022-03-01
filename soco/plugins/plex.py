@@ -111,7 +111,7 @@ class PlexPlugin(SoCoPlugin):
         self.soco.play_from_queue(position)
 
     def add_to_queue(
-        self, plex_media, add_next=False
+        self, plex_media, add_next=False, position=None
     ):  # pylint: disable=too-many-locals
         """Add the provided media to the speaker's playback queue.
 
@@ -119,13 +119,37 @@ class PlexPlugin(SoCoPlugin):
             plex_media (plexapi): The plexapi object representing the Plex media
                 to be enqueued. Can be one of plexapi.audio.Track,
                 plexapi.audio.Album, plexapi.audio.Artist or
-                plexapi.playlist.Playlist.
+                plexapi.playlist.Playlist. Can also be a list of the above items.
             add_next (bool): True if media should be enqueued after the
                 currently selected track, False to add to the end of the queue.
+            position (int): The position index in the queue to place the item.
+                Takes precedence over add_next if both are provided.
 
         Returns:
-            int: The index of the new item in the queue.
+            int: The index of the first item added to the queue.
         """
+        # Handle a list of Plex media items
+        if isinstance(plex_media, list):
+            position_result = first_added_position = None
+
+            # If inserting into the queue, repeatedly insert the items in reverse order
+            media_items = reversed(plex_media) if (add_next or position) else plex_media
+
+            for media_item in media_items:
+                if add_next or position:
+                    # Insert each item at the initial queue position in reverse order
+                    position_result = self.add_to_queue(
+                        media_item, add_next, first_added_position or position
+                    )
+                else:
+                    # Append each item to the end of the queue
+                    position_result = self.add_to_queue(media_item)
+                first_added_position = first_added_position or position_result
+
+            if not add_next:
+                return first_added_position
+            return position_result
+
         plex_server = plex_media._server  # pylint: disable=protected-access
         try:
             base_id = "{}:{}".format(
@@ -167,7 +191,9 @@ class PlexPlugin(SoCoPlugin):
         desired_first_track = 0
         enqueue_as_next = 0
 
-        if add_next:
+        if position:
+            desired_first_track = position
+        elif add_next:
             current_track_info = self.soco.get_current_track_info()
             current_position = int(current_track_info["playlist_position"])
             desired_first_track = current_position + 1
