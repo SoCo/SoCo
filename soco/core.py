@@ -49,7 +49,12 @@ from .services import (
     AudioIn,
     GroupRenderingControl,
 )
-from .utils import really_utf8, camel_to_underscore, deprecated
+from .utils import (
+    camel_to_underscore,
+    deprecated,
+    really_utf8,
+    string_has_uri_components,
+)
 from .xml import XML
 
 AUDIO_INPUT_FORMATS = {
@@ -1855,9 +1860,18 @@ class SoCo(_SocoSingletonBase):
         track["metadata"] = metadata
 
         def _title_in_uri(title):
-            return title and (
-                title in track["uri"] or title in urllib.parse.unquote(track["uri"])
-            )
+            """Returns True if the title contains URI components
+            and the track title is repeated inside the track URI.
+
+            Used to avoid using invalid values in title metadata.
+            """
+            if not title:
+                return False
+
+            if not string_has_uri_components(title):
+                return False
+
+            return title in track["uri"] or title in urllib.parse.unquote(track["uri"])
 
         def _parse_radio_metadata(metadata):
             """Try to parse trackinfo from radio metadata."""

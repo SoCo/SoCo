@@ -1,0 +1,23 @@
+{
+    "input": {
+        "AbsCount" : "2147483647",
+        "AbsTime" : "NOT_IMPLEMENTED",
+        "RelCount" : "2147483647",
+        "RelTime" : "0:00:04",
+        "Track" : "1",
+        "TrackDuration" : "0:03:12",
+        "TrackMetaData" : "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"x-file-cifs:*:audio/mpeg:*\" duration=\"0:03:12\">x-file-cifs://192.168.1.3/sonos/music/Tired.mp3</res><r:streamContent></r:streamContent><upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2f192.168.1.3%2fsonos%2fmusic%2fTired.mp3&amp;v=265</upnp:albumArtURI><dc:title>Tired</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Alan Walker, Gavin James</dc:creator><upnp:album>Tired</upnp:album><upnp:originalTrackNumber>1</upnp:originalTrackNumber><r:albumArtist>Alan Walker, Gavin James</r:albumArtist></item></DIDL-Lite>",
+        "TrackURI" : "x-file-cifs://192.168.1.3/sonos/music/Tired.mp3"
+    },
+    "result": {
+        "title": "Tired",
+        "artist": "Alan Walker, Gavin James",
+        "album": "Tired",
+        "album_art": "http://192.168.1.101:1400/getaa?u=x-file-cifs%3a%2f%2f192.168.1.3%2fsonos%2fmusic%2fTired.mp3&v=265",
+        "position": "0:00:04",
+        "playlist_position": "1",
+        "duration": "0:03:12",
+        "uri": "x-file-cifs://192.168.1.3/sonos/music/Tired.mp3",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"x-file-cifs:*:audio/mpeg:*\" duration=\"0:03:12\">x-file-cifs://192.168.1.3/sonos/music/Tired.mp3</res><r:streamContent></r:streamContent><upnp:albumArtURI>/getaa?u=x-file-cifs%3a%2f%2f192.168.1.3%2fsonos%2fmusic%2fTired.mp3&amp;v=265</upnp:albumArtURI><dc:title>Tired</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:creator>Alan Walker, Gavin James</dc:creator><upnp:album>Tired</upnp:album><upnp:originalTrackNumber>1</upnp:originalTrackNumber><r:albumArtist>Alan Walker, Gavin James</r:albumArtist></item></DIDL-Lite>"
+    }
+}
