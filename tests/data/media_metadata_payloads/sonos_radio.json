@@ -1,0 +1,23 @@
+{
+    "input": {
+        "Track": "1",
+        "TrackDuration": "0:00:00",
+        "TrackMetaData": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\"><res protocolInfo=\"http-get:*:audio/mp4:*\">x-sonos-http:sonos%3a00000000000000000000000000000000%3a00%3a0000000000000%3ahead%3a0000%3a%3atra.0000000%3adefault%3aSD.mp4?sid=303&amp;flags=0&amp;sn=8</res><upnp:albumArtURI>https://sonosradio.imgix.net/placeholders/00000000000000000000000000000000_bg_09.png?w=200&amp;auto=format,compress?w=200&amp;mark-scale=93&amp;mark-align=center,middle&amp;mark=https%3A%2F%2Fapi.napster.com%2Fimageserver%2Fv2%2Falbums%2Falb.00000%2Fimages%2F600x600.jpg&amp;auto=format,compress</upnp:albumArtURI><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>I&apos;m Not In Love</dc:title><dc:creator>10cc</dc:creator><r:trackGain>4.000000</r:trackGain><r:tiid>00000000000000000000000000000000:00:0000000000000:head:0000::tra.0000000:default:SD:6</r:tiid></item></DIDL-Lite>",
+        "TrackURI": "x-sonos-http:sonos%3a00000000000000000000000000000000%3a00%3a0000000000000%3ahead%3a0000%3a%3atra.0000000%3adefault%3aSD.mp4?sid=303&flags=0&sn=8",
+        "RelTime": "0:00:06",
+        "AbsTime": "NOT_IMPLEMENTED",
+        "RelCount": "2147483647",
+        "AbsCount": "2147483647"
+    },
+    "result": {
+        "title": "I'm Not In Love",
+        "artist": "10cc",
+        "album": "",
+        "album_art": "https://sonosradio.imgix.net/placeholders/00000000000000000000000000000000_bg_09.png?w=200&auto=format,compress?w=200&mark-scale=93&mark-align=center,middle&mark=https%3A%2F%2Fapi.napster.com%2Fimageserver%2Fv2%2Falbums%2Falb.00000%2Fimages%2F600x600.jpg&auto=format,compress",
+        "position": "0:00:06",
+        "playlist_position": "1",
+        "duration": "0:00:00",
+        "uri": "x-sonos-http:sonos%3a00000000000000000000000000000000%3a00%3a0000000000000%3ahead%3a0000%3a%3atra.0000000%3adefault%3aSD.mp4?sid=303&flags=0&sn=8",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\"><res protocolInfo=\"http-get:*:audio/mp4:*\">x-sonos-http:sonos%3a00000000000000000000000000000000%3a00%3a0000000000000%3ahead%3a0000%3a%3atra.0000000%3adefault%3aSD.mp4?sid=303&amp;flags=0&amp;sn=8</res><upnp:albumArtURI>https://sonosradio.imgix.net/placeholders/00000000000000000000000000000000_bg_09.png?w=200&amp;auto=format,compress?w=200&amp;mark-scale=93&amp;mark-align=center,middle&amp;mark=https%3A%2F%2Fapi.napster.com%2Fimageserver%2Fv2%2Falbums%2Falb.00000%2Fimages%2F600x600.jpg&amp;auto=format,compress</upnp:albumArtURI><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>I&apos;m Not In Love</dc:title><dc:creator>10cc</dc:creator><r:trackGain>4.000000</r:trackGain><r:tiid>00000000000000000000000000000000:00:0000000000000:head:0000::tra.0000000:default:SD:6</r:tiid></item></DIDL-Lite>"
+    }
+}
