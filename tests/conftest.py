@@ -3,14 +3,43 @@
 Add the --ip command line option, and skip all tests marked the with
 'integration' marker unless the option is included
 """
-from os import path
-import json
 import codecs
-
+import json
+from os import path
+from unittest import mock
 
 import pytest
+from soco import SoCo
 
+IP_ADDR = "192.168.1.101"
 THISDIR = path.dirname(path.abspath(__file__))
+
+
+@pytest.fixture()
+def moco():
+    """A mock soco with fake services and hardcoded is_coordinator.
+
+    Allows calls to services to be tracked. Should not cause any network
+    access
+    """
+    services = (
+        "AVTransport",
+        "RenderingControl",
+        "DeviceProperties",
+        "ContentDirectory",
+        "ZoneGroupTopology",
+        "GroupRenderingControl",
+    )
+    patchers = [mock.patch("soco.core.{}".format(service)) for service in services]
+    for patch in patchers:
+        patch.start()
+    with mock.patch(
+        "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
+    ) as is_coord:
+        is_coord = True  # noqa: F841
+        yield SoCo(IP_ADDR)
+    for patch in reversed(patchers):
+        patch.stop()
 
 
 def pytest_addoption(parser):

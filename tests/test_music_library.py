@@ -1,36 +1,4 @@
-from unittest import mock
-import pytest
-
-from soco import SoCo
 from soco.exceptions import SoCoUPnPException
-
-IP_ADDR = "192.168.1.101"
-
-
-@pytest.fixture()
-def moco():
-    """A mock soco with fake services and hardcoded is_coordinator.
-
-    Allows calls to services to be tracked. Should not cause any network
-    access
-    """
-    services = (
-        "AVTransport",
-        "RenderingControl",
-        "DeviceProperties",
-        "ContentDirectory",
-        "ZoneGroupTopology",
-    )
-    patchers = [mock.patch("soco.core.{}".format(service)) for service in services]
-    for patch in patchers:
-        patch.start()
-    with mock.patch(
-        "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
-    ) as is_coord:
-        is_coord = True  # noqa: F841
-        yield SoCo(IP_ADDR)
-    for patch in reversed(patchers):
-        patch.stop()
 
 
 class TestMusicLibrary:
