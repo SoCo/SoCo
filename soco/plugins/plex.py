@@ -24,10 +24,10 @@ Requires:
         >>> track = album.tracks()[4]
         >>> playlist = plex.playlist("My Playlist")
         >>>
-        >>> plugin.play_now(track)    # Play a single track
-        >>> plugin.play_now(album)    # Play a complete album
-        >>> plugin.play_now(artist)   # Play all music from an artist
-        >>> plugin.play_now(playlist) # Play an existing playlist
+        >>> plugin.play_now(artist)     # Play all tracks from an artist
+        >>> plugin.add_to_queue(track)  # Add track to the end of queue
+        >>> pos = plugin.add_to_queue([album, playlist])  # Enqueue multiple
+        >>> s.play_from_queue(pos)      # Play items just enqueued
 """
 
 from urllib.parse import quote
@@ -105,14 +105,13 @@ class PlexPlugin(SoCoPlugin):
         return self.service_info["ServiceType"]
 
     def play_now(self, plex_media):
-        """Insert the media next in the queue and immediately begin playback."""
-        position = self.add_to_queue(plex_media, add_next=True)
-        position -= 1
-        self.soco.play_from_queue(position)
+        """Add the media to the end of the queue and immediately begin playback."""
+        position = self.add_to_queue(plex_media)
+        self.soco.play_from_queue(position - 1)
 
     def add_to_queue(
-        self, plex_media, add_next=False, position=None
-    ):  # pylint: disable=too-many-branches, too-many-locals
+        self, plex_media, position=0, as_next=False
+    ):  # pylint: disable=too-many-locals
         """Add the provided media to the speaker's playback queue.
 
         Args:
@@ -120,10 +119,14 @@ class PlexPlugin(SoCoPlugin):
                 to be enqueued. Can be one of plexapi.audio.Track,
                 plexapi.audio.Album, plexapi.audio.Artist or
                 plexapi.playlist.Playlist. Can also be a list of the above items.
-            add_next (bool): True if media should be enqueued after the
-                currently selected track, False to add to the end of the queue.
-            position (int): The position index in the queue to place the item.
-                Takes precedence over add_next if both are provided.
+            position (int): The index (1-based) at which the media should be
+                added. Default is 0 (append to the end of the queue).
+            as_next (bool): Whether this media should be played as the next
+                track in shuffle mode. This only works if "play_mode=SHUFFLE".
+
+                Note: Enqueuing multi-track items like albums or playlists will
+                select one track randomly as the next item and shuffle the
+                remaining tracks throughout the queue.
 
         Returns:
             int: The index of the first item added to the queue.
@@ -133,20 +136,22 @@ class PlexPlugin(SoCoPlugin):
             position_result = first_added_position = None
 
             # If inserting into the queue, repeatedly insert the items in reverse order
-            media_items = reversed(plex_media) if (add_next or position) else plex_media
+            media_items = reversed(plex_media) if (as_next or position) else plex_media
 
             for media_item in media_items:
-                if add_next or position:
+                if as_next or position:
                     # Insert each item at the initial queue position in reverse order
                     position_result = self.add_to_queue(
-                        media_item, add_next, first_added_position or position
+                        media_item,
+                        as_next=as_next,
+                        position=(first_added_position or position),
                     )
                 else:
-                    # Append each item to the end of the queue
+                    # Append each item to the end of the queue in order
                     position_result = self.add_to_queue(media_item)
                 first_added_position = first_added_position or position_result
 
-            if not add_next:
+            if not as_next:
                 return first_added_position
             return position_result
 
@@ -188,17 +193,6 @@ class PlexPlugin(SoCoPlugin):
             desc=desc,
         )
 
-        desired_first_track = 0
-        enqueue_as_next = 0
-
-        if position:
-            desired_first_track = position
-        elif add_next:
-            current_track_info = self.soco.get_current_track_info()
-            current_position = int(current_track_info["playlist_position"])
-            desired_first_track = current_position + 1
-            enqueue_as_next = 1
-
         metadata = to_didl_string(item_didl)
         enqueued_uri = "x-rincon-cpcontainer:{}?sid={}&flags=8300&sn=9".format(
             item_didl.item_id, self.service_id
@@ -208,8 +202,8 @@ class PlexPlugin(SoCoPlugin):
                 ("InstanceID", 0),
                 ("EnqueuedURI", enqueued_uri),
                 ("EnqueuedURIMetaData", metadata),
-                ("DesiredFirstTrackNumberEnqueued", desired_first_track),
-                ("EnqueueAsNext", enqueue_as_next),
+                ("DesiredFirstTrackNumberEnqueued", position),
+                ("EnqueueAsNext", int(as_next)),
             ]
         )
         qnumber = response["FirstTrackNumberEnqueued"]
