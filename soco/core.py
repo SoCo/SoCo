@@ -249,6 +249,7 @@ class SoCo(_SocoSingletonBase):
         is_satellite
         has_satellites
         sub_enabled
+        sub_gain
         is_subwoofer
         has_subwoofer
         channel
@@ -1119,6 +1120,43 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
                 ("EQType", "SubEnable"),
                 ("DesiredValue", int(enable)),
+            ]
+        )
+
+    @property
+    def sub_gain(self):
+        """int: The current subwoofer gain level.
+
+        Returns the current value or None if not supported.
+        """
+        if not self.has_subwoofer:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SubGain")]
+        )
+        return int(response["CurrentValue"])
+
+    @sub_gain.setter
+    def sub_gain(self, level):
+        """Set the subwoofer gain level.
+
+        :param level: Desired subwoofer gain level (-10 to 10)
+        :type level: int
+        """
+        if not self.has_subwoofer:
+            raise NotSupportedException("This group does not have a subwoofer")
+
+        if not -10 <= level <= 10:
+            raise ValueError(
+                "Invalid value, must be integer between -10 and 10 inclusive"
+            )
+
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SubGain"),
+                ("DesiredValue", int(level)),
             ]
         )
 
