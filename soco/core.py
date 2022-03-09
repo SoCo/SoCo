@@ -1141,15 +1141,15 @@ class SoCo(_SocoSingletonBase):
     def sub_gain(self, level):
         """Set the subwoofer gain level.
 
-        :param level: Desired subwoofer gain level (-10 to 10)
+        :param level: Desired subwoofer gain level (-15 to 15)
         :type level: int
         """
         if not self.has_subwoofer:
             raise NotSupportedException("This group does not have a subwoofer")
 
-        if not -10 <= level <= 10:
+        if not -15 <= level <= 15:
             raise ValueError(
-                "Invalid value, must be integer between -10 and 10 inclusive"
+                "Invalid value, must be integer between -15 and 15 inclusive"
             )
 
         self.renderingControl.SetEQ(
