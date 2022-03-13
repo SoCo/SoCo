@@ -1331,7 +1331,7 @@ class TestRenderingControl:
         "prop,variable,type,min,max",
         [
             ("surround_enabled", "SurroundEnable", bool, None, None),
-            ("surround_ambient_enabled", "SurroundMode", bool, None, None),
+            ("surround_full_volume_enabled", "SurroundMode", bool, None, None),
             ("surround_volume_tv", "SurroundLevel", int, -15, 15),
             ("surround_volume_music", "MusicSurroundLevel", int, -15, 15),
         ],
@@ -1347,9 +1347,6 @@ class TestRenderingControl:
         def _assert_seteq_call(prop, variable, value, type):
             desired_value = value
             setattr(moco, prop, value)
-
-            if variable == "SurroundMode":  # negate desired value for surround mode
-                desired_value = not value
 
             moco.renderingControl.SetEQ.assert_any_call(
                 [
