@@ -2,7 +2,7 @@
 from conftest import DataLoader
 
 DATA_LOADER = DataLoader("media_metadata_payloads")
-MEDIA_TEST_SOURCES = ("bbc", "cifs", "pandora", "sonos_radio", "tunein")
+MEDIA_TEST_SOURCES = ("bbc", "cifs", "pandora", "sonos_radio", "tunein", "tunein_2")
 
 
 def test_metadata_parsing(moco):
