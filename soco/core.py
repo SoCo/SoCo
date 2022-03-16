@@ -54,7 +54,6 @@ from .utils import (
     camel_to_underscore,
     deprecated,
     really_utf8,
-    string_has_uri_components,
 )
 from .xml import XML
 
@@ -2010,7 +2009,7 @@ class SoCo(_SocoSingletonBase):
             if not title:
                 return False
 
-            if not string_has_uri_components(title):
+            if self.music_source_from_uri(track["uri"]) == MUSIC_SRC_LIBRARY:
                 return False
 
             return title in track["uri"] or title in urllib.parse.unquote(track["uri"])
