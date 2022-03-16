@@ -7,7 +7,7 @@
 import functools
 import re
 import warnings
-from urllib.parse import quote as quote_url, urlparse
+from urllib.parse import quote as quote_url
 
 from .xml import XML
 
@@ -201,14 +201,3 @@ def url_escape_path(path):
 def first_cap(string):
     """Return upper cased first character"""
     return string[0].upper() + string[1:]
-
-
-def string_has_uri_components(string):
-    """Returns True if the string contains common URI components."""
-    if string.endswith(".m3u8"):
-        return True
-    try:
-        result = urlparse(string)
-        return all([result.path, result.query])
-    except ValueError:
-        return False
