@@ -213,7 +213,7 @@ class ShareLinkPlugin(SoCoPlugin):
 
         return False
 
-    def add_share_link_to_queue(self, uri, position=0, as_next=False):
+    def add_share_link_to_queue(self, uri, position=0, as_next=False, **kwargs):
         """Add a Spotify/Tidal/... item to the queue.
 
         This is similar to soco.add_uri_to_queue() but will work with
@@ -265,7 +265,8 @@ class ShareLinkPlugin(SoCoPlugin):
                             ("EnqueuedURIMetaData", metadata),
                             ("DesiredFirstTrackNumberEnqueued", position),
                             ("EnqueueAsNext", int(as_next)),
-                        ]
+                        ],
+                        **kwargs
                     )
 
                     qnumber = response["FirstTrackNumberEnqueued"]
