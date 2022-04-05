@@ -52,9 +52,7 @@ class MusicServiceSoapClient:
     yourself.
     """
 
-    def __init__(
-        self, endpoint, timeout, music_service, token_store, device=None
-    ):
+    def __init__(self, endpoint, timeout, music_service, token_store, device=None):
         """
         Args:
             endpoint (str): The SOAP endpoint. A url.
