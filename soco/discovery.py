@@ -17,8 +17,6 @@ from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
-# pylint: disable=too-many-locals, too-many-branches, too-many-statements
-
 
 def discover(
     timeout=5,
@@ -272,7 +270,6 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
-# pylint: disable=too-many-arguments
 def scan_network(
     include_invisible=False,
     multi_household=False,

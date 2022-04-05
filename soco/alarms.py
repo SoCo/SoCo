@@ -188,8 +188,6 @@ class Alarm:
     system. An alarm is not automatically saved. Call `save()` to do that.
     """
 
-    # pylint: disable=too-many-instance-attributes
-    # pylint: disable=too-many-arguments
     def __init__(
         self,
         zone,

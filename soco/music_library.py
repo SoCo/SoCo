@@ -179,8 +179,6 @@ class MusicLibrary:
         args = tuple(["radio_shows"] + list(args))
         return self.get_music_library_information(*args, **kwargs)
 
-        # pylint: disable=too-many-locals, too-many-arguments, too-many-branches
-
     def get_music_library_information(
         self,
         search_type,
