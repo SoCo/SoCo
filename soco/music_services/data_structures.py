@@ -1,5 +1,5 @@
 # Disable while we have Python 2.x compatability
-# pylint: disable=useless-object-inheritance, too-many-arguments
+# pylint: disable=useless-object-inheritance
 
 """Data structures for music service items
 
@@ -232,7 +232,7 @@ class MusicServiceItem(MetadataDictBase):
     def __init__(
         self,
         item_id,
-        desc,  # pylint: disable=too-many-arguments
+        desc,
         resources,
         uri,
         metadata_dict,

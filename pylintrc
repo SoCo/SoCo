@@ -1,13 +1,33 @@
 [MESSAGES CONTROL]
 
-# locally disable too-many-lines is only possible if the disable statement is
-# put into the first line, which is not good practice
-# see https://github.com/SoCo/SoCo/issues/127
-# duplicate code check disabled whilst refactoring of wimp plugin is in
-# progress
-disable=too-many-lines,locally-disabled,duplicate-code,too-few-public-methods,
-    bad-option-value,no-else-return,cyclic-import,too-many-public-methods,
-    bad-continuation, consider-using-f-string
+disable=
+# Reasons disabled:
+#  consider-using-f-string - str.format sometimes more readable
+#  cyclic-import - doesn't test if both import on load
+#  duplicate-code - unavoidable
+#  format - handled by black
+#  locally-disabled - it spams too much
+#  too-many-* - can harm readability
+#  too-few-* - can harm readability
+    bad-continuation,
+    bad-option-value,
+    consider-using-f-string,
+    cyclic-import,
+    duplicate-code,
+    format,
+    locally-disabled,
+    no-else-return,
+    too-few-public-methods,
+    too-many-ancestors,
+    too-many-arguments,
+    too-many-branches,
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-locals,
+    too-many-public-methods,
+    too-many-return-statements,
+    too-many-statements,
+    too-many-boolean-expressions
 
 
 [REPORTS]

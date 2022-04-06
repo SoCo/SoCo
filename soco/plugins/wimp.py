@@ -1,4 +1,4 @@
-# pylint: disable=star-args,too-many-locals
+# pylint: disable=star-args
 
 """Plugin for the Wimp music service (Service ID 20)"""
 

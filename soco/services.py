@@ -95,7 +95,6 @@ class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
         return self.datatype
 
 
-# pylint: disable=too-many-instance-attributes
 class Service:
     """A class representing a UPnP service.
 
@@ -695,7 +694,6 @@ class Service:
             )
         """
 
-        # pylint: disable=too-many-locals
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree

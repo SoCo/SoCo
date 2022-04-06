@@ -15,7 +15,6 @@ from ..xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-# pylint: disable=too-many-instance-attributes
 class Account:
 
     """An account for a Music Service.

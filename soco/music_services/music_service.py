@@ -42,7 +42,7 @@ from ..xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-# pylint: disable=too-many-instance-attributes, protected-access
+# pylint: disable=protected-access
 class MusicServiceSoapClient:
 
     """A SOAP client for accessing Music Services.
@@ -52,9 +52,7 @@ class MusicServiceSoapClient:
     yourself.
     """
 
-    def __init__(
-        self, endpoint, timeout, music_service, token_store, device=None
-    ):  # pylint: disable=too-many-arguments
+    def __init__(self, endpoint, timeout, music_service, token_store, device=None):
         """
         Args:
             endpoint (str): The SOAP endpoint. A url.
@@ -341,7 +339,6 @@ class MusicServiceSoapClient:
         self._cached_soap_header = None
 
 
-# pylint: disable=too-many-instance-attributes
 class MusicService:
 
     """The MusicService class provides access to third party music services.

@@ -109,9 +109,7 @@ class PlexPlugin(SoCoPlugin):
         position = self.add_to_queue(plex_media)
         self.soco.play_from_queue(position - 1)
 
-    def add_to_queue(
-        self, plex_media, position=0, as_next=False, **kwargs
-    ):  # pylint: disable=too-many-locals
+    def add_to_queue(self, plex_media, position=0, as_next=False, **kwargs):
         """Add the provided media to the speaker's playback queue.
 
         Args:

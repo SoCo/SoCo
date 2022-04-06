@@ -132,7 +132,7 @@ class _ArgsSingleton(type):
         return cls._instances[key][args]
 
 
-class _SocoSingletonBase(  # pylint: disable=too-few-public-methods,no-init
+class _SocoSingletonBase(  # pylint: disable=no-init
     _ArgsSingleton("ArgsSingletonMeta", (object,), {})
 ):
 
@@ -177,7 +177,7 @@ def only_on_soundbars(function):
     return inner_function
 
 
-# pylint: disable=R0904,too-many-instance-attributes
+# pylint: disable=R0904
 class SoCo(_SocoSingletonBase):
 
     """A simple class for controlling a Sonos speaker.
@@ -759,7 +759,6 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Play([("InstanceID", 0), ("Speed", 1)])
 
     @only_on_master
-    # pylint: disable=too-many-arguments
     def play_uri(self, uri="", meta="", title="", start=True, force_radio=False):
         """Play a URI.
 

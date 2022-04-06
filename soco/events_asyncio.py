@@ -155,7 +155,7 @@ class EventNotifyHandler(EventNotifyHandlerBase):
         log.debug("Event %s received for %s service at %s", seq, service_id, timestamp)
 
 
-class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-attributes
+class EventListener(EventListenerBase):
     """The Event Listener.
 
     Runs an http server which is an endpoint for ``NOTIFY``
@@ -475,7 +475,7 @@ class Subscription(SubscriptionBase):
             self._auto_renew_task.cancel()
             self._auto_renew_task = None
 
-    # pylint: disable=no-self-use, too-many-branches, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 

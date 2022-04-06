@@ -1,5 +1,3 @@
-# pylint: disable=too-many-instance-attributes
-
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance
 
@@ -155,7 +153,6 @@ class Snapshot:
         # return if device is a coordinator (helps usage)
         return self.is_coordinator
 
-    # pylint: disable=too-many-branches
     def restore(self, fade=False):
         """Restore the state of a device to that which was previously saved.
 
