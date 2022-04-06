@@ -1,4 +1,4 @@
-# pylint: disable = star-args, too-many-arguments, unsupported-membership-test
+# pylint: disable = star-args, unsupported-membership-test
 # pylint: disable = not-an-iterable
 
 # Disable while we have Python 2.x compatability

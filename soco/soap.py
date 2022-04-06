@@ -93,8 +93,6 @@ class SoapFault(SoCoException):
 #   </s:Body>
 # </s:Envelope>
 
-# pylint: disable=too-many-instance-attributes, too-many-arguments
-
 
 class SoapMessage:
 

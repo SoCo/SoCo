@@ -335,7 +335,7 @@ class Subscription(SubscriptionBase):
             self._auto_renew_loop.stop()
             self._auto_renew_loop = None
 
-    # pylint: disable=no-self-use, too-many-branches, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 

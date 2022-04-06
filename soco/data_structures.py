@@ -1,4 +1,4 @@
-# pylint: disable=star-args, too-many-arguments, fixme, import-outside-toplevel
+# pylint: disable=star-args, fixme, import-outside-toplevel
 
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance,bad-mcs-classmethod-argument
@@ -170,7 +170,6 @@ class DidlResource:
 
     # Adapted from a class taken from the Python Brisa project - MIT licence.
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         uri,
@@ -534,7 +533,6 @@ class DidlObject(metaclass=DidlMetaClass):
             # way.
             setattr(self, key, value)
 
-    # pylint: disable=too-many-locals, too-many-branches
     @classmethod
     def from_element(cls, element):  # pylint: disable=R0914
         """Create an instance of this class from an ElementTree xml Element.

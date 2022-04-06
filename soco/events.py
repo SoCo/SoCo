@@ -370,7 +370,7 @@ class Subscription(SubscriptionBase):
         """Cancels the auto_renew thread"""
         self._auto_renew_thread_flag.set()
 
-    # pylint: disable=no-self-use, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 

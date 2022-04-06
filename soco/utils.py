@@ -136,7 +136,7 @@ class deprecated:
     """
 
     # pylint really doesn't like decorators!
-    # pylint: disable=invalid-name, too-few-public-methods
+    # pylint: disable=invalid-name
     # pylint: disable=missing-docstring
 
     def __init__(
