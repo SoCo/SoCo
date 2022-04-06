@@ -109,7 +109,7 @@ class PlexPlugin(SoCoPlugin):
         position = self.add_to_queue(plex_media)
         self.soco.play_from_queue(position - 1)
 
-    def add_to_queue(self, plex_media, position=0, as_next=False):
+    def add_to_queue(self, plex_media, position=0, as_next=False, **kwargs):
         """Add the provided media to the speaker's playback queue.
 
         Args:
@@ -202,7 +202,8 @@ class PlexPlugin(SoCoPlugin):
                 ("EnqueuedURIMetaData", metadata),
                 ("DesiredFirstTrackNumberEnqueued", position),
                 ("EnqueueAsNext", int(as_next)),
-            ]
+            ],
+            **kwargs
         )
         qnumber = response["FirstTrackNumberEnqueued"]
         return int(qnumber)
