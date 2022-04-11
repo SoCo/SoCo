@@ -2,8 +2,6 @@
 """The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
-
-
 import datetime
 import logging
 import re
@@ -28,7 +26,6 @@ from .data_structures import (
     Queue,
     to_didl_string,
 )
-from .cache import Cache
 from .data_structures_entry import from_didl_string
 from .exceptions import (
     SoCoSlaveException,
@@ -36,7 +33,6 @@ from .exceptions import (
     NotSupportedException,
     SoCoNotVisibleException,
 )
-from .groups import ZoneGroup
 from .music_library import MusicLibrary
 from .services import (
     DeviceProperties,
@@ -56,6 +52,7 @@ from .utils import (
     really_utf8,
 )
 from .xml import XML
+from .zgs import ZoneGroupState
 
 AUDIO_INPUT_FORMATS = {
     0: "No input connected",
@@ -74,18 +71,6 @@ AUDIO_INPUT_FORMATS = {
     84934658: "Multichannel PCM 5.1",
     84934713: "Dolby 5.1",
     84934714: "Dolby Digital Plus 5.1",
-}
-
-# XML to zone attribute mappings for ZoneGroupState contents
-# Used by SoCo._parse_zone_group_state()
-ZGS_ATTRIB_MAPPING = {
-    "BootSeq": "_boot_seqnum",
-    "ChannelMapSet": "_channel_map",
-    "HTSatChanMapSet": "_ht_sat_chan_map",
-    "MicEnabled": "_mic_enabled",
-    "UUID": "_uid",
-    "VoiceConfigState": "_voice_config_state",
-    "ZoneName": "_player_name",
 }
 
 _LOG = logging.getLogger(__name__)
@@ -331,6 +316,7 @@ class SoCo(_SocoSingletonBase):
     """
 
     _class_group = "SoCo"
+    zone_group_states = {}
 
     # pylint: disable=super-on-old-class
     def __init__(self, ip_address):
@@ -363,15 +349,14 @@ class SoCo(_SocoSingletonBase):
         self.music_library = MusicLibrary(self)
 
         # Some private attributes
-        self._all_zones = set()
         self._boot_seqnum = None
-        self._groups = set()
         self._channel_map = None
         self._ht_sat_chan_map = None
         self._is_bridge = None
         self._is_coordinator = False
         self._is_satellite = False
         self._has_satellites = False
+        self._satellite_parent = None
         self._channel = None
         self._is_soundbar = None
         self._voice_config_state = None
@@ -379,9 +364,6 @@ class SoCo(_SocoSingletonBase):
         self._player_name = None
         self._uid = None
         self._household_id = None
-        self._visible_zones = set()
-        self._zgs_cache = Cache(default_timeout=5)
-        self._zgs_result = None
 
         _LOG.debug("Created SoCo instance for ip: %s", ip_address)
 
@@ -394,7 +376,7 @@ class SoCo(_SocoSingletonBase):
     @property
     def boot_seqnum(self):
         """int: The boot sequence number."""
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return int(self._boot_seqnum)
 
     @property
@@ -405,7 +387,7 @@ class SoCo(_SocoSingletonBase):
         # return result["CurrentZoneName"]
         # but it is probably quicker to get it from the group topology
         # and take advantage of any caching
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._player_name
 
     @player_name.setter
@@ -433,7 +415,7 @@ class SoCo(_SocoSingletonBase):
         # is probably quicker than any alternative, since the zgt is probably
         # cached. This will set self._uid for us for next time, so we won't
         # have to do this again
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._uid
         # An alternative way of getting the uid is as follows:
         # self.device_description_url = \
@@ -483,7 +465,7 @@ class SoCo(_SocoSingletonBase):
         # if not, we have to get it from the zone topology. This will set
         # self._is_bridge for us for next time, so we won't have to do this
         # again
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._is_bridge
 
     @property
@@ -493,13 +475,13 @@ class SoCo(_SocoSingletonBase):
         # invisible = self.deviceProperties.GetInvisible()['CurrentInvisible']
         # but it is better to do it in the following way, which uses the
         # zone group topology, to capitalise on any caching.
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._is_coordinator
 
     @property
     def is_satellite(self):
         """bool: Is this zone a satellite in a home theater setup?"""
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._is_satellite
 
     @property
@@ -508,7 +490,7 @@ class SoCo(_SocoSingletonBase):
 
         Will only return True on the primary device in a home theater configuration.
         """
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         return self._has_satellites
 
     @property
@@ -525,7 +507,7 @@ class SoCo(_SocoSingletonBase):
         Only provides reliable results when called on the soundbar
         or subwoofer devices if configured in a home theater setup.
         """
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         channel_map = self._channel_map or self._ht_sat_chan_map
         if not channel_map:
             return False
@@ -540,7 +522,7 @@ class SoCo(_SocoSingletonBase):
 
         Can be one of "LF,RF", "LF", "RF", "LR", "RR", "SW", or None.
         """
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         # Omit repeated channel entries (e.g., "RF,RF" -> "RF")
         if self._channel:
             channels = set(self._channel.split(","))
@@ -1538,146 +1520,19 @@ class SoCo(_SocoSingletonBase):
         except SoCoUPnPException as error:
             raise NotSupportedException from error
 
-    def _parse_zone_group_state(self):
-        """The Zone Group State contains a lot of useful information.
-
-        Retrieve and parse it, and populate the relevant properties.
-        """
-
-        # zoneGroupTopology.GetZoneGroupState()['ZoneGroupState'] returns XML like
-        # this:
-        #
-        # <ZoneGroups>
-        #   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXXX1400:0">
-        #     <ZoneGroupMember
-        #         BootSeq="33"
-        #         Configuration="1"
-        #         Icon="x-rincon-roomicon:zoneextender"
-        #         Invisible="1"
-        #         IsZoneBridge="1"
-        #         Location="http://192.168.1.100:1400/xml/device_description.xml"
-        #         MinCompatibleVersion="22.0-00000"
-        #         SoftwareVersion="24.1-74200"
-        #         UUID="RINCON_000ZZZ1400"
-        #         ZoneName="BRIDGE"/>
-        #   </ZoneGroup>
-        #   <ZoneGroup Coordinator="RINCON_000XXX1400" ID="RINCON_000XXX1400:46">
-        #     <ZoneGroupMember
-        #         BootSeq="44"
-        #         Configuration="1"
-        #         Icon="x-rincon-roomicon:living"
-        #         Location="http://192.168.1.101:1400/xml/device_description.xml"
-        #         MinCompatibleVersion="22.0-00000"
-        #         SoftwareVersion="24.1-74200"
-        #         UUID="RINCON_000XXX1400"
-        #         ZoneName="Living Room"/>
-        #     <ZoneGroupMember
-        #         BootSeq="52"
-        #         Configuration="1"
-        #         Icon="x-rincon-roomicon:kitchen"
-        #         Location="http://192.168.1.102:1400/xml/device_description.xml"
-        #         MinCompatibleVersion="22.0-00000"
-        #         SoftwareVersion="24.1-74200"
-        #         UUID="RINCON_000YYY1400"
-        #         ZoneName="Kitchen"/>
-        #   </ZoneGroup>
-        # </ZoneGroups>
-        #
-
-        def parse_zone_group_member(member_element):
-            """Parse a ZoneGroupMember or Satellite element from Zone Group
-            State, create a SoCo instance for the member, set basic attributes
-            and return it."""
-            # Create a SoCo instance for each member. Because SoCo
-            # instances are singletons, this is cheap if they have already
-            # been created, and useful if they haven't. We can then
-            # update various properties for that instance.
-            member_attribs = member_element.attrib
-            ip_addr = member_attribs["Location"].split("//")[1].split(":")[0]
-            zone = config.SOCO_CLASS(ip_addr)
-            # share our cache
-            zone._zgs_cache = self._zgs_cache
-            # uid doesn't change, but it's not harmful to (re)set it, in case
-            # the zone is as yet unseen.
-            for key, attrib in ZGS_ATTRIB_MAPPING.items():
-                setattr(zone, attrib, member_attribs.get(key))
-
-            for channel_map in list(
-                filter(None, [zone._channel_map, zone._ht_sat_chan_map])
-            ):
-                for channel in channel_map.split(";"):
-                    if channel.startswith(zone._uid):
-                        zone._channel = channel.split(":")[-1]
-
-            # add the zone to the set of all members, and to the set
-            # of visible members if appropriate
-            if member_attribs.get("Invisible") != "1":
-                self._visible_zones.add(zone)
-            self._all_zones.add(zone)
-            return zone
-
-        # This is called quite frequently, so it is worth optimising it.
-        # Maintain a private cache. If the zgt has not changed, there is no
-        # need to repeat all the XML parsing. In addition, switch on network
-        # caching for a short interval (5 secs).
-        zgs = self.zoneGroupTopology.GetZoneGroupState(cache=self._zgs_cache)[
-            "ZoneGroupState"
-        ]
-        if zgs == self._zgs_result:
-            return
-        self._zgs_result = zgs
-        tree = XML.fromstring(zgs.encode("utf-8"))
-        # Empty the sets of all zone groups
-        self.clear_zone_groups()
-        # Compatibility fallback for pre-10.1 firmwares
-        # where a "ZoneGroups" element is not used
-        tree = tree.find("ZoneGroups") or tree
-        # Loop over each ZoneGroup Element
-        for group_element in tree.findall("ZoneGroup"):
-            coordinator_uid = group_element.attrib["Coordinator"]
-            group_uid = group_element.attrib["ID"]
-            group_coordinator = None
-            members = set()
-            for member_element in group_element.findall("ZoneGroupMember"):
-                zone = parse_zone_group_member(member_element)
-                zone._is_satellite = False
-                # Perform extra processing relevant to direct zone group
-                # members
-                #
-                # If this element has the same UUID as the coordinator, it is
-                # the coordinator
-                if zone._uid == coordinator_uid:
-                    group_coordinator = zone
-                    zone._is_coordinator = True
-                else:
-                    zone._is_coordinator = False
-                # is_bridge doesn't change, but it does no real harm to
-                # set/reset it here, just in case the zone has not been seen
-                # before
-                zone._is_bridge = member_element.attrib.get("IsZoneBridge") == "1"
-                # add the zone to the members for this group
-                members.add(zone)
-                # Loop over Satellite elements if present, and process as for
-                # ZoneGroup elements
-                satellite_elements = member_element.findall("Satellite")
-                zone._has_satellites = bool(satellite_elements)
-                for satellite_element in satellite_elements:
-                    zone = parse_zone_group_member(satellite_element)
-                    zone._is_satellite = True
-                    # Assume a satellite can't be a bridge or coordinator, so
-                    # no need to check.
-                    #
-                    # Add the zone to the members for this group.
-                    members.add(zone)
-                # Now create a ZoneGroup with this info and add it to the list
-                # of groups
-            self._groups.add(ZoneGroup(group_uid, group_coordinator, members))
+    @property
+    def zone_group_state(self):
+        """Return the assocated ZoneGroupState instance."""
+        zgs = self.zone_group_states.get(self.household_id)
+        if not zgs:
+            zgs = self.zone_group_states[self.household_id] = ZoneGroupState()
+        return zgs
 
     @property
     def all_groups(self):
         """set of :class:`soco.groups.ZoneGroup`: All available groups."""
-        self._parse_zone_group_state()
-        return self._groups.copy()
+        self.zone_group_state.poll(self)
+        return self.zone_group_state.groups.copy()
 
     @property
     def group(self):
@@ -1706,20 +1561,14 @@ class SoCo(_SocoSingletonBase):
     @property
     def all_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All available zones."""
-        self._parse_zone_group_state()
-        return self._all_zones.copy()
+        self.zone_group_state.poll(self)
+        return self.zone_group_state.all_zones.copy()
 
     @property
     def visible_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All visible zones."""
-        self._parse_zone_group_state()
-        return self._visible_zones.copy()
-
-    def clear_zone_groups(self):
-        """Clear all known group sets for this zone."""
-        self._groups.clear()
-        self._all_zones.clear()
-        self._visible_zones.clear()
+        self.zone_group_state.poll(self)
+        return self.zone_group_state.visible_zones.copy()
 
     def partymode(self):
         """Put all the speakers in the network in the same group, a.k.a Party
@@ -1746,7 +1595,7 @@ class SoCo(_SocoSingletonBase):
                 ("CurrentURIMetaData", ""),
             ]
         )
-        self._zgs_cache.clear()
+        self.zone_group_state.clear_cache()
 
     def unjoin(self):
         """Remove this speaker from a group.
@@ -1757,7 +1606,7 @@ class SoCo(_SocoSingletonBase):
         """
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup([("InstanceID", 0)])
-        self._zgs_cache.clear()
+        self.zone_group_state.clear_cache()
 
     def create_stereo_pair(self, rh_slave_speaker):
         """Create a stereo pair.
@@ -1942,7 +1791,7 @@ class SoCo(_SocoSingletonBase):
     @property
     def voice_service_configured(self):
         """bool: Is a voice service configured on this device?"""
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         if self._voice_config_state is None:
             return None
         return bool(int(self._voice_config_state))
@@ -1955,7 +1804,7 @@ class SoCo(_SocoSingletonBase):
             or if a voice service is not configured.
 
         """
-        self._parse_zone_group_state()
+        self.zone_group_state.poll(self)
         if not self.voice_service_configured:
             return None
         return bool(int(self._mic_enabled))
