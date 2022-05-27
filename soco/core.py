@@ -1372,12 +1372,12 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def surround_level(self):
-        """Convenience wrapper for surround_volume_tv getter to match raw Sonos API."""
+        """Convenience getter for surround_volume_tv to match raw Sonos API."""
         return self.surround_volume_tv
 
     @surround_level.setter
     def surround_level(self, relative_volume):
-        """Convenience wrapper for surround_volume_tv setter to match raw Sonos API."""
+        """Convenience setter for surround_volume_tv to match raw Sonos API."""
         self.surround_volume_tv = relative_volume
 
     @property
@@ -1411,12 +1411,12 @@ class SoCo(_SocoSingletonBase):
 
     @property
     def music_surround_level(self):
-        """Convenience wrapper for surround_volume_music getter to match raw Sonos API."""
+        """Convenience getter for surround_volume_music to match raw Sonos API."""
         return self.surround_volume_music
 
     @music_surround_level.setter
     def music_surround_level(self, relative_volume):
-        """Convenience wrapper for surround_volume_music setter to match raw Sonos API."""
+        """Convenience setter for surround_volume_music to match raw Sonos API."""
         self.surround_volume_music = relative_volume
 
     @property
