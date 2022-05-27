@@ -1371,6 +1371,16 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def surround_level(self):
+        """Convenience wrapper for surround_volume_tv getter to match raw Sonos API."""
+        return self.surround_volume_tv
+
+    @surround_level.setter
+    def surround_level(self, relative_volume):
+        """Convenience wrapper for surround_volume_tv setter to match raw Sonos API."""
+        self.surround_volume_tv = relative_volume
+
+    @property
     def surround_volume_music(self):
         """Return the relative volume for surround speakers in music mode,
         in the range -15 to +15.
@@ -1398,6 +1408,16 @@ class SoCo(_SocoSingletonBase):
                 ("DesiredValue", relative_volume),
             ]
         )
+
+    @property
+    def music_surround_level(self):
+        """Convenience wrapper for surround_volume_music getter to match raw Sonos API."""
+        return self.surround_volume_music
+
+    @music_surround_level.setter
+    def music_surround_level(self, relative_volume):
+        """Convenience wrapper for surround_volume_music setter to match raw Sonos API."""
+        self.surround_volume_music = relative_volume
 
     @property
     def dialog_level(self):
