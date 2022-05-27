@@ -1342,6 +1342,16 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def surround_mode(self):
+        """Convenience surround_full_volume_enabled getter to match raw Sonos API."""
+        return self.surround_full_volume_enabled
+
+    @surround_mode.setter
+    def surround_mode(self, value):
+        """Convenience surround_full_volume_enabled setter to match raw Sonos API."""
+        self.surround_full_volume_enabled = value
+
+    @property
     def surround_volume_tv(self):
         """Get the relative volume for surround speakers in TV
         playback mode. Ranges from -15 to +15."""
