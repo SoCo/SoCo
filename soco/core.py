@@ -2051,7 +2051,7 @@ class SoCo(_SocoSingletonBase):
             radio_track = {}
             trackinfo = (
                 metadata.findtext(
-                    ".//{urn:schemas-rinconnetworks-com:" "metadata-1-0/}streamContent"
+                    ".//{urn:schemas-rinconnetworks-com:metadata-1-0/}streamContent"
                 )
                 or ""
             )
@@ -2075,9 +2075,7 @@ class SoCo(_SocoSingletonBase):
                     radio_track["album"] = tags["ALBUM"]
             else:
                 # Might find some kind of title anyway in metadata
-                title = metadata.findtext(
-                    ".//{http://purl.org/dc/" "elements/1.1/}title"
-                )
+                title = metadata.findtext(".//{http://purl.org/dc/elements/1.1/}title")
                 # Avoid using URIs as the title
                 if _title_in_uri(title):
                     radio_track["title"] = trackinfo
