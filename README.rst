@@ -42,7 +42,7 @@ would be appreciated.**
 Installation
 ------------
 
-SoCo requires Python 3.7 or newer.
+SoCo requires Python 3.6 or newer.
 
 Use pip:
 

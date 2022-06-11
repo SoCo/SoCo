@@ -48,6 +48,7 @@ CLASSIFIERS = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -60,7 +61,7 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-PYTHON_REQUIRES = ">=3.7"
+PYTHON_REQUIRES = ">=3.6"
 
 with open("README.rst", encoding="utf-8") as file:
     LONG_DESCRIPTION = file.read()
