@@ -14,9 +14,9 @@ avoid unnecessary reprocessing of identical data.
 Since the payloads are identical between all speakers, we can use a
 common cache per household.
 
-Satellite devices can sometimes deliver outdated payloads when they
-are directly polled. These requests are instead redirected to their
-parent device.
+As satellites can sometimes deliver outdated payloads when they are
+directly polled, these requests are instead forwarded to the parent
+device.
 
 Example payload contents:
 
