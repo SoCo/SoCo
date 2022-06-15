@@ -52,7 +52,7 @@ from .utils import (
     really_utf8,
 )
 from .xml import XML
-from .zgs import ZoneGroupState
+from .zonegroupstate import ZoneGroupState
 
 AUDIO_INPUT_FORMATS = {
     0: "No input connected",
