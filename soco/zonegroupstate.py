@@ -196,11 +196,18 @@ class ZoneGroupState:
         # been created, and useful if they haven't. We can then
         # update various properties for that instance.
         member_attribs = member_element.attrib
+
+        # Example Location contents:
+        #   http://192.168.1.100:1400/xml/device_description.xml
         ip_addr = member_attribs["Location"].split("//")[1].split(":")[0]
         zone = config.SOCO_CLASS(ip_addr)
         for key, attrib in ZGS_ATTRIB_MAPPING.items():
             setattr(zone, attrib, member_attribs.get(key))
 
+        # Example ChannelMapSet (stereo pair) contents:
+        #   RINCON_001XXX1400:LF,LF;RINCON_002XXX1400:RF,RF
+        # Example HTSatChanMapSet (home theater) contents:
+        #   RINCON_001XXX1400:LF,RF;RINCON_002XXX1400:LR;RINCON_003XXX1400:RR
         for channel_map in list(
             filter(None, [zone._channel_map, zone._ht_sat_chan_map])
         ):
