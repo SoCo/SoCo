@@ -149,7 +149,7 @@ class ZoneGroupState:
             soco = soco._satellite_parent
 
         zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
-        self.process_payload(zgs, "poll", soco.ip_address)
+        self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""

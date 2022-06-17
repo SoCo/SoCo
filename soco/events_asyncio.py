@@ -141,7 +141,9 @@ class EventNotifyHandler(EventNotifyHandlerBase):
                 # Pass ZGS payload to associated SoCo instance to update
                 # attributes. Keeps cache warm and avoids network calls.
                 service.soco.zone_group_state.process_payload(
-                    variables["zone_group_state"], "event", service.soco.ip_address
+                    payload=variables["zone_group_state"],
+                    source="event",
+                    source_ip=service.soco.ip_address,
                 )
 
             # Build the Event object
