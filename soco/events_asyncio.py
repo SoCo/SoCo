@@ -137,6 +137,15 @@ class EventNotifyHandler(EventNotifyHandlerBase):
             else:
                 variables = parse_event_xml(content)
 
+            if "zone_group_state" in variables:
+                # Pass ZGS payload to associated SoCo instance to update
+                # attributes. Keeps cache warm and avoids network calls.
+                service.soco.zone_group_state.process_payload(
+                    payload=variables["zone_group_state"],
+                    source="event",
+                    source_ip=service.soco.ip_address,
+                )
+
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)
             # pass the event details on to the service so it can update
