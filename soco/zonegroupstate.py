@@ -61,9 +61,25 @@ Example payload contents:
 
 """
 import logging
+import sys
 import time
 
-from lxml import etree as LXML
+# pylint: disable=I1101
+try:
+    from lxml import etree as LXML
+
+except ImportError:
+    print(
+        """
+        SoCo Error: Import of dependency 'lxml' failed. Please install it.
+
+        Depending on your platform you may also need to install
+        system libraries 'libxml2' and 'libxslt'.
+
+        Please refer to: https://lxml.de/installation.html for more details.
+        """
+    )
+    sys.exit(1)
 
 from . import config
 from .groups import ZoneGroup
