@@ -2192,7 +2192,7 @@ class SoCo(_SocoSingletonBase):
         return self.music_library.get_music_library_information(*args, **kwargs)
 
     @only_on_master
-    def add_uri_to_queue(self, uri, position=0, as_next=False):
+    def add_uri_to_queue(self, uri, position=0, as_next=False, **kwargs):
         """Add the URI to the queue.
 
         For arguments and return value see `add_to_queue`.
@@ -2201,10 +2201,10 @@ class SoCo(_SocoSingletonBase):
         # etc of the uri. But this seems OK.
         res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
         item = DidlObject(resources=res, title="", parent_id="", item_id="")
-        return self.add_to_queue(item, position, as_next)
+        return self.add_to_queue(item, position, as_next, **kwargs)
 
     @only_on_master
-    def add_to_queue(self, queueable_item, position=0, as_next=False):
+    def add_to_queue(self, queueable_item, position=0, as_next=False, **kwargs):
         """Add a queueable item to the queue.
 
         Args:
@@ -2226,12 +2226,13 @@ class SoCo(_SocoSingletonBase):
                 ("EnqueuedURIMetaData", metadata),
                 ("DesiredFirstTrackNumberEnqueued", position),
                 ("EnqueueAsNext", int(as_next)),
-            ]
+            ],
+            **kwargs,
         )
         qnumber = response["FirstTrackNumberEnqueued"]
         return int(qnumber)
 
-    def add_multiple_to_queue(self, items, container=None):
+    def add_multiple_to_queue(self, items, container=None, **kwargs):
         """Add a sequence of items to the queue.
 
         Args:
@@ -2263,7 +2264,8 @@ class SoCo(_SocoSingletonBase):
                     ("ContainerMetaData", container_metadata),
                     ("DesiredFirstTrackNumberEnqueued", 0),
                     ("EnqueueAsNext", 0),
-                ]
+                ],
+                **kwargs,
             )
 
     @only_on_master
