@@ -75,6 +75,8 @@ class Account:
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
         settings_url = "http://{}:1400/status/accounts".format(device.ip_address)
+        # Remove this as part of PR #925
+        # pylint: disable=W3101
         result = requests.get(settings_url).content
         log.debug("Account data: %s", result)
         return result

@@ -287,6 +287,8 @@ class SoapMessage:
         if _LOG.isEnabledFor(logging.DEBUG):
             _LOG.debug("Sending %s, %s", headers, prettify(data))
 
+        # Remove this as part of PR #925
+        # pylint: disable=W3101
         response = requests.post(
             self.endpoint,
             headers=headers,

@@ -61,25 +61,9 @@ Example payload contents:
 
 """
 import logging
-import sys
 import time
 
-# pylint: disable=I1101
-try:
-    from lxml import etree as LXML
-
-except ImportError:
-    print(
-        """
-        SoCo Error: Import of dependency 'lxml' failed. Please install it.
-
-        Depending on your platform you may also need to install
-        system libraries 'libxml2' and 'libxslt'.
-
-        Please refer to: https://lxml.de/installation.html for more details.
-        """
-    )
-    sys.exit(1)
+from lxml import etree as LXML
 
 from . import config
 from .groups import ZoneGroup
@@ -110,7 +94,7 @@ ZGS_XSLT = """
   </xsl:template>
 </xsl:stylesheet>
 """
-ZGS_TRANSFORM = LXML.XSLT(LXML.fromstring(ZGS_XSLT))
+ZGS_TRANSFORM = LXML.XSLT(LXML.fromstring(ZGS_XSLT))  # pylint:disable=I1101
 
 _LOG = logging.getLogger(__name__)
 
@@ -285,6 +269,6 @@ class ZoneGroupState:
 
 def normalize_zgs_xml(xml):
     """Normalize the ZoneGroupState payload and return an lxml ElementTree instance."""
-    parser = LXML.XMLParser(remove_blank_text=True)
-    tree = LXML.fromstring(xml, parser)
+    parser = LXML.XMLParser(remove_blank_text=True)  # pylint:disable=I1101
+    tree = LXML.fromstring(xml, parser)  # pylint:disable=I1101
     return ZGS_TRANSFORM(tree)
