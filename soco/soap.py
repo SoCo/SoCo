@@ -32,6 +32,7 @@ from xml.sax.saxutils import escape
 
 import requests
 
+from . import config
 from .exceptions import SoCoException
 from .utils import prettify
 from .xml import XML
@@ -287,12 +288,13 @@ class SoapMessage:
         if _LOG.isEnabledFor(logging.DEBUG):
             _LOG.debug("Sending %s, %s", headers, prettify(data))
 
-        # Remove this as part of PR #925
-        # pylint: disable=W3101
+        timeout = self.request_args.pop("timeout", config.REQUEST_TIMEOUT)
+
         response = requests.post(
             self.endpoint,
             headers=headers,
             data=data.encode("utf-8"),
+            timeout=timeout,
             **self.request_args
         )
         _LOG.debug("Received %s, %s", response.headers, response.text)

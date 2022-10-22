@@ -1,6 +1,7 @@
 """Tests for the soap module."""
 
 
+from soco.config import REQUEST_TIMEOUT
 from soco.soap import SoapMessage
 from soco.xml import XML
 from unittest import mock
@@ -142,6 +143,7 @@ def test_call():
                 "Content-Type": 'text/xml; charset="utf-8"',
                 "user-agent": "sonos",
             },
+            timeout=REQUEST_TIMEOUT,
             data=mock.ANY,
             other_arg=4,
         )
