@@ -82,7 +82,7 @@ def _get_header(soap_action):
     # depends on the locale settings of the system. However, I'm unsure if
     # they are actually used. The character coding is set elsewhere and I think
     # the available music in each country is bound to the account.
-    language, _ = locale.getdefaultlocale()
+    language, _ = locale.getlocale()
     if language is None:
         language = ""
     else:
