@@ -73,6 +73,7 @@ AUDIO_INPUT_FORMATS = {
     84934658: "Multichannel PCM 5.1",
     84934713: "Dolby 5.1",
     84934714: "Dolby Digital Plus 5.1",
+    84934718: "Dolby Multichannel PCM 5.1",
     84934721: "DTS 5.1",
 }
 
