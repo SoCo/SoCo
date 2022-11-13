@@ -401,7 +401,7 @@ class Subscription(SubscriptionBase):
         if response and response.status_code != 412:
             response.raise_for_status()
 
-        if success:
+        if response and success:
             success(response.headers)
         if unconditional:
             unconditional()
