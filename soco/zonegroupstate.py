@@ -66,6 +66,7 @@ import time
 from lxml import etree as LXML
 
 from . import config
+from .exceptions import SoCoUPnPException
 from .groups import ZoneGroup
 
 EVENT_CACHE_TIMEOUT = 60
@@ -148,7 +149,19 @@ class ZoneGroupState:
             )
             soco = soco._satellite_parent
 
-        zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
+        try:
+            # On large Sonos systems, the following can cause the Sonos player
+            # to generate a '501' error.
+            zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
+        except SoCoUPnPException:
+            _LOG.debug(
+                "SoCoUPnPException raised on 'GetZoneGroupState()'. "
+                "Falling back to using ZoneGroupTopology events."
+            )
+            sub = soco.zoneGroupTopology.subscribe()
+            event = sub.events.get(timeout=1.0)
+            zgs = event.variables.get("zone_group_state")
+            sub.unsubscribe()
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     def process_payload(self, payload, source, source_ip):
