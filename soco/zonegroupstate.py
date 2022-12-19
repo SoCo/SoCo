@@ -154,6 +154,10 @@ class ZoneGroupState:
             # to generate a '501' error.
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
         except SoCoUPnPException:
+            # The event code below only works with the standard
+            # events module
+            if config.EVENTS_MODULE.__name__ != "soco.events":
+                raise
             _LOG.debug(
                 "SoCoUPnPException raised on 'GetZoneGroupState()'. "
                 "Falling back to using ZoneGroupTopology events."
