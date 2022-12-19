@@ -154,7 +154,7 @@ class ZoneGroupState:
 
         try:
             # On large Sonos systems, the following can cause the Sonos player
-            # to generate a '501' error.
+            # to generate a '501' error, raising an exception
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
         except SoCoUPnPException:
             zgs = self._get_zgs_by_event(soco)
@@ -203,8 +203,7 @@ class ZoneGroupState:
         await asyncio.sleep(1.0)
         await sub.unsubscribe()
         await events_asyncio.event_listener.async_stop()
-        zgs = ASYNCIO_ZGS
-        return zgs
+        return ASYNCIO_ZGS
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
