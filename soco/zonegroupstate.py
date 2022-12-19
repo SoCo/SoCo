@@ -157,6 +157,8 @@ class ZoneGroupState:
             # to generate a '501' error, raising an exception
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
         except SoCoUPnPException:
+            if config.ZGT_EVENT_FALLBACK is False:  # Disable fallback behaviour
+                raise
             zgs = self._get_zgs_by_event(soco)
             if zgs is None:
                 raise
