@@ -14,11 +14,11 @@ on:
 jobs:
   SoCo-Check-Jobs:
     name: SoCo Check Jobs (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11", "3.12-dev"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12-dev"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -27,7 +27,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          sudo apt-get install graphviz libxml2-dev libxslt-dev python-dev
+          sudo apt-get install graphviz libxml2-dev libxslt-dev python3-dev
           python -m pip install --upgrade pip
           pip install -e .
           pip install -r requirements.txt
@@ -42,9 +42,10 @@ jobs:
         run: |
           pytest --cov-config .coveragerc --cov soco .
       - name: Test formatting with Black
+        if: matrix.python-version != 3.6
         run: |
           black --check soco tests
       - name: Test documentation build
-        if: matrix.python-version == 3.9
+        if: matrix.python-version == 3.11
         run: |
           make docs
