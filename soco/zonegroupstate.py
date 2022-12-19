@@ -154,19 +154,25 @@ class ZoneGroupState:
             # to generate a '501' error.
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
         except SoCoUPnPException:
-            # The event code below only works with the standard
-            # events module
-            if config.EVENTS_MODULE.__name__ != "soco.events":
+            zgs = self.get_zgs_by_event(soco)
+            if zgs is None:
                 raise
-            _LOG.debug(
-                "SoCoUPnPException raised on 'GetZoneGroupState()'. "
-                "Falling back to using ZoneGroupTopology events."
-            )
-            sub = soco.zoneGroupTopology.subscribe()
-            event = sub.events.get(timeout=1.0)
-            zgs = event.variables.get("zone_group_state")
-            sub.unsubscribe()
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+
+    @staticmethod
+    def get_zgs_by_event(speaker):
+        # The event code below only works with the standard
+        # events module
+        if config.EVENTS_MODULE.__name__ != "soco.events":
+            return None
+        _LOG.debug(
+            "SoCoUPnPException raised on 'GetZoneGroupState()'. "
+            "Falling back to using ZoneGroupTopology events."
+        )
+        sub = speaker.zoneGroupTopology.subscribe()
+        event = sub.events.get(timeout=1.0)
+        sub.unsubscribe()
+        return event.variables.get("zone_group_state")
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
