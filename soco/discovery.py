@@ -442,7 +442,7 @@ def scan_network_by_household_id(
     network_scan_kwargs["multi_household"] = True
     zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
     if zones:
-        zones = {zone for zone in zones if zone.household_id == household_id}
+        zones = {zone for zone in zones if household_id in zone.household_id}
     _LOG.debug("Returning zones: %s", zones)
     return zones
 
