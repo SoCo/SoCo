@@ -164,7 +164,8 @@ class ZoneGroupState:
                 raise
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
-    def _get_zgs_by_event(self, speaker):
+    @staticmethod
+    def _get_zgs_by_event(speaker):
         """
         Obtain ZGS using events. Specialise the approach depending on the
         events module being used.
@@ -182,22 +183,26 @@ class ZoneGroupState:
 
         elif config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
             loop = asyncio.get_event_loop()
-            zgs = loop.run_until_complete(self._get_zgs_asyncio(speaker))
+            zgs = loop.run_until_complete(ZoneGroupState._get_zgs_asyncio(speaker))
             loop.close()
             return zgs
 
         elif config.EVENTS_MODULE.__name__ == "soco.events_twisted":
-            # ToDo
+            # To be implemented
+            return None
+
+        else:
             return None
 
     @staticmethod
     async def _get_zgs_asyncio(speaker):
-        from . import events_asyncio
-        global ASYNCIO_ZGS
+        from . import events_asyncio  # pylint: disable=C0415
+
+        global ASYNCIO_ZGS  # pylint: disable=W0603
         ASYNCIO_ZGS = None
 
         def event_callback(event):
-            global ASYNCIO_ZGS
+            global ASYNCIO_ZGS  # pylint: disable=W0603
             ASYNCIO_ZGS = event.variables.get("zone_group_state")
 
         sub = await speaker.zoneGroupTopology.subscribe()

@@ -87,5 +87,5 @@ for the Sonos Zone Group Topology will fail.
 By default, SoCo will then fall back to using a method based on ZGT events. If
 you wish to disable this behaviour, set 'ZGT_EVENT_FALLBACK' to 'False'. Your
 code should then be prepared to catch 'SoCoUPnPException' '501' errors when
-using functions that interrogate system state. 
+using functions that interrogate system state.
 """
