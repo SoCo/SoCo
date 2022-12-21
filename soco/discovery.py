@@ -285,7 +285,7 @@ def scan_network(
     include_invisible=False,
     multi_household=False,
     max_threads=256,
-    scan_timeout=0.1,
+    scan_timeout=0.5,
     min_netmask=24,
     networks_to_scan=None,
 ):
