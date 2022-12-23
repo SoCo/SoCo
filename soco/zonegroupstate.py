@@ -165,8 +165,7 @@ class ZoneGroupState:
     @staticmethod
     def _get_zgs_by_event(speaker):
         """
-        Obtain ZGS using events. Specialise the approach depending on the
-        events module being used.
+        Obtain the ZGS using events.
         """
         _LOG.debug(
             "SoCoUPnPException raised on 'GetZoneGroupState()'. "
@@ -180,11 +179,11 @@ class ZoneGroupState:
             return event.variables.get("zone_group_state")
 
         elif config.EVENTS_MODULE.__name__ == "soco.events_twisted":
-            # Not yet implemented for events_twisted
+            # Placeholder: not yet implemented for events_twisted
             return None
 
         elif config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
-            # Not yet implemented for events_asyncio
+            # Placeholder: not yet implemented for events_asyncio
             return None
 
         else:
