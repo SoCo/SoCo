@@ -60,7 +60,6 @@ Example payload contents:
   </ZoneGroupState>
 
 """
-import asyncio
 import logging
 import time
 
@@ -97,8 +96,6 @@ ZGS_XSLT = """
 </xsl:stylesheet>
 """
 ZGS_TRANSFORM = LXML.XSLT(LXML.fromstring(ZGS_XSLT))  # pylint:disable=I1101
-
-ASYNCIO_ZGS = None
 
 _LOG = logging.getLogger(__name__)
 
@@ -157,7 +154,8 @@ class ZoneGroupState:
             # to generate a '501' error, raising an exception
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
         except SoCoUPnPException:
-            if config.ZGT_EVENT_FALLBACK is False:  # Disable fallback behaviour
+            if config.ZGT_EVENT_FALLBACK is False:
+                # Disable event fallback behaviour
                 raise
             zgs = self._get_zgs_by_event(soco)
             if zgs is None:
@@ -181,36 +179,16 @@ class ZoneGroupState:
             sub.unsubscribe()
             return event.variables.get("zone_group_state")
 
-        elif config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
-            loop = asyncio.get_event_loop()
-            zgs = loop.run_until_complete(ZoneGroupState._get_zgs_asyncio(speaker))
-            loop.close()
-            return zgs
-
         elif config.EVENTS_MODULE.__name__ == "soco.events_twisted":
-            # To be implemented
+            # Not yet implemented for events_twisted
+            return None
+
+        elif config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
+            # Not yet implemented for events_asyncio
             return None
 
         else:
             return None
-
-    @staticmethod
-    async def _get_zgs_asyncio(speaker):
-        from . import events_asyncio  # pylint: disable=C0415
-
-        global ASYNCIO_ZGS  # pylint: disable=W0603
-        ASYNCIO_ZGS = None
-
-        def event_callback(event):
-            global ASYNCIO_ZGS  # pylint: disable=W0603
-            ASYNCIO_ZGS = event.variables.get("zone_group_state")
-
-        sub = await speaker.zoneGroupTopology.subscribe()
-        sub.callback = event_callback
-        await asyncio.sleep(1.0)
-        await sub.unsubscribe()
-        await events_asyncio.event_listener.async_stop()
-        return ASYNCIO_ZGS
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
