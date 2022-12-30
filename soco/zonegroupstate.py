@@ -150,7 +150,7 @@ class ZoneGroupState:
             soco = soco._satellite_parent
 
         # On large Sonos systems, GetZoneGroupState() can cause the
-        # target Sonos player to return an HTTP '501' error, raising a
+        # target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException
         try:
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
@@ -172,6 +172,7 @@ class ZoneGroupState:
     def _get_zgs_by_event(speaker):
         """
         Obtain the ZGS using a ZGT event.
+        Only the standard events module is currently supported.
         """
         if config.EVENTS_MODULE.__name__ in [
             "soco.events_twisted",
