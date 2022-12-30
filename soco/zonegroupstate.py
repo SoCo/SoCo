@@ -163,16 +163,16 @@ class ZoneGroupState:
                 _LOG.debug("ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)")
                 raise
             _LOG.debug("Falling back to using ZGT events")
-            zgs = self._get_zgs_by_event(soco)
+            zgs = self.get_zgs_by_event(soco)
             if zgs is None:
                 raise
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     @staticmethod
-    def _get_zgs_by_event(speaker):
+    def get_zgs_by_event(speaker):
         """
-        Obtain the ZGS using a ZGT event.
-        Only the standard events module is currently supported.
+        Fall back to obtaining the ZGS using a ZGT event.
+        Only the standard events module is currently supported by this method.
         """
         if config.EVENTS_MODULE.__name__ in [
             "soco.events_twisted",
