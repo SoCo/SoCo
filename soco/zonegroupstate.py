@@ -155,6 +155,11 @@ class ZoneGroupState:
         # On large Sonos systems, GetZoneGroupState() can cause the
         # target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException.
+        # If this happens, we fall back to using a ZGT event to determine the
+        # ZGS, and we continue to default to this method until
+        # EVENT_FALLBACK_TIMEOUT has elapsed.
+        # Fallback behaviour can be disabled entirely by setting the
+        # config.ZGT_EVENT_FALLBACK flag to False.
         if time.monotonic() < self._event_fallback_until and config.ZGT_EVENT_FALLBACK:
             _LOG.debug("Immediate use of event fallback to get ZGS")
             zgs = self.get_zgs_by_event(soco)
@@ -176,10 +181,10 @@ class ZoneGroupState:
                 zgs = self.get_zgs_by_event(soco)
                 if zgs is None:
                     raise
-                self._event_fallback_until = time.monotonic() + EVENT_FALLBACK_TIMEOUT
                 _LOG.debug(
                     "Setting event fallback timer to %ss", EVENT_FALLBACK_TIMEOUT
                 )
+                self._event_fallback_until = time.monotonic() + EVENT_FALLBACK_TIMEOUT
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     @staticmethod
