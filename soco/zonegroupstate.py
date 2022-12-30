@@ -160,10 +160,7 @@ class ZoneGroupState:
         # EVENT_FALLBACK_TIMEOUT has elapsed.
         # Fallback behaviour can be disabled entirely by setting the
         # config.ZGT_EVENT_FALLBACK flag to False.
-        if time.monotonic() < self._event_fallback_until and config.ZGT_EVENT_FALLBACK:
-            _LOG.debug("Immediate use of ZGT event fallback to get ZGS")
-            zgs = self.get_zgs_by_event(soco)
-        else:
+        if time.monotonic() >= self._event_fallback_until:
             try:
                 zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
                 self._event_fallback_until = NEVER_TIME
@@ -177,7 +174,7 @@ class ZoneGroupState:
                         "ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)"
                     )
                     raise
-                _LOG.debug("Falling back to using ZGT events")
+                _LOG.debug("Falling back to using a ZGT event")
                 zgs = self.get_zgs_by_event(soco)
                 if zgs is None:
                     raise
@@ -185,6 +182,9 @@ class ZoneGroupState:
                     "Setting ZGT event fallback timer to %ss", EVENT_FALLBACK_TIMEOUT
                 )
                 self._event_fallback_until = time.monotonic() + EVENT_FALLBACK_TIMEOUT
+        else:  # Within EVENT_FALLBACK_TIMEOUT of the first event fallback call
+            _LOG.debug("Immediate use of ZGT event fallback to get ZGS")
+            zgs = self.get_zgs_by_event(soco)
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     @staticmethod
