@@ -72,6 +72,7 @@ from .groups import ZoneGroup
 EVENT_CACHE_TIMEOUT = 60
 POLLING_CACHE_TIMEOUT = 5
 NEVER_TIME = -1200.0
+EVENT_FALLBACK_TIMEOUT = 120
 
 ZGS_ATTRIB_MAPPING = {
     "BootSeq": "_boot_seqnum",
@@ -115,6 +116,8 @@ class ZoneGroupState:
         self._cache_until = NEVER_TIME
         self._last_zgs = None
 
+        self._event_fallback_until = NEVER_TIME
+
         # Statistics
         self.total_requests = 0
         self.processed_count = 0
@@ -152,20 +155,30 @@ class ZoneGroupState:
         # On large Sonos systems, GetZoneGroupState() can cause the
         # target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException
-        try:
-            zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
-        except SoCoUPnPException as soco_exception:
-            _LOG.debug(
-                "Exception (%s) raised on 'GetZoneGroupState()'",
-                soco_exception,
-            )
-            if config.ZGT_EVENT_FALLBACK is False:
-                _LOG.debug("ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)")
-                raise
-            _LOG.debug("Falling back to using ZGT events")
+        if time.monotonic() < self._event_fallback_until and config.ZGT_EVENT_FALLBACK:
+            _LOG.debug("Immediate use of event fallback to get ZGS")
             zgs = self.get_zgs_by_event(soco)
-            if zgs is None:
-                raise
+        else:
+            try:
+                zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
+            except SoCoUPnPException as soco_exception:
+                _LOG.debug(
+                    "Exception (%s) raised on 'GetZoneGroupState()'",
+                    soco_exception,
+                )
+                if config.ZGT_EVENT_FALLBACK is False:
+                    _LOG.debug(
+                        "ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)"
+                    )
+                    raise
+                _LOG.debug("Falling back to using ZGT events")
+                zgs = self.get_zgs_by_event(soco)
+                if zgs is None:
+                    raise
+                self._event_fallback_until = time.monotonic() + EVENT_FALLBACK_TIMEOUT
+                _LOG.debug(
+                    "Setting event fallback timer to %ss", EVENT_FALLBACK_TIMEOUT
+                )
         self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
 
     @staticmethod
