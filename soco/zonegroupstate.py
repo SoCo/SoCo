@@ -193,20 +193,17 @@ class ZoneGroupState:
         Fall back to obtaining the ZGS using a ZGT event.
         Only the standard events module is currently supported by this method.
         """
-        if config.EVENTS_MODULE.__name__ in [
-            "soco.events_twisted",
-            "soco.events_asyncio",
-        ]:
-            _LOG.debug(
-                "ZGT event fallback not supported when using module '%s'",
-                config.EVENTS_MODULE.__name__,
-            )
-            return None
+        if config.EVENTS_MODULE.__name__ == "soco.events":
+            sub = speaker.zoneGroupTopology.subscribe()
+            event = sub.events.get(timeout=1.0)
+            sub.unsubscribe()
+            return event.variables.get("zone_group_state")
 
-        sub = speaker.zoneGroupTopology.subscribe()
-        event = sub.events.get(timeout=1.0)
-        sub.unsubscribe()
-        return event.variables.get("zone_group_state")
+        _LOG.debug(
+            "ZGT event fallback not supported when using module '%s'",
+            config.EVENTS_MODULE.__name__,
+        )
+        return None
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
