@@ -184,14 +184,14 @@ class ZoneGroupState:
         """
         if config.EVENTS_MODULE.__name__ == "soco.events":
             _LOG.debug("Updating ZGS using standard 'events' module")
-            self.update_zgs_events_default(speaker)
+            self.update_zgs_by_event_default(speaker)
 
         if config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
             _LOG.debug("Updating ZGS using 'events_asyncio' module")
             # Explicit event loop control required for Python 3.6
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            loop.run_until_complete(ZoneGroupState.update_zgs_events_asyncio(speaker))
+            loop.run_until_complete(ZoneGroupState.update_zgs_by_event_asyncio(speaker))
             asyncio.set_event_loop(None)
             loop.close()
             # From Python 3.7, we could just use:
@@ -202,7 +202,7 @@ class ZoneGroupState:
                 "ZGT event fallback not supported when using 'events_twisted'"
             )
 
-    def update_zgs_events_default(self, speaker):
+    def update_zgs_by_event_default(self, speaker):
         """
         Update the ZGS using the default events module.
         """
@@ -213,7 +213,7 @@ class ZoneGroupState:
         self.process_payload(payload=zgs, source="event", source_ip=speaker.ip_address)
 
     @staticmethod
-    async def update_zgs_events_asyncio(speaker):
+    async def update_zgs_by_event_asyncio(speaker):
         """
         Update ZGS using events_asyncio. When the event is received,
         the events_asyncio library will call 'process_payload' with
