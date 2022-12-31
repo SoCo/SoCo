@@ -185,6 +185,7 @@ class ZoneGroupState:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(ZoneGroupState.update_zgs_events_asyncio(speaker))
+            asyncio.set_event_loop(None)
             loop.close()
             # From Python 3.7, we could just use:
             # asyncio.run(ZoneGroupState.update_zgs_events_asyncio(speaker))
