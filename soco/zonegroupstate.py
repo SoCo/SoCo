@@ -60,19 +60,19 @@ Example payload contents:
   </ZoneGroupState>
 
 """
+import asyncio
 import logging
 import time
 
 from lxml import etree as LXML
 
 from . import config
-from .exceptions import SoCoUPnPException
+from .exceptions import SoCoException, SoCoUPnPException
 from .groups import ZoneGroup
 
 EVENT_CACHE_TIMEOUT = 60
 POLLING_CACHE_TIMEOUT = 5
 NEVER_TIME = -1200.0
-EVENT_FALLBACK_TIMEOUT = 120
 
 ZGS_ATTRIB_MAPPING = {
     "BootSeq": "_boot_seqnum",
@@ -116,8 +116,6 @@ class ZoneGroupState:
         self._cache_until = NEVER_TIME
         self._last_zgs = None
 
-        self._event_fallback_until = NEVER_TIME
-
         # Statistics
         self.total_requests = 0
         self.processed_count = 0
@@ -156,54 +154,63 @@ class ZoneGroupState:
         # target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException.
         # If this happens, we fall back to using a ZGT event to determine the
-        # ZGS, and we continue to default to this method until
-        # EVENT_FALLBACK_TIMEOUT has elapsed.
-        # Fallback behaviour can be disabled entirely by setting the
+        # ZGS. Fallback behaviour can be disabled by setting the
         # config.ZGT_EVENT_FALLBACK flag to False.
-        if time.monotonic() >= self._event_fallback_until:
-            try:
-                zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
-                self._event_fallback_until = NEVER_TIME
-            except SoCoUPnPException as soco_exception:
-                _LOG.debug(
-                    "Exception (%s) raised on 'GetZoneGroupState()'",
-                    soco_exception,
-                )
-                if config.ZGT_EVENT_FALLBACK is False:
-                    _LOG.debug(
-                        "ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)"
-                    )
-                    raise
-                _LOG.debug("Falling back to using a ZGT event")
-                zgs = self.get_zgs_by_event(soco)
-                if zgs is None:
-                    raise
-                _LOG.debug(
-                    "Setting ZGT event fallback timer to %ss", EVENT_FALLBACK_TIMEOUT
-                )
-                self._event_fallback_until = time.monotonic() + EVENT_FALLBACK_TIMEOUT
-        else:  # Within EVENT_FALLBACK_TIMEOUT of the first event fallback call
-            _LOG.debug("Immediate use of ZGT event fallback to get ZGS")
-            zgs = self.get_zgs_by_event(soco)
-        self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+        try:
+            zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
+            self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+        except SoCoUPnPException as soco_exception:
+            _LOG.debug(
+                "Exception (%s) raised on 'GetZoneGroupState()'",
+                soco_exception,
+            )
+            if config.ZGT_EVENT_FALLBACK is False:
+                _LOG.debug("ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)")
+                raise
+            _LOG.debug("Falling back to using a ZGT event")
+            self.update_zgs_by_event(soco)
 
-    @staticmethod
-    def get_zgs_by_event(speaker):
+    def update_zgs_by_event(self, speaker):
         """
-        Fall back to obtaining the ZGS using a ZGT event.
-        Only the standard events module is currently supported by this method.
+        Fall back to updating the ZGS using a ZGT event.
+        Use of the 'events_twisted' module is not currently supported.
         """
         if config.EVENTS_MODULE.__name__ == "soco.events":
-            sub = speaker.zoneGroupTopology.subscribe()
-            event = sub.events.get(timeout=1.0)
-            sub.unsubscribe()
-            return event.variables.get("zone_group_state")
+            _LOG.debug("Updating ZGS using standard 'events' module")
+            self.update_zgs_events(speaker)
 
-        _LOG.debug(
-            "ZGT event fallback not supported when using module '%s'",
-            config.EVENTS_MODULE.__name__,
-        )
-        return None
+        if config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
+            _LOG.debug("Updating ZGS using 'events_asyncio' module")
+            asyncio.run(ZoneGroupState.update_zgs_events_asyncio(speaker))
+
+        if config.EVENTS_MODULE.__name__ == "soco.events_twisted":
+            raise SoCoException(
+                "ZGT event fallback not supported when using 'events_twisted'"
+            )
+
+    def update_zgs_events(self, speaker):
+        """
+        Update the ZGS using the standard events module.
+        """
+        sub = speaker.zoneGroupTopology.subscribe()
+        event = sub.events.get(timeout=1.0)
+        sub.unsubscribe()
+        zgs = event.variables.get("zone_group_state")
+        self.process_payload(payload=zgs, source="event", source_ip=speaker.ip_address)
+
+    @staticmethod
+    async def update_zgs_events_asyncio(speaker):
+        """
+        Update ZGS using events_asyncio. When the event is received,
+        the events_asyncio library will call 'process_payload' with
+        the updated ZGS.
+        """
+        from . import events_asyncio  # pylint: disable=C0415
+
+        sub = await speaker.zoneGroupTopology.subscribe()
+        await asyncio.sleep(1.0)
+        await sub.unsubscribe()
+        await events_asyncio.event_listener.async_stop()
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
