@@ -81,11 +81,11 @@ timeout at runtime. It can also be overridden for specific calls by using the
 
 ZGT_EVENT_FALLBACK = True
 """
-For large Sonos systems (20+ players) the standard method of querying a player
-for the Sonos Zone Group Topology will fail.
+For large Sonos systems (about 20+ players) the standard method of querying a
+player for the Sonos Zone Group Topology will fail.
 
 By default, SoCo will then fall back to using a method based on ZGT events. If
 you wish to disable this behaviour, set 'ZGT_EVENT_FALLBACK' to 'False'. Your
-code should then be prepared to catch 'SoCoUPnPException' (501) errors when
+code should then be prepared to catch `NotSupportedException` errors when
 using functions that interrogate system state.
 """

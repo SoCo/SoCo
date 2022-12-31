@@ -67,7 +67,7 @@ import time
 from lxml import etree as LXML
 
 from . import config
-from .exceptions import SoCoException, SoCoUPnPException
+from .exceptions import NotSupportedException, SoCoException, SoCoUPnPException
 from .groups import ZoneGroup
 
 EVENT_CACHE_TIMEOUT = 60
@@ -150,8 +150,8 @@ class ZoneGroupState:
             )
             soco = soco._satellite_parent
 
-        # On large Sonos systems, GetZoneGroupState() can cause the
-        # target Sonos player to return an HTTP 501 error, raising a
+        # On large (about 20+ players) systems, GetZoneGroupState() can cause
+        # the target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException.
         # If this happens, we fall back to using a ZGT event to determine the
         # ZGS. Fallback behaviour can be disabled by setting the
@@ -159,16 +159,23 @@ class ZoneGroupState:
         try:
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
             self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
-        except SoCoUPnPException as soco_exception:
+        except SoCoUPnPException as soco_upnp_exception:
             _LOG.debug(
                 "Exception (%s) raised on 'GetZoneGroupState()'",
-                soco_exception,
+                soco_upnp_exception,
             )
             if config.ZGT_EVENT_FALLBACK is False:
                 _LOG.debug("ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)")
-                raise
+                raise NotSupportedException(
+                    "'GetZoneGroupState()' call fails on large Sonos systems"
+                ) from soco_upnp_exception
             _LOG.debug("Falling back to using a ZGT event")
-            self.update_zgs_by_event(soco)
+            try:
+                self.update_zgs_by_event(soco)
+            except Exception as soco_exception:
+                raise SoCoException(
+                    "Obtaining ZGT using events failed"
+                ) from soco_exception
 
     def update_zgs_by_event(self, speaker):
         """
@@ -197,7 +204,7 @@ class ZoneGroupState:
 
     def update_zgs_events_default(self, speaker):
         """
-        Update the ZGS using the standard events module.
+        Update the ZGS using the default events module.
         """
         sub = speaker.zoneGroupTopology.subscribe()
         event = sub.events.get(timeout=1.0)
