@@ -153,29 +153,31 @@ class ZoneGroupState:
         # On large (about 20+ players) systems, GetZoneGroupState() can cause
         # the target Sonos player to return an HTTP 501 error, raising a
         # SoCoUPnPException.
-        # If this happens, we fall back to using a ZGT event to determine the
-        # ZGS. Fallback behaviour can be disabled by setting the
-        # config.ZGT_EVENT_FALLBACK flag to False.
         try:
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
             self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+
+        # In the event of failure, we fall back to using a ZGT event to
+        # determine the ZGS. Fallback behaviour can be disabled by setting the
+        # config.ZGT_EVENT_FALLBACK flag to False.
         except SoCoUPnPException as soco_upnp_exception:
             _LOG.debug(
                 "Exception (%s) raised on 'GetZoneGroupState()'",
                 soco_upnp_exception,
             )
+
             if config.ZGT_EVENT_FALLBACK is False:
                 _LOG.debug("ZGT event fallback disabled (config.ZGT_EVENT_FALLBACK)")
                 raise NotSupportedException(
-                    "'GetZoneGroupState()' call fails on large Sonos systems"
+                    "'GetZoneGroupState()' call fails on large Sonos systems "
+                    "and event fallback is disabled"
                 ) from soco_upnp_exception
+
             _LOG.debug("Falling back to using a ZGT event")
             try:
                 self.update_zgs_by_event(soco)
             except Exception as soco_exception:
-                raise SoCoException(
-                    "Obtaining ZGT using events failed"
-                ) from soco_exception
+                raise soco_exception from soco_upnp_exception
 
     def update_zgs_by_event(self, speaker):
         """
@@ -188,18 +190,19 @@ class ZoneGroupState:
 
         if config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
             _LOG.debug("Updating ZGS using 'events_asyncio' module")
-            # Explicit event loop control required for Python 3.6
+            # Explicit asyncio event loop control required for Python 3.6
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             loop.run_until_complete(ZoneGroupState.update_zgs_by_event_asyncio(speaker))
             asyncio.set_event_loop(None)
             loop.close()
-            # From Python 3.7, we could just use:
+            # From Python 3.7, we can just use the single statement:
             # asyncio.run(ZoneGroupState.update_zgs_events_asyncio(speaker))
 
         if config.EVENTS_MODULE.__name__ == "soco.events_twisted":
             raise SoCoException(
-                "ZGT event fallback not supported when using 'events_twisted'"
+                "ZGT event fallback not supported when using the "
+                "'events_twisted' module"
             )
 
     def update_zgs_by_event_default(self, speaker):
