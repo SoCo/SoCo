@@ -219,15 +219,19 @@ class ZoneGroupState:
     async def update_zgs_by_event_asyncio(speaker):
         """
         Update ZGS using events_asyncio. When the event is received,
-        the events_asyncio library will call 'process_payload' with
+        the events_asyncio notify handler will call 'process_payload' with
         the updated ZGS.
         """
         from . import events_asyncio  # pylint: disable=C0415
 
+        event_listener_is_running = events_asyncio.event_listener.is_running
         sub = await speaker.zoneGroupTopology.subscribe()
         await asyncio.sleep(1.0)
         await sub.unsubscribe()
-        await events_asyncio.event_listener.async_stop()
+        if not event_listener_is_running:
+            # The event listener was started as a result of our
+            # subscribe() call, so stop it
+            await events_asyncio.event_listener.async_stop()
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
