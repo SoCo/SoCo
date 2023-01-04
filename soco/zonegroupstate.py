@@ -188,7 +188,7 @@ class ZoneGroupState:
             _LOG.debug("Updating ZGS using standard 'events' module")
             self.update_zgs_by_event_default(speaker)
 
-        if config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
+        elif config.EVENTS_MODULE.__name__ == "soco.events_asyncio":
             _LOG.debug("Updating ZGS using 'events_asyncio' module")
             # Explicit asyncio event loop control required for Python 3.6
             loop = asyncio.new_event_loop()
@@ -199,10 +199,18 @@ class ZoneGroupState:
             # From Python 3.7, we can just use the single statement:
             # asyncio.run(ZoneGroupState.update_zgs_events_asyncio(speaker))
 
-        if config.EVENTS_MODULE.__name__ == "soco.events_twisted":
+        elif config.EVENTS_MODULE.__name__ == "soco.events_twisted":
+            # Future: Insert code here to handle the 'events_twisted' case
             raise SoCoException(
-                "ZGT event fallback not supported when using the "
+                "ZGT event fallback not yet implemented when using the "
                 "'events_twisted' module"
+            )
+
+        else:
+            # In case any additional events frameworks come along ...
+            raise SoCoException(
+                "ZGT event fallback not implemented for "
+                f"'{config.EVENTS_MODULE.__name__}' module"
             )
 
     def update_zgs_by_event_default(self, speaker):
