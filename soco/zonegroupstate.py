@@ -234,7 +234,7 @@ class ZoneGroupState:
 
         event_listener_is_running = events_asyncio.event_listener.is_running
         sub = await speaker.zoneGroupTopology.subscribe()
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(0.25)
         await sub.unsubscribe()
         if not event_listener_is_running:
             # The event listener was started as a result of our
