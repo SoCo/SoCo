@@ -5,11 +5,11 @@ on:
   push:
     branches:
       - master
-      - 'v0.28.fixes'
+      - 'v0.29.fixes'
   pull_request:
     branches:
       - master
-      - 'v0.28.fixes'
+      - 'v0.29.fixes'
 
 env:
   CACHE_VERSION: 1
@@ -17,11 +17,11 @@ env:
 jobs:
   SoCo-Check-Jobs:
     name: SoCo Check Jobs (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9, "3.10", "3.11", "3.12-dev"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12-dev"]
     steps:
       - uses: actions/checkout@v2
 
@@ -33,7 +33,7 @@ jobs:
 
       - name: Install package dependencies
         run: |
-          sudo apt-get install graphviz libxml2-dev libxslt-dev python-dev
+          sudo apt-get install graphviz libxml2-dev libxslt-dev python3-dev
 
       - name: Restore Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
@@ -71,12 +71,13 @@ jobs:
           pytest --cov-config .coveragerc --cov soco .
 
       - name: Test formatting with Black
+        if: matrix.python-version != 3.6
         run: |
           . venv/bin/activate
           black --check soco tests
 
       - name: Test documentation build
-        if: matrix.python-version == 3.9
+        if: matrix.python-version == 3.11
         run: |
           . venv/bin/activate
           make docs
