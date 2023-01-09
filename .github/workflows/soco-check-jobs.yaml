@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12-dev"]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v2
 
@@ -29,11 +29,11 @@ jobs:
         id: setup-python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python-version }}-dev
 
       - name: Install package dependencies
         run: |
-          sudo apt-get install graphviz libxml2-dev libxslt-dev python3-dev
+          sudo apt-get install graphviz libxml2-dev libxslt-dev
 
       - name: Restore Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
