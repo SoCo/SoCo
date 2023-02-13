@@ -24,7 +24,7 @@ def discover(
     interface_addr=None,
     household_id="Sonos",
     allow_network_scan=False,
-    **network_scan_kwargs
+    **network_scan_kwargs,
 ):
     """Discover Sonos zones on the local network.
 

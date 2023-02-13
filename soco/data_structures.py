@@ -458,7 +458,7 @@ class DidlObject(metaclass=DidlMetaClass):
         restricted=True,
         resources=None,
         desc="RINCON_AssociatedZPUDN",
-        **kwargs
+        **kwargs,
     ):
         """
         Args:
@@ -629,7 +629,7 @@ class DidlObject(metaclass=DidlMetaClass):
             restricted=restricted,
             resources=resources,
             desc=desc,
-            **content
+            **content,
         )
 
     @classmethod

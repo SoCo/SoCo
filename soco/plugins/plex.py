@@ -203,7 +203,7 @@ class PlexPlugin(SoCoPlugin):
                 ("DesiredFirstTrackNumberEnqueued", position),
                 ("EnqueueAsNext", int(as_next)),
             ],
-            **kwargs
+            **kwargs,
         )
         qnumber = response["FirstTrackNumberEnqueued"]
         return int(qnumber)
