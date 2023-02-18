@@ -249,6 +249,7 @@ def test_get_names():
 
 
 def test_create_music_service():
+
     # Normal instantiation, default token store
     ms = MusicService("Spotify")
     assert ms.service_name == "Spotify"

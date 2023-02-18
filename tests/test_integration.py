@@ -648,9 +648,7 @@ class TestReorderSonosPlaylist:
         """Test removing first track from Sonos Playlist."""
         test_playlist, num_tracks = self._reset_spl_contents(soco)
         tracks = [0] + list(range(num_tracks - 1))  # [0, 0, 1, ..., n-1]
-        new_pos = [
-            None,
-        ] + list(
+        new_pos = [None,] + list(
             range(num_tracks - 1)
         )  # [None, 0, ..., n-1]
         args = {
