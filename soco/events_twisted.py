@@ -383,7 +383,6 @@ class Subscription(SubscriptionBase):
         return d
 
     def _wrap(self, method, strict, *args, **kwargs):
-
         """This is a wrapper for `Subscription.subscribe`, `Subscription.renew`
         and `Subscription.unsubscribe` which:
 
