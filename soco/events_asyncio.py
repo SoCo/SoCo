@@ -281,6 +281,7 @@ class EventListener(EventListenerBase):
 
     async def async_stop(self):
         """Stop the listener."""
+        self.is_running = False
         if self.site:
             await self.site.stop()
             self.site = None
