@@ -20,4 +20,7 @@ clean:
 	rm -rf dist
 	$(MAKE) -C doc clean
 
+build: soco
+	python -m build
+
 .PHONY: lint docs test clean
