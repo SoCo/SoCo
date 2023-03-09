@@ -563,7 +563,9 @@ class Service:
             xml_error = xml_error.encode("utf-8")
             error = ET.fromstring(xml_error)
             log.debug("Error %s", xml_error)
-            error_code = error.findtext(".//{urn:schemas-upnp-org:control-1-0}errorCode")
+            error_code = error.findtext(
+                ".//{urn:schemas-upnp-org:control-1-0}errorCode"
+            )
             if error_code is not None:
                 description = self.UPNP_ERRORS.get(int(error_code), "")
                 raise SoCoUPnPException(
@@ -574,13 +576,14 @@ class Service:
                     error_description=description,
                     error_xml=xml_error,
                 )
-            else:
-                raise ValueError("No error code found in UPnP error response")
-        except (ET.ParseError, ValueError) as e:        
+
+            raise ValueError("No error code found in UPnP error response")
+        except (ET.ParseError, ValueError) as e:
             # Unknown error, so just return the entire response
-            log.error("Error parsing UPnP error response from %s: %s", self.soco.ip_address, xml_error)
+            error = "Error parsing UPnP error response from %s: %s"
+            log.error(error, self.soco.ip_address, xml_error)
             raise UnknownSoCoException(xml_error) from e
-        
+
     def subscribe(
         self, requested_timeout=None, auto_renew=False, event_queue=None, strict=True
     ):
