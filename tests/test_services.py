@@ -5,7 +5,7 @@
 
 import pytest
 
-from soco.exceptions import SoCoUPnPException
+from soco.exceptions import SoCoUPnPException, UnknownSoCoException
 from soco.services import Service, Action, Argument, Vartype
 
 from unittest import mock
@@ -35,6 +35,29 @@ DUMMY_ERROR = "".join(
         "</s:Envelope>",
     ]
 )  # noqa PEP8
+
+DUMMY_ERROR_NO_ERROR_CODE = "".join(
+    [
+        '<?xml version="1.0"?>',
+        "<s:Envelope ",
+        'xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" ',
+        's:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">',
+        "<s:Body>",
+        "<s:Fault>",
+        "<faultcode>s:Client</faultcode>",
+        "<faultstring>UPnPError</faultstring>",
+        "<detail>",
+        '<UPnPError xmlns="urn:schemas-upnp-org:control-1-0">',
+        "<errorDescription>Oops μИⅠℂ☺ΔЄ💋</errorDescription>",
+        "</UPnPError>",
+        "</detail>",
+        "</s:Fault>",
+        "</s:Body>",
+        "</s:Envelope>",
+    ]
+)  # noqa PEP8
+
+DUMMY_ERROR_EMPTY_RESPONSE = ""
 
 DUMMY_VALID_RESPONSE = "".join(
     [
@@ -298,7 +321,15 @@ def test_handle_upnp_error(service):
     )
     assert E.value.error_code == "607"
     assert E.value.error_description == "Signature Failure"
-    # TODO: Try this with a None Error Code
 
+def test_handle_upnp_error_with_no_error_code(service):
+    """Check errors are extracted properly."""
+    with pytest.raises(UnknownSoCoException):
+        service.handle_upnp_error(DUMMY_ERROR_NO_ERROR_CODE)
+
+def test_handle_upnp_error_with_empty_response(service):
+    """Check errors are extracted properly."""
+    with pytest.raises(UnknownSoCoException):
+        service.handle_upnp_error(DUMMY_ERROR_EMPTY_RESPONSE)
 
 # TODO: test iter_actions
