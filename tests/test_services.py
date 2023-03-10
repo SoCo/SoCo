@@ -322,14 +322,17 @@ def test_handle_upnp_error(service):
     assert E.value.error_code == "607"
     assert E.value.error_description == "Signature Failure"
 
+
 def test_handle_upnp_error_with_no_error_code(service):
     """Check errors are extracted properly."""
     with pytest.raises(UnknownSoCoException):
         service.handle_upnp_error(DUMMY_ERROR_NO_ERROR_CODE)
 
+
 def test_handle_upnp_error_with_empty_response(service):
     """Check errors are extracted properly."""
     with pytest.raises(UnknownSoCoException):
         service.handle_upnp_error(DUMMY_ERROR_EMPTY_RESPONSE)
+
 
 # TODO: test iter_actions
