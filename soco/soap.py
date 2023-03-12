@@ -112,7 +112,7 @@ class SoapMessage:
         soap_action=None,
         soap_header=None,
         namespace=None,
-        **request_args
+        **request_args,
     ):
         """
         Args:
@@ -295,7 +295,7 @@ class SoapMessage:
             headers=headers,
             data=data.encode("utf-8"),
             timeout=timeout,
-            **self.request_args
+            **self.request_args,
         )
         _LOG.debug("Received %s, %s", response.headers, response.text)
         status = response.status_code

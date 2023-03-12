@@ -266,7 +266,7 @@ class ShareLinkPlugin(SoCoPlugin):
                             ("DesiredFirstTrackNumberEnqueued", position),
                             ("EnqueueAsNext", int(as_next)),
                         ],
-                        **kwargs
+                        **kwargs,
                     )
 
                     qnumber = response["FirstTrackNumberEnqueued"]
