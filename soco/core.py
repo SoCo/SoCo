@@ -510,7 +510,14 @@ class SoCo(_SocoSingletonBase):
 
         Only provides reliable results when called on the soundbar
         or subwoofer devices if configured in a home theater setup.
+
+        Sonos Amp devices support a directly-connected 3rd party subwoofer
+        connected over RCA. This property is always enabled for those devices.
         """
+        model_name = self.speaker_info["model_name"].lower()
+        if model_name.endswith("sonos amp"):
+            return True
+
         self.zone_group_state.poll(self)
         channel_map = self._channel_map or self._ht_sat_chan_map
         if not channel_map:
