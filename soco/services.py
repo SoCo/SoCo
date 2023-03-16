@@ -36,6 +36,7 @@ import logging
 from collections import namedtuple
 from xml.sax.saxutils import escape
 
+import xml.etree.ElementTree as ET
 import requests
 
 from .cache import Cache
@@ -558,24 +559,30 @@ class Service:
         # errorDescription is not required, and Sonos does not seem to use it.
 
         # NB need to encode unicode strings before passing to ElementTree
-        xml_error = xml_error.encode("utf-8")
-        error = XML.fromstring(xml_error)
-        log.debug("Error %s", xml_error)
-        error_code = error.findtext(".//{urn:schemas-upnp-org:control-1-0}errorCode")
-        if error_code is not None:
-            description = self.UPNP_ERRORS.get(int(error_code), "")
-            raise SoCoUPnPException(
-                message="UPnP Error {} received: {} from {}".format(
-                    error_code, description, self.soco.ip_address
-                ),
-                error_code=error_code,
-                error_description=description,
-                error_xml=xml_error,
+        try:
+            xml_error = xml_error.encode("utf-8")
+            error = ET.fromstring(xml_error)
+            log.debug("Error %s", xml_error)
+            error_code = error.findtext(
+                ".//{urn:schemas-upnp-org:control-1-0}errorCode"
             )
+            if error_code is not None:
+                description = self.UPNP_ERRORS.get(int(error_code), "")
+                raise SoCoUPnPException(
+                    message="UPnP Error {} received: {} from {}".format(
+                        error_code, description, self.soco.ip_address
+                    ),
+                    error_code=error_code,
+                    error_description=description,
+                    error_xml=xml_error,
+                )
 
-        # Unknown error, so just return the entire response
-        log.error("Unknown error received from %s", self.soco.ip_address)
-        raise UnknownSoCoException(xml_error)
+            raise ValueError("No error code found in UPnP error response")
+        except (ET.ParseError, ValueError) as e:
+            # Unknown error, so just return the entire response
+            error = "Error parsing UPnP error response from %s: %s"
+            log.error(error, self.soco.ip_address, xml_error)
+            raise UnknownSoCoException(xml_error) from e
 
     def subscribe(
         self, requested_timeout=None, auto_renew=False, event_queue=None, strict=True
