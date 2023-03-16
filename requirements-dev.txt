@@ -1,5 +1,7 @@
 appdirs==1.4.4
-black==22.12.0; python_version >= "3.7"
+black==23.1.0; python_version >= "3.7"
+build==0.9.0; python_version == "3.6"
+build==0.10.0; python_version >= "3.7"
 build==0.10.0
 coveralls==3.3.1
 flake8==5.0.4; python_version <= "3.7"
@@ -8,12 +10,12 @@ graphviz==0.19.1
 ifaddr==0.1.7
 importlib-metadata<5; python_version == "3.7"
 pylint==2.13.9; python_version == "3.6"
-pylint==2.15.9; python_version >= "3.7"
+pylint==2.17.0; python_version >= "3.7"
 pytest==7.0.1; python_version == "3.6"
-pytest==7.1.2; python_version >= "3.7"
+pytest==7.2.2; python_version >= "3.7"
 pytest-cov==3.0.0
 requests==2.27.1; python_version == "3.6"
-requests==2.28.0; python_version >= "3.7"
+requests==2.28.2; python_version >= "3.7"
 requests-mock==1.9.3
 sphinx==4.3.2; python_version <= "3.7"
 sphinx==4.5.0; python_version >= "3.8"
