@@ -185,7 +185,9 @@ class Alarms(_SocoSingletonBase):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
 
-    def get_next_alarm_datetime(self, from_datetime=None, include_disabled=False):
+    def get_next_alarm_datetime(
+        self, from_datetime=None, include_disabled=False, zone_uid=None
+    ):
         """Get the next alarm trigger datetime.
 
         Args:
@@ -197,6 +199,8 @@ class Alarms(_SocoSingletonBase):
             include_disabled (bool, optional): If `True` then disabled alarms
                 will be included in searching for the next alarm. Defaults to
                 `False`.
+            zone_uid (str, optional): If set the alarms will be filtered by
+                zone with this UID. Defaults to `None`.
 
         Returns:
             datetime: The next alarm trigger datetime or None if disabled
@@ -207,10 +211,15 @@ class Alarms(_SocoSingletonBase):
         next_alarm_datetime = None
         for alarm_id in self.alarms:
             this_alarm = self.alarms.get(alarm_id)
+            if zone_uid is not None and this_alarm.zone.uid != zone_uid:
+                continue
             this_next_datetime = this_alarm.get_next_alarm_datetime(
                 from_datetime, include_disabled
             )
-            if next_alarm_datetime is None or this_next_datetime < this_alarm:
+            if (next_alarm_datetime is None) or (
+                this_next_datetime is not None
+                and this_next_datetime < next_alarm_datetime
+            ):
                 next_alarm_datetime = this_next_datetime
         return next_alarm_datetime
 
@@ -430,9 +439,8 @@ class Alarm:
             from_datetime = datetime.now()
 
         # Convert helper words to number recurrences
-        recurrence_on_str = self.recurrence
         recurrence_on_str = RECURRENCE_KEYWORD_EQUIVALENT.get(
-            recurrence_on_str, recurrence_on_str
+            self.recurrence, self.recurrence
         )
 
         # For the purpose of finding the next alarm a "once" trigger that has
@@ -454,9 +462,8 @@ class Alarm:
             assert 0 <= val <= 6
 
         # Begin search from next day if it would have already triggered today
-        alarm_time = self.start_time.time()
         offset = 0
-        if alarm_time >= from_datetime.time():
+        if self.start_time <= from_datetime.time():
             offset += 1
 
         # Find first day
@@ -468,7 +475,7 @@ class Alarm:
 
         return datetime.combine(
             from_datetime.date() + timedelta(days=offset),
-            alarm_time,
+            self.start_time,
             tzinfo=from_datetime.tzinfo,
         )
 
