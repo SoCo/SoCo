@@ -185,7 +185,7 @@ class Alarms(_SocoSingletonBase):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
 
-    def get_next_alarm_datetime(self, from_datetime=None, bypass_disabled=False):
+    def get_next_alarm_datetime(self, from_datetime=None, include_disabled=False):
         """Get the next alarm trigger datetime.
 
         Args:
@@ -194,7 +194,7 @@ class Alarms(_SocoSingletonBase):
                 exact time. Since alarms do not store timezone information,
                 the output timezone will match this input argument. Defaults
                 to `datetime.now()`.
-            bypass_disabled (bool, optional): If `True` then disabled alarms
+            include_disabled (bool, optional): If `True` then disabled alarms
                 will be included in searching for the next alarm. Defaults to
                 `False`.
 
@@ -208,7 +208,7 @@ class Alarms(_SocoSingletonBase):
         for alarm_id in self.alarms:
             this_alarm = self.alarms.get(alarm_id)
             this_next_datetime = this_alarm.get_next_alarm_datetime(
-                from_datetime, bypass_disabled
+                from_datetime, include_disabled
             )
             if next_alarm_datetime is None or this_next_datetime < this_alarm:
                 next_alarm_datetime = this_next_datetime
@@ -407,7 +407,7 @@ class Alarm:
         """`str`: The ID of the alarm, or `None`."""
         return self._alarm_id
 
-    def get_next_alarm_datetime(self, from_datetime=None, bypass_disabled=False):
+    def get_next_alarm_datetime(self, from_datetime=None, include_disabled=False):
         """Get the next alarm trigger datetime.
 
         Args:
@@ -416,14 +416,14 @@ class Alarm:
                 exact time. Since alarms do not store timezone information,
                 the output timezone will match this input argument. Defaults
                 to `datetime.now()`.
-            bypass_disabled (bool, optional): If `True` then the next datetime
+            include_disabled (bool, optional): If `True` then the next datetime
                 will be computed even if the alarm is disabled. Defaults to
                 `False`.
 
         Returns:
             datetime: The next alarm trigger datetime or None if disabled
         """
-        if not self.enabled and not bypass_disabled:
+        if not self.enabled and not include_disabled:
             return None
 
         if from_datetime is None:
