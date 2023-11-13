@@ -1,7 +1,7 @@
 """This module contains classes relating to Sonos Alarms."""
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from . import discovery
 from .core import _SocoSingletonBase, PLAY_MODES
@@ -193,7 +193,7 @@ class Alarms(_SocoSingletonBase):
                 alarms from. This argument filters by alarms on or after this
                 exact time. Since alarms do not store timezone information,
                 the output timezone will match this input argument. Defaults
-                to `datetime().now()`.
+                to `datetime.now()`.
             bypass_disabled (bool, optional): If `True` then disabled alarms
                 will be included in searching for the next alarm. Defaults to
                 `False`.
@@ -202,7 +202,7 @@ class Alarms(_SocoSingletonBase):
             datetime: The next alarm trigger datetime or None if disabled
         """
         if from_datetime is None:
-            from_datetime = datetime().now()
+            from_datetime = datetime.now()
 
         next_alarm_datetime = None
         for alarm_id in self.alarms:
@@ -415,7 +415,7 @@ class Alarm:
                 alarms from. This argument filters by alarms on or after this
                 exact time. Since alarms do not store timezone information,
                 the output timezone will match this input argument. Defaults
-                to `datetime().now()`.
+                to `datetime.now()`.
             bypass_disabled (bool, optional): If `True` then the next datetime
                 will be computed even if the alarm is disabled. Defaults to
                 `False`.
@@ -427,7 +427,7 @@ class Alarm:
             return None
 
         if from_datetime is None:
-            from_datetime = datetime().now()
+            from_datetime = datetime.now()
 
         # Convert helper words to number recurrences
         recurrence_on_str = self.recurrence
@@ -467,7 +467,7 @@ class Alarm:
             offset_weekday = (from_datetime_day + offset) % 7
 
         return datetime.combine(
-            from_datetime.date() + datetime.timedelta(days=offset),
+            from_datetime.date() + timedelta(days=offset),
             alarm_time,
             tzinfo=from_datetime.tzinfo,
         )
