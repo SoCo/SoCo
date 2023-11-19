@@ -450,7 +450,6 @@ class Alarm:
 
         # Trim the 'ON_' prefix, convert to int, remove duplicates
         recurrence_set = set(map(int, recurrence_on_str[3:]))
-        assert len(recurrence_set) > 0
 
         # Convert Sonos weekdays to Python weekdays
         # Sonos starts on Sunday, Python starts on Monday
@@ -458,8 +457,6 @@ class Alarm:
             recurrence_set.remove(0)
             recurrence_set.add(7)
         recurrence_set = {x - 1 for x in recurrence_set}
-        for val in recurrence_set:
-            assert 0 <= val <= 6
 
         # Begin search from next day if it would have already triggered today
         offset = 0
