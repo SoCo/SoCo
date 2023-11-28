@@ -1,7 +1,7 @@
 """This module contains classes relating to Sonos Alarms."""
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from . import discovery
 from .core import _SocoSingletonBase, PLAY_MODES
@@ -10,6 +10,12 @@ from .xml import XML
 
 log = logging.getLogger(__name__)
 TIME_FORMAT = "%H:%M:%S"
+RECURRENCE_KEYWORD_EQUIVALENT = {
+    "DAILY": "ON_0123456",
+    "ONCE": "ON_",  # Never reoccurs
+    "WEEKDAYS": "ON_12345",
+    "WEEKENDS": "ON_06",
+}
 
 
 def is_valid_recurrence(text):
@@ -178,6 +184,44 @@ class Alarms(_SocoSingletonBase):
         for alarm_id in list(self.alarms):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
+
+    def get_next_alarm_datetime(
+        self, from_datetime=None, include_disabled=False, zone_uid=None
+    ):
+        """Get the next alarm trigger datetime.
+
+        Args:
+            from_datetime (datetime, optional): a datetime to reference next
+                alarms from. This argument filters by alarms on or after this
+                exact time. Since alarms do not store timezone information,
+                the output timezone will match this input argument. Defaults
+                to `datetime.now()`.
+            include_disabled (bool, optional): If `True` then disabled alarms
+                will be included in searching for the next alarm. Defaults to
+                `False`.
+            zone_uid (str, optional): If set the alarms will be filtered by
+                zone with this UID. Defaults to `None`.
+
+        Returns:
+            datetime: The next alarm trigger datetime or None if disabled
+        """
+        if from_datetime is None:
+            from_datetime = datetime.now()
+
+        next_alarm_datetime = None
+        for alarm_id in self.alarms:
+            this_alarm = self.alarms.get(alarm_id)
+            if zone_uid is not None and this_alarm.zone.uid != zone_uid:
+                continue
+            this_next_datetime = this_alarm.get_next_alarm_datetime(
+                from_datetime, include_disabled
+            )
+            if (next_alarm_datetime is None) or (
+                this_next_datetime is not None
+                and this_next_datetime < next_alarm_datetime
+            ):
+                next_alarm_datetime = this_next_datetime
+        return next_alarm_datetime
 
 
 class Alarm:
@@ -371,6 +415,66 @@ class Alarm:
     def alarm_id(self):
         """`str`: The ID of the alarm, or `None`."""
         return self._alarm_id
+
+    def get_next_alarm_datetime(self, from_datetime=None, include_disabled=False):
+        """Get the next alarm trigger datetime.
+
+        Args:
+            from_datetime (datetime, optional): a datetime to reference next
+                alarms from. This argument filters by alarms on or after this
+                exact time. Since alarms do not store timezone information,
+                the output timezone will match this input argument. Defaults
+                to `datetime.now()`.
+            include_disabled (bool, optional): If `True` then the next datetime
+                will be computed even if the alarm is disabled. Defaults to
+                `False`.
+
+        Returns:
+            datetime: The next alarm trigger datetime or None if disabled
+        """
+        if not self.enabled and not include_disabled:
+            return None
+
+        if from_datetime is None:
+            from_datetime = datetime.now()
+
+        # Convert helper words to number recurrences
+        recurrence_on_str = RECURRENCE_KEYWORD_EQUIVALENT.get(
+            self.recurrence, self.recurrence
+        )
+
+        # For the purpose of finding the next alarm a "once" trigger that has
+        # yet to trigger is everyday (the next possible day)
+        if recurrence_on_str == RECURRENCE_KEYWORD_EQUIVALENT["ONCE"]:
+            recurrence_on_str = RECURRENCE_KEYWORD_EQUIVALENT["DAILY"]
+
+        # Trim the 'ON_' prefix, convert to int, remove duplicates
+        recurrence_set = set(map(int, recurrence_on_str[3:]))
+
+        # Convert Sonos weekdays to Python weekdays
+        # Sonos starts on Sunday, Python starts on Monday
+        if 0 in recurrence_set:
+            recurrence_set.remove(0)
+            recurrence_set.add(7)
+        recurrence_set = {x - 1 for x in recurrence_set}
+
+        # Begin search from next day if it would have already triggered today
+        offset = 0
+        if self.start_time <= from_datetime.time():
+            offset += 1
+
+        # Find first day
+        from_datetime_day = from_datetime.weekday()
+        offset_weekday = (from_datetime_day + offset) % 7
+        while offset_weekday not in recurrence_set:
+            offset += 1
+            offset_weekday = (from_datetime_day + offset) % 7
+
+        return datetime.combine(
+            from_datetime.date() + timedelta(days=offset),
+            self.start_time,
+            tzinfo=from_datetime.tzinfo,
+        )
 
 
 def get_alarms(zone=None):
