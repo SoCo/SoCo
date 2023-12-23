@@ -124,6 +124,11 @@ class ZoneGroupState:
         """Clear the cache timestamp."""
         self._cache_until = NEVER_TIME
 
+    def extend_cache(self, timeout=EVENT_CACHE_TIMEOUT):
+        """Extend the cache timeout."""
+        self._cache_until = time.monotonic() + timeout
+        _LOG.debug("Extending ZGS cache by %ss", timeout)
+
     def clear_zone_groups(self):
         """Clear all known group sets."""
         self.groups.clear()
@@ -156,6 +161,7 @@ class ZoneGroupState:
         try:
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
             self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+            self.extend_cache(POLLING_CACHE_TIMEOUT)
 
         # In the event of failure, we fall back to using a ZGT event to
         # determine the ZGS. Fallback behaviour can be disabled by setting the
@@ -244,22 +250,12 @@ class ZoneGroupState:
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
         self.total_requests += 1
-
-        def update_cache():
-            if source == "event":
-                timeout = EVENT_CACHE_TIMEOUT
-            else:
-                timeout = POLLING_CACHE_TIMEOUT
-            self._cache_until = time.monotonic() + timeout
-            _LOG.debug("Setting ZGS cache to %ss", timeout)
-
         tree = normalize_zgs_xml(payload)
         normalized_zgs = str(tree)
         if normalized_zgs == self._last_zgs:
             _LOG.debug(
                 "Duplicate ZGS received from %s (%s), ignoring", source_ip, source
             )
-            update_cache()
             return
 
         self.processed_count += 1
@@ -272,7 +268,6 @@ class ZoneGroupState:
         )
 
         self.update_soco_instances(tree)
-        update_cache()
         self._last_zgs = normalized_zgs
 
     def parse_zone_group_member(self, member_element):
