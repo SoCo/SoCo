@@ -436,6 +436,8 @@ class SubscriptionBase:
                 self.timeout = None
             else:
                 self.timeout = int(timeout.lstrip("Second-"))
+            if service.service_type == "ZoneGroupTopology":
+                service.soco.zone_group_state.extend_cache(self.timeout)
             self._timestamp = time.time()
             self.is_subscribed = True
             log.debug(
@@ -453,8 +455,6 @@ class SubscriptionBase:
             # Autorenew just before expiry, say at 85% of self.timeout seconds
             interval = self.timeout * 85 / 100
             self._auto_renew_start(interval)
-            if service.service_type == "ZoneGroupTopology":
-                service.soco.zone_group_state.extend_cache(self.timeout)
 
         # Lock out EventNotifyHandler during registration.
         # If events_twisted is used, this lock should always be
@@ -518,6 +518,8 @@ class SubscriptionBase:
                 self.timeout = None
             else:
                 self.timeout = int(timeout.lstrip("Second-"))
+            if self.service.service_type == "ZoneGroupTopology":
+                self.service.soco.zone_group_state.extend_cache(self.timeout)
             self._timestamp = time.time()
             self.is_subscribed = True
             log.debug(
@@ -525,8 +527,6 @@ class SubscriptionBase:
                 self.service.base_url + self.service.event_subscription_url,
                 self.sid,
             )
-            if self.service.service_type == "ZoneGroupTopology":
-                self.service.soco.zone_group_state.extend_cache(self.timeout)
 
         return self._request(
             "SUBSCRIBE",
