@@ -11,6 +11,9 @@ on:
       - master
       - 'v0.30.fixes'
 
+env:
+  CACHE_VERSION: 1
+
 jobs:
   SoCo-Check-Jobs:
     name: SoCo Check Jobs (${{ matrix.python-version }})
@@ -20,32 +23,61 @@ jobs:
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+
+      - name: Install package dependencies
         run: |
-          sudo apt-get install graphviz libxml2-dev libxslt-dev python3-dev
-          python -m pip install --upgrade pip
+          sudo apt-get install graphviz libxml2-dev libxslt-dev
+
+      - name: Restore Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3
+        with:
+          path: venv
+          key: >-
+            ${{ env.CACHE_VERSION }}-${{ runner.os }}-venv-${{
+            steps.setup-python.outputs.python-version }}-${{
+            hashFiles('requirements-dev.txt') }}
+          restore-keys: |
+            ${{ env.CACHE_VERSION }}-${{ runner.os }}-venv-${{
+            steps.setup-python.outputs.python-version }}-
+
+      - name: Create Python ${{ matrix.python-version }} virtual environment
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install -U pip
           pip install -e .
-          pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
       - name: Lint with flake8 and pylint
         run: |
           # stop the build if there are Python syntax errors or undefined names
+          . venv/bin/activate
           flake8 soco
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           pylint soco
+
       - name: Test with pytest
         run: |
+          . venv/bin/activate
           pytest --cov-config .coveragerc --cov soco .
+
       - name: Test formatting with Black
         if: matrix.python-version != 3.6
         run: |
+          . venv/bin/activate
           black --check soco tests
+
       - name: Test documentation build
         if: matrix.python-version == 3.11
         run: |
+          . venv/bin/activate
           make docs
