@@ -128,15 +128,27 @@ class ZoneGroupState:
 
     def add_subscription(self, subscription: SubscriptionBase):
         """Start tracking a ZoneGroupTopology subscription."""
-        if subscription.service.service_type == "ZoneGroupTopology" and subscription not in self._subscriptions:
+        if (
+            subscription.service.service_type == "ZoneGroupTopology"
+            and subscription not in self._subscriptions
+        ):
             self._subscriptions.add(subscription)
-            _LOG.debug("Monitoring ZoneGroupTopology subscription %s on %s", subscription.sid, subscription.service.soco)
+            _LOG.debug(
+                "Monitoring ZoneGroupTopology subscription %s on %s",
+                subscription.sid,
+                subscription.service.soco,
+            )
 
     def remove_subscription(self, subscription: SubscriptionBase):
         """Stop tracking a ZoneGroupTopology subscription."""
         if subscription in self._subscriptions:
             self._subscriptions.remove(subscription)
-            _LOG.debug("Discarded unsubscribed subscription %s from %s, %d remaining", subscription.sid, subscription.service.soco, len(self._subscriptions))
+            _LOG.debug(
+                "Discarded unsubscribed subscription %s from %s, %d remaining",
+                subscription.sid,
+                subscription.service.soco,
+                len(self._subscriptions),
+            )
 
     @property
     def has_subscriptions(self):
