@@ -171,7 +171,7 @@ class ZoneGroupState:
         if self.has_subscriptions:
             self.total_requests += 1
             _LOG.debug(
-                "Subscriptions (%s) still active (GetZoneGroupState) during poll for %s, using cache",
+                "Subscriptions (%s) still active during poll for %s, using cache",
                 len(self._subscriptions),
                 soco.ip_address,
             )
