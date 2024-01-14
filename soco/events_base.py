@@ -438,6 +438,7 @@ class SubscriptionBase:
                 self.timeout = int(timeout.lstrip("Second-"))
             self._timestamp = time.time()
             self.is_subscribed = True
+            service.soco.zone_group_state.add_subscription(self)
             log.debug(
                 "Subscribed to %s, sid: %s",
                 service.base_url + service.event_subscription_url,
@@ -653,6 +654,7 @@ class SubscriptionBase:
         # an attempt to unsubscribe fails
         self._has_been_unsubscribed = True
         self._timestamp = None
+        self.service.soco.zone_group_state.remove_subscription(self)
         # Cancel any auto renew
         self._auto_renew_cancel()
         if msg:
