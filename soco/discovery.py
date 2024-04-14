@@ -363,8 +363,7 @@ def scan_network(
     # Use threading to scan the list efficiently
     sonos_ip_addresses = []
     thread_list = []
-    if max_threads > len(ip_set):
-        max_threads = len(ip_set)
+    max_threads = min(max_threads, len(ip_set))
     for _ in range(max_threads):
         thread = threading.Thread(
             target=_sonos_scan_worker_thread,

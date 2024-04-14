@@ -120,8 +120,7 @@ class Alarms(_SocoSingletonBase):
 
     def __iter__(self):
         """Return an interator for all alarms."""
-        for alarm in list(self.alarms.values()):
-            yield alarm
+        yield from list(self.alarms.values())
 
     def __len__(self):
         """Return the number of alarms."""
