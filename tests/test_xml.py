@@ -1,6 +1,5 @@
 """Tests for the xml module."""
 
-
 from soco import xml
 
 

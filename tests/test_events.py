@@ -1,6 +1,5 @@
 """Tests for the services module."""
 
-
 import pytest
 
 from soco.events_base import Event, parse_event_xml

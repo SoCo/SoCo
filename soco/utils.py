@@ -113,7 +113,6 @@ def show_xml(xml):
 
 
 class deprecated:
-
     """A decorator for marking deprecated objects.
 
     Used internally by SoCo to cause a warning to be issued when the object

@@ -81,7 +81,6 @@ _LOG = logging.getLogger(__name__)
 
 
 class _ArgsSingleton(type):
-
     """A metaclass which permits only a single instance of each derived class
     sharing the same `_class_group` class attribute to exist for any given set
     of positional arguments.
@@ -124,7 +123,6 @@ class _ArgsSingleton(type):
 class _SocoSingletonBase(  # pylint: disable=no-init
     _ArgsSingleton("ArgsSingletonMeta", (object,), {})
 ):
-
     """The base class for the SoCo class.
 
     Uses a Python 2 and 3 compatible method of declaring a metaclass. See, eg,
@@ -168,7 +166,6 @@ def only_on_soundbars(function):
 
 # pylint: disable=R0904
 class SoCo(_SocoSingletonBase):
-
     """A simple class for controlling a Sonos speaker.
 
     For any given set of arguments to __init__, only one instance of this class
@@ -2417,9 +2414,11 @@ class SoCo(_SocoSingletonBase):
             [
                 (
                     "ObjectID",
-                    "FV:2"
-                    if favorite_type is SONOS_FAVORITES
-                    else "R:0/{}".format(favorite_type),
+                    (
+                        "FV:2"
+                        if favorite_type is SONOS_FAVORITES
+                        else "R:0/{}".format(favorite_type)
+                    ),
                 ),
                 ("BrowseFlag", "BrowseDirectChildren"),
                 ("Filter", "*"),

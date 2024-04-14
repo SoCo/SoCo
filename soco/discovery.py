@@ -1,7 +1,6 @@
 """This module contains methods for discovering Sonos devices on the
 network."""
 
-
 import logging
 import socket
 import select

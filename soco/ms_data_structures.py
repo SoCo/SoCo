@@ -41,7 +41,6 @@ def tags_with_text(xml, tags=None):
 
 
 class MusicServiceItem:
-
     """Class that represents a music service item."""
 
     # These fields must be overwritten in the sub classes
@@ -326,7 +325,6 @@ class MusicServiceItem:
 
 
 class MSTrack(MusicServiceItem):
-
     """Class that represents a music service track."""
 
     item_class = "object.item.audioItem.musicTrack"
@@ -398,7 +396,6 @@ class MSTrack(MusicServiceItem):
 
 
 class MSAlbum(MusicServiceItem):
-
     """Class that represents a Music Service Album."""
 
     item_class = "object.container.album.musicAlbum"
@@ -454,7 +451,6 @@ class MSAlbum(MusicServiceItem):
 
 
 class MSAlbumList(MusicServiceItem):
-
     """Class that represents a Music Service Album List."""
 
     item_class = "object.container.albumlist"
@@ -503,7 +499,6 @@ class MSAlbumList(MusicServiceItem):
 
 
 class MSPlaylist(MusicServiceItem):
-
     """Class that represents a Music Service Play List."""
 
     item_class = "object.container.albumlist"
@@ -552,7 +547,6 @@ class MSPlaylist(MusicServiceItem):
 
 
 class MSArtistTracklist(MusicServiceItem):
-
     """Class that represents a Music Service Artist Track List."""
 
     item_class = "object.container.playlistContainer.sameArtist"
@@ -589,7 +583,6 @@ class MSArtistTracklist(MusicServiceItem):
 
 
 class MSArtist(MusicServiceItem):
-
     """Class that represents a Music Service Artist."""
 
     valid_fields = [
@@ -622,7 +615,6 @@ class MSArtist(MusicServiceItem):
 
 
 class MSFavorites(MusicServiceItem):
-
     """Class that represents a Music Service Favorite."""
 
     valid_fields = [
@@ -651,7 +643,6 @@ class MSFavorites(MusicServiceItem):
 
 
 class MSCollection(MusicServiceItem):
-
     """Class that represents a Music Service Collection."""
 
     valid_fields = [

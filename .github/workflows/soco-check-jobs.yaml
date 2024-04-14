@@ -42,7 +42,7 @@ jobs:
         run: |
           pytest --cov-config .coveragerc --cov soco .
       - name: Test formatting with Black
-        if: matrix.python-version != 3.6
+        if: matrix.python-version >= 3.8
         run: |
           black --check soco tests
       - name: Test documentation build

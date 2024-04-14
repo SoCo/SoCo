@@ -44,7 +44,6 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 # pylint: disable=protected-access
 class MusicServiceSoapClient:
-
     """A SOAP client for accessing Music Services.
 
     This class handles all the necessary authentication for accessing
@@ -340,7 +339,6 @@ class MusicServiceSoapClient:
 
 
 class MusicService:
-
     """The MusicService class provides access to third party music services.
 
     Example:

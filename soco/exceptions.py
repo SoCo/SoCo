@@ -5,12 +5,10 @@
 
 
 class SoCoException(Exception):
-
     """Base class for all SoCo exceptions."""
 
 
 class UnknownSoCoException(SoCoException):
-
     """An unknown UPnP error.
 
     The exception object will contain the raw response sent back from
@@ -19,7 +17,6 @@ class UnknownSoCoException(SoCoException):
 
 
 class SoCoUPnPException(SoCoException):
-
     """A UPnP Fault Code, raised in response to actions sent over the
     network.
 
@@ -45,7 +42,6 @@ class SoCoUPnPException(SoCoException):
 
 
 class CannotCreateDIDLMetadata(SoCoException):
-
     """
     ..  deprecated:: 0.11
         Use `DIDLMetadataError` instead.
@@ -53,7 +49,6 @@ class CannotCreateDIDLMetadata(SoCoException):
 
 
 class DIDLMetadataError(CannotCreateDIDLMetadata):
-
     """Raised if a data container class cannot create the DIDL metadata due to
     missing information.
 
@@ -64,7 +59,6 @@ class DIDLMetadataError(CannotCreateDIDLMetadata):
 
 
 class MusicServiceException(SoCoException):
-
     """An error relating to a third party music service."""
 
 
@@ -73,7 +67,6 @@ class MusicServiceAuthException(MusicServiceException):
 
 
 class UnknownXMLStructure(SoCoException):
-
     """Raised if XML with an unknown or unexpected structure is returned."""
 
 

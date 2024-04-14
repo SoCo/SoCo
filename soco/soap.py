@@ -41,7 +41,6 @@ _LOG = logging.getLogger(__name__)
 
 
 class SoapFault(SoCoException):
-
     """An exception encapsulating a SOAP Fault."""
 
     def __init__(self, faultcode, faultstring, detail=None):
@@ -96,7 +95,6 @@ class SoapFault(SoCoException):
 
 
 class SoapMessage:
-
     """A SOAP Message representing a remote procedure call.
 
     Uses the `Requests <http://www.python-requests.org/en/latest/>`_ library

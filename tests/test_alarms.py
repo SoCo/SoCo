@@ -1,6 +1,5 @@
 """Tests for the alarms module."""
 
-
 from soco.alarms import is_valid_recurrence
 
 

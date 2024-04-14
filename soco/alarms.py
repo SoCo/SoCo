@@ -1,4 +1,5 @@
 """This module contains classes relating to Sonos Alarms."""
+
 import logging
 import re
 from datetime import datetime, timedelta
@@ -224,7 +225,6 @@ class Alarms(_SocoSingletonBase):
 
 
 class Alarm:
-
     """A class representing a Sonos Alarm.
 
     Alarms may be created or updated and saved to, or removed from the Sonos
