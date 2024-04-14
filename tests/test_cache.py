@@ -1,6 +1,5 @@
 """Tests for the cache module."""
 
-
 from soco.cache import Cache, NullCache, TimedCache
 
 

@@ -1,4 +1,5 @@
 """This module contains classes relating to Sonos Alarms."""
+
 import logging
 import re
 from datetime import datetime, timedelta
@@ -120,8 +121,7 @@ class Alarms(_SocoSingletonBase):
 
     def __iter__(self):
         """Return an interator for all alarms."""
-        for alarm in list(self.alarms.values()):
-            yield alarm
+        yield from list(self.alarms.values())
 
     def __len__(self):
         """Return the number of alarms."""
@@ -225,7 +225,6 @@ class Alarms(_SocoSingletonBase):
 
 
 class Alarm:
-
     """A class representing a Sonos Alarm.
 
     Alarms may be created or updated and saved to, or removed from the Sonos

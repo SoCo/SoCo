@@ -7,7 +7,6 @@ They may be set by your code as follows::
     config.VARIABLE = value
 """
 
-
 SOCO_CLASS = None
 """The class object to use when `SoCo` instances are created.
 

@@ -1,6 +1,5 @@
 """Tests for the music_service module."""
 
-
 from unittest import mock
 import pytest
 

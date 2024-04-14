@@ -1,6 +1,5 @@
 """Test for music_services/data_structures"""
 
-
 from collections import OrderedDict
 import pytest
 from unittest.mock import PropertyMock, Mock, patch

@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
 class Account:
-
     """An account for a Music Service.
 
     Each service may have more than one account: see the `Sonos release notes

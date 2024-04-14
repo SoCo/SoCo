@@ -1,4 +1,5 @@
 """Tests for the media metadata parsing."""
+
 from conftest import DataLoader
 
 DATA_LOADER = DataLoader("media_metadata_payloads")

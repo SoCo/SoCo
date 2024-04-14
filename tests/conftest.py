@@ -3,6 +3,7 @@
 Add the --ip command line option, and skip all tests marked the with
 'integration' marker unless the option is included
 """
+
 import codecs
 import json
 from os import path

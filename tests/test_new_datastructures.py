@@ -1,6 +1,5 @@
 """Module to test the data structure classes with pytest."""
 
-
 import pytest
 
 from soco import data_structures

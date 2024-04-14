@@ -1,6 +1,5 @@
 """Tests for the soap module."""
 
-
 from soco.config import REQUEST_TIMEOUT
 from soco.soap import SoapMessage
 from soco.xml import XML
