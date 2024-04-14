@@ -753,7 +753,9 @@ class SoCo(_SocoSingletonBase):
         self.avTransport.Play([("InstanceID", 0), ("Speed", 1)])
 
     @only_on_master
-    def play_uri(self, uri="", meta="", title="", start=True, force_radio=False):
+    def play_uri(
+        self, uri="", meta="", title="", start=True, force_radio=False, **kwargs
+    ):
         """Play a URI.
 
         Playing a URI will replace what was playing with the stream
@@ -769,6 +771,7 @@ class SoCo(_SocoSingletonBase):
             title (str): The title to show in the player (if no meta).
             start (bool): If the URI that has been set should start playing.
             force_radio (bool): forces a uri to play as a radio stream.
+            kwargs: additional arguments such as timeout.
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
@@ -831,7 +834,8 @@ class SoCo(_SocoSingletonBase):
                 uri = "x-rincon-mp3radio{}".format(uri[colon:])
 
         self.avTransport.SetAVTransportURI(
-            [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)]
+            [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)],
+            **kwargs,
         )
         # The track is enqueued, now play it if needed
         if start:
