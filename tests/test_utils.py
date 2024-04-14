@@ -1,6 +1,5 @@
 """Tests for the utils module."""
 
-
 from soco.utils import deprecated
 
 

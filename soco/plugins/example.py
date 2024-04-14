@@ -1,13 +1,11 @@
 """Example implementation of a plugin."""
 
-
 from ..plugins import SoCoPlugin
 
 __all__ = ["ExamplePlugin"]
 
 
 class ExamplePlugin(SoCoPlugin):
-
     """This file serves as an example of a SoCo plugin."""
 
     def __init__(self, soco, username):

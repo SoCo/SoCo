@@ -160,7 +160,6 @@ def form_name(didl_class):
 
 
 class DidlResource:
-
     """Identifies a resource, typically some type of a binary asset, such as a
     song.
 
@@ -398,7 +397,6 @@ _DIDL_CLASS_TO_CLASS = {}
 
 
 class DidlMetaClass(type):
-
     """Meta class for all Didl objects."""
 
     def __new__(cls, name, bases, attrs):
@@ -831,7 +829,6 @@ class DidlObject(metaclass=DidlMetaClass):
 
 
 class DidlItem(DidlObject):
-
     """A basic content directory item."""
 
     # The spec allows for an option 'refID' attribute, but we do not handle it
@@ -851,7 +848,6 @@ class DidlItem(DidlObject):
 
 
 class DidlAudioItem(DidlItem):
-
     """An audio item."""
 
     # the DIDL Lite class for this object.
@@ -871,7 +867,6 @@ class DidlAudioItem(DidlItem):
 
 
 class DidlMusicTrack(DidlAudioItem):
-
     """Class that represents a music library track."""
 
     # the DIDL Lite class for this object.
@@ -891,7 +886,6 @@ class DidlMusicTrack(DidlAudioItem):
 
 
 class DidlAudioBook(DidlAudioItem):
-
     """Class that represents an audio book."""
 
     # the DIDL Lite class for this object.
@@ -909,7 +903,6 @@ class DidlAudioBook(DidlAudioItem):
 
 
 class DidlAudioBroadcast(DidlAudioItem):
-
     """Class that represents an audio broadcast."""
 
     # the DIDL Lite class for this object.
@@ -926,7 +919,6 @@ class DidlAudioBroadcast(DidlAudioItem):
 
 
 class DidlRecentShow(DidlMusicTrack):
-
     """Class that represents a recent radio show/podcast."""
 
     # the DIDL Lite class for this object.
@@ -934,7 +926,6 @@ class DidlRecentShow(DidlMusicTrack):
 
 
 class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
-
     """Class that represents an audio broadcast Sonos favorite."""
 
     # Note: The sonos-favorite part of the class spec obviously isn't part of
@@ -946,7 +937,6 @@ class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
 
 class DidlFavorite(DidlItem):
-
     """Class that represents a Sonos favorite.
 
     Note that the favorite itself isn't playable in all cases, please use the
@@ -998,7 +988,6 @@ class DidlFavorite(DidlItem):
 
 
 class DidlContainer(DidlObject):
-
     """Class that represents a music library container."""
 
     # the DIDL Lite class for this object.
@@ -1009,7 +998,6 @@ class DidlContainer(DidlObject):
 
 
 class DidlAlbum(DidlContainer):
-
     """A content directory album."""
 
     # the DIDL Lite class for this object.
@@ -1030,7 +1018,6 @@ class DidlAlbum(DidlContainer):
 
 
 class DidlMusicAlbum(DidlAlbum):
-
     """Class that represents a music library album."""
 
     # the DIDL Lite class for this object.
@@ -1055,7 +1042,6 @@ class DidlMusicAlbum(DidlAlbum):
 
 
 class DidlMusicAlbumFavorite(DidlMusicAlbum):
-
     """Class that represents a Sonos favorite music library album.
 
     This class is not part of the DIDL spec and is Sonos specific.
@@ -1070,7 +1056,6 @@ class DidlMusicAlbumFavorite(DidlMusicAlbum):
 
 
 class DidlMusicAlbumCompilation(DidlMusicAlbum):
-
     """Class that represents a Sonos favorite music library compilation.
 
     This class is not part of the DIDL spec and is Sonos specific.
@@ -1085,7 +1070,6 @@ class DidlMusicAlbumCompilation(DidlMusicAlbum):
 
 
 class DidlPerson(DidlContainer):
-
     """A content directory class representing a person."""
 
     # the DIDL Lite class for this object.
@@ -1101,7 +1085,6 @@ class DidlPerson(DidlContainer):
 
 
 class DidlComposer(DidlPerson):
-
     """Class that represents a music library composer."""
 
     # Not in the DIDL-Lite spec. Sonos specific??
@@ -1111,7 +1094,6 @@ class DidlComposer(DidlPerson):
 
 
 class DidlMusicArtist(DidlPerson):
-
     """Class that represents a music library artist."""
 
     # the DIDL Lite class for this object.
@@ -1127,7 +1109,6 @@ class DidlMusicArtist(DidlPerson):
 
 
 class DidlAlbumList(DidlContainer):
-
     """Class that represents a music library album list."""
 
     # This does not appear (that I can find) in the DIDL-Lite specs.
@@ -1137,7 +1118,6 @@ class DidlAlbumList(DidlContainer):
 
 
 class DidlPlaylistContainer(DidlContainer):
-
     """Class that represents a music library play list."""
 
     # (str) The DIDL Lite class for this object
@@ -1166,7 +1146,6 @@ class DidlPlaylistContainer(DidlContainer):
 
 
 class DidlSameArtist(DidlPlaylistContainer):
-
     """Class that represents all tracks by a single artist.
 
     This type is returned by browsing an artist or a composer
@@ -1178,21 +1157,18 @@ class DidlSameArtist(DidlPlaylistContainer):
 
 
 class DidlPlaylistContainerFavorite(DidlPlaylistContainer):
-
     """Class that represents a Sonos favorite play list."""
 
     item_class = "object.container.playlistContainer.sonos-favorite"
 
 
 class DidlPlaylistContainerTracklist(DidlPlaylistContainer):
-
     """Class that represents a Sonos tracklist."""
 
     item_class = "object.container.playlistContainer.tracklist"
 
 
 class DidlGenre(DidlContainer):
-
     """A content directory class representing a general genre."""
 
     # the DIDL Lite class for this object.
@@ -1211,7 +1187,6 @@ class DidlGenre(DidlContainer):
 
 
 class DidlMusicGenre(DidlGenre):
-
     """Class that represents a music genre."""
 
     # the DIDL Lite class for this object.
@@ -1233,7 +1208,6 @@ class DidlRadioShow(DidlContainer):
 
 
 class ListOfMusicInfoItems(list):
-
     """Abstract container class for a list of music information items.
 
     Instances of this class are returned from queries into the music library
@@ -1305,7 +1279,6 @@ class ListOfMusicInfoItems(list):
 
 
 class SearchResult(ListOfMusicInfoItems):
-
     """Container class that represents a search or browse result.
 
     Browse is just a special case of search.
@@ -1329,7 +1302,6 @@ class SearchResult(ListOfMusicInfoItems):
 
 
 class Queue(ListOfMusicInfoItems):
-
     """Container class that represents a queue."""
 
     def __repr__(self):

@@ -99,7 +99,6 @@ def _get_header(soap_action):
 
 
 class Wimp(SoCoPlugin):
-
     """Class that implements a Wimp plugin.
 
     Note:

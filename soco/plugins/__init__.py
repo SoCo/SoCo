@@ -16,7 +16,6 @@ _LOG = logging.getLogger(__name__)
 
 
 class SoCoPlugin:
-
     """The base class for SoCo plugins."""
 
     def __init__(self, soco):

@@ -5,7 +5,6 @@
 
 
 class ZoneGroup:
-
     """
     A class representing a Sonos Group. It looks like this::
 

@@ -60,6 +60,7 @@ Example payload contents:
   </ZoneGroupState>
 
 """
+
 import asyncio
 import logging
 import time
