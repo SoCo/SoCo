@@ -837,7 +837,7 @@ class SoCo(_SocoSingletonBase):
                 uri = "x-rincon-mp3radio{}".format(uri[colon:])
 
         self.avTransport.SetAVTransportURI(
-            [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)],
+            [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)]
         )
         # The track is enqueued, now play it if needed
         if start:
