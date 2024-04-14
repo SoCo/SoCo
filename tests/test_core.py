@@ -644,6 +644,21 @@ class TestAVTransport:
 
         moco.avTransport.Play.assert_called_with([("InstanceID", 0), ("Speed", 1)])
 
+    def test_soco_play_uri_timeout(self, moco):
+        """Test play_uri accepts timeout."""
+        uri = (
+            "http://archive.org/download/tend2005-07-16.flac16/"
+            "tend2005-07-16t10wonderboy_64kb.mp3"
+        )
+        moco.play_uri(uri, timeout=300)
+        moco.avTransport.Play.assert_called_with(
+            [
+                ("InstanceID", 0),
+                ("Speed", 1),
+            ],
+            timeout=300,
+        )
+
     def test_soco_play_uri_with_title(self, moco):
         uri = (
             "http://archive.org/download/tend2005-07-16.flac16/"
