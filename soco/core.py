@@ -748,9 +748,12 @@ class SoCo(_SocoSingletonBase):
             self.play()
 
     @only_on_master
-    def play(self):
-        """Play the currently selected track."""
-        self.avTransport.Play([("InstanceID", 0), ("Speed", 1)])
+    def play(self, **kwargs):
+        """Play the currently selected track.
+
+        Args:
+            kwargs: additional arguments such as timeout."""
+        self.avTransport.Play([("InstanceID", 0), ("Speed", 1)], **kwargs)
 
     @only_on_master
     def play_uri(
@@ -835,11 +838,10 @@ class SoCo(_SocoSingletonBase):
 
         self.avTransport.SetAVTransportURI(
             [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", meta)],
-            **kwargs,
         )
         # The track is enqueued, now play it if needed
         if start:
-            return self.play()
+            return self.play(**kwargs)
         return False
 
     @only_on_master

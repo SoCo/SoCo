@@ -651,8 +651,11 @@ class TestAVTransport:
             "tend2005-07-16t10wonderboy_64kb.mp3"
         )
         moco.play_uri(uri, timeout=300)
-        moco.avTransport.SetAVTransportURI.assert_called_with(
-            [("InstanceID", 0), ("CurrentURI", uri), ("CurrentURIMetaData", "")],
+        moco.avTransport.Play.assert_called_with(
+            [
+                ("InstanceID", 0),
+                ("Speed", 1),
+            ],
             timeout=300,
         )
 
