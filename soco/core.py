@@ -512,6 +512,9 @@ class SoCo(_SocoSingletonBase):
         Sonos Amp devices support a directly-connected 3rd party subwoofer
         connected over RCA. This property is always enabled for those devices.
         """
+        if not self.speaker_info:
+            self.get_speaker_info()
+
         model_name = self.speaker_info["model_name"].lower()
         if model_name.endswith("sonos amp"):
             return True
