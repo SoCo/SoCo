@@ -918,6 +918,7 @@ class DidlAudioBroadcast(DidlAudioItem):
         }
     )
 
+
 class DidlAudioLineIn(DidlAudioItem):
     """Class that represents an audio line in."""
 

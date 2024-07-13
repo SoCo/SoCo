@@ -8,7 +8,7 @@ import logging
 
 from .data_structures import didl_class_to_soco_class
 from .exceptions import DIDLMetadataError
-from .xml import XML, ns_tag
+from .xml import ns_tag
 import lxml.etree as ET
 
 _LOG = logging.getLogger(__name__)
