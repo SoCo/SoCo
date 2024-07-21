@@ -5,11 +5,11 @@ objects from both music library and music service data structures
 
 from functools import lru_cache
 import logging
+import lxml.etree as ET
 
 from .data_structures import didl_class_to_soco_class
 from .exceptions import DIDLMetadataError
 from .xml import ns_tag
-import lxml.etree as ET
 
 _LOG = logging.getLogger(__name__)
 _LOG.addHandler(logging.NullHandler())

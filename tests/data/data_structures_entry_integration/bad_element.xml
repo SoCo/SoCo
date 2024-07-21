@@ -1,8 +1,0 @@
-<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-    xmlns:r="urn:schemas-rinconnetworks-com:metadata-1-0/"
-    xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">
-    <item id="playback" parentID="0" restricted="false">
-        <dc:title>loadLineIn</dc:title>
-        <upnp:class>object.item.audioItem.linein</upnp:class>
-        <res x-rincon-stream>x-rincon-stream:RINCON_949F3E5352EC01400</res></item></DIDL-Lite>
