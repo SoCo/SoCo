@@ -166,6 +166,7 @@ class EventListener(EventListenerBase):
             The port on which the event listener listens is configurable.
             See `config.EVENT_LISTENER_PORT`
         """
+        # pylint: disable=possibly-used-before-assignment
         factory = Site(EventNotifyHandler())
         for port_number in range(
             self.requested_port_number, self.requested_port_number + 100
@@ -323,6 +324,7 @@ class Subscription(SubscriptionBase):
 
     def _auto_renew_start(self, interval):
         """Starts the auto_renew loop."""
+        # pylint: disable=possibly-used-before-assignment
         self._auto_renew_loop = task.LoopingCall(
             self.renew, is_autorenew=True, strict=False
         )
@@ -352,6 +354,7 @@ class Subscription(SubscriptionBase):
                 no parameters.
 
         """
+        # pylint: disable=possibly-used-before-assignment
         agent = BrowserLikeRedirectAgent(Agent(reactor))
 
         if headers:
@@ -441,6 +444,7 @@ class Subscription(SubscriptionBase):
             # We start by assuming no Failure occurred
             failure = None
 
+            # pylint: disable=possibly-used-before-assignment
             if isinstance(outcome, Failure):
                 failure = outcome
                 # If a Failure or Exception occurred during execution of
@@ -492,6 +496,7 @@ class Subscription(SubscriptionBase):
                 failure.trap()
 
         # Create a deferred
+        # pylint: disable=possibly-used-before-assignment
         d = defer.Deferred()  # pylint: disable=invalid-name
         # Set its subscription property to refer to this Subscription
         d.subscription = self
