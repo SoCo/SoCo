@@ -186,6 +186,7 @@ class PlexPlugin(SoCoPlugin):
 
         item_didl = didl_class(
             plex_media.title,
+            # pylint: disable=possibly-used-before-assignment
             PREFIX_LOOKUP[parent_type] + quote(parent_uri),
             PREFIX_LOOKUP[item_type] + quote(item_uri),
             desc=desc,
