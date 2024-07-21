@@ -30,7 +30,7 @@ def from_didl_string(string):
     """
     items = []
     parser = ET.XMLParser(recover=True, encoding="utf-8")
-    root = ET.fromstring(string.encode("utf-8"),parser=parser)
+    root = ET.fromstring(string.encode("utf-8"), parser=parser)
     for elt in root:
         if elt.tag.endswith("item") or elt.tag.endswith("container"):
             item_class = elt.findtext(ns_tag("upnp", "class"))
