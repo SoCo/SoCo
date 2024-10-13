@@ -105,6 +105,7 @@ _OFFICIAL_CLASSES = {
     "object.item.audioItem.musicTrack",
     "object.item.audioItem.audioBroadcast",
     "object.item.audioItem.audioBook",
+    "object.item.audioItem.linein",
     "object.container",
     "object.container.person",
     "object.container.person.musicArtist",
@@ -914,6 +915,19 @@ class DidlAudioBroadcast(DidlAudioItem):
             "radio_call_sign": ("upnp", "radioCallSign"),
             "radio_station_id": ("upnp", "radioStationID"),
             "channel_nr": ("upnp", "channelNr"),
+        }
+    )
+
+
+class DidlAudioLineIn(DidlAudioItem):
+    """Class that represents an audio line in."""
+
+    # the DIDL Lite class for this object.
+    item_class = "object.item.audioItem.linein"
+    _translation = DidlAudioItem._translation.copy()
+    _translation.update(
+        {
+            "title": ("upnp", "title"),
         }
     )
 

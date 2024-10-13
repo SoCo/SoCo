@@ -5,10 +5,11 @@ objects from both music library and music service data structures
 
 from functools import lru_cache
 import logging
+import lxml.etree as ET
 
 from .data_structures import didl_class_to_soco_class
 from .exceptions import DIDLMetadataError
-from .xml import XML, ns_tag
+from .xml import ns_tag
 
 _LOG = logging.getLogger(__name__)
 _LOG.addHandler(logging.NullHandler())
@@ -28,7 +29,8 @@ def from_didl_string(string):
         list: A list of one or more instances of `DidlObject` or a subclass
     """
     items = []
-    root = XML.fromstring(string.encode("utf-8"))
+    parser = ET.XMLParser(recover=True, encoding="utf-8")
+    root = ET.fromstring(string.encode("utf-8"), parser=parser)
     for elt in root:
         if elt.tag.endswith("item") or elt.tag.endswith("container"):
             item_class = elt.findtext(ns_tag("upnp", "class"))

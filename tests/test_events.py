@@ -2,7 +2,12 @@
 
 import pytest
 
+from soco.data_structures import DidlAudioLineIn
 from soco.events_base import Event, parse_event_xml
+
+from conftest import DataLoader
+
+DATA_LOADER = DataLoader("data_structures_entry_integration")
 
 
 DUMMY_EVENT = """
@@ -88,3 +93,11 @@ def test_event_parsing():
     assert event_dict["zone_group_state"]
     assert event_dict["alarm_run_sequence"] == "RINCON_000EXXXXXX0:56:0"
     assert event_dict["zone_group_id"] == "RINCON_000XXXX01400:57"
+
+
+def test_event_parsing_linein():
+    xml_message = DATA_LOADER.load_xml("source_linein.xml")
+    result = parse_event_xml(xml_message)
+    linein: DidlAudioLineIn = result["av_transport_uri_meta_data"]
+    assert linein.item_class == "object.item.audioItem.linein"
+    assert linein.title == "loadLineIn"
