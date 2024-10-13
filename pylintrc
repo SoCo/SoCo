@@ -28,7 +28,8 @@ disable=
     too-many-return-statements,
     too-many-statements,
     too-many-boolean-expressions,
-    too-many-positional-arguments
+    too-many-positional-arguments,
+    c-extension-no-member
 
 
 [REPORTS]
