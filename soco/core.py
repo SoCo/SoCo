@@ -2988,6 +2988,7 @@ SOURCES = {
 SOUNDBARS = (
     "arc",
     "arc sl",
+    "arc ultra",
     "beam",
     "playbase",
     "playbar",
