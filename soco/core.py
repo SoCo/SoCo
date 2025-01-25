@@ -1961,6 +1961,8 @@ class SoCo(_SocoSingletonBase):
                 or ""
             )
 
+            index = trackinfo.find(" - ")
+
             if "TYPE=SNG|" in trackinfo:
                 # Examples from services:
                 #  Apple Music radio:
@@ -1974,9 +1976,9 @@ class SoCo(_SocoSingletonBase):
                     radio_track["artist"] = tags["ARTIST"]
                 if tags.get("ALBUM"):
                     radio_track["album"] = tags["ALBUM"]
-            elif (index := trackinfo.find(" - ")) > -1:
+            elif index > -1:
                 radio_track["artist"] = trackinfo[:index].strip()
-                radio_track["title"] = trackinfo[index + 3 :].strip()                    
+                radio_track["title"] = trackinfo[index + 3 :].strip()                  
             else:
                 # Might find some kind of title anyway in metadata
                 title = metadata.findtext(".//{http://purl.org/dc/elements/1.1/}title")
