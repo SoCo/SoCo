@@ -1960,8 +1960,8 @@ class SoCo(_SocoSingletonBase):
                 )
                 or ""
             )
-
             index = trackinfo.find(" - ")
+
             if "TYPE=SNG|" in trackinfo:
                 # Examples from services:
                 #  Apple Music radio:
