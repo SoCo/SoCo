@@ -187,6 +187,7 @@ class Service:
             612: "No Such Session",
         }
         self.DEFAULT_ARGS = {}
+        self.additional_headers = {}
 
     def __getattr__(self, action):
         """Called when a method on the instance cannot be found.
@@ -422,6 +423,10 @@ class Service:
             "Content-Type": 'text/xml; charset="utf-8"',
             "SOAPACTION": soap_action,
         }
+        if len(self.additional_headers):
+            headers.update(self.additional_headers)
+
+        print(headers)
         # Note that although we set the charset to utf-8 here, in fact the
         # body is still unicode. It will only be converted to bytes when it
         # is set over the network
