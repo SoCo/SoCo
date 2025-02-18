@@ -118,6 +118,7 @@ def service():
     mock_service = Service(mock_soco)
     return mock_service
 
+
 @pytest.fixture()
 def content_directory_service():
     """A mock content directory service, for use as a test fixture."""
@@ -126,6 +127,7 @@ def content_directory_service():
     mock_soco.ip_address = "192.168.1.101"
     mock_service = ContentDirectory(mock_soco)
     return mock_service
+
 
 def test_init_defaults(service):
     """Check default properties are set up correctly."""
@@ -318,24 +320,29 @@ def test_send_command(service):
         )
         assert fake_post.called
 
+
 def test_build_command_content_directory(content_directory_service):
     """Test creation of headers for content directory."""
     headers, _ = content_directory_service.build_command(
         "Browse",
         [
-            ('ObjectID', 'FV:2'),
-            ('BrowseFlag', 'BrowseDirectChildren'),
-            ('Filter', 'dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI'),
-            ('StartingIndex', '0'),
-            ('RequestedCount', '100'),
-            ('SortCriteria', ''),  
+            ("ObjectID", "FV:2"),
+            ("BrowseFlag", "BrowseDirectChildren"),
+            (
+                "Filter",
+                "dc:title,res,dc:creator,upnp:artist,upnp:album,upnp:albumArtURI",
+            ),
+            ("StartingIndex", "0"),
+            ("RequestedCount", "100"),
+            ("SortCriteria", ""),
         ],
     )
     assert headers == {
         "Content-Type": 'text/xml; charset="utf-8"',
         "SOAPACTION": "urn:schemas-upnp-org:service:ContentDirectory:1#Browse",
-        "USER-AGENT": "Sonos/83.1-61210"
+        "USER-AGENT": "Sonos/83.1-61210",
     }
+
 
 def test_handle_upnp_error(service):
     """Check errors are extracted properly."""
