@@ -859,7 +859,7 @@ class ContentDirectory(Service):
                 720: "Cannot process the request",
             }
         )
-        self.additional_headers = {"USER-AGENT" : "Sonos/83.1-61210"}
+        self.additional_headers = {"USER-AGENT": "Sonos/83.1-61210"}
 
 
 class MS_ConnectionManager(Service):  # pylint: disable=invalid-name
