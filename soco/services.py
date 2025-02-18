@@ -426,7 +426,6 @@ class Service:
         if len(self.additional_headers):
             headers.update(self.additional_headers)
 
-        print(headers)
         # Note that although we set the charset to utf-8 here, in fact the
         # body is still unicode. It will only be converted to bytes when it
         # is set over the network
