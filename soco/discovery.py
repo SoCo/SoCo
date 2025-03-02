@@ -679,7 +679,7 @@ def _find_ip_addresses():
     local addresses are excluded.
 
     Returns:
-        set: A set of IPv4, IPv6 addresses (dotted decimal strings). Empty
+        set: A set of IPv4, IPv6 addresses. Empty
         set if there are no addresses found.
     """
 
