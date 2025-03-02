@@ -5,7 +5,6 @@ the main entry to the SoCo functionality
 import datetime
 import logging
 import re
-import socket
 from functools import wraps
 import urllib.parse
 from xml.sax.saxutils import escape
