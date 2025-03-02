@@ -15,14 +15,6 @@ Visit the `SoCo documentation`_ for a more detailed overview of the functionailt
    :alt: Join the chat at https://gitter.im/SoCo/SoCo
    :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
-   :target: https://travis-ci.com/SoCo/SoCo
-   :alt: Build Status
-
-.. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
-   :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
-   :alt: Requirements Status
-
 .. image:: https://img.shields.io/pypi/v/soco.svg?style=flat
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
