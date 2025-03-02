@@ -5,13 +5,13 @@ the main entry to the SoCo functionality
 import datetime
 import logging
 import re
-from netaddr.strategy.ipv6 import valid_str as valid_ipv6
-from netaddr.strategy.ipv4 import valid_str as valid_ipv4
 from functools import wraps
 import urllib.parse
 from xml.sax.saxutils import escape
 from xml.parsers.expat import ExpatError
 import warnings
+from netaddr.strategy.ipv6 import valid_str as valid_ipv6
+from netaddr.strategy.ipv4 import valid_str as valid_ipv4
 import xmltodict
 
 
