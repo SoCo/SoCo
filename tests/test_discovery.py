@@ -101,7 +101,10 @@ class TestDiscover:
         # Now test include_visible parameter. include_invisible=True should
         # result in calling SoCo.all_zones etc
         # Reset gethostbyname, to always return the same value
-        monkeypatch.setattr("socket.gethostbyname", Mock(return_value="2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF"))
+        monkeypatch.setattr(
+            "socket.gethostbyname",
+            Mock(return_value="2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF"),
+        )
         config.SOCO_CLASS.return_value = Mock(all_zones="ALL", visible_zones="VISIBLE")
         assert discover(include_invisible=True) == "ALL"
         assert discover(include_invisible=False) == "VISIBLE"
@@ -113,6 +116,7 @@ class TestDiscover:
         discover(timeout=1)
         # Check no SoCo instance created
         config.SOCO_CLASS.assert_not_called
+
 
 def test_by_name():
     """Test the by_name method"""

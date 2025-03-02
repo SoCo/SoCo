@@ -82,7 +82,9 @@ def discover(
             socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack("B", 4)
         )
         _sock.setsockopt(
-            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_pton(_protocol, interface_addr)
+            socket.IPPROTO_IP,
+            socket.IP_MULTICAST_IF,
+            socket.inet_pton(_protocol, interface_addr),
         )
         return _sock
 
@@ -700,7 +702,6 @@ def _find_ip_addresses():
                 except ValueError:
                     # Not an IPv6 address
                     continue
-
 
     _LOG.debug("Set of attached IPs: %s", str(ip_addresses))
     return ip_addresses
