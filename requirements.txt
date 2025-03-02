@@ -3,3 +3,4 @@ xmltodict
 ifaddr
 appdirs
 lxml
+netaddr

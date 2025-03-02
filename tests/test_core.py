@@ -385,6 +385,13 @@ class TestSoco:
         with pytest.raises(ValueError):
             _ = SoCo(bad_ip_addr)
 
+    @pytest.mark.parametrize(
+        "bad_ip_addr", ["not_ip", "2001:db8:3333:4444:5555:6666:7777:8888!"]
+    )
+    def test_soco_bad_ipv6(self, bad_ip_addr):
+        with pytest.raises(ValueError):
+            _ = SoCo(bad_ip_addr)
+
     def test_soco_init(self, moco):
         assert moco.ip_address == IP_ADDR
         assert moco.speaker_info == {}

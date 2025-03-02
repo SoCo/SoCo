@@ -13,6 +13,7 @@ import pytest
 from soco import SoCo
 
 IP_ADDR = "192.168.1.101"
+IP6_ADDR = "2001:db8:3333:4444:5555:6666:7777:8888"
 THISDIR = path.dirname(path.abspath(__file__))
 
 

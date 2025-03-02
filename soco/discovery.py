@@ -10,6 +10,7 @@ import struct
 import ipaddress
 import threading
 import ifaddr
+from netaddr.strategy.ipv6 import valid_str as valid_ipv6
 
 from . import config
 from .utils import really_utf8
@@ -70,14 +71,20 @@ def discover(
 
         Create and return a socket with appropriate options set for multicast.
         """
+        if valid_ipv6(interface_addr):
+            _protocol = socket.AF_INET6
+        else:
+            _protocol = socket.AF_INET
 
-        _sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        _sock = socket.socket(_protocol, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         # UPnP v1.0 requires a TTL of 4
         _sock.setsockopt(
             socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, struct.pack("B", 4)
         )
         _sock.setsockopt(
-            socket.IPPROTO_IP, socket.IP_MULTICAST_IF, socket.inet_aton(interface_addr)
+            socket.IPPROTO_IP,
+            socket.IP_MULTICAST_IF,
+            socket.inet_pton(_protocol, interface_addr),
         )
         return _sock
 
@@ -96,7 +103,10 @@ def discover(
 
     if interface_addr is not None:  # Use the specified interface, if any
         try:
-            _ = socket.inet_aton(interface_addr)
+            if valid_ipv6(interface_addr):
+                _ = socket.inet_pton(socket.AF_INET6, interface_addr)
+            else:
+                _ = socket.inet_pton(socket.AF_INET, interface_addr)
         except OSError as e:
             raise ValueError(
                 "{} is not a valid IP address string".format(interface_addr)
@@ -106,7 +116,7 @@ def discover(
             "Sending discovery packets on specified interface %s", interface_addr
         )
     else:  # Use all qualified, discovered network interfaces
-        addresses = _find_ipv4_addresses()
+        addresses = _find_ip_addresses()
         if len(addresses) == 0:
             _LOG.debug("No interfaces available for discovery")
             return None
@@ -661,32 +671,40 @@ def _find_ipv4_networks(min_netmask):
     return ipv4_net_list
 
 
-def _find_ipv4_addresses():
-    """Discover and return all the host's IPv4 addresses.
+def _find_ip_addresses():
+    """Discover and return all the host's IPv4 and IPv6 addresses.
 
     Helper function to return a set of IPv4 addresses associated
     with the network interfaces of this host. Loopback and link
     local addresses are excluded.
 
     Returns:
-        set: A set of IPv4 addresses (dotted decimal strings). Empty
+        set: A set of IPv4, IPv6 addresses. Empty
         set if there are no addresses found.
     """
 
-    ipv4_addresses = set()
+    ip_addresses = set()
     for adapter in ifaddr.get_adapters():
         for ifaddr_network in adapter.ips:
             try:
                 ipaddress.IPv4Network(ifaddr_network.ip)
-            except ValueError:
-                # Not an IPv4 address
-                continue
-            ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
-            if not ipv4_network.is_loopback and not ipv4_network.is_link_local:
-                ipv4_addresses.add(ifaddr_network.ip)
 
-    _LOG.debug("Set of attached IPs: %s", str(ipv4_addresses))
-    return ipv4_addresses
+                ipv4_network = ipaddress.ip_network(ifaddr_network.ip)
+                if not ipv4_network.is_loopback and not ipv4_network.is_link_local:
+                    ip_addresses.add(ifaddr_network.ip)
+            except ValueError:
+                try:
+                    ipaddress.IPv6Network(ifaddr_network.ip)
+
+                    ipv6_network = ipaddress.ip_network(ifaddr_network.ip)
+                    if not ipv6_network.is_loopback and not ipv6_network.is_link_local:
+                        ip_addresses.add(ifaddr_network.ip)
+                except ValueError:
+                    # Not an IPv6 address
+                    continue
+
+    _LOG.debug("Set of attached IPs: %s", str(ip_addresses))
+    return ip_addresses
 
 
 def _check_ip_and_port(ip_address, port, timeout):
