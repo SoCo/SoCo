@@ -327,9 +327,8 @@ class SoCo(_SocoSingletonBase):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
         super().__init__()
-        if valid_ipv4(ip_address) != True:
-            if valid_ipv6(ip_address) != True:
-                raise ValueError("Not a valid IP address string")
+        if valid_ipv4(ip_address) is False and valid_ipv6(ip_address) is False:
+            raise ValueError("Not a valid IP address string")
 
         #: The speaker's ip address
         self.ip_address = ip_address
