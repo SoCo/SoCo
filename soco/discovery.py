@@ -104,9 +104,9 @@ def discover(
     if interface_addr is not None:  # Use the specified interface, if any
         try:
             if valid_ipv6(interface_addr):
-                _ = socket.inet_pton(AF_INET6, interface_addr)
+                _ = socket.inet_pton(socket.AF_INET6, interface_addr)
             else:
-                _ = socket.inet_pton(AF_INET, interface_addr)
+                _ = socket.inet_pton(socket.AF_INET, interface_addr)
         except OSError as e:
             raise ValueError(
                 "{} is not a valid IP address string".format(interface_addr)
