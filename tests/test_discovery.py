@@ -5,6 +5,8 @@ import ifaddr
 
 from collections import OrderedDict
 
+from conftest import IP_ADDR, IP6_ADDR
+
 from unittest.mock import patch, MagicMock as Mock, call
 
 from soco import discover
@@ -19,7 +21,6 @@ from soco.discovery import (
     scan_network,
 )
 
-IP_ADDR = "192.168.1.101"
 TIMEOUT = 5
 
 
@@ -75,7 +76,7 @@ class TestDiscover:
         sock = socket.socket.return_value
         sock.recvfrom.return_value = (
             b"SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)",
-            [IP_ADDR],
+            [IP6_ADDR],
         )  # (data, # address)
         # Return a couple of IP addresses from _find_ip_addresses()
         monkeypatch.setattr(
@@ -96,7 +97,7 @@ class TestDiscover:
         # select called with the relevant timeout
         select.select.assert_called_with([sock], [], [], min(TIMEOUT, 0.1))
         # SoCo should be created with the IP address received
-        config.SOCO_CLASS.assert_called_with(IP_ADDR)
+        config.SOCO_CLASS.assert_called_with(IP6_ADDR)
 
         # Now test include_visible parameter. include_invisible=True should
         # result in calling SoCo.all_zones etc
