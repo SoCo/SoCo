@@ -11,7 +11,7 @@ from soco import discover
 from soco import config
 from soco.discovery import (
     by_name,
-    _find_ipv4_addresses,
+    _find_ip_addresses,
     _find_ipv4_networks,
     _check_ip_and_port,
     _is_sonos,
@@ -32,9 +32,9 @@ class TestDiscover:
             b"SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)",
             [IP_ADDR],
         )  # (data, # address)
-        # Return a couple of IP addresses from _find_ipv4_addresses()
+        # Return a couple of IP addresses from _find_ip_addresses()
         monkeypatch.setattr(
-            "soco.discovery._find_ipv4_addresses",
+            "soco.discovery._find_ip_addresses",
             Mock(return_value={"192.168.0.15", "192.168.1.16"}),
         )
         # Prevent creation of soco instances
@@ -69,6 +69,50 @@ class TestDiscover:
         # Check no SoCo instance created
         config.SOCO_CLASS.assert_not_called
 
+    def test_discover_ipv6(self, monkeypatch):
+        # Create a fake socket, whose data is always a certain string
+        monkeypatch.setattr("socket.socket", Mock())
+        sock = socket.socket.return_value
+        sock.recvfrom.return_value = (
+            b"SERVER: Linux UPnP/1.0 Sonos/26.1-76230 (ZPS3)",
+            [IP_ADDR],
+        )  # (data, # address)
+        # Return a couple of IP addresses from _find_ip_addresses()
+        monkeypatch.setattr(
+            "soco.discovery._find_ip_addresses",
+            Mock(return_value={"2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF"}),
+        )
+        # Prevent creation of soco instances
+        monkeypatch.setattr("soco.config.SOCO_CLASS", Mock())
+        # Fake return value for select
+        monkeypatch.setattr("select.select", Mock(return_value=([sock], 1, 1)))
+
+        # Set timeout
+        TIMEOUT = 2
+        discover(timeout=TIMEOUT)
+        # 3 packets in total should be sent (3 to
+        # 2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF)
+        assert sock.sendto.call_count == 3
+        # select called with the relevant timeout
+        select.select.assert_called_with([sock], [], [], min(TIMEOUT, 0.1))
+        # SoCo should be created with the IP address received
+        config.SOCO_CLASS.assert_called_with(IP_ADDR)
+
+        # Now test include_visible parameter. include_invisible=True should
+        # result in calling SoCo.all_zones etc
+        # Reset gethostbyname, to always return the same value
+        monkeypatch.setattr("socket.gethostbyname", Mock(return_value="2001:db8:3333:4444:CCCC:DDDD:EEEE:FFFF"))
+        config.SOCO_CLASS.return_value = Mock(all_zones="ALL", visible_zones="VISIBLE")
+        assert discover(include_invisible=True) == "ALL"
+        assert discover(include_invisible=False) == "VISIBLE"
+
+        # If select does not return within timeout SoCo should not be called
+        # at all
+        # Simulate no data being returned within timeout
+        select.select.return_value = (0, 1, 1)
+        discover(timeout=1)
+        # Check no SoCo instance created
+        config.SOCO_CLASS.assert_not_called
 
 def test_by_name():
     """Test the by_name method"""
@@ -113,9 +157,9 @@ def test__find_ipv4_networks(monkeypatch):
     assert ipaddress.ip_network("169.254.1.10/16", False) not in _find_ipv4_networks(16)
 
 
-def test__find_ipv4_addresses(monkeypatch):
+def test__find_ip_addresses(monkeypatch):
     _set_up_adapters(monkeypatch)
-    assert _find_ipv4_addresses() == {"192.168.0.1", "192.168.1.1", "15.100.100.100"}
+    assert _find_ip_addresses() == {"192.168.0.1", "192.168.1.1", "15.100.100.100"}
 
 
 def test__check_ip_and_port(monkeypatch):
