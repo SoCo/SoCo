@@ -291,7 +291,16 @@ class Snapshot:
             # Now loop around all the queue entries adding them
             for queue_group in self.queue:
                 for queue_item in queue_group:
-                    self.device.add_uri_to_queue(queue_item.uri)
+                    uri = None
+                    # Get Uri from Item if availiable
+                    if hasattr(queue_item, 'uri') and queue_item.uri:
+                        uri = queue_item.uri
+                    # Get Uri from Item.resources if availiable
+                    elif hasattr(queue_item, 'resources') and len(queue_item.resources) > 0 and hasattr(queue_item.resources[0],'uri'):
+                        uri = queue_item.resources[0].uri
+                    # Add uri to queue if found
+                    if uri:
+                        self.device.add_uri_to_queue(uri)
 
     def __enter__(self):
         self.snapshot()
