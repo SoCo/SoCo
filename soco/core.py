@@ -557,6 +557,14 @@ class SoCo(_SocoSingletonBase):
         return self._is_soundbar
 
     @property
+    def is_arc_ultra_soundbar(self):
+        """bool: Is this zone an arc ultra sound bar?"""
+        if not self.speaker_info:
+            self.get_speaker_info()
+
+        return self.speaker_info["model_name"].lower().endswith(ARC_ULTRA_PRODUCT_NAME)
+
+    @property
     def play_mode(self):
         """str: The queue's play mode.
 
@@ -1477,6 +1485,41 @@ class SoCo(_SocoSingletonBase):
     def dialog_level(self, dialog_level):
         """Convenience wrapper for dialog_mode setter to match raw Sonos API."""
         self.dialog_mode = dialog_level
+
+    @property
+    def speech_enhance_enabled(self):
+        """bool: The speaker's speech enhancement mode.
+
+        True if on, False if off, None if not supported.
+        """
+        if not self.is_arc_ultra_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled")]
+        )
+        return bool(int(response["CurrentValue"]))
+
+    @speech_enhance_enabled.setter
+    def speech_enhance_enabled(self, speech_mode):
+        """Switch on/off the arc ultra soundbar speech enhancement.
+
+        :param speech_mode: Enable or disable dialog mode
+        :type speech_mode: bool
+        :raises NotSupportedException: If the device does not support
+        speech enhancement.
+        """
+        if not self.is_arc_ultra_soundbar:
+            raise NotSupportedException(
+                "The device not a arc ultra and doesn't support speech_enhance_enabled."
+            )
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "SpeechEnhanceEnabled"),
+                ("DesiredValue", int(speech_mode)),
+            ]
+        )
 
     @property
     def trueplay(self):
@@ -2997,6 +3040,8 @@ SOUNDBARS = (
     "ray",
     "sonos amp",
 )
+
+ARC_ULTRA_PRODUCT_NAME = "arc ultra"
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo

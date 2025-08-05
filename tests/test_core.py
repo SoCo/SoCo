@@ -4,6 +4,7 @@ import requests_mock
 
 from conftest import IP_ADDR
 from soco import SoCo
+from soco.core import ARC_ULTRA_PRODUCT_NAME
 from soco.data_structures import to_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
@@ -514,6 +515,36 @@ class TestSoco:
             }
         )
         assert should == res
+
+    @mock.patch("soco.core.requests")
+    def test_soco_speech_enhance_mode(self, mocr, moco_zgs):
+        moco_zgs.renderingControl.GetEQ.reset_mock()
+        response = mock.MagicMock()
+        mocr.get.return_value = response
+        response.content = self.device_description
+
+        # Data is available only when an arc ultra soundbar. Test not a soundbar first
+        moco_zgs._is_soundbar = False
+        assert moco_zgs.speech_enhance_enabled is None
+        assert moco_zgs.renderingControl.GetEQ.call_count == 0
+        with pytest.raises(NotSupportedException):
+            moco_zgs.speech_enhance_enabled = 1
+
+        # Data should be available when an arc ultra soundbar
+        moco_zgs.speaker_info["model_name"] = "speaker prefix " + ARC_ULTRA_PRODUCT_NAME
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "1"}
+        assert moco_zgs.speech_enhance_enabled == 1
+        moco_zgs.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled")]
+        )
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "0"}
+        assert moco_zgs.speech_enhance_enabled == 0
+
+        moco_zgs.renderingControl.SetEQ.reset_mock()
+        moco_zgs.speech_enhance_enabled = 1
+        moco_zgs.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 1)]
+        )
 
 
 class TestAVTransport:
@@ -1252,6 +1283,7 @@ class TestRenderingControl:
                 moco.trueplay = True
 
     def test_soco_soundbar_audio_input_format(self, moco):
+        moco._is_soundbar = True
         moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "0"}
         assert moco.soundbar_audio_input_format_code == 0
         assert moco.soundbar_audio_input_format == "No input connected"
