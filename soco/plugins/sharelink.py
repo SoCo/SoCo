@@ -252,7 +252,7 @@ class ShareLinkPlugin(SoCoPlugin):
                         'com:metadata-1-0/" xmlns="urn:schemas-upnp-org:m'
                         'etadata-1-0/DIDL-Lite/"><item id="{item_id}" par'
                         'entID="-1" restricted="true"><dc:title>{title}</'
-                        'dc:title><upnp:class>{item_class}</upnp:class><d'
+                        "dc:title><upnp:class>{item_class}</upnp:class><d"
                         'esc id="cdudn" nameSpace="urn:schemas-rinconnetw'
                         'orks-com:metadata-1-0/">SA_RINCON{sn}_X_#Svc{sn}'
                         "-0-Token</desc></item></DIDL-Lite>"
