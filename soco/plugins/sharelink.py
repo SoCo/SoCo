@@ -226,6 +226,9 @@ class ShareLinkPlugin(SoCoPlugin):
                 added. Default is 0 (add URI at the end of the queue).
             as_next (bool): Whether this URI should be played as the next
                 track in shuffle mode. This only works if "play_mode=SHUFFLE".
+            **kwargs: any keyword arguments. If ``dc_title`` is specified,
+                this will be used as the dc:title of the metadata_template.
+                If not specified, the dc:title will be empty.
 
         Returns:
             int: The index of the new item in the queue.
@@ -239,20 +242,23 @@ class ShareLinkPlugin(SoCoPlugin):
 
                 enqueue_uri = magic[share_type]["prefix"] + encoded_uri
 
+                dc_title = kwargs.pop("dc_title", "")
                 metadata_template = (
                     '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                     '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata'
                     '-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-'
                     'com:metadata-1-0/" xmlns="urn:schemas-upnp-org:m'
-                    'etadata-1-0/DIDL-Lite/"><item id="{item_id}" res'
-                    'tricted="true"><upnp:class>{item_class}</upnp:cl'
-                    'ass><desc id="cdudn" nameSpace="urn:schemas-rinc'
-                    'onnetworks-com:metadata-1-0/">SA_RINCON{sn}_X_#S'
-                    "vc{sn}-0-Token</desc></item></DIDL-Lite>"
+                    'etadata-1-0/DIDL-Lite/"><item id="{item_id}" par'
+                    'entID="-1" restricted="true"><dc:title>{title}</'
+                    "dc:title><upnp:class>{item_class}</upnp:class><d"
+                    'esc id="cdudn" nameSpace="urn:schemas-rinconnetw'
+                    'orks-com:metadata-1-0/">SA_RINCON{sn}_X_#Svc{sn}'
+                    "-0-Token</desc></item></DIDL-Lite>"
                 )
 
                 metadata = metadata_template.format(
                     item_id=magic[share_type]["key"] + encoded_uri,
+                    title=dc_title,
                     item_class=magic[share_type]["class"],
                     sn=service.service_number(),
                 )
