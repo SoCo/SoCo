@@ -136,7 +136,7 @@ def parse_response(service, response, search_type):
         result_type_proper = result_type[0].upper() + result_type[1:]
         raw_items = response.get(result_type, [])
         # If there is only 1 result, it is not put in an array
-        if isinstance(raw_items, OrderedDict):
+        if isinstance(raw_items, dict):
             raw_items = [raw_items]
 
         for raw_item in raw_items:

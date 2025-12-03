@@ -118,6 +118,33 @@ RESPONSES.append(
         ]
     )
 )
+# Test case for issue #988: single result returned as plain dict (e.g., Amazon Music)
+RESPONSES.append(
+    {
+        "searchResult": {
+            "index": "0",
+            "count": "1",
+            "total": "1",
+            "mediaMetadata": {
+                "id": "track/amazon123",
+                "title": "Single Result Track",
+                "itemType": "track",
+                "mimeType": "audio/mp4",
+                "trackMetadata": {
+                    "albumArtURI": "http://example.com/art.jpg",
+                    "artistId": "artist/456",
+                    "artist": "Test Artist",
+                    "album": "Test Album",
+                    "duration": "300",
+                    "canPlay": "true",
+                    "canSkip": "true",
+                    "canAddToFavorites": "true",
+                    "trackNumber": "1",
+                },
+            },
+        }
+    }
+)
 PARSE_RESULTS = (
     {
         "number_of_results": 2,
@@ -127,6 +154,12 @@ PARSE_RESULTS = (
     {
         "number_of_results": 1,
         "type": "getMetadataResult",
+        "class_key": "MediaMetadataTrack",
+    },
+    # Test case for issue #988: single result as plain dict
+    {
+        "number_of_results": 1,
+        "type": "searchResult",
         "class_key": "MediaMetadataTrack",
     },
 )
