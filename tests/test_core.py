@@ -861,6 +861,7 @@ class TestAVTransport:
         """Test join accepts timeout."""
         moco2 = mock.Mock()
         moco2.uid = "RINCON_000XXX1400"
+        moco_zgs.avTransport.SetAVTransportURI.reset_mock()
         moco_zgs.join(moco2, timeout=300)
         moco_zgs.avTransport.SetAVTransportURI.assert_called_once_with(
             [
@@ -880,6 +881,7 @@ class TestAVTransport:
 
     def test_unjoin_timeout(self, moco_zgs):
         """Test unjoin accepts timeout."""
+        moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.reset_mock()
         moco_zgs.unjoin(timeout=300)
         moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.assert_called_once_with(
             [
