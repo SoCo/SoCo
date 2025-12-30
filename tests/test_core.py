@@ -879,7 +879,7 @@ class TestAVTransport:
         )
 
     def test_unjoin_timeout(self, moco_zgs):
-        """Test join accepts timeout."""
+        """Test unjoin accepts timeout."""
         moco_zgs.unjoin(timeout=300)
         moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.assert_called_once_with(
             [
