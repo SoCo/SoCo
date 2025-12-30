@@ -869,9 +869,8 @@ class TestAVTransport:
                 ("CurrentURI", "x-rincon:RINCON_000XXX1400"),
                 ("CurrentURIMetaData", ""),
             ],
-            timeout=300
+            timeout=300,
         )
-
 
     def test_unjoin(self, moco_zgs):
         moco_zgs.unjoin()
@@ -887,8 +886,8 @@ class TestAVTransport:
             [
                 ("InstanceID", 0),
             ],
-            timeout=300
-        )       
+            timeout=300,
+        )
 
     def test_switch_to_line_in(self, moco_zgs):
         moco_zgs.avTransport.reset_mock()
