@@ -1743,7 +1743,7 @@ class SoCo(_SocoSingletonBase):
         """
 
         self.avTransport.BecomeCoordinatorOfStandaloneGroup(
-            [("InstanceID", 0)], 
+            [("InstanceID", 0)],
             **kwargs
         )
         self.zone_group_state.clear_cache()
