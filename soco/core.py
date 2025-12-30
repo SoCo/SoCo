@@ -1713,7 +1713,7 @@ class SoCo(_SocoSingletonBase):
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
         Args:
-            kwargs: additional arguments such as timeout.        
+            kwargs: additional arguments such as timeout.
         """
         # Tell every other visible zone to join this one
         # pylint: disable = expression-not-assigned
@@ -1726,7 +1726,7 @@ class SoCo(_SocoSingletonBase):
             [
                 ("InstanceID", 0),
                 ("CurrentURI", "x-rincon:{}".format(master.uid)),
-                ("CurrentURIMetaData", ""), 
+                ("CurrentURIMetaData", ""),
             ],
             **kwargs,
         )
@@ -1742,7 +1742,10 @@ class SoCo(_SocoSingletonBase):
             kwargs: additional arguments such as timeout.
         """
 
-        self.avTransport.BecomeCoordinatorOfStandaloneGroup([("InstanceID", 0)], **kwargs)
+        self.avTransport.BecomeCoordinatorOfStandaloneGroup(
+            [("InstanceID", 0)], 
+            **kwargs
+        )
         self.zone_group_state.clear_cache()
 
     def create_stereo_pair(self, rh_slave_speaker):
