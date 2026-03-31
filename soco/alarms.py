@@ -102,11 +102,11 @@ class Alarms(_SocoSingletonBase):
     def __init__(self):
         """Initialize the instance."""
         self.alarms = {}
+        self.alarms_skipped = {}
         self._last_zone_used = None
         self._last_alarm_list_version = None
         self.last_uid = None
         self.last_id = 0
-        self.alarm_skipped = False
 
     @property
     def last_alarm_list_version(self):
@@ -164,14 +164,13 @@ class Alarms(_SocoSingletonBase):
                         )
                     )
 
-            if int(alarm_list_id) <= self.last_id and not self.alarm_skipped:
+            if int(alarm_list_id) <= self.last_id:
                 return
 
         self.last_alarm_list_version = current_alarm_list_version
 
-        new_alarms, skipped = parse_alarm_payload(response, zone)
-        self.alarm_skipped = skipped
-
+        new_alarms = parse_alarm_payload(response, zone)
+        self.alarms_skipped = {}
         # Update existing and create new Alarm instances
         for alarm_id, kwargs in new_alarms.items():
             existing_alarm = self.alarms.get(alarm_id)
@@ -180,12 +179,23 @@ class Alarms(_SocoSingletonBase):
             else:
                 new_alarm = Alarm(**kwargs)
                 new_alarm._alarm_id = alarm_id  # pylint: disable=protected-access
-                self.alarms[alarm_id] = new_alarm
+                if new_alarm.zone is None:
+                    self.alarms_skipped[alarm_id] = new_alarm
+                else:
+                    self.alarms[alarm_id] = new_alarm
 
         # Prune alarms removed externally
         for alarm_id in list(self.alarms):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
+
+    def update_skipped(self, zone):
+        """Update the zone for any skipped alarms and move to main list if possible."""
+        for alarm_id, alarm in list(self.alarms_skipped.items()):
+            if zone.uid == alarm.room_uuid:
+                alarm.zone = zone
+                self.alarms[alarm_id] = alarm
+                self.alarms_skipped.pop(alarm_id)
 
     def get_next_alarm_datetime(
         self, from_datetime=None, include_disabled=False, zone_uid=None
@@ -245,6 +255,7 @@ class Alarm:
         play_mode="NORMAL",
         volume=20,
         include_linked_zones=False,
+        room_uuid=None,
     ):
         """
         Args:
@@ -289,6 +300,7 @@ class Alarm:
         self.play_mode = play_mode
         self.volume = volume
         self.include_linked_zones = include_linked_zones
+        self.room_uuid = room_uuid
         self._alarm_id = None
 
     def __repr__(self):
@@ -535,7 +547,6 @@ def parse_alarm_payload(payload, zone):
 
     alarms = tree.findall("Alarm")
     alarm_args = {}
-    skipped = False
     for alarm in alarms:
         values = alarm.attrib
         alarm_id = values["ID"]
@@ -543,11 +554,6 @@ def parse_alarm_payload(payload, zone):
         alarm_zone = next(
             (z for z in zone.all_zones if z.uid == values["RoomUUID"]), None
         )
-        if alarm_zone is None:
-            # Some alarms are not associated with a zone, ignore these
-            skipped = True
-            continue
-
         args = {
             "zone": alarm_zone,
             # StartTime not StartLocalTime which is used by CreateAlarm
@@ -568,7 +574,8 @@ def parse_alarm_payload(payload, zone):
             "play_mode": values["PlayMode"],
             "volume": values["Volume"],
             "include_linked_zones": values["IncludeLinkedZones"] == "1",
+            "room_uuid": values["RoomUUID"],
         }
 
         alarm_args[alarm_id] = args
-    return alarm_args, skipped
+    return alarm_args

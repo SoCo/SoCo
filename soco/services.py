@@ -787,6 +787,9 @@ class AlarmClock(Service):
 
     def __init__(self, soco):
         super().__init__(soco)
+        from soco.alarms import Alarms
+        alarms = Alarms()
+        alarms.update_skipped(soco)
         self.UPNP_ERRORS.update(
             {
                 801: "Already an alarm for this time",
