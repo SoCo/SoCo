@@ -106,6 +106,7 @@ class Alarms(_SocoSingletonBase):
         self._last_alarm_list_version = None
         self.last_uid = None
         self.last_id = 0
+        self.alarm_skipped = False
 
     @property
     def last_alarm_list_version(self):
@@ -163,12 +164,13 @@ class Alarms(_SocoSingletonBase):
                         )
                     )
 
-            if int(alarm_list_id) <= self.last_id:
+            if int(alarm_list_id) <= self.last_id and not self.alarm_skipped:
                 return
 
         self.last_alarm_list_version = current_alarm_list_version
 
-        new_alarms = parse_alarm_payload(response, zone)
+        new_alarms, skipped = parse_alarm_payload(response, zone)
+        self.alarm_skipped = skipped
 
         # Update existing and create new Alarm instances
         for alarm_id, kwargs in new_alarms.items():
@@ -533,6 +535,7 @@ def parse_alarm_payload(payload, zone):
 
     alarms = tree.findall("Alarm")
     alarm_args = {}
+    skipped = False
     for alarm in alarms:
         values = alarm.attrib
         alarm_id = values["ID"]
@@ -542,6 +545,7 @@ def parse_alarm_payload(payload, zone):
         )
         if alarm_zone is None:
             # Some alarms are not associated with a zone, ignore these
+            skipped = True
             continue
 
         args = {
@@ -567,4 +571,4 @@ def parse_alarm_payload(payload, zone):
         }
 
         alarm_args[alarm_id] = args
-    return alarm_args
+    return alarm_args, skipped
