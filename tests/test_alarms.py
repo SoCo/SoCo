@@ -86,3 +86,23 @@ def test_alarms_skipped(moco):
     assert int(alarm.volume) == 25
     assert alarm.include_linked_zones is False
     assert alarm.room_uuid == "RINCON_test_missing"
+
+    # Add the missing zone and update skipped alarms
+    mock_missing_zone = MagicMock()
+    mock_missing_zone.uid = "RINCON_test_missing"
+    alarms.update_skipped(mock_missing_zone)
+    assert len(alarms.alarms) == 1
+    assert len(alarms.alarms_skipped) == 0
+    alarm = alarms.alarms["14"]
+    assert alarm.zone == mock_missing_zone
+    assert alarm.start_time == time(7, 0, 0)
+    assert alarm.duration == time(2, 0, 0)
+    assert alarm.recurrence == "DAILY"
+    assert alarm.enabled is True
+    assert alarm.program_uri is None  # x-rincon-buzzer:0 is mapped to None in the code
+    assert alarm.program_metadata == "" 
+    assert alarm.play_mode == "SHUFFLE_NOREPEAT"
+    assert int(alarm.volume) == 25
+    assert alarm.include_linked_zones is False
+    assert alarm.room_uuid == "RINCON_test_missing"
+        
