@@ -17,6 +17,7 @@ def test_recurrence():
     assert not is_valid_recurrence("ON_")
     assert not is_valid_recurrence(" ON_1")
 
+
 def test_alarms(moco):
     """Test loading and processing of alarms for an existing zone."""
     alarm_list_response = {
@@ -32,13 +33,15 @@ def test_alarms(moco):
     # Create a mock zone with the correct uid
     mock_zone = MagicMock()
     mock_zone.uid = "RINCON_test"
-    with patch.object(type(moco), "all_zones", new_callable=PropertyMock) as mock_all_zones:
+    with patch.object(
+        type(moco), "all_zones", new_callable=PropertyMock
+    ) as mock_all_zones:
         mock_all_zones.return_value = [mock_zone]
         alarms = Alarms()
         alarms.update(moco)
-    
+
     assert len(alarms.alarms) == 1
-    assert len(alarms.alarms_skipped) == 0    
+    assert len(alarms.alarms_skipped) == 0
     alarm = alarms.alarms["14"]
     assert alarm.zone == mock_zone
     assert alarm.start_time == time(7, 0, 0)
@@ -51,6 +54,7 @@ def test_alarms(moco):
     assert int(alarm.volume) == 25
     assert alarm.include_linked_zones is False
     assert alarm.room_uuid == "RINCON_test"
+
 
 def test_alarms_skipped(moco):
     """Test loading and processing of alarms for a missing zone."""
@@ -67,11 +71,13 @@ def test_alarms_skipped(moco):
     # Create a mock zone with the correct uid
     mock_zone = MagicMock()
     mock_zone.uid = "RINCON_test"
-    with patch.object(type(moco), "all_zones", new_callable=PropertyMock) as mock_all_zones:
+    with patch.object(
+        type(moco), "all_zones", new_callable=PropertyMock
+    ) as mock_all_zones:
         mock_all_zones.return_value = [mock_zone]
         alarms = Alarms()
         alarms.update(moco)
-    
+
     assert len(alarms.alarms) == 0
     assert len(alarms.alarms_skipped) == 1
     alarm = alarms.alarms_skipped["14"]
@@ -100,9 +106,8 @@ def test_alarms_skipped(moco):
     assert alarm.recurrence == "DAILY"
     assert alarm.enabled is True
     assert alarm.program_uri is None  # x-rincon-buzzer:0 is mapped to None in the code
-    assert alarm.program_metadata == "" 
+    assert alarm.program_metadata == ""
     assert alarm.play_mode == "SHUFFLE_NOREPEAT"
     assert int(alarm.volume) == 25
     assert alarm.include_linked_zones is False
     assert alarm.room_uuid == "RINCON_test_missing"
-        
