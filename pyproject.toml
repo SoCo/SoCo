@@ -60,7 +60,7 @@
     ]
 
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311", "py312", "py313"]
+target-version = ["py38"]
 
 [tool.setuptools]
     packages = ["soco", "soco.plugins", "soco.music_services"]
