@@ -286,6 +286,9 @@ class Alarm:
             include_linked_zones (bool, optional): `True` if the alarm should
                 be played on the other speakers in the same group, `False`
                 otherwise. Defaults to `False`.
+            room_uuid (str, optional): The UUID of the room/speaker this alarm
+                belongs to. Set automatically when loading alarms from the
+                Sonos system. Defaults to `None`.
         """
 
         self.zone = zone

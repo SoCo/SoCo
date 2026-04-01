@@ -1,6 +1,5 @@
 """Tests for the alarms module."""
 
-import datetime
 from datetime import time
 from unittest.mock import MagicMock, patch, PropertyMock
 
