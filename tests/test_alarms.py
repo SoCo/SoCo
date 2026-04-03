@@ -125,8 +125,7 @@ def test_alarms_skipped_reuse_object_on_update(moco):
         '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
         'Enabled="1" RoomUUID="{}" ProgramURI="x-rincon-buzzer:0" '
         'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
-        'IncludeLinkedZones="0"/>'.format(missing_uuid)
-        + "</Alarms>",
+        'IncludeLinkedZones="0"/>'.format(missing_uuid) + "</Alarms>",
     }
     mock_present_zone = MagicMock()
     mock_present_zone.uid = "RINCON_test"
