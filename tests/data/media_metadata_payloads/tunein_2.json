@@ -1,0 +1,23 @@
+{
+    "input": {
+        "Track": "1",
+        "TrackDuration": "0:00:00",
+        "TrackMetaData": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"aac:*:application/octet-stream:*\">aac://http://lyd.nrk.no/nrk_radio_mp3_aac_h</res><r:streamContent>Martin Solveig + Ina Wroldsen med Places</r:streamContent><dc:title>nrk_radio_mp3_aac_h</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>",
+        "TrackURI": "aac://http://lyd.nrk.no/nrk_radio_mp3_aac_h",
+        "RelTime": "0:00:00",
+        "AbsTime": "NOT_IMPLEMENTED",
+        "RelCount": "2147483647",
+        "AbsCount": "2147483647"
+    },
+    "result": {
+        "title": "Martin Solveig + Ina Wroldsen med Places",
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "0:00:00",
+        "playlist_position": "1",
+        "duration": "0:00:00",
+        "uri": "aac://http://lyd.nrk.no/nrk_radio_mp3_aac_h",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"aac:*:application/octet-stream:*\">aac://http://lyd.nrk.no/nrk_radio_mp3_aac_h</res><r:streamContent>Martin Solveig + Ina Wroldsen med Places</r:streamContent><dc:title>nrk_radio_mp3_aac_h</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>"
+    }
+}

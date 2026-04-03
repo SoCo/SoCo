@@ -2,12 +2,10 @@
 
 """This class contains XML related utility functions."""
 
-
 import sys
 import re
 
 import xml.etree.ElementTree as XML
-
 
 # Create regular expression for filtering invalid characters, from:
 # http://stackoverflow.com/questions/1707890/

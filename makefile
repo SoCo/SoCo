@@ -1,7 +1,7 @@
 
 lint: soco
 	flake8 soco
-	flake8 --ignore=F401,F841 tests
+	flake8 tests
 	pylint soco
 
 test:
@@ -19,5 +19,8 @@ clean:
 	rm -rf soco.egg-info
 	rm -rf dist
 	$(MAKE) -C doc clean
+
+build: soco
+	python -m build
 
 .PHONY: lint docs test clean

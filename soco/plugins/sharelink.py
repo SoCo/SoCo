@@ -41,9 +41,24 @@ class ShareClass:
                 "key": "00040000",
                 "class": "object.container.album.musicAlbum",
             },
+            "episode": {
+                "prefix": "",
+                "key": "00032020",
+                "class": "object.item.audioItem.musicTrack",
+            },
             "track": {
                 "prefix": "",
                 "key": "00032020",
+                "class": "object.item.audioItem.musicTrack",
+            },
+            "show": {
+                "prefix": "x-rincon-cpcontainer:1006206c",
+                "key": "1006206c",
+                "class": "object.container.playlistContainer",
+            },
+            "song": {
+                "prefix": "",
+                "key": "10032020",
                 "class": "object.item.audioItem.musicTrack",
             },
             "playlist": {
@@ -67,7 +82,9 @@ class SpotifyShare(ShareClass):
     """Spotify share class."""
 
     def canonical_uri(self, uri):
-        match = re.search(r"spotify.*[:/](album|track|playlist)[:/](\w+)", uri)
+        match = re.search(
+            r"spotify.*[:/](album|episode|playlist|show|track)[:/](\w+)", uri
+        )
         if match:
             return "spotify:" + match.group(1) + ":" + match.group(2)
 
@@ -132,8 +149,46 @@ class DeezerShare(ShareClass):
         return (share_type, encoded_uri)
 
 
+class AppleMusicShare(ShareClass):
+    """Apple Music share class."""
+
+    def canonical_uri(self, uri):
+        # https://music.apple.com/dk/album/black-velvet/217502930?i=217503142
+        match = re.search(
+            r"https://music\.apple\.com/\w+/album/[^/]+/\d+\?i=(\d+)", uri
+        )
+        if match:
+            return "song:" + match.group(1)
+
+        # https://music.apple.com/dk/album/amused-to-death/975952384
+        match = re.search(r"https://music\.apple\.com/\w+/album/[^/]+/(\d+)", uri)
+        if match:
+            return "album:" + match.group(1)
+
+        # Apple-created playlist
+        # https://music.apple.com/dk/playlist/power-ballads-essentials/pl.92e04ee75ed64804b9df468b5f45a161
+        # User-created playlist
+        # https://music.apple.com/de/playlist/unnamed-playlist/pl.u-rR2PCrLdLJk
+        match = re.search(
+            r"https://music\.apple\.com/\w+/playlist/[^/]+/(pl\.[-a-zA-Z0-9]+)", uri
+        )
+        if match:
+            return "playlist:" + match.group(1)
+
+        return None
+
+    def service_number(self):
+        return 52231
+
+    def extract(self, uri):
+        uri = self.canonical_uri(uri)
+        share_type = uri.split(":")[0]
+        encoded_uri = uri.replace(":", "%3a")
+        return (share_type, encoded_uri)
+
+
 class ShareLinkPlugin(SoCoPlugin):
-    """A SoCo plugin for playing Spotify/Tidal share links."""
+    """A SoCo plugin for playing music service share links."""
 
     def __init__(self, soco):
         """Initialize the plugin."""
@@ -143,6 +198,7 @@ class ShareLinkPlugin(SoCoPlugin):
             SpotifyUSShare(),
             TIDALShare(),
             DeezerShare(),
+            AppleMusicShare(),
         ]
 
     @property
@@ -157,7 +213,7 @@ class ShareLinkPlugin(SoCoPlugin):
 
         return False
 
-    def add_share_link_to_queue(self, uri, position=0, as_next=False):
+    def add_share_link_to_queue(self, uri, position=0, as_next=False, **kwargs):
         """Add a Spotify/Tidal/... item to the queue.
 
         This is similar to soco.add_uri_to_queue() but will work with
@@ -170,6 +226,9 @@ class ShareLinkPlugin(SoCoPlugin):
                 added. Default is 0 (add URI at the end of the queue).
             as_next (bool): Whether this URI should be played as the next
                 track in shuffle mode. This only works if "play_mode=SHUFFLE".
+            **kwargs: any keyword arguments. If ``dc_title`` is specified,
+                this will be used as the dc:title of the metadata_template.
+                If not specified, the dc:title will be empty.
 
         Returns:
             int: The index of the new item in the queue.
@@ -178,25 +237,28 @@ class ShareLinkPlugin(SoCoPlugin):
 
         for service in self.services:
             if service.canonical_uri(uri):
-                (share_type, encoded_uri) = service.extract(uri)
+                share_type, encoded_uri = service.extract(uri)
                 magic = service.magic()
 
                 enqueue_uri = magic[share_type]["prefix"] + encoded_uri
 
+                dc_title = kwargs.pop("dc_title", "")
                 metadata_template = (
                     '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                     '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata'
                     '-1-0/upnp/" xmlns:r="urn:schemas-rinconnetworks-'
                     'com:metadata-1-0/" xmlns="urn:schemas-upnp-org:m'
-                    'etadata-1-0/DIDL-Lite/"><item id="{item_id}" res'
-                    'tricted="true"><upnp:class>{item_class}</upnp:cl'
-                    'ass><desc id="cdudn" nameSpace="urn:schemas-rinc'
-                    'onnetworks-com:metadata-1-0/">SA_RINCON{sn}_X_#S'
-                    "vc{sn}-0-Token</desc></item></DIDL-Lite>"
+                    'etadata-1-0/DIDL-Lite/"><item id="{item_id}" par'
+                    'entID="-1" restricted="true"><dc:title>{title}</'
+                    "dc:title><upnp:class>{item_class}</upnp:class><d"
+                    'esc id="cdudn" nameSpace="urn:schemas-rinconnetw'
+                    'orks-com:metadata-1-0/">SA_RINCON{sn}_X_#Svc{sn}'
+                    "-0-Token</desc></item></DIDL-Lite>"
                 )
 
                 metadata = metadata_template.format(
                     item_id=magic[share_type]["key"] + encoded_uri,
+                    title=dc_title,
                     item_class=magic[share_type]["class"],
                     sn=service.service_number(),
                 )
@@ -209,7 +271,8 @@ class ShareLinkPlugin(SoCoPlugin):
                             ("EnqueuedURIMetaData", metadata),
                             ("DesiredFirstTrackNumberEnqueued", position),
                             ("EnqueueAsNext", int(as_next)),
-                        ]
+                        ],
+                        **kwargs,
                     )
 
                     qnumber = response["FirstTrackNumberEnqueued"]

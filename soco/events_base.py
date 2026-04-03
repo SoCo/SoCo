@@ -7,8 +7,8 @@
 """Base classes used by :py:mod:`soco.events` and
 :py:mod:`soco.events_twisted`."""
 
-
 import atexit
+from functools import lru_cache
 import logging
 import socket
 import time
@@ -25,7 +25,7 @@ from .xml import XML
 log = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
-# pylint: disable=too-many-branches
+@lru_cache()
 def parse_event_xml(xml_event):
     """Parse the body of a UPnP event.
 
@@ -157,8 +157,6 @@ class Event:
 
     """
 
-    # pylint: disable=too-few-public-methods, too-many-arguments
-
     def __init__(self, sid, seq, service, timestamp, variables=None):
         # Initialisation has to be done like this, because __setattr__ is
         # overridden, and will not allow direct setting of attributes
@@ -187,8 +185,6 @@ class EventNotifyHandlerBase:
     """Base class for `soco.events.EventNotifyHandler` and
     `soco.events_twisted.EventNotifyHandler`.
     """
-
-    # pylint: disable=too-many-public-methods
 
     def handle_notification(self, headers, content):
         """Handle a ``NOTIFY`` request by building an `Event` object and
@@ -337,8 +333,6 @@ class SubscriptionBase:
     `soco.events_twisted.Subscription`
     """
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, service, event_queue=None):
         """
         Args:
@@ -443,6 +437,7 @@ class SubscriptionBase:
                 self.timeout = int(timeout.lstrip("Second-"))
             self._timestamp = time.time()
             self.is_subscribed = True
+            service.soco.zone_group_state.add_subscription(self)
             log.debug(
                 "Subscribed to %s, sid: %s",
                 service.base_url + service.event_subscription_url,
@@ -619,7 +614,7 @@ class SubscriptionBase:
         """
         raise NotImplementedError
 
-    # pylint: disable=missing-docstring, too-many-arguments
+    # pylint: disable=missing-docstring
     def _request(self, method, url, headers, success, unconditional=None):
         """Send a HTTP request
 
@@ -658,6 +653,7 @@ class SubscriptionBase:
         # an attempt to unsubscribe fails
         self._has_been_unsubscribed = True
         self._timestamp = None
+        self.service.soco.zone_group_state.remove_subscription(self)
         # Cancel any auto renew
         self._auto_renew_cancel()
         if msg:

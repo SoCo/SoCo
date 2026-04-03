@@ -3,7 +3,6 @@
 
 """This class contains utility functions used internally by SoCo."""
 
-
 import functools
 import re
 import warnings
@@ -93,7 +92,7 @@ def prettify(unicode_text):
     """
     import xml.dom.minidom
 
-    reparsed = xml.dom.minidom.parseString(unicode_text.encode("utf-8"))
+    reparsed = xml.dom.minidom.parseString(unicode_text)
     return reparsed.toprettyxml(indent="  ", newl="\n")
 
 
@@ -113,7 +112,6 @@ def show_xml(xml):
 
 
 class deprecated:
-
     """A decorator for marking deprecated objects.
 
     Used internally by SoCo to cause a warning to be issued when the object
@@ -136,7 +134,7 @@ class deprecated:
     """
 
     # pylint really doesn't like decorators!
-    # pylint: disable=invalid-name, too-few-public-methods
+    # pylint: disable=invalid-name
     # pylint: disable=missing-docstring
 
     def __init__(
@@ -154,7 +152,6 @@ class deprecated:
     def __call__(self, deprecated_fn):
         @functools.wraps(deprecated_fn)
         def decorated(*args, **kwargs):
-
             message = "Call to deprecated function {}.".format(deprecated_fn.__name__)
             if self.will_be_removed_in is not None:
                 message += " Will be removed in version {}.".format(

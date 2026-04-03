@@ -68,18 +68,14 @@ import time
 import asyncio
 
 try:
-    from aiohttp import ClientSession, web
+    from aiohttp import ClientSession, ClientTimeout, web
 except ImportError as error:
-    print(
-        """ImportError: {}:
+    print("""ImportError: {}:
     Use of the SoCo events_asyncio module requires the 'aiohttp'
     package and its dependencies to be installed. aiohttp is not
     installed with SoCo by default due to potential issues installing
-    the dependencies 'mutlidict' and 'yarl' on some platforms.
-    See: https://github.com/SoCo/SoCo/issues/819""".format(
-            error
-        )
-    )
+    the dependencies 'multidict' and 'yarl' on some platforms.
+    See: https://github.com/SoCo/SoCo/issues/819""".format(error))
     sys.exit(1)
 
 # Event is imported for compatibility with events.py
@@ -137,6 +133,15 @@ class EventNotifyHandler(EventNotifyHandlerBase):
             else:
                 variables = parse_event_xml(content)
 
+            if "zone_group_state" in variables:
+                # Pass ZGS payload to associated SoCo instance to update
+                # attributes. Keeps cache warm and avoids network calls.
+                service.soco.zone_group_state.process_payload(
+                    payload=variables["zone_group_state"],
+                    source="event",
+                    source_ip=service.soco.ip_address,
+                )
+
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)
             # pass the event details on to the service so it can update
@@ -155,7 +160,7 @@ class EventNotifyHandler(EventNotifyHandlerBase):
         log.debug("Event %s received for %s service at %s", seq, service_id, timestamp)
 
 
-class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-attributes
+class EventListener(EventListenerBase):
     """The Event Listener.
 
     Runs an http server which is an endpoint for ``NOTIFY``
@@ -206,7 +211,8 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
             if not port:
                 return
             self.address = (ip_address, port)
-            self.session = ClientSession(raise_for_status=True)
+            client_timeout = ClientTimeout(total=10)
+            self.session = ClientSession(raise_for_status=True, timeout=client_timeout)
             self.is_running = True
             log.debug("Event Listener started")
 
@@ -271,6 +277,7 @@ class EventListener(EventListenerBase):  # pylint: disable=too-many-instance-att
 
     async def async_stop(self):
         """Stop the listener."""
+        self.is_running = False
         if self.site:
             await self.site.stop()
             self.site = None
@@ -474,7 +481,7 @@ class Subscription(SubscriptionBase):
             self._auto_renew_task.cancel()
             self._auto_renew_task = None
 
-    # pylint: disable=no-self-use, too-many-branches, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 

@@ -2,7 +2,6 @@
 
 """Unit tests for the music service data structures."""
 
-
 from xml.sax.saxutils import escape
 
 import pytest

@@ -1,7 +1,6 @@
 """This module contains methods for discovering Sonos devices on the
 network."""
 
-
 import logging
 import socket
 import select
@@ -17,15 +16,14 @@ from .utils import really_utf8
 
 _LOG = logging.getLogger(__name__)
 
-# pylint: disable=too-many-locals, too-many-branches
-
 
 def discover(
     timeout=5,
     include_invisible=False,
     interface_addr=None,
+    household_id="Sonos",
     allow_network_scan=False,
-    **network_scan_kwargs
+    **network_scan_kwargs,
 ):
     """Discover Sonos zones on the local network.
 
@@ -54,6 +52,9 @@ def discover(
             the system default interface(s) for UDP multicast messages will be
             used. This is probably what you want to happen. Defaults to
             `None`.
+        household_id (str): Supply a Sonos Household ID to restrict discovery
+            to a specific household. Useful in multi-household networks. In
+            the default case the first player to respond will be used.
         allow_network_scan (bool, optional): If normal discovery fails, fall
             back to a scan of the attached network(s) to detect Sonos
             devices.
@@ -81,47 +82,70 @@ def discover(
         return _sock
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent(
-        """\
+    PLAYER_SEARCH = dedent("""\
         M-SEARCH * HTTP/1.1
         HOST: 239.255.255.250:1900
         MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """
-    ).encode("utf-8")
+        """).encode("utf-8")
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
-    _sockets = []
-    # Use the specified interface, if any
-    if interface_addr is not None:
+    if interface_addr is not None:  # Use the specified interface, if any
         try:
-            address = socket.inet_aton(interface_addr)
+            _ = socket.inet_aton(interface_addr)
         except OSError as e:
             raise ValueError(
                 "{} is not a valid IP address string".format(interface_addr)
             ) from e
-        _sockets.append(create_socket(interface_addr))
-        _LOG.debug("Sending discovery packets on specified interface")
-    else:
-        # Use all relevant network interfaces
-        for address in _find_ipv4_addresses():
-            try:
-                _sockets.append(create_socket(address))
-            except OSError as e:
-                _LOG.warning(
-                    "Can't make a discovery socket for %s: %s: %s",
-                    address,
-                    e.__class__.__name__,
-                    e,
-                )
-        _LOG.debug("Sending discovery packets on %s", _sockets)
+        addresses = {interface_addr}
+        _LOG.debug(
+            "Sending discovery packets on specified interface %s", interface_addr
+        )
+    else:  # Use all qualified, discovered network interfaces
+        addresses = _find_ipv4_addresses()
+        if len(addresses) == 0:
+            _LOG.debug("No interfaces available for discovery")
+            return None
+        _LOG.debug("Sending discovery packets on discovered interface(s) %s", addresses)
 
+    # Create sockets
+    _sockets = []
+    for address in addresses:
+        try:
+            _sock = create_socket(address)
+            _sockets.append(_sock)
+            _LOG.debug("Created socket %s for %s", _sock, address)
+        except OSError as e:
+            _LOG.warning(
+                "Can't make a discovery socket for %s: %s: %s",
+                address,
+                e.__class__.__name__,
+                e,
+            )
+
+    # Send a few times to each socket. UDP is unreliable
     for _ in range(0, 3):
-        # Send a few times to each socket. UDP is unreliable
+        for _sock in _sockets[:]:  # Copy the list, because items may be removed
+            _LOG.debug("Sending discovery packet on %s", _sock)
+            try:
+                _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+            except OSError as e:
+                _LOG.debug("Sending failed %s: removing %s from sockets list", e, _sock)
+                _sockets.remove(_sock)
+                _LOG.debug("Closing socket %s", _sock)
+                _sock.close()
+
+    if len(_sockets) == 0:
+        _LOG.debug("Sending failed on all interfaces")
+        return None
+
+    def close_sockets():
+        """Helper function to close all remaining open sockets"""
         for _sock in _sockets:
-            _sock.sendto(really_utf8(PLAYER_SEARCH), (MCAST_GRP, MCAST_PORT))
+            _LOG.debug("Closing socket %s", _sock)
+            _sock.close()
 
     t0 = time.time()
     while True:
@@ -133,7 +157,9 @@ def discover(
         # is no monotonic timer available before Python 3.3.
         t1 = time.time()
         if t1 - t0 > timeout:
-            return None
+            _LOG.debug("Discovery timeout")
+            close_sockets()
+            break
 
         # The timeout of the select call is set to be no greater than
         # 100ms, so as not to exceed (too much) the required timeout
@@ -163,20 +189,29 @@ def discover(
             for _sock in response:
                 data, addr = _sock.recvfrom(1024)
                 _LOG.debug('Received discovery response from %s: "%s"', addr, data)
-                if b"Sonos" in data:
+                if really_utf8(household_id) in data:
                     # Now we have an IP, we can build a SoCo instance and query
                     # that player for the topology to find the other players.
                     # It is much more efficient to rely upon the Zone
                     # Player's ability to find the others, than to wait for
                     # query responses from them ourselves.
                     zone = config.SOCO_CLASS(addr[0])
+                    close_sockets()
                     if include_invisible:
                         return zone.all_zones
                     else:
                         return zone.visible_zones
-        elif allow_network_scan:
-            _LOG.debug("Falling back to network scan discovery")
+
+    if allow_network_scan:
+        _LOG.debug("Falling back to network scan discovery")
+        if household_id == "Sonos":
             return scan_network(
+                include_invisible=include_invisible,
+                **network_scan_kwargs,
+            )
+        else:
+            return scan_network_by_household_id(
+                household_id,
                 include_invisible=include_invisible,
                 **network_scan_kwargs,
             )
@@ -243,12 +278,11 @@ def by_name(name, allow_network_scan=False, **network_scan_kwargs):
     return None
 
 
-# pylint: disable=too-many-arguments
 def scan_network(
     include_invisible=False,
     multi_household=False,
     max_threads=256,
-    scan_timeout=0.1,
+    scan_timeout=0.5,
     min_netmask=24,
     networks_to_scan=None,
 ):
@@ -326,8 +360,7 @@ def scan_network(
     # Use threading to scan the list efficiently
     sonos_ip_addresses = []
     thread_list = []
-    if max_threads > len(ip_set):
-        max_threads = len(ip_set)
+    max_threads = min(max_threads, len(ip_set))
     for _ in range(max_threads):
         thread = threading.Thread(
             target=_sonos_scan_worker_thread,
@@ -405,7 +438,7 @@ def scan_network_by_household_id(
     network_scan_kwargs["multi_household"] = True
     zones = scan_network(include_invisible=include_invisible, **network_scan_kwargs)
     if zones:
-        zones = {zone for zone in zones if zone.household_id == household_id}
+        zones = {zone for zone in zones if household_id in zone.household_id}
     _LOG.debug("Returning zones: %s", zones)
     return zones
 
@@ -717,6 +750,8 @@ def _sonos_scan_worker_thread(
             # Put the address back on the list and drop out of this thread.
             ip_set.add(ip_addr)
             break
+
+        _LOG.debug("Scanning port %s:1400", ip_address)
 
         if check:
             _LOG.debug("Found open port 1400 at IP '%s'", ip_address)

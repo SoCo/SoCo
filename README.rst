@@ -15,14 +15,6 @@ Visit the `SoCo documentation`_ for a more detailed overview of the functionailt
    :alt: Join the chat at https://gitter.im/SoCo/SoCo
    :target: https://gitter.im/SoCo/SoCo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
-.. image:: https://travis-ci.com/SoCo/SoCo.svg?branch=master
-   :target: https://travis-ci.com/SoCo/SoCo
-   :alt: Build Status
-
-.. image:: https://img.shields.io/requires/github/SoCo/SoCo/master.svg?style=flat
-   :target: https://requires.io/github/SoCo/SoCo/requirements/?branch=master
-   :alt: Requirements Status
-
 .. image:: https://img.shields.io/pypi/v/soco.svg?style=flat
     :target: https://pypi.python.org/pypi/soco/
     :alt: Latest PyPI version
@@ -34,13 +26,15 @@ Sonos has changed the way music service account information is available. This m
 
 Issue #557 is a meta issue for this problem and you can use that to track progress on solving the issues, but
 *please refrain from posting "me too" comments* in there. Also, there is no need to open any more separate issue about this.
-
 If you have another music service that should be on the list, comment in #557
+
+**As of v0.26.0, nascent music service support has been reinstated, with some known issues. Testing and issue reporting
+would be appreciated.**
 
 Installation
 ------------
 
-SoCo requires Python 3.5 or newer.
+SoCo requires Python 3.6 or newer.
 
 Use pip:
 
@@ -75,9 +69,9 @@ set containing them:
 
 .. code:: python
 
-    >>> import soco
-    >>> for zone in soco.discover():
-    ...        print zone.player_name
+    >>> from soco import discover
+    >>> for zone in discover():
+    ...        print(zone.player_name)
     Living Room
     Kitchen
 
@@ -86,7 +80,7 @@ If you prefer a list to a set:
 
 .. code:: python
 
-    >>> zone_list = list(soco.discover())
+    >>> zone_list = list(discover())
     >>> zone_list
     [SoCo("192.168.1.101"), SoCo("192.168.1.102")]
     >>> zone_list[0].mute = True
@@ -109,7 +103,7 @@ Of course, you can also play music!
 
         track = sonos.get_current_track_info()
 
-        print track['title']
+        print(track['title'])
 
         sonos.pause()
 
@@ -176,6 +170,12 @@ SoCo supports the following controls amongst others:
 
 -  Get or set alarms
 -  Get or set sleep timers
+
+-  Enable or disable surround speakers or subwoofer
+-  Get information regarding a home theater setup:
+
+   - If surround speakers or a subwoofer are paired
+   - Which audio channel a given speaker handles
 
 -  Get or set the speaker’s bass and treble EQ
 -  Toggle the speaker’s loudness compensation, night mode and dialog mode

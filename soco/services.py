@@ -36,6 +36,7 @@ import logging
 from collections import namedtuple
 from xml.sax.saxutils import escape
 
+import xml.etree.ElementTree as ET
 import requests
 
 from .cache import Cache
@@ -95,7 +96,6 @@ class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
         return self.datatype
 
 
-# pylint: disable=too-many-instance-attributes
 class Service:
     """A class representing a UPnP service.
 
@@ -187,6 +187,7 @@ class Service:
             612: "No Such Session",
         }
         self.DEFAULT_ARGS = {}
+        self.additional_headers = {}
 
     def __getattr__(self, action):
         """Called when a method on the instance cannot be found.
@@ -422,6 +423,9 @@ class Service:
             "Content-Type": 'text/xml; charset="utf-8"',
             "SOAPACTION": soap_action,
         }
+        if len(self.additional_headers):
+            headers.update(self.additional_headers)
+
         # Note that although we set the charset to utf-8 here, in fact the
         # body is still unicode. It will only be converted to bytes when it
         # is set over the network
@@ -463,6 +467,13 @@ class Service:
             `requests.exceptions.HTTPError`: if an http error occurs.
 
         """
+        # Determine the timeout for the request: use the value of
+        # config.REQUEST_TIMEOUT unless overridden by 'timeout'
+        # being provided as a kwarg by the caller, in which case
+        # use this and remove it from kwargs.
+        timeout = kwargs.pop("timeout", config.REQUEST_TIMEOUT)
+        log.debug("Request timeout set to %s", timeout)
+
         if args is None:
             args = self.compose_args(action, kwargs)
         if cache is None:
@@ -471,6 +482,7 @@ class Service:
         if result is not None:
             log.debug("Cache hit")
             return result
+
         # Cache miss, so go ahead and make a network call
         headers, body = self.build_command(action, args)
         log.debug("Sending %s %s to %s", action, args, self.soco.ip_address)
@@ -480,7 +492,7 @@ class Service:
             self.base_url + self.control_url,
             headers=headers,
             data=body.encode("utf-8"),
-            timeout=20,
+            timeout=timeout,
         )
 
         log.debug("Received %s, %s", response.headers, response.text)
@@ -551,24 +563,30 @@ class Service:
         # errorDescription is not required, and Sonos does not seem to use it.
 
         # NB need to encode unicode strings before passing to ElementTree
-        xml_error = xml_error.encode("utf-8")
-        error = XML.fromstring(xml_error)
-        log.debug("Error %s", xml_error)
-        error_code = error.findtext(".//{urn:schemas-upnp-org:control-1-0}errorCode")
-        if error_code is not None:
-            description = self.UPNP_ERRORS.get(int(error_code), "")
-            raise SoCoUPnPException(
-                message="UPnP Error {} received: {} from {}".format(
-                    error_code, description, self.soco.ip_address
-                ),
-                error_code=error_code,
-                error_description=description,
-                error_xml=xml_error,
+        try:
+            xml_error = xml_error.encode("utf-8")
+            error = ET.fromstring(xml_error)
+            log.debug("Error %s", xml_error)
+            error_code = error.findtext(
+                ".//{urn:schemas-upnp-org:control-1-0}errorCode"
             )
+            if error_code is not None:
+                description = self.UPNP_ERRORS.get(int(error_code), "")
+                raise SoCoUPnPException(
+                    message="UPnP Error {} received: {} from {}".format(
+                        error_code, description, self.soco.ip_address
+                    ),
+                    error_code=error_code,
+                    error_description=description,
+                    error_xml=xml_error,
+                )
 
-        # Unknown error, so just return the entire response
-        log.error("Unknown error received from %s", self.soco.ip_address)
-        raise UnknownSoCoException(xml_error)
+            raise ValueError("No error code found in UPnP error response")
+        except (ET.ParseError, ValueError) as e:
+            # Unknown error, so just return the entire response
+            error = "Error parsing UPnP error response from %s: %s"
+            log.error(error, self.soco.ip_address, xml_error)
+            raise UnknownSoCoException(xml_error) from e
 
     def subscribe(
         self, requested_timeout=None, auto_renew=False, event_queue=None, strict=True
@@ -687,7 +705,6 @@ class Service:
             )
         """
 
-        # pylint: disable=too-many-locals
         # pylint: disable=invalid-name
         ns = "{urn:schemas-upnp-org:service-1-0}"
         # get the scpd body as bytes, and feed directly to elementtree
@@ -842,6 +859,7 @@ class ContentDirectory(Service):
                 720: "Cannot process the request",
             }
         )
+        self.additional_headers = {"USER-AGENT": "Sonos/83.1-61210"}
 
 
 class MS_ConnectionManager(Service):  # pylint: disable=invalid-name

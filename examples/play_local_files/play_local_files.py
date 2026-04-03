@@ -17,7 +17,6 @@ supply the zone name. The local machine IP should be autodetected.
 """
 
 
-
 import os
 import sys
 import time
@@ -165,7 +164,7 @@ def main():
         add_random_file_from_present_folder(args.ip, args.port, zone)
         # Remember the http server runs in its own daemonized thread, so it is
         # necessary to keep the main thread alive. So sleep for 3 years.
-        time.sleep(10 ** 8)
+        time.sleep(10**8)
     except KeyboardInterrupt:
         server.stop()
 

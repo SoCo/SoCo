@@ -1,0 +1,23 @@
+{
+    "input": {
+        "Track": "1",
+        "TrackDuration": "0:02:00",
+        "TrackMetaData": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\"><res protocolInfo=\"http-get:*:audio/mp3:*\" duration=\"0:02:00\">x-sonos-http:VC1%3A%3AST%3A%3AST%3A1234567890123456789%3A%3ATR%3A12345678%3A%3A0%3A%3ARINCON_000123456789012341400%3A1234567890.mp3?sid=236&amp;flags=32768&amp;sn=1</res><upnp:albumArtURI>https://cont-1.p-cdn.us/images/09/33/95/c6/0123456789012345789/_500W_500H.jpg</upnp:albumArtURI><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Hit the Road Jack</dc:title><dc:creator>Ray Charles</dc:creator><upnp:album>True Genius</upnp:album><r:trackGain>-0.340000</r:trackGain><r:tiid>VC1::ST::ST:1234567890123456789::TR:12345678::0::RINCON_000123456789012341400:1234567890</r:tiid><r:rating><r:type>NONE</r:type><r:connotation>NEUTRAL</r:connotation></r:rating><r:policies mask=\"0x320008\" flags=\"0x20008\"/></item></DIDL-Lite>",
+        "TrackURI": "x-sonos-http:VC1%3A%3AST%3A%3AST%3A1234567890123456789%3A%3ATR%3A12345678%3A%3A0%3A%3ARINCON_000123456789012341400%3A1234567890.mp3?sid=236&flags=32768&sn=1",
+        "RelTime": "0:01:01",
+        "AbsTime": "NOT_IMPLEMENTED",
+        "RelCount": "2147483647",
+        "AbsCount": "2147483647"
+    },
+    "result": {
+        "title": "Hit the Road Jack",
+        "artist": "Ray Charles",
+        "album": "True Genius",
+        "album_art": "https://cont-1.p-cdn.us/images/09/33/95/c6/0123456789012345789/_500W_500H.jpg",
+        "position": "0:01:01",
+        "playlist_position": "1",
+        "duration": "0:02:00",
+        "uri": "x-sonos-http:VC1%3A%3AST%3A%3AST%3A1234567890123456789%3A%3ATR%3A12345678%3A%3A0%3A%3ARINCON_000123456789012341400%3A1234567890.mp3?sid=236&flags=32768&sn=1",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\"><res protocolInfo=\"http-get:*:audio/mp3:*\" duration=\"0:02:00\">x-sonos-http:VC1%3A%3AST%3A%3AST%3A1234567890123456789%3A%3ATR%3A12345678%3A%3A0%3A%3ARINCON_000123456789012341400%3A1234567890.mp3?sid=236&amp;flags=32768&amp;sn=1</res><upnp:albumArtURI>https://cont-1.p-cdn.us/images/09/33/95/c6/0123456789012345789/_500W_500H.jpg</upnp:albumArtURI><upnp:class>object.item.audioItem.musicTrack</upnp:class><dc:title>Hit the Road Jack</dc:title><dc:creator>Ray Charles</dc:creator><upnp:album>True Genius</upnp:album><r:trackGain>-0.340000</r:trackGain><r:tiid>VC1::ST::ST:1234567890123456789::TR:12345678::0::RINCON_000123456789012341400:1234567890</r:tiid><r:rating><r:type>NONE</r:type><r:connotation>NEUTRAL</r:connotation></r:rating><r:policies mask=\"0x320008\" flags=\"0x20008\"/></item></DIDL-Lite>"
+    }
+}

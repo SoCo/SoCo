@@ -50,7 +50,6 @@ Example:
 
 """
 
-
 import errno
 import logging
 import socketserver
@@ -370,7 +369,7 @@ class Subscription(SubscriptionBase):
         """Cancels the auto_renew thread"""
         self._auto_renew_thread_flag.set()
 
-    # pylint: disable=no-self-use, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 
@@ -401,14 +400,13 @@ class Subscription(SubscriptionBase):
         if response and response.status_code != 412:
             response.raise_for_status()
 
-        if success:
+        if response and success:
             success(response.headers)
         if unconditional:
             unconditional()
 
     # pylint: disable=inconsistent-return-statements
     def _wrap(self, method, strict, *args, **kwargs):
-
         """This is a wrapper for `Subscription.subscribe`, `Subscription.renew`
         and `Subscription.unsubscribe` which:
 
@@ -435,7 +433,6 @@ class Subscription(SubscriptionBase):
         # A lock is used, because autorenewal occurs in
         # a thread
         with self._lock:
-
             try:
                 method(*args, **kwargs)
 

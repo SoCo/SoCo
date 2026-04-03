@@ -62,7 +62,7 @@ ENDS = ["</s:Envelope>", "</e:propertyset>"]
 
 
 class AnalyzeWS:
-    """ Class for analysis of WireShark dumps. Also shows the parts of the
+    """Class for analysis of WireShark dumps. Also shows the parts of the
     WireShark dumps syntax highlighted in the terminal and/or writes them to
     files and shows them in a browser.
 
@@ -93,7 +93,7 @@ class AnalyzeWS:
         self.pages = {}
 
     def set_file(self, filename):
-        """ Analyse the file with the captured content """
+        """Analyse the file with the captured content"""
         # Use the file name as prefix if none is given
         if self.output_prefix is None:
             _, self.output_prefix = os.path.split(filename)
@@ -134,7 +134,7 @@ class AnalyzeWS:
             sys.exit(0)
 
     def _parse_load(self, load):
-        """ Parse the load from a single packet """
+        """Parse the load from a single packet"""
         # If the load is ??
         if load in ["??"]:
             self._debug("IGNORING")
@@ -166,7 +166,7 @@ class AnalyzeWS:
                 self._debug("NOTHING TO DO")
 
     def _debug(self, message, load=False, no_prefix=False):
-        """ Output debug information """
+        """Output debug information"""
         if self.args.debug_analysis:
             if load:
                 message = "\r\n".join(
@@ -183,12 +183,12 @@ class AnalyzeWS:
                     print(message)
 
     def to_file_mode(self):
-        """ Write all the messages to files """
+        """Write all the messages to files"""
         for message_no in range(len(self.messages)):
             self.__to_file(message_no)
 
     def __to_file(self, message_no):
-        """ Write a single message to file """
+        """Write a single message to file"""
         filename = self.__create_file_name(message_no)
         try:
             with codecs.open(
@@ -206,18 +206,18 @@ class AnalyzeWS:
         return filename
 
     def __create_file_name(self, message_no):
-        """ Create the filename to save to """
+        """Create the filename to save to"""
         cwd = os.getcwd()
         filename = "{}_{}.xml".format(self.output_prefix, message_no)
         return os.path.join(cwd, filename)
 
     def to_browser_mode(self):
-        """ Write all the messages to files and open them in the browser """
+        """Write all the messages to files and open them in the browser"""
         for message_no in range(len(self.messages)):
             self.__to_browser(message_no)
 
     def __to_browser(self, message_no):
-        """ Write a single message to file and open the file in a
+        """Write a single message to file and open the file in a
         browser
 
         """
@@ -240,7 +240,7 @@ class AnalyzeWS:
             sys.exit(21)
 
     def interactive_mode(self):
-        """ Interactive mode """
+        """Interactive mode"""
         if PLATFORM == "win32":
             # Defaulting to 80 on windows, better ideas are welcome, but the
             # solutions I found online are rather bulky
@@ -275,7 +275,7 @@ class AnalyzeWS:
                 self.__to_file(message_no)
 
     def __update_window(self, width, height, message_no, page_no):
-        """ Update the window with the menu and the new text """
+        """Update the window with the menu and the new text"""
         file_exists_label = "-F-ILE"
         if not os.path.exists(self.__create_file_name(message_no)):
             file_exists_label = "(f)ile"
@@ -319,7 +319,7 @@ class AnalyzeWS:
         return page_no
 
     def _form_pages(self, message_no, content, out, height, width):
-        """ Form the pages """
+        """Form the pages"""
         self.pages[message_no] = []
         page_height = height - 4  # 2-3 for menu, 1 for cursor
         outline = ""
@@ -363,7 +363,7 @@ class AnalyzeWS:
 
 
 class WSPart:
-    """ This class parses and represents a single Sonos UPnP message """
+    """This class parses and represents a single Sonos UPnP message"""
 
     def __init__(self, captured, args):
         self.external_inner_xml = args.external_inner_xml
@@ -385,18 +385,18 @@ class WSPart:
             self.encoding = "utf-8"
 
     def add_content(self, captured):
-        """ Adds content to the main UPnP message """
+        """Adds content to the main UPnP message"""
         self.raw_body += captured
 
     def finalize_content(self):
-        """ Finalize the additons """
+        """Finalize the additons"""
         self.write_closed = True
         body = self.raw_body.decode(self.encoding)
         self._init_xml(body)
         self._form_output()
 
     def _init_xml(self, body):
-        """ Parse the present body as xml """
+        """Parse the present body as xml"""
         tree = etree.fromstring(body.encode(self.encoding), PARSER)
         # Extract and replace inner DIDL xml in tags
         for text in tree.xpath('.//text()[contains(., "DIDL")]'):
@@ -427,7 +427,7 @@ class WSPart:
         # sys.exit(1)
 
     def _form_output(self):
-        """ Form the output """
+        """Form the output"""
         self.output = ""
         if self.external_inner_xml:
             self.output += "<Dummy_tag_to_create_valid_xml_on_external_inner" "_xml>\n"
@@ -442,7 +442,7 @@ class WSPart:
 
 
 def __build_option_parser():
-    """ Build the option parser for this script """
+    """Build the option parser for this script"""
     description = """
     Tool to analyze Wireshark dumps of Sonos traffic.
 
@@ -534,7 +534,7 @@ def __build_option_parser():
 
 
 def getch():
-    """ Read a single character non-echoed and return it. Recipe from:
+    """Read a single character non-echoed and return it. Recipe from:
     http://code.activestate.com/recipes/
     134892-getch-like-unbuffered-character-reading-from-stdin/
     """
@@ -552,7 +552,7 @@ def getch():
 
 
 def main():
-    """ Main method of the script """
+    """Main method of the script"""
     parser = __build_option_parser()
     args = parser.parse_args()
     analyze_ws = AnalyzeWS(args)

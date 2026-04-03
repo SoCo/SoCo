@@ -16,7 +16,8 @@ recursive-exclude doc *.pyc *.pyo *.rej *.orig .DS_Store
 prune doc/_build
 
 # Tests
-recursive-include tests *.py
+recursive-include tests *
+recursive-exclude tests *.pyc *.pyo *.rej *.orig .DS_Store
 
 # Examples
 recursive-include examples *

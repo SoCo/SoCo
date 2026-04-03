@@ -1,4 +1,4 @@
-# pylint: disable=star-args, too-many-arguments, fixme, import-outside-toplevel
+# pylint: disable=star-args, fixme, import-outside-toplevel
 
 # Disable while we have Python 2.x compatability
 # pylint: disable=useless-object-inheritance,bad-mcs-classmethod-argument
@@ -105,6 +105,7 @@ _OFFICIAL_CLASSES = {
     "object.item.audioItem.musicTrack",
     "object.item.audioItem.audioBroadcast",
     "object.item.audioItem.audioBook",
+    "object.item.audioItem.linein",
     "object.container",
     "object.container.person",
     "object.container.person.musicArtist",
@@ -160,7 +161,6 @@ def form_name(didl_class):
 
 
 class DidlResource:
-
     """Identifies a resource, typically some type of a binary asset, such as a
     song.
 
@@ -170,7 +170,6 @@ class DidlResource:
 
     # Adapted from a class taken from the Python Brisa project - MIT licence.
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(
         self,
         uri,
@@ -399,7 +398,6 @@ _DIDL_CLASS_TO_CLASS = {}
 
 
 class DidlMetaClass(type):
-
     """Meta class for all Didl objects."""
 
     def __new__(cls, name, bases, attrs):
@@ -459,7 +457,7 @@ class DidlObject(metaclass=DidlMetaClass):
         restricted=True,
         resources=None,
         desc="RINCON_AssociatedZPUDN",
-        **kwargs
+        **kwargs,
     ):
         """
         Args:
@@ -534,7 +532,6 @@ class DidlObject(metaclass=DidlMetaClass):
             # way.
             setattr(self, key, value)
 
-    # pylint: disable=too-many-locals, too-many-branches
     @classmethod
     def from_element(cls, element):  # pylint: disable=R0914
         """Create an instance of this class from an ElementTree xml Element.
@@ -631,7 +628,7 @@ class DidlObject(metaclass=DidlMetaClass):
             restricted=restricted,
             resources=resources,
             desc=desc,
-            **content
+            **content,
         )
 
     @classmethod
@@ -833,7 +830,6 @@ class DidlObject(metaclass=DidlMetaClass):
 
 
 class DidlItem(DidlObject):
-
     """A basic content directory item."""
 
     # The spec allows for an option 'refID' attribute, but we do not handle it
@@ -853,7 +849,6 @@ class DidlItem(DidlObject):
 
 
 class DidlAudioItem(DidlItem):
-
     """An audio item."""
 
     # the DIDL Lite class for this object.
@@ -873,7 +868,6 @@ class DidlAudioItem(DidlItem):
 
 
 class DidlMusicTrack(DidlAudioItem):
-
     """Class that represents a music library track."""
 
     # the DIDL Lite class for this object.
@@ -893,7 +887,6 @@ class DidlMusicTrack(DidlAudioItem):
 
 
 class DidlAudioBook(DidlAudioItem):
-
     """Class that represents an audio book."""
 
     # the DIDL Lite class for this object.
@@ -911,7 +904,6 @@ class DidlAudioBook(DidlAudioItem):
 
 
 class DidlAudioBroadcast(DidlAudioItem):
-
     """Class that represents an audio broadcast."""
 
     # the DIDL Lite class for this object.
@@ -927,8 +919,20 @@ class DidlAudioBroadcast(DidlAudioItem):
     )
 
 
-class DidlRecentShow(DidlMusicTrack):
+class DidlAudioLineIn(DidlAudioItem):
+    """Class that represents an audio line in."""
 
+    # the DIDL Lite class for this object.
+    item_class = "object.item.audioItem.linein"
+    _translation = DidlAudioItem._translation.copy()
+    _translation.update(
+        {
+            "title": ("upnp", "title"),
+        }
+    )
+
+
+class DidlRecentShow(DidlMusicTrack):
     """Class that represents a recent radio show/podcast."""
 
     # the DIDL Lite class for this object.
@@ -936,7 +940,6 @@ class DidlRecentShow(DidlMusicTrack):
 
 
 class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
-
     """Class that represents an audio broadcast Sonos favorite."""
 
     # Note: The sonos-favorite part of the class spec obviously isn't part of
@@ -948,7 +951,6 @@ class DidlAudioBroadcastFavorite(DidlAudioBroadcast):
 
 
 class DidlFavorite(DidlItem):
-
     """Class that represents a Sonos favorite.
 
     Note that the favorite itself isn't playable in all cases, please use the
@@ -1000,7 +1002,6 @@ class DidlFavorite(DidlItem):
 
 
 class DidlContainer(DidlObject):
-
     """Class that represents a music library container."""
 
     # the DIDL Lite class for this object.
@@ -1011,7 +1012,6 @@ class DidlContainer(DidlObject):
 
 
 class DidlAlbum(DidlContainer):
-
     """A content directory album."""
 
     # the DIDL Lite class for this object.
@@ -1032,7 +1032,6 @@ class DidlAlbum(DidlContainer):
 
 
 class DidlMusicAlbum(DidlAlbum):
-
     """Class that represents a music library album."""
 
     # the DIDL Lite class for this object.
@@ -1057,7 +1056,6 @@ class DidlMusicAlbum(DidlAlbum):
 
 
 class DidlMusicAlbumFavorite(DidlMusicAlbum):
-
     """Class that represents a Sonos favorite music library album.
 
     This class is not part of the DIDL spec and is Sonos specific.
@@ -1072,7 +1070,6 @@ class DidlMusicAlbumFavorite(DidlMusicAlbum):
 
 
 class DidlMusicAlbumCompilation(DidlMusicAlbum):
-
     """Class that represents a Sonos favorite music library compilation.
 
     This class is not part of the DIDL spec and is Sonos specific.
@@ -1087,7 +1084,6 @@ class DidlMusicAlbumCompilation(DidlMusicAlbum):
 
 
 class DidlPerson(DidlContainer):
-
     """A content directory class representing a person."""
 
     # the DIDL Lite class for this object.
@@ -1103,7 +1099,6 @@ class DidlPerson(DidlContainer):
 
 
 class DidlComposer(DidlPerson):
-
     """Class that represents a music library composer."""
 
     # Not in the DIDL-Lite spec. Sonos specific??
@@ -1113,7 +1108,6 @@ class DidlComposer(DidlPerson):
 
 
 class DidlMusicArtist(DidlPerson):
-
     """Class that represents a music library artist."""
 
     # the DIDL Lite class for this object.
@@ -1129,7 +1123,6 @@ class DidlMusicArtist(DidlPerson):
 
 
 class DidlAlbumList(DidlContainer):
-
     """Class that represents a music library album list."""
 
     # This does not appear (that I can find) in the DIDL-Lite specs.
@@ -1139,7 +1132,6 @@ class DidlAlbumList(DidlContainer):
 
 
 class DidlPlaylistContainer(DidlContainer):
-
     """Class that represents a music library play list."""
 
     # (str) The DIDL Lite class for this object
@@ -1168,7 +1160,6 @@ class DidlPlaylistContainer(DidlContainer):
 
 
 class DidlSameArtist(DidlPlaylistContainer):
-
     """Class that represents all tracks by a single artist.
 
     This type is returned by browsing an artist or a composer
@@ -1180,21 +1171,18 @@ class DidlSameArtist(DidlPlaylistContainer):
 
 
 class DidlPlaylistContainerFavorite(DidlPlaylistContainer):
-
     """Class that represents a Sonos favorite play list."""
 
     item_class = "object.container.playlistContainer.sonos-favorite"
 
 
 class DidlPlaylistContainerTracklist(DidlPlaylistContainer):
-
     """Class that represents a Sonos tracklist."""
 
     item_class = "object.container.playlistContainer.tracklist"
 
 
 class DidlGenre(DidlContainer):
-
     """A content directory class representing a general genre."""
 
     # the DIDL Lite class for this object.
@@ -1213,7 +1201,6 @@ class DidlGenre(DidlContainer):
 
 
 class DidlMusicGenre(DidlGenre):
-
     """Class that represents a music genre."""
 
     # the DIDL Lite class for this object.
@@ -1235,7 +1222,6 @@ class DidlRadioShow(DidlContainer):
 
 
 class ListOfMusicInfoItems(list):
-
     """Abstract container class for a list of music information items.
 
     Instances of this class are returned from queries into the music library
@@ -1281,9 +1267,7 @@ class ListOfMusicInfoItems(list):
                 dictionary [\'{0}\'] is deprecated. Please use the named
                 attribute {1}.{0} instead. The deprecated way of retrieving the
                 metadata will be removed from the third release after
-                0.8""".format(
-                    key, self.__class__.__name__
-                )
+                0.8""".format(key, self.__class__.__name__)
             message = textwrap.dedent(message).replace("\n", " ").lstrip()
             warnings.warn(message, stacklevel=2)
             return self._metadata[key]
@@ -1307,7 +1291,6 @@ class ListOfMusicInfoItems(list):
 
 
 class SearchResult(ListOfMusicInfoItems):
-
     """Container class that represents a search or browse result.
 
     Browse is just a special case of search.
@@ -1331,7 +1314,6 @@ class SearchResult(ListOfMusicInfoItems):
 
 
 class Queue(ListOfMusicInfoItems):
-
     """Container class that represents a queue."""
 
     def __repr__(self):

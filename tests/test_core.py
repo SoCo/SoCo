@@ -2,8 +2,10 @@ from unittest import mock
 import pytest
 import requests_mock
 
+from conftest import IP_ADDR
 from soco import SoCo
-from soco.data_structures import DidlMusicTrack, to_didl_string
+from soco.core import ARC_ULTRA_PRODUCT_NAME
+from soco.data_structures import to_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
@@ -12,35 +14,6 @@ from soco.exceptions import (
 )
 from soco.groups import ZoneGroup
 from soco.xml import XML
-
-IP_ADDR = "192.168.1.101"
-
-
-@pytest.fixture()
-def moco():
-    """A mock soco with fake services and hardcoded is_coordinator.
-
-    Allows calls to services to be tracked. Should not cause any network
-    access
-    """
-    services = (
-        "AVTransport",
-        "RenderingControl",
-        "DeviceProperties",
-        "ContentDirectory",
-        "ZoneGroupTopology",
-        "GroupRenderingControl",
-    )
-    patchers = [mock.patch("soco.core.{}".format(service)) for service in services]
-    for patch in patchers:
-        patch.start()
-    with mock.patch(
-        "soco.SoCo.is_coordinator", new_callable=mock.PropertyMock
-    ) as is_coord:
-        is_coord = True
-        yield SoCo(IP_ADDR)
-    for patch in reversed(patchers):
-        patch.stop()
 
 
 @pytest.fixture()
@@ -146,7 +119,7 @@ ZGS = (
               Orientation="0"
               RoomCalibrationState="4"
               SecureRegState="3"
-              VoiceConfigState="0"
+              VoiceConfigState="2"
               MicEnabled="0"
               AirPlayEnabled="0"
               IdleState="1"
@@ -175,8 +148,8 @@ ZGS = (
               Orientation="0"
               RoomCalibrationState="4"
               SecureRegState="3"
-              VoiceConfigState="0"
-              MicEnabled="0"
+              VoiceConfigState="2"
+              MicEnabled="1"
               AirPlayEnabled="0"
               IdleState="0"
               MoreInfo=""/>
@@ -411,7 +384,7 @@ class TestSoco:
     @pytest.mark.parametrize("bad_ip_addr", ["not_ip", "555.555.555.555"])
     def test_soco_bad_ip(self, bad_ip_addr):
         with pytest.raises(ValueError):
-            speaker = SoCo(bad_ip_addr)
+            _ = SoCo(bad_ip_addr)
 
     def test_soco_init(self, moco):
         assert moco.ip_address == IP_ADDR
@@ -543,6 +516,36 @@ class TestSoco:
         )
         assert should == res
 
+    @mock.patch("soco.core.requests")
+    def test_soco_speech_enhance_mode(self, mocr, moco_zgs):
+        moco_zgs.renderingControl.GetEQ.reset_mock()
+        response = mock.MagicMock()
+        mocr.get.return_value = response
+        response.content = self.device_description
+
+        # Data is available only when an arc ultra soundbar. Test not a soundbar first
+        moco_zgs._is_soundbar = False
+        assert moco_zgs.speech_enhance_enabled is None
+        assert moco_zgs.renderingControl.GetEQ.call_count == 0
+        with pytest.raises(NotSupportedException):
+            moco_zgs.speech_enhance_enabled = 1
+
+        # Data should be available when an arc ultra soundbar
+        moco_zgs.speaker_info["model_name"] = "speaker prefix " + ARC_ULTRA_PRODUCT_NAME
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "1"}
+        assert moco_zgs.speech_enhance_enabled == 1
+        moco_zgs.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled")]
+        )
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "0"}
+        assert moco_zgs.speech_enhance_enabled == 0
+
+        moco_zgs.renderingControl.SetEQ.reset_mock()
+        moco_zgs.speech_enhance_enabled = 1
+        moco_zgs.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 1)]
+        )
+
 
 class TestAVTransport:
     @pytest.mark.parametrize(
@@ -671,6 +674,21 @@ class TestAVTransport:
         moco.play_uri(uri)
 
         moco.avTransport.Play.assert_called_with([("InstanceID", 0), ("Speed", 1)])
+
+    def test_soco_play_uri_timeout(self, moco):
+        """Test play_uri accepts timeout."""
+        uri = (
+            "http://archive.org/download/tend2005-07-16.flac16/"
+            "tend2005-07-16t10wonderboy_64kb.mp3"
+        )
+        moco.play_uri(uri, timeout=300)
+        moco.avTransport.Play.assert_called_with(
+            [
+                ("InstanceID", 0),
+                ("Speed", 1),
+            ],
+            timeout=300,
+        )
 
     def test_soco_play_uri_with_title(self, moco):
         uri = (
@@ -839,10 +857,36 @@ class TestAVTransport:
             ]
         )
 
+    def test_join_timeout(self, moco_zgs):
+        """Test join accepts timeout."""
+        moco2 = mock.Mock()
+        moco2.uid = "RINCON_000XXX1400"
+        moco_zgs.avTransport.SetAVTransportURI.reset_mock()
+        moco_zgs.join(moco2, timeout=300)
+        moco_zgs.avTransport.SetAVTransportURI.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("CurrentURI", "x-rincon:RINCON_000XXX1400"),
+                ("CurrentURIMetaData", ""),
+            ],
+            timeout=300,
+        )
+
     def test_unjoin(self, moco_zgs):
         moco_zgs.unjoin()
         moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.assert_called_once_with(
             [("InstanceID", 0)]
+        )
+
+    def test_unjoin_timeout(self, moco_zgs):
+        """Test unjoin accepts timeout."""
+        moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.reset_mock()
+        moco_zgs.unjoin(timeout=300)
+        moco_zgs.avTransport.BecomeCoordinatorOfStandaloneGroup.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+            ],
+            timeout=300,
         )
 
     def test_switch_to_line_in(self, moco_zgs):
@@ -1097,7 +1141,7 @@ class TestAVTransport:
     @pytest.mark.parametrize("bad_sleep_time", ["BadTime", "00:43:23", "4200s", ""])
     def test_set_sleep_timer_bad_sleep_time(self, moco, bad_sleep_time):
         with pytest.raises(ValueError):
-            result = moco.set_sleep_timer(bad_sleep_time)
+            _ = moco.set_sleep_timer(bad_sleep_time)
 
     def test_get_sleep_timer(self, moco):
         moco.avTransport.reset_mock()
@@ -1264,6 +1308,44 @@ class TestRenderingControl:
             with pytest.raises(SoCoNotVisibleException):
                 moco.trueplay = True
 
+    def test_soco_soundbar_audio_input_format(self, moco):
+        moco._is_soundbar = True
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "0"}
+        assert moco.soundbar_audio_input_format_code == 0
+        assert moco.soundbar_audio_input_format == "No input connected"
+
+        moco.deviceProperties.GetZoneInfo.assert_called_with()
+
+        moco.deviceProperties.GetZoneInfo.return_value = {"HTAudioIn": "12345"}
+        assert "Unknown audio input format: 12345" in moco.soundbar_audio_input_format
+
+        moco._is_soundbar = False
+        assert moco.soundbar_audio_input_format_code is None
+        assert moco.soundbar_audio_input_format is None
+
+    def test_soco_audio_delay(self, moco):
+        moco._is_soundbar = False
+        assert moco.audio_delay is None
+        assert not moco.renderingControl.GetEQ.called
+
+        with pytest.raises(NotSupportedException):
+            moco.audio_delay = 1
+
+        moco._is_soundbar = True
+
+        with pytest.raises(ValueError):
+            moco.audio_delay = 6
+
+        moco.renderingControl.GetEQ.return_value = {"CurrentValue": "2"}
+        assert moco.audio_delay == 2
+        moco.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay")]
+        )
+        moco.audio_delay = 1
+        moco.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "AudioDelay"), ("DesiredValue", 1)]
+        )
+
     def test_soco_fixed_volume(self, moco):
         moco.renderingControl.GetSupportsOutputFixed.return_value = {
             "CurrentSupportsFixed": "1"
@@ -1317,6 +1399,69 @@ class TestRenderingControl:
         moco.renderingControl.SetVolume.assert_any_call(
             [("InstanceID", 0), ("Channel", "RF"), ("DesiredVolume", 100)]
         )
+
+    @pytest.mark.parametrize(
+        "prop,variable,type,min,max",
+        [
+            ("surround_enabled", "SurroundEnable", bool, None, None),
+            ("surround_full_volume_enabled", "SurroundMode", bool, None, None),
+            ("surround_volume_tv", "SurroundLevel", int, -15, 15),
+            ("surround_volume_music", "MusicSurroundLevel", int, -15, 15),
+        ],
+    )
+    def test_soco_surround_settings(self, moco, prop, variable, type, min, max):
+        """Test the surround settings.
+
+        This performs the following checks:
+        * For boolean values, check toggling and payloads
+        * For ranged int values, check the ranges and payloads.
+        """
+
+        def _assert_seteq_call(prop, variable, value, type):
+            desired_value = value
+            setattr(moco, prop, value)
+
+            moco.renderingControl.SetEQ.assert_any_call(
+                [
+                    ("InstanceID", 0),
+                    ("EQType", variable),
+                    ("DesiredValue", int(desired_value)),
+                ]
+            )
+
+            moco.renderingControl.GetEQ.return_value = {
+                "CurrentValue": int(desired_value)
+            }
+            if type == bool:
+                assert getattr(moco, prop) == bool(value)
+            elif type == int:
+                assert getattr(moco, prop) == value
+
+            moco.renderingControl.GetEQ.assert_any_call(
+                [("InstanceID", 0), ("EQType", variable)]
+            )
+            moco.renderingControl.SetEQ.reset_mock()
+            moco.renderingControl.GetEQ.reset_mock()
+
+        with mock.patch(
+            "soco.SoCo.is_soundbar", new_callable=mock.PropertyMock
+        ) as mock_is_soundbar:
+            mock_is_soundbar = True  # noqa: F841
+
+            if type == bool:
+                for target in [True, False]:
+                    _assert_seteq_call(prop, variable, target, type)
+
+            elif type == int:
+                for target in [min, max]:
+                    _assert_seteq_call(prop, variable, target, type)
+
+                for target in [min - 5, max + 5]:
+                    with pytest.raises(ValueError):
+                        setattr(moco, prop, target)
+
+            else:
+                raise Exception("unhandled type %s" % type)
 
 
 class TestDeviceProperties:
@@ -1509,10 +1654,16 @@ class TestZoneGroupTopology:
         c = moco_zgs.group.coordinator
         c.groupRenderingControl.GetGroupVolume.return_value = {"CurrentVolume": 50}
         assert g.volume == 50
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.GetGroupVolume.assert_called_once_with(
             [("InstanceID", 0)]
         )
         g.volume = 75
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.SetGroupVolume.assert_called_once_with(
             [("InstanceID", 0), ("DesiredVolume", 75)]
         )
@@ -1537,10 +1688,22 @@ class TestZoneGroupTopology:
             "NewVolume": "75"
         }
         new_volume = g.set_relative_volume(25)
+        c.groupRenderingControl.SnapshotGroupVolume.assert_called_with(
+            [("InstanceID", 0)]
+        )
         c.groupRenderingControl.SetRelativeGroupVolume.assert_called_once_with(
             [("InstanceID", 0), ("Adjustment", 25)]
         )
         assert new_volume == 75
+
+    def test_mic_enabled(self, moco_zgs):
+        for zone in moco_zgs.all_zones:
+            if zone.uid == "RINCON_000E58A53FAE01400":
+                assert zone.mic_enabled is False
+            elif zone.uid == "RINCON_000E5884455C01400":
+                assert zone.mic_enabled is True
+            else:
+                assert zone.mic_enabled is None
 
 
 def test_only_on_master_true(moco_only_on_master):

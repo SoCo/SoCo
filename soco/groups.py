@@ -5,7 +5,6 @@
 
 
 class ZoneGroup:
-
     """
     A class representing a Sonos Group. It looks like this::
 
@@ -133,6 +132,7 @@ class ZoneGroup:
 
         An integer between 0 and 100.
         """
+        self.coordinator.groupRenderingControl.SnapshotGroupVolume([("InstanceID", 0)])
         response = self.coordinator.groupRenderingControl.GetGroupVolume(
             [("InstanceID", 0)]
         )
@@ -142,6 +142,7 @@ class ZoneGroup:
     def volume(self, group_volume):
         group_volume = int(group_volume)
         group_volume = max(0, min(group_volume, 100))  # Coerce in range
+        self.coordinator.groupRenderingControl.SnapshotGroupVolume([("InstanceID", 0)])
         self.coordinator.groupRenderingControl.SetGroupVolume(
             [("InstanceID", 0), ("DesiredVolume", group_volume)]
         )
@@ -192,6 +193,7 @@ class ZoneGroup:
         """
         relative_group_volume = int(relative_group_volume)
         # Sonos automatically handles out-of-range values.
+        self.coordinator.groupRenderingControl.SnapshotGroupVolume([("InstanceID", 0)])
         resp = self.coordinator.groupRenderingControl.SetRelativeGroupVolume(
             [("InstanceID", 0), ("Adjustment", relative_group_volume)]
         )

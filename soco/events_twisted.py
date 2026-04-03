@@ -62,7 +62,6 @@ twisted.python.failure.Failure.html
 
 """
 
-
 import sys
 import logging
 
@@ -71,7 +70,6 @@ if "sphinx" in sys.modules:
 
     class Resource:  # pylint: disable=no-init
         """Fake Resource class to use when building docs"""
-
 
 else:
     from twisted.internet import reactor
@@ -167,6 +165,7 @@ class EventListener(EventListenerBase):
             The port on which the event listener listens is configurable.
             See `config.EVENT_LISTENER_PORT`
         """
+        # pylint: disable=possibly-used-before-assignment
         factory = Site(EventNotifyHandler())
         for port_number in range(
             self.requested_port_number, self.requested_port_number + 100
@@ -179,7 +178,7 @@ class EventListener(EventListenerBase):
                     port_number, factory, interface=ip_address
                 )
                 break
-            # pylint: disable=invalid-name
+            # pylint: disable=invalid-name,used-before-assignment
             except twisted.internet.error.CannotListenError as e:
                 log.warning(e)
                 continue
@@ -324,6 +323,7 @@ class Subscription(SubscriptionBase):
 
     def _auto_renew_start(self, interval):
         """Starts the auto_renew loop."""
+        # pylint: disable=possibly-used-before-assignment
         self._auto_renew_loop = task.LoopingCall(
             self.renew, is_autorenew=True, strict=False
         )
@@ -336,7 +336,7 @@ class Subscription(SubscriptionBase):
             self._auto_renew_loop.stop()
             self._auto_renew_loop = None
 
-    # pylint: disable=no-self-use, too-many-branches, too-many-arguments
+    # pylint: disable=no-self-use
     def _request(self, method, url, headers, success, unconditional=None):
         """Sends an HTTP request.
 
@@ -353,10 +353,11 @@ class Subscription(SubscriptionBase):
                 no parameters.
 
         """
+        # pylint: disable=possibly-used-before-assignment
         agent = BrowserLikeRedirectAgent(Agent(reactor))
 
         if headers:
-            for k in headers.keys():
+            for k in list(headers.keys()):
                 header = headers[k]
                 del headers[k]
                 if isinstance(header, (list,)):
@@ -384,7 +385,6 @@ class Subscription(SubscriptionBase):
         return d
 
     def _wrap(self, method, strict, *args, **kwargs):
-
         """This is a wrapper for `Subscription.subscribe`, `Subscription.renew`
         and `Subscription.unsubscribe` which:
 
@@ -443,6 +443,7 @@ class Subscription(SubscriptionBase):
             # We start by assuming no Failure occurred
             failure = None
 
+            # pylint: disable=possibly-used-before-assignment
             if isinstance(outcome, Failure):
                 failure = outcome
                 # If a Failure or Exception occurred during execution of
@@ -494,6 +495,7 @@ class Subscription(SubscriptionBase):
                 failure.trap()
 
         # Create a deferred
+        # pylint: disable=possibly-used-before-assignment
         d = defer.Deferred()  # pylint: disable=invalid-name
         # Set its subscription property to refer to this Subscription
         d.subscription = self

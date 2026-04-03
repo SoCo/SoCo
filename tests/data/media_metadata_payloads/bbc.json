@@ -1,0 +1,23 @@
+{
+    "input": {
+        "Track": "1",
+        "TrackDuration": "0:00:00",
+        "TrackMetaData": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"sonos.com-hls-radio:*:audio/mpegurl:*\">hls-radio://http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_two.m3u8</res><r:streamContent></r:streamContent><dc:title>bbc_radio_two.m3u8</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>",
+        "TrackURI": "hls-radio://http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_two.m3u8",
+        "RelTime": "0:02:35",
+        "AbsTime": "NOT_IMPLEMENTED",
+        "RelCount": "2147483647",
+        "AbsCount": "2147483647"
+    },
+    "result": {
+        "title": "",
+        "artist": "",
+        "album": "",
+        "album_art": "",
+        "position": "0:02:35",
+        "playlist_position": "1",
+        "duration": "0:00:00",
+        "uri": "hls-radio://http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_two.m3u8",
+        "metadata": "<DIDL-Lite xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:upnp=\"urn:schemas-upnp-org:metadata-1-0/upnp/\" xmlns:r=\"urn:schemas-rinconnetworks-com:metadata-1-0/\" xmlns=\"urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/\"><item id=\"-1\" parentID=\"-1\" restricted=\"true\"><res protocolInfo=\"sonos.com-hls-radio:*:audio/mpegurl:*\">hls-radio://http://a.files.bbci.co.uk/media/live/manifesto/audio/simulcast/hls/nonuk/sbr_low/ak/bbc_radio_two.m3u8</res><r:streamContent></r:streamContent><dc:title>bbc_radio_two.m3u8</dc:title><upnp:class>object.item</upnp:class></item></DIDL-Lite>"
+    }
+}

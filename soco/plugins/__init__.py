@@ -11,12 +11,10 @@ It contains the base class for all plugins
 import logging
 import importlib
 
-
 _LOG = logging.getLogger(__name__)
 
 
 class SoCoPlugin:
-
     """The base class for SoCo plugins."""
 
     def __init__(self, soco):

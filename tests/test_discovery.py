@@ -5,12 +5,11 @@ import ifaddr
 
 from collections import OrderedDict
 
-from unittest.mock import patch, MagicMock as Mock, PropertyMock, call
+from unittest.mock import patch, MagicMock as Mock, call
 
 from soco import discover
 from soco import config
 from soco.discovery import (
-    any_soco,
     by_name,
     _find_ipv4_addresses,
     _find_ipv4_networks,
