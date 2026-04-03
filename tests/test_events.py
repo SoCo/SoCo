@@ -101,3 +101,26 @@ def test_event_parsing_linein():
     linein: DidlAudioLineIn = result["av_transport_uri_meta_data"]
     assert linein.item_class == "object.item.audioItem.linein"
     assert linein.title == "loadLineIn"
+
+
+def test_event_parsing_null_value():
+    """parse_event_xml must not raise AttributeError when a LastChange variable
+    has neither a 'val' attribute nor text content (value is None).
+    """
+    # Inner LastChange XML contains <CurrentTrackURI/> — no val attr, no text.
+    event_xml = (
+        '<e:propertyset xmlns:e="urn:schemas-upnp-org:event-1-0">'
+        "<e:property>"
+        "<LastChange>"
+        '&lt;Event xmlns="urn:schemas-upnp-org:metadata-1-0/AVT/"&gt;'
+        '&lt;InstanceID val="0"&gt;'
+        "&lt;CurrentTrackURI/&gt;"
+        "&lt;/InstanceID&gt;"
+        "&lt;/Event&gt;"
+        "</LastChange>"
+        "</e:property>"
+        "</e:propertyset>"
+    )
+    # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
+    result = parse_event_xml(event_xml)
+    assert result["current_track_uri"] is None

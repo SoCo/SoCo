@@ -559,7 +559,7 @@ class MusicLibrary:
             complete_result=True,
         )
 
-        reduced = [item for item in result if item.__class__ == DidlMusicAlbum]
+        reduced = [item for item in result if isinstance(item, DidlMusicAlbum)]
         # It is necessary to update the list of items in two places, due to
         # a bug in SearchResult
         result[:] = reduced

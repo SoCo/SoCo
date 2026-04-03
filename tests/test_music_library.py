@@ -1,3 +1,12 @@
+from unittest.mock import patch
+
+from soco.data_structures import (
+    DidlMusicAlbum,
+    DidlMusicAlbumCompilation,
+    DidlMusicTrack,
+    DidlResource,
+    SearchResult,
+)
 from soco.exceptions import SoCoUPnPException
 
 
@@ -311,3 +320,39 @@ class TestMusicLibrary:
         moco.contentDirectory.DestroyObject.assert_called_once_with(
             [("ObjectID", "S:" + share)]
         )
+
+    def test_get_albums_for_artist_includes_subclasses(self, moco):
+        """get_albums_for_artist must include DidlMusicAlbum subclasses.
+
+        Previously used ``item.__class__ == DidlMusicAlbum`` which silently
+        excluded subclasses such as DidlMusicAlbumCompilation.
+        """
+        res = DidlResource(
+            uri="x-rincon-playlist:RINCON_000XXX1400#A:1",
+            protocol_info="x-rincon-playlist:*:*:*",
+        )
+        album = DidlMusicAlbum(
+            title="Album", parent_id="A:", item_id="A:1", resources=[res]
+        )
+        compilation = DidlMusicAlbumCompilation(
+            title="Compilation", parent_id="A:", item_id="A:2", resources=[res]
+        )
+        track = DidlMusicTrack(
+            title="Track", parent_id="Q:0", item_id="Q:0/1", resources=[res]
+        )
+        fake_result = SearchResult(
+            [album, compilation, track],
+            search_type="albums",
+            number_returned=3,
+            total_matches=3,
+            update_id="0",
+        )
+        with patch.object(
+            moco.music_library, "get_album_artists", return_value=fake_result
+        ):
+            result = moco.music_library.get_albums_for_artist("Some Artist")
+
+        assert len(result) == 2
+        assert album in result
+        assert compilation in result
+        assert track not in result

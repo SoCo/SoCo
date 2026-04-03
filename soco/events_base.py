@@ -96,7 +96,7 @@ def parse_event_xml(xml_event):
                         value = last_change_var.text
                     # If DIDL metadata is returned, convert it to a music
                     # library data structure
-                    if value.startswith("<DIDL-Lite"):
+                    if value is not None and value.startswith("<DIDL-Lite"):
                         # Wrap any parsing exception in a SoCoFault, so the
                         # user can handle it
                         try:
