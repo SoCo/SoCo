@@ -170,12 +170,17 @@ class Alarms(_SocoSingletonBase):
         self.last_alarm_list_version = current_alarm_list_version
 
         new_alarms = parse_alarm_payload(response, zone)
+        old_skipped = self.alarms_skipped
         self.alarms_skipped = {}
         # Update existing and create new Alarm instances
         for alarm_id, kwargs in new_alarms.items():
-            existing_alarm = self.alarms.get(alarm_id)
+            existing_alarm = self.alarms.get(alarm_id) or old_skipped.get(alarm_id)
             if existing_alarm:
                 existing_alarm.update(**kwargs)
+                if existing_alarm.zone is None:
+                    self.alarms_skipped[alarm_id] = existing_alarm
+                else:
+                    self.alarms[alarm_id] = existing_alarm
             else:
                 new_alarm = Alarm(**kwargs)
                 new_alarm._alarm_id = alarm_id  # pylint: disable=protected-access
@@ -216,6 +221,10 @@ class Alarms(_SocoSingletonBase):
 
         Returns:
             datetime: The next alarm trigger datetime or None if disabled
+
+        Note:
+            Alarms in `alarms_skipped` (whose speaker was not registered at
+            the time of the last `update()`) are not considered.
         """
         if from_datetime is None:
             from_datetime = datetime.now()
@@ -376,9 +385,19 @@ class Alarm:
 
         Raises:
             ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
-                because there
-                is already an alarm for this room at the specified time.
+                because there is already an alarm for this room at the specified
+                time.
+            SoCoException: if `zone` is `None` (alarm was loaded for a speaker
+                that was not yet registered). Call `Alarms.update_skipped()`
+                with the zone once it is available before saving.
         """
+        if self.zone is None:
+            raise SoCoException(
+                "Cannot save alarm {}: zone is not set. "
+                "Call Alarms.update_skipped() with the zone first.".format(
+                    self._alarm_id
+                )
+            )
         args = [
             ("StartLocalTime", self.start_time.strftime(TIME_FORMAT)),
             (

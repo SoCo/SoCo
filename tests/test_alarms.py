@@ -4,8 +4,9 @@ from datetime import time
 from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
-from soco.alarms import Alarms, is_valid_recurrence
+from soco.alarms import Alarm, Alarms, is_valid_recurrence
 from soco.core import _ArgsSingleton
+from soco.exceptions import SoCoException
 
 
 @pytest.fixture(autouse=True)
@@ -112,3 +113,61 @@ def test_alarms_skipped(moco):
     assert len(alarms.alarms_skipped) == 0
     alarm = alarms.alarms["14"]
     assert alarm.zone == mock_missing_zone
+
+
+def test_alarms_skipped_reuse_object_on_update(moco):
+    """Verify that a skipped alarm's existing object is reused when update() is
+    called again and the zone is now available, preserving object identity."""
+    missing_uuid = "RINCON_test_missing"
+    alarm_list_response = {
+        "CurrentAlarmListVersion": "RINCON_test:14",
+        "CurrentAlarmList": "<Alarms>"
+        '<Alarm ID="14" StartTime="07:00:00" Duration="02:00:00" Recurrence="DAILY" '
+        'Enabled="1" RoomUUID="{}" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="SHUFFLE_NOREPEAT" Volume="25" '
+        'IncludeLinkedZones="0"/>'.format(missing_uuid)
+        + "</Alarms>",
+    }
+    mock_present_zone = MagicMock()
+    mock_present_zone.uid = "RINCON_test"
+    mock_missing_zone = MagicMock()
+    mock_missing_zone.uid = missing_uuid
+
+    moco.alarmClock.ListAlarms = MagicMock(return_value=alarm_list_response)
+
+    # First update: zone is missing, alarm goes to alarms_skipped
+    with patch.object(
+        type(moco), "all_zones", new_callable=PropertyMock
+    ) as mock_all_zones:
+        mock_all_zones.return_value = [mock_present_zone]
+        alarms = Alarms()
+        alarms.update(moco)
+
+    assert len(alarms.alarms_skipped) == 1
+    skipped_alarm_obj = alarms.alarms_skipped["14"]
+
+    # Second update: version is higher, zone is now present
+    alarm_list_response_v2 = dict(alarm_list_response)
+    alarm_list_response_v2["CurrentAlarmListVersion"] = "RINCON_test:15"
+    moco.alarmClock.ListAlarms = MagicMock(return_value=alarm_list_response_v2)
+
+    with patch.object(
+        type(moco), "all_zones", new_callable=PropertyMock
+    ) as mock_all_zones:
+        mock_all_zones.return_value = [mock_present_zone, mock_missing_zone]
+        alarms.update(moco)
+
+    assert len(alarms.alarms) == 1
+    assert len(alarms.alarms_skipped) == 0
+    resolved_alarm = alarms.alarms["14"]
+    # The same object should have been updated in place, not replaced
+    assert resolved_alarm is skipped_alarm_obj
+    assert resolved_alarm.zone == mock_missing_zone
+
+
+def test_save_raises_when_zone_is_none(moco):
+    """Verify that save() raises SoCoException when zone is None."""
+    alarm = Alarm(zone=None, room_uuid="RINCON_test_missing")
+    alarm._alarm_id = None  # pylint: disable=protected-access
+    with pytest.raises(SoCoException, match="zone is not set"):
+        alarm.save()
