@@ -102,6 +102,7 @@ class Alarms(_SocoSingletonBase):
     def __init__(self):
         """Initialize the instance."""
         self.alarms = {}
+        self.alarms_skipped = {}
         self._last_zone_used = None
         self._last_alarm_list_version = None
         self.last_uid = None
@@ -169,21 +170,37 @@ class Alarms(_SocoSingletonBase):
         self.last_alarm_list_version = current_alarm_list_version
 
         new_alarms = parse_alarm_payload(response, zone)
-
+        old_skipped = self.alarms_skipped
+        self.alarms_skipped = {}
         # Update existing and create new Alarm instances
         for alarm_id, kwargs in new_alarms.items():
-            existing_alarm = self.alarms.get(alarm_id)
+            existing_alarm = self.alarms.get(alarm_id) or old_skipped.get(alarm_id)
             if existing_alarm:
                 existing_alarm.update(**kwargs)
+                if existing_alarm.zone is None:
+                    self.alarms_skipped[alarm_id] = existing_alarm
+                else:
+                    self.alarms[alarm_id] = existing_alarm
             else:
                 new_alarm = Alarm(**kwargs)
                 new_alarm._alarm_id = alarm_id  # pylint: disable=protected-access
-                self.alarms[alarm_id] = new_alarm
+                if new_alarm.zone is None:
+                    self.alarms_skipped[alarm_id] = new_alarm
+                else:
+                    self.alarms[alarm_id] = new_alarm
 
         # Prune alarms removed externally
         for alarm_id in list(self.alarms):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
+
+    def update_skipped(self, zone):
+        """Update the zone for any skipped alarms and move to main list if possible."""
+        for alarm_id, alarm in list(self.alarms_skipped.items()):
+            if zone.uid == alarm.room_uuid:
+                alarm.zone = zone
+                self.alarms[alarm_id] = alarm
+                self.alarms_skipped.pop(alarm_id)
 
     def get_next_alarm_datetime(
         self, from_datetime=None, include_disabled=False, zone_uid=None
@@ -204,6 +221,10 @@ class Alarms(_SocoSingletonBase):
 
         Returns:
             datetime: The next alarm trigger datetime or None if disabled
+
+        Note:
+            Alarms in `alarms_skipped` (whose speaker was not registered at
+            the time of the last `update()`) are not considered.
         """
         if from_datetime is None:
             from_datetime = datetime.now()
@@ -243,6 +264,7 @@ class Alarm:
         play_mode="NORMAL",
         volume=20,
         include_linked_zones=False,
+        room_uuid=None,
     ):
         """
         Args:
@@ -273,6 +295,9 @@ class Alarm:
             include_linked_zones (bool, optional): `True` if the alarm should
                 be played on the other speakers in the same group, `False`
                 otherwise. Defaults to `False`.
+            room_uuid (str, optional): The UUID of the room/speaker this alarm
+                belongs to. Set automatically when loading alarms from the
+                Sonos system. Defaults to `None`.
         """
 
         self.zone = zone
@@ -287,6 +312,7 @@ class Alarm:
         self.play_mode = play_mode
         self.volume = volume
         self.include_linked_zones = include_linked_zones
+        self.room_uuid = room_uuid
         self._alarm_id = None
 
     def __repr__(self):
@@ -359,9 +385,19 @@ class Alarm:
 
         Raises:
             ~soco.exceptions.SoCoUPnPException: if the alarm cannot be created
-                because there
-                is already an alarm for this room at the specified time.
+                because there is already an alarm for this room at the specified
+                time.
+            SoCoException: if `zone` is `None` (alarm was loaded for a speaker
+                that was not yet registered). Call `Alarms.update_skipped()`
+                with the zone once it is available before saving.
         """
+        if self.zone is None:
+            raise SoCoException(
+                "Cannot save alarm {}: zone is not set. "
+                "Call Alarms.update_skipped() with the zone first.".format(
+                    self._alarm_id
+                )
+            )
         args = [
             ("StartLocalTime", self.start_time.strftime(TIME_FORMAT)),
             (
@@ -540,10 +576,6 @@ def parse_alarm_payload(payload, zone):
         alarm_zone = next(
             (z for z in zone.all_zones if z.uid == values["RoomUUID"]), None
         )
-        if alarm_zone is None:
-            # Some alarms are not associated with a zone, ignore these
-            continue
-
         args = {
             "zone": alarm_zone,
             # StartTime not StartLocalTime which is used by CreateAlarm
@@ -564,6 +596,7 @@ def parse_alarm_payload(payload, zone):
             "play_mode": values["PlayMode"],
             "volume": values["Volume"],
             "include_linked_zones": values["IncludeLinkedZones"] == "1",
+            "room_uuid": values["RoomUUID"],
         }
 
         alarm_args[alarm_id] = args
