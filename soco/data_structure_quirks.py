@@ -16,7 +16,6 @@ applies them to DIDL-Lite objects.
 
 import logging
 
-
 _LOG = logging.getLogger(__name__)
 
 

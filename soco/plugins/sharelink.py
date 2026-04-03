@@ -237,7 +237,7 @@ class ShareLinkPlugin(SoCoPlugin):
 
         for service in self.services:
             if service.canonical_uri(uri):
-                (share_type, encoded_uri) = service.extract(uri)
+                share_type, encoded_uri = service.extract(uri)
                 magic = service.magic()
 
                 enqueue_uri = magic[share_type]["prefix"] + encoded_uri

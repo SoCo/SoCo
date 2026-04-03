@@ -7,7 +7,6 @@
 
 """This module contains the classes underlying SoCo's caching system."""
 
-
 import threading
 from pickle import dumps
 from time import time

@@ -8,7 +8,6 @@ from soco.exceptions import MusicServiceException
 from soco.music_services.accounts import Account
 from soco.music_services.music_service import MusicService
 
-
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
 from soco.music_services.token_store import JsonFileTokenStore
 
