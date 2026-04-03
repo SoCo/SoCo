@@ -1540,8 +1540,8 @@ class TestDeviceProperties:
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
 
-    def test_add_rear_speakers(self, moco):
-        """Test add_rear_speakers sends the correct ChannelMapSet."""
+    def test_add_satellite_speakers(self, moco):
+        """Test add_satellite_speakers sends the correct ChannelMapSet."""
         moco._uid = "RINCON_000XXX1400"
         moco._is_soundbar = True
         left_rear = mock.Mock()
@@ -1549,18 +1549,18 @@ class TestDeviceProperties:
         right_rear = mock.Mock()
         right_rear.uid = "RINCON_RIGHT1400"
 
-        moco.add_rear_speakers(left_rear, right_rear)
+        moco.add_satellite_speakers(left_rear, right_rear)
 
         expected_map = "RINCON_000XXX1400:LF,RF;RINCON_RIGHT1400:RR;RINCON_LEFT1400:LR"
         moco.deviceProperties.AddHTSatellite.assert_called_once_with(
             [("ChannelMapSet", expected_map)]
         )
 
-    def test_add_rear_speakers_not_soundbar(self, moco):
-        """Test add_rear_speakers raises NotSupportedException on non-soundbars."""
+    def test_add_satellite_speakers_not_soundbar(self, moco):
+        """Test add_satellite_speakers raises NotSupportedException on non-soundbars."""
         moco._is_soundbar = False
         with pytest.raises(NotSupportedException):
-            moco.add_rear_speakers(mock.Mock(), mock.Mock())
+            moco.add_satellite_speakers(mock.Mock(), mock.Mock())
 
     def test_separate_satellite_speakers(self, moco):
         """Test separate_satellite_speakers calls RemoveHTSatellite for each satellite."""

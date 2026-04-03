@@ -1805,7 +1805,7 @@ class SoCo(_SocoSingletonBase):
         self.deviceProperties.AddHTSatellite([("ChannelMapSet", channel_map)])
 
     @only_on_soundbars
-    def add_rear_speakers(self, left_rear, right_rear):
+    def add_satellite_speakers(self, left_rear, right_rear):
         """Add rear satellite speakers to this soundbar.
 
         Args:
