@@ -1785,46 +1785,55 @@ class SoCo(_SocoSingletonBase):
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
 
-    def set_satellite_mapping(self, map: str):
-        """Sets the given satellite mapping for the device.
+    @only_on_soundbars
+    def _set_satellite_mapping(self, channel_map):
+        """Set the satellite channel mapping for this soundbar.
 
-        This is used to combine satellite speakers with a soundbar:
+        This is used internally by :meth:`add_rear_speakers`. The
+        channel-map string format is:
+        ``RINCON_<soundbar>:LF,RF;RINCON_<right>:RR;RINCON_<left>:LR``
+
+        Channel abbreviations:
         - LF = left front
-        - LR = left rear
         - RF = right front
+        - LR = left rear
         - RR = right rear
-        - LF,LR = left and right front, usually a soundbar
 
-        Example mapping:
-            RINCON_<beam>:LF,RF;RINCON_<right rear>:RR;RINCON_<left rear>:LR
+        Args:
+            channel_map (str): The channel mapping string.
         """
+        self.deviceProperties.AddHTSatellite([("ChannelMapSet", channel_map)])
 
-        self.deviceProperties.AddHTSatellite([("ChannelMapSet", map)])
+    @only_on_soundbars
+    def add_rear_speakers(self, left_rear, right_rear):
+        """Add rear satellite speakers to this soundbar.
 
-    def add_rear_speakers(self, left: str, right: str):
-        """Adds rear speakers to the to the soundbar."""
-        if self.is_soundbar:
-            raise Exception("Supported only on soundbars.")
+        Args:
+            left_rear (SoCo): The speaker to use as the left rear satellite.
+            right_rear (SoCo): The speaker to use as the right rear satellite.
 
-        map = "{uid}:LF,RF;{right}:RR;{left}:LR".format({"uid": self.uid, "left": left, "right": right})
+        Raises:
+            NotSupportedException: If this device is not a soundbar.
+        """
+        channel_map = "{soundbar}:LF,RF;{right}:RR;{left}:LR".format(
+            soundbar=self.uid, right=right_rear.uid, left=left_rear.uid
+        )
+        self._set_satellite_mapping(channel_map)
 
-        return self.set_satellite_mapping(map)
-
+    @only_on_soundbars
     def separate_satellite_speakers(self):
-        """This will remove all satellite speakers connected to the device.
+        """Remove all satellite speakers from this soundbar.
 
-        Warning: this will reset the trueplay tuning?
+        Warning:
+            This will reset the Trueplay tuning for the device.
+
+        Raises:
+            NotSupportedException: If this device is not a soundbar.
         """
-        if not self.is_soundbar:
-            raise Exception("Supported only on soundbars.")
-
-        # confusingly named all_zones returns all zone members,
-        # we filter out ourselves to get all the speakers we have to remove.
-        satellites = [dev.uid for dev in self.all_zones if dev.uid is not self.uid]
-
+        satellites = [dev for dev in self.group.members if dev.is_satellite]
         for satellite in satellites:
-            _LOG.debug("Going to remove satellite %s from %s", satellite, self.uid)
-            self.deviceProperties.RemoveHTSatellite(SatRoomUUID=satellite)
+            _LOG.debug("Removing satellite %s from %s", satellite.uid, self.uid)
+            self.deviceProperties.RemoveHTSatellite([("SatRoomUUID", satellite.uid)])
 
     def switch_to_line_in(self, source=None):
         """Switch the speaker's input to line-in.

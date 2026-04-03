@@ -1540,6 +1540,61 @@ class TestDeviceProperties:
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
 
+    def test_add_rear_speakers(self, moco):
+        """Test add_rear_speakers sends the correct ChannelMapSet."""
+        moco._uid = "RINCON_000XXX1400"
+        moco._is_soundbar = True
+        left_rear = mock.Mock()
+        left_rear.uid = "RINCON_LEFT1400"
+        right_rear = mock.Mock()
+        right_rear.uid = "RINCON_RIGHT1400"
+
+        moco.add_rear_speakers(left_rear, right_rear)
+
+        expected_map = "RINCON_000XXX1400:LF,RF;RINCON_RIGHT1400:RR;RINCON_LEFT1400:LR"
+        moco.deviceProperties.AddHTSatellite.assert_called_once_with(
+            [("ChannelMapSet", expected_map)]
+        )
+
+    def test_add_rear_speakers_not_soundbar(self, moco):
+        """Test add_rear_speakers raises NotSupportedException on non-soundbars."""
+        moco._is_soundbar = False
+        with pytest.raises(NotSupportedException):
+            moco.add_rear_speakers(mock.Mock(), mock.Mock())
+
+    def test_separate_satellite_speakers(self, moco):
+        """Test separate_satellite_speakers calls RemoveHTSatellite for each satellite."""
+        moco._is_soundbar = True
+
+        sat1 = mock.Mock()
+        sat1.uid = "RINCON_SAT1_1400"
+        sat1.is_satellite = True
+        sat2 = mock.Mock()
+        sat2.uid = "RINCON_SAT2_1400"
+        sat2.is_satellite = True
+        # Use pure Mock members so is_satellite doesn't trigger zone group polling
+        non_satellite = mock.Mock()
+        non_satellite.is_satellite = False
+
+        with mock.patch.object(
+            type(moco), "group", new_callable=mock.PropertyMock
+        ) as mock_group:
+            grp = mock.Mock()
+            grp.members = {non_satellite, sat1, sat2}
+            mock_group.return_value = grp
+            moco.separate_satellite_speakers()
+
+        calls = moco.deviceProperties.RemoveHTSatellite.call_args_list
+        assert len(calls) == 2
+        called_uids = {c.args[0][0][1] for c in calls}
+        assert called_uids == {"RINCON_SAT1_1400", "RINCON_SAT2_1400"}
+
+    def test_separate_satellite_speakers_not_soundbar(self, moco):
+        """Test separate_satellite_speakers raises NotSupportedException on non-soundbars."""
+        moco._is_soundbar = False
+        with pytest.raises(NotSupportedException):
+            moco.separate_satellite_speakers()
+
     def test_get_battery_info(self, moco):
         url = "http://" + moco.ip_address + ":1400/status/batterystatus"
 
