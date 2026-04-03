@@ -1785,6 +1785,56 @@ class SoCo(_SocoSingletonBase):
             [("ChannelMapSet", ""), ("KeepGrouped", "0")]
         )
 
+    @only_on_soundbars
+    def _set_satellite_mapping(self, channel_map):
+        """Set the satellite channel mapping for this soundbar.
+
+        This is used internally by :meth:`add_satellite_speakers`. The
+        channel-map string format is:
+        ``RINCON_<soundbar>:LF,RF;RINCON_<right>:RR;RINCON_<left>:LR``
+
+        Channel abbreviations:
+        - LF = left front
+        - RF = right front
+        - LR = left rear
+        - RR = right rear
+
+        Args:
+            channel_map (str): The channel mapping string.
+        """
+        self.deviceProperties.AddHTSatellite([("ChannelMapSet", channel_map)])
+
+    @only_on_soundbars
+    def add_satellite_speakers(self, left_rear, right_rear):
+        """Add rear satellite speakers to this soundbar.
+
+        Args:
+            left_rear (SoCo): The speaker to use as the left rear satellite.
+            right_rear (SoCo): The speaker to use as the right rear satellite.
+
+        Raises:
+            NotSupportedException: If this device is not a soundbar.
+        """
+        channel_map = "{soundbar}:LF,RF;{right}:RR;{left}:LR".format(
+            soundbar=self.uid, right=right_rear.uid, left=left_rear.uid
+        )
+        self._set_satellite_mapping(channel_map)
+
+    @only_on_soundbars
+    def separate_satellite_speakers(self):
+        """Remove all satellite speakers from this soundbar.
+
+        Warning:
+            This will reset the Trueplay tuning for the device.
+
+        Raises:
+            NotSupportedException: If this device is not a soundbar.
+        """
+        satellites = [dev for dev in self.group.members if dev.is_satellite]
+        for satellite in satellites:
+            _LOG.debug("Removing satellite %s from %s", satellite.uid, self.uid)
+            self.deviceProperties.RemoveHTSatellite([("SatRoomUUID", satellite.uid)])
+
     def switch_to_line_in(self, source=None):
         """Switch the speaker's input to line-in.
 
