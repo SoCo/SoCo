@@ -206,6 +206,19 @@ def test_parse_response(response, correct):
         assert result.music_service is music_service
 
 
+def test_parse_response_plain_dict_fields():
+    """Test that a single result returned as a plain dict (issue #988) parses
+    fields correctly, not just the count and class."""
+    music_service = Mock()
+    music_service.desc = "DESC"
+    results = data_structures.parse_response(music_service, RESPONSES[2], "albums")
+    assert len(results) == 1
+    item = results[0]
+    assert item.title == "Single Result Track"
+    assert item.item_id == "0fffffff" + "track/amazon123"
+    assert item.music_service is music_service
+
+
 def test_parse_response_bad_type():
     """Test parse reponse bad code"""
     with pytest.raises(ValueError) as exp:
