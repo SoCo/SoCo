@@ -1789,7 +1789,7 @@ class SoCo(_SocoSingletonBase):
     def _set_satellite_mapping(self, channel_map):
         """Set the satellite channel mapping for this soundbar.
 
-        This is used internally by :meth:`add_rear_speakers`. The
+        This is used internally by :meth:`add_satellite_speakers`. The
         channel-map string format is:
         ``RINCON_<soundbar>:LF,RF;RINCON_<right>:RR;RINCON_<left>:LR``
 
