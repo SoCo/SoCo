@@ -720,10 +720,18 @@ class Service:
                 name = state.findtext("{}name".format(ns))
                 datatype = state.findtext("{}dataType".format(ns))
                 default = state.findtext("{}defaultValue".format(ns))
-                value_list_elt = state.find("{}allowedValueList".format(ns)) or ()
-                value_list = [item.text for item in value_list_elt] or None
-                value_range_elt = state.find("{}allowedValueRange".format(ns)) or ()
-                value_range = [item.text for item in value_range_elt] or None
+                value_list_elt = state.find("{}allowedValueList".format(ns))
+                value_list = (
+                    ([item.text for item in value_list_elt] or None)
+                    if value_list_elt is not None
+                    else None
+                )
+                value_range_elt = state.find("{}allowedValueRange".format(ns))
+                value_range = (
+                    ([item.text for item in value_range_elt] or None)
+                    if value_range_elt is not None
+                    else None
+                )
                 vartypes[name] = Vartype(datatype, default, value_list, value_range)
         # find all the actions
         actionLists = tree.findall("{}actionList".format(ns))
