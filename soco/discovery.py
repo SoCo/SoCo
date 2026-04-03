@@ -82,15 +82,13 @@ def discover(
         return _sock
 
     # pylint: disable=invalid-name
-    PLAYER_SEARCH = dedent(
-        """\
+    PLAYER_SEARCH = dedent("""\
         M-SEARCH * HTTP/1.1
         HOST: 239.255.255.250:1900
         MAN: "ssdp:discover"
         MX: 1
         ST: urn:schemas-upnp-org:device:ZonePlayer:1
-        """
-    ).encode("utf-8")
+        """).encode("utf-8")
     MCAST_GRP = "239.255.255.250"
     MCAST_PORT = 1900
 
