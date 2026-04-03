@@ -2,6 +2,7 @@
 """The core module contains the SoCo class that implements
 the main entry to the SoCo functionality
 """
+
 import datetime
 import logging
 import re
@@ -76,6 +77,7 @@ AUDIO_INPUT_FORMATS = {
     84934716: "Dolby TrueHD 5.1",
     84934718: "Dolby Multichannel PCM 5.1",
     84934721: "DTS 5.1",
+    118489090: "Multichannel PCM 7.1",
     118489146: "Dolby Digital Plus 7.1",
 }
 
@@ -1712,12 +1714,14 @@ class SoCo(_SocoSingletonBase):
         The trick seems to be (only tested on a two-speaker setup) to tell each
         speaker which to join. There's probably a bit more to it if multiple
         groups have been defined.
+        Args:
+            kwargs: additional arguments such as timeout.
         """
         # Tell every other visible zone to join this one
         # pylint: disable = expression-not-assigned
         [zone.join(self) for zone in self.visible_zones if zone is not self]
 
-    def join(self, master):
+    def join(self, master, **kwargs):
         """Join this speaker to another "master" speaker."""
 
         self.avTransport.SetAVTransportURI(
@@ -1725,19 +1729,24 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
                 ("CurrentURI", "x-rincon:{}".format(master.uid)),
                 ("CurrentURIMetaData", ""),
-            ]
+            ],
+            **kwargs,
         )
         self.zone_group_state.clear_cache()
 
-    def unjoin(self):
+    def unjoin(self, **kwargs):
         """Remove this speaker from a group.
 
         Seems to work ok even if you remove what was previously the group
         master from it's own group. If the speaker was not in a group also
         returns ok.
+        Args:
+            kwargs: additional arguments such as timeout.
         """
 
-        self.avTransport.BecomeCoordinatorOfStandaloneGroup([("InstanceID", 0)])
+        self.avTransport.BecomeCoordinatorOfStandaloneGroup(
+            [("InstanceID", 0)], **kwargs
+        )
         self.zone_group_state.clear_cache()
 
     def create_stereo_pair(self, rh_slave_speaker):
@@ -2638,16 +2647,12 @@ class SoCo(_SocoSingletonBase):
             )
         except SoCoUPnPException as err:
             if "Error 402 received" in str(err):
-                raise ValueError(
-                    "invalid sleep_time_seconds, must be integer \
-                    value between 0 and 86399 inclusive or None"
-                ) from err
+                raise ValueError("invalid sleep_time_seconds, must be integer \
+                    value between 0 and 86399 inclusive or None") from err
             raise
         except ValueError as error:
-            raise ValueError(
-                "invalid sleep_time_seconds, must be integer \
-                value between 0 and 86399 inclusive or None"
-            ) from error
+            raise ValueError("invalid sleep_time_seconds, must be integer \
+                value between 0 and 86399 inclusive or None") from error
 
     @only_on_master
     def get_sleep_timer(self):

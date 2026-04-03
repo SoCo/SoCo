@@ -1267,9 +1267,7 @@ class ListOfMusicInfoItems(list):
                 dictionary [\'{0}\'] is deprecated. Please use the named
                 attribute {1}.{0} instead. The deprecated way of retrieving the
                 metadata will be removed from the third release after
-                0.8""".format(
-                    key, self.__class__.__name__
-                )
+                0.8""".format(key, self.__class__.__name__)
             message = textwrap.dedent(message).replace("\n", " ").lstrip()
             warnings.warn(message, stacklevel=2)
             return self._metadata[key]

@@ -7,7 +7,6 @@
 """Base classes used by :py:mod:`soco.events` and
 :py:mod:`soco.events_twisted`."""
 
-
 import atexit
 from functools import lru_cache
 import logging

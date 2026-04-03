@@ -3,7 +3,6 @@
 
 """This class contains utility functions used internally by SoCo."""
 
-
 import functools
 import re
 import warnings

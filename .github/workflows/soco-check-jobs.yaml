@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14.0-beta.1"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -42,10 +42,11 @@ jobs:
         run: |
           pytest --cov-config .coveragerc --cov soco .
       - name: Test formatting with Black
-        if: matrix.python-version >= 3.8
+        if: >-
+          ${{ startsWith(matrix.python-version, '3.1') }}
         run: |
           black --check soco tests
       - name: Test documentation build
-        if: matrix.python-version == 3.11
+        if: matrix.python-version == '3.11'
         run: |
           make docs

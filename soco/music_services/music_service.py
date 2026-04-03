@@ -25,7 +25,6 @@ Known problems:
 
 """
 
-
 import logging
 from urllib.parse import quote as quote_url
 import json
