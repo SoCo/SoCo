@@ -2,7 +2,6 @@
 
 from soco.utils import deprecated
 
-
 # Deprecation decorator
 
 

@@ -50,7 +50,6 @@ Example:
 
 """
 
-
 import errno
 import logging
 import socketserver

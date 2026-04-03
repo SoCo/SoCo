@@ -11,7 +11,6 @@ It contains the base class for all plugins
 import logging
 import importlib
 
-
 _LOG = logging.getLogger(__name__)
 
 

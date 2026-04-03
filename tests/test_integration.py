@@ -15,7 +15,6 @@ interrupted at every unit test!
 PLEASE RESPECT THIS.
 """
 
-
 import time
 
 import pytest

@@ -3,7 +3,6 @@
 
 """This module contains classes relating to Third Party music services."""
 
-
 import logging
 import weakref
 

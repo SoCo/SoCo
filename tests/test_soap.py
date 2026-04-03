@@ -5,7 +5,6 @@ from soco.soap import SoapMessage
 from soco.xml import XML
 from unittest import mock
 
-
 DUMMY_VALID_RESPONSE = "".join(
     [
         '<?xml version="1.0"?>',

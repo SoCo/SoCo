@@ -56,13 +56,13 @@ Class overview:
 
 
 """
+
 from urllib.parse import quote as quote_url
 
 import logging
 from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
-
 
 _LOG = logging.getLogger(__name__)
 _LOG.addHandler(logging.NullHandler())
