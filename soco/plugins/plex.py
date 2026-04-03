@@ -43,7 +43,6 @@ from ..exceptions import SoCoException
 from ..music_services import MusicService
 from ..plugins import SoCoPlugin
 
-
 PREFIX_LOOKUP = {
     "album": "1004206c",
     "artist": "1005004c",

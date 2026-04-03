@@ -56,13 +56,12 @@ Class overview:
 
 
 """
+
 from urllib.parse import quote as quote_url
 
 import logging
-from collections import OrderedDict
 from ..data_structures import DidlResource, DidlItem, SearchResult
 from ..utils import camel_to_underscore
-
 
 _LOG = logging.getLogger(__name__)
 _LOG.addHandler(logging.NullHandler())
@@ -98,7 +97,7 @@ def parse_response(service, response, search_type):
 
     Args:
         service (MusicService): The music service that produced the response
-        response (OrderedDict): The response from the soap client call
+        response (dict): The response from the soap client call
         search_type (str): A string that indicates the search type that the
             response is from
 
@@ -136,7 +135,7 @@ def parse_response(service, response, search_type):
         result_type_proper = result_type[0].upper() + result_type[1:]
         raw_items = response.get(result_type, [])
         # If there is only 1 result, it is not put in an array
-        if isinstance(raw_items, OrderedDict):
+        if isinstance(raw_items, dict):
             raw_items = [raw_items]
 
         for raw_item in raw_items:
@@ -274,7 +273,7 @@ class MusicServiceItem(MetadataDictBase):
         Args:
             music_service (MusicService): The music service that content_dict
                 originated from
-            content_dict (OrderedDict): The data to instantiate the music
+            content_dict (dict): The data to instantiate the music
                 service item from
 
         Returns:

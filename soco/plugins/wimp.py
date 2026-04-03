@@ -2,7 +2,6 @@
 
 """Plugin for the Wimp music service (Service ID 20)"""
 
-
 import locale
 import socket
 

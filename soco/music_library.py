@@ -7,7 +7,6 @@ The Music Library is the collection of music stored on your local network.
 For access to third party music streaming services, see the
 `music_service` module."""
 
-
 import logging
 
 from urllib.parse import quote as quote_url
