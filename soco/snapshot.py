@@ -291,7 +291,7 @@ class Snapshot:
             # Now loop around all the queue entries adding them
             for queue_group in self.queue:
                 for queue_item in queue_group:
-                    self.device.add_uri_to_queue(queue_item.uri)
+                    self.device.add_uri_to_queue(queue_item.get_uri())
 
     def __enter__(self):
         self.snapshot()
