@@ -8,7 +8,7 @@ MEDIA_TEST_SOURCES = ("bbc", "cifs", "pandora", "sonos_radio", "tunein", "tunein
 
 def test_metadata_parsing(moco):
     for media_source in MEDIA_TEST_SOURCES:
-        metadata_info = DATA_LOADER.load_json("{}.json".format(media_source))
+        metadata_info = DATA_LOADER.load_json(f"{media_source}.json")
         moco.avTransport.GetPositionInfo.return_value = metadata_info["input"]
         assert moco.get_current_track_info() == metadata_info["result"]
         moco.avTransport.GetPositionInfo.assert_called_once_with(

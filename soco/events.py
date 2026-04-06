@@ -219,7 +219,7 @@ class EventListener(EventListenerBase):
         # Send a dummy request in case the http server is currently listening
         try:
             # pylint: disable=R1732
-            urlopen("http://{}:{}/".format(address[0], address[1]))
+            urlopen(f"http://{address[0]}:{address[1]}/")
         except URLError:
             # If the server is already shut down, we receive a socket error,
             # which we ignore.

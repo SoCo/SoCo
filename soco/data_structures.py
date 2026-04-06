@@ -90,7 +90,7 @@ def didl_class_to_soco_class(didl_class):
             (base_class,),
             {
                 "item_class": didl_class,
-                __doc__: "Class that represents a {}".format(didl_class),
+                __doc__: f"Class that represents a {didl_class}",
             },
         )
         _DIDL_CLASS_TO_CLASS[didl_class] = cls
@@ -252,7 +252,7 @@ class DidlResource:
                     return int(result)
                 except ValueError as error:
                     raise DIDLMetadataError(
-                        "Could not convert {} to an integer".format(name)
+                        f"Could not convert {name} to an integer"
                     ) from error
             else:
                 return None
@@ -686,7 +686,7 @@ class DidlObject(metaclass=DidlMetaClass):
             middle = self.title.encode("ascii", "replace")[0:40]
         else:
             middle = str(self.to_dict).encode("ascii", "replace")[0:40]
-        return "<{} '{}' at {}>".format(self.__class__.__name__, middle, hex(id(self)))
+        return f"<{self.__class__.__name__} '{middle}' at {hex(id(self))}>"
 
     def __str__(self):
         """Get the str value for the item.

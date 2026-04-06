@@ -39,9 +39,7 @@ illegal_unichrs = [
 ]
 
 illegal_ranges = [
-    "{}-{}".format(chr(low), chr(high))
-    for (low, high) in illegal_unichrs
-    if low < sys.maxunicode
+    f"{chr(low)}-{chr(high)}" for (low, high) in illegal_unichrs if low < sys.maxunicode
 ]
 
 illegal_xml_re = re.compile("[%s]" % "".join(illegal_ranges))
@@ -78,4 +76,4 @@ def ns_tag(ns_id, tag):
         >>> xml.ns_tag('dc','author')
         '{http://purl.org/dc/elements/1.1/}author'
     """
-    return "{{{}}}{}".format(NAMESPACES[ns_id], tag)
+    return f"{{{NAMESPACES[ns_id]}}}{tag}"

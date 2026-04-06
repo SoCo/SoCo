@@ -31,7 +31,7 @@ def moco():
         "ZoneGroupTopology",
         "GroupRenderingControl",
     )
-    patchers = [mock.patch("soco.core.{}".format(service)) for service in services]
+    patchers = [mock.patch(f"soco.core.{service}") for service in services]
     for patch in patchers:
         patch.start()
     with mock.patch(

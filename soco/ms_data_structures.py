@@ -35,7 +35,7 @@ def tags_with_text(xml, tags=None):
         elif len(element) > 0:  # pylint: disable=len-as-condition
             tags_with_text(element, tags)
         else:
-            message = "Unknown XML structure: {}".format(element)
+            message = f"Unknown XML structure: {element}"
             raise ValueError(message)
     return tags
 
@@ -114,7 +114,7 @@ class MusicServiceItem:
             tag = item.tag[len(NAMESPACES["ms"]) + 2 :]  # Strip namespace
             tag = camel_to_underscore(tag)  # Convert to nice names
             if tag not in cls.valid_fields:
-                message = "The info tag '{}' is not allowed for this item".format(tag)
+                message = f"The info tag '{tag}' is not allowed for this item"
                 raise ValueError(message)
             content[tag] = item.text
 
@@ -185,7 +185,7 @@ class MusicServiceItem:
             middle = self.content["title"].encode("ascii", "replace")[0:40]
         else:
             middle = str(self.content).encode("ascii", "replace")[0:40]
-        return "<{} '{}' at {}>".format(self.__class__.__name__, middle, hex(id(self)))
+        return f"<{self.__class__.__name__} '{middle}' at {hex(id(self))}>"
 
     def __str__(self):
         """Return the str value for the item::
@@ -579,7 +579,7 @@ class MSArtistTracklist(MusicServiceItem):
     def uri(self):
         """Return the URI."""
         # x-rincon-cpcontainer:100f006cartistpopsongsid_1566
-        return "x-rincon-cpcontainer:100f006c{}".format(self.item_id)
+        return f"x-rincon-cpcontainer:100f006c{self.item_id}"
 
 
 class MSArtist(MusicServiceItem):

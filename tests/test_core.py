@@ -31,7 +31,7 @@ def moco_only_on_master():
         "ZoneGroupTopology",
         "GroupRenderingControl",
     )
-    patchers = [mock.patch("soco.core.{}".format(service)) for service in services]
+    patchers = [mock.patch(f"soco.core.{service}") for service in services]
     for patch in patchers:
         patch.start()
     yield SoCo(IP_ADDR)
@@ -391,10 +391,10 @@ class TestSoco:
         assert moco.speaker_info == {}
 
     def test_soco_str(self, moco):
-        assert str(moco) == "<SoCo object at ip {}>".format(IP_ADDR)
+        assert str(moco) == f"<SoCo object at ip {IP_ADDR}>"
 
     def test_soco_repr(self, moco):
-        assert repr(moco) == 'SoCo("{}")'.format(IP_ADDR)
+        assert repr(moco) == f'SoCo("{IP_ADDR}")'
 
     @pytest.mark.parametrize(
         "model_name",
@@ -978,7 +978,7 @@ class TestAVTransport:
         playlist_name = "cool music"
         playlist_id = 1
         moco.avTransport.CreateSavedQueue.return_value = {
-            "AssignedObjectID": "SQ:{}".format(playlist_id)
+            "AssignedObjectID": f"SQ:{playlist_id}"
         }
         playlist = moco.create_sonos_playlist(playlist_name)
         moco.avTransport.CreateSavedQueue.assert_called_once_with(
@@ -990,7 +990,7 @@ class TestAVTransport:
             ]
         )
         assert playlist.title == playlist_name
-        expected_uri = "file:///jffs/settings/savedqueues.rsq#{}".format(playlist_id)
+        expected_uri = f"file:///jffs/settings/savedqueues.rsq#{playlist_id}"
         assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"
 
@@ -998,14 +998,14 @@ class TestAVTransport:
         playlist_name = "saved queue"
         playlist_id = 1
         moco.avTransport.SaveQueue.return_value = {
-            "AssignedObjectID": "SQ:{}".format(playlist_id)
+            "AssignedObjectID": f"SQ:{playlist_id}"
         }
         playlist = moco.create_sonos_playlist_from_queue(playlist_name)
         moco.avTransport.SaveQueue.assert_called_once_with(
             [("InstanceID", 0), ("Title", playlist_name), ("ObjectID", "")]
         )
         assert playlist.title == playlist_name
-        expected_uri = "file:///jffs/settings/savedqueues.rsq#{}".format(playlist_id)
+        expected_uri = f"file:///jffs/settings/savedqueues.rsq#{playlist_id}"
         assert playlist.resources[0].uri == expected_uri
         assert playlist.parent_id == "SQ:"
 
