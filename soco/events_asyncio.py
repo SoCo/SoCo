@@ -253,7 +253,7 @@ class EventListener(EventListenerBase):
                 self.port = port_number
                 break
             # pylint: disable=invalid-name
-            except socket.error as e:
+            except OSError as e:
                 log.warning("Could not bind to %s:%s: %s", ip_address, port_number, e)
                 continue
 
@@ -387,11 +387,11 @@ class Subscription(SubscriptionBase):
     def _log_exception(self, exc):
         """Log an exception during subscription."""
         msg = (
-            "An Exception occurred: {}.".format(exc)
+            f"An Exception occurred: {exc}."
             + " Subscription to {},".format(
                 self.service.base_url + self.service.event_subscription_url
             )
-            + " sid: {} has been cancelled".format(self.sid)
+            + f" sid: {self.sid} has been cancelled"
         )
         log.exception(msg)
 

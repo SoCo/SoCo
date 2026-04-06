@@ -418,11 +418,11 @@ class SubscriptionBase:
             ip_address = config.EVENT_ADVERTISE_IP
 
         headers = {
-            "Callback": "<http://{}:{}>".format(ip_address, port),
+            "Callback": f"<http://{ip_address}:{port}>",
             "NT": "upnp:event",
         }
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
+            headers["TIMEOUT"] = f"Second-{requested_timeout}"
 
         # pylint: disable=missing-docstring
         def success(headers):
@@ -504,7 +504,7 @@ class SubscriptionBase:
         if requested_timeout is None:
             requested_timeout = self.requested_timeout
         if requested_timeout is not None:
-            headers["TIMEOUT"] = "Second-{}".format(requested_timeout)
+            headers["TIMEOUT"] = f"Second-{requested_timeout}"
 
         # pylint: disable=missing-docstring
         def success(headers):
@@ -774,7 +774,7 @@ def get_listen_ip(ip_address):
     try:
         sock.connect((ip_address, config.EVENT_LISTENER_PORT))
         return sock.getsockname()[0]
-    except socket.error:
+    except OSError:
         return None
     finally:
         sock.close()

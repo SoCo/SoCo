@@ -23,9 +23,7 @@ def assert_xml_equal(left, right, explain=None):
 
     def _build_explanation(left, right, explain):
         if left.tag != right.tag:
-            explain.append(
-                "tag <{}> does not match tag <{}>".format(left.tag, right.tag)
-            )
+            explain.append(f"tag <{left.tag}> does not match tag <{right.tag}>")
         for name, value in left.attrib.items():
             if right.get(name) != value:
                 explain.append(
@@ -57,7 +55,7 @@ def assert_xml_equal(left, right, explain=None):
     explain = []
     _build_explanation(left, right, explain)
     if explain != []:
-        header = "Comparing XML elements {} and {}".format(left, right)
+        header = f"Comparing XML elements {left} and {right}"
         assert False, header + "\n".join(explain)
 
 

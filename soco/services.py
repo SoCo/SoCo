@@ -72,7 +72,7 @@ class Action(namedtuple("ActionBase", "name, in_args, out_args")):
     def __str__(self):
         args = ", ".join(str(arg) for arg in self.in_args)
         returns = ", ".join(str(arg) for arg in self.out_args)
-        return "{0}({1}) -> {{{2}}}".format(self.name, args, returns)
+        return f"{self.name}({args}) -> {{{returns}}}"
 
 
 class Argument(namedtuple("ArgumentBase", "name, vartype")):
@@ -81,8 +81,8 @@ class Argument(namedtuple("ArgumentBase", "name, vartype")):
     def __str__(self):
         argument = self.name
         if self.vartype.default:
-            argument = "{}={}".format(self.name, self.vartype.default)
-        return "{}: {}".format(argument, str(self.vartype))
+            argument = f"{self.name}={self.vartype.default}"
+        return f"{argument}: {str(self.vartype)}"
 
 
 class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
@@ -92,7 +92,7 @@ class Vartype(namedtuple("VartypeBase", "datatype, default, list, range")):
         if self.list:
             return "[{}]".format(", ".join(self.list))
         if self.range:
-            return "[{}..{}]".format(self.range[0], self.range[1])
+            return f"[{self.range[0]}..{self.range[1]}]"
         return self.datatype
 
 
@@ -140,13 +140,13 @@ class Service:
         self.version = 1
         self.service_id = self.service_type
         #: str: The base URL for sending UPnP Actions.
-        self.base_url = "http://{}:1400".format(self.soco.ip_address)
+        self.base_url = f"http://{self.soco.ip_address}:1400"
         #: str: The UPnP Control URL.
-        self.control_url = "/{}/Control".format(self.service_type)
+        self.control_url = f"/{self.service_type}/Control"
         #: str: The service control protocol description URL.
-        self.scpd_url = "/xml/{}{}.xml".format(self.service_type, self.version)
+        self.scpd_url = f"/xml/{self.service_type}{self.version}.xml"
         #: str: The service eventing subscription URL.
-        self.event_subscription_url = "/{}/Event".format(self.service_type)
+        self.event_subscription_url = f"/{self.service_type}/Event"
         #: A cache for storing the result of network calls. By default, this is
         #: a `TimedCache` with a default timeout=0.
         self.cache = Cache(default_timeout=0)
@@ -337,7 +337,7 @@ class Service:
                 # The found 'action' will be visible from outside the loop
                 break
         else:
-            raise AttributeError("Unknown Action: {}".format(action_name))
+            raise AttributeError(f"Unknown Action: {action_name}")
 
         # Check for given argument names which do not occur in the expected
         # argument list
@@ -510,7 +510,7 @@ class Service:
             return result
         elif status == 405:
             raise NotSupportedException(
-                "{} not supported on {}".format(action, self.soco.ip_address)
+                f"{action} not supported on {self.soco.ip_address}"
             )
         elif status == 500:
             # Internal server error. UPnP requires this to be returned if the
@@ -713,20 +713,20 @@ class Service:
         tree = XML.fromstring(scpd_body)
         # parse the state variables to get the relevant variable types
         vartypes = {}
-        srvStateTables = tree.findall("{}serviceStateTable".format(ns))
+        srvStateTables = tree.findall(f"{ns}serviceStateTable")
         for srvStateTable in srvStateTables:
-            statevars = srvStateTable.findall("{}stateVariable".format(ns))
+            statevars = srvStateTable.findall(f"{ns}stateVariable")
             for state in statevars:
-                name = state.findtext("{}name".format(ns))
-                datatype = state.findtext("{}dataType".format(ns))
-                default = state.findtext("{}defaultValue".format(ns))
-                value_list_elt = state.find("{}allowedValueList".format(ns))
+                name = state.findtext(f"{ns}name")
+                datatype = state.findtext(f"{ns}dataType")
+                default = state.findtext(f"{ns}defaultValue")
+                value_list_elt = state.find(f"{ns}allowedValueList")
                 value_list = (
                     ([item.text for item in value_list_elt] or None)
                     if value_list_elt is not None
                     else None
                 )
-                value_range_elt = state.find("{}allowedValueRange".format(ns))
+                value_range_elt = state.find(f"{ns}allowedValueRange")
                 value_range = (
                     ([item.text for item in value_range_elt] or None)
                     if value_range_elt is not None
@@ -734,22 +734,20 @@ class Service:
                 )
                 vartypes[name] = Vartype(datatype, default, value_list, value_range)
         # find all the actions
-        actionLists = tree.findall("{}actionList".format(ns))
+        actionLists = tree.findall(f"{ns}actionList")
         for actionList in actionLists:
-            actions = actionList.findall("{}action".format(ns))
+            actions = actionList.findall(f"{ns}action")
             for i in actions:
-                action_name = i.findtext("{}name".format(ns))
-                argLists = i.findall("{}argumentList".format(ns))
+                action_name = i.findtext(f"{ns}name")
+                argLists = i.findall(f"{ns}argumentList")
                 for argList in argLists:
-                    args_iter = argList.findall("{}argument".format(ns))
+                    args_iter = argList.findall(f"{ns}argument")
                     in_args = []
                     out_args = []
                     for arg in args_iter:
-                        arg_name = arg.findtext("{}name".format(ns))
-                        direction = arg.findtext("{}direction".format(ns))
-                        related_variable = arg.findtext(
-                            "{}relatedStateVariable".format(ns)
-                        )
+                        arg_name = arg.findtext(f"{ns}name")
+                        direction = arg.findtext(f"{ns}direction")
+                        related_variable = arg.findtext(f"{ns}relatedStateVariable")
                         vartype = vartypes[related_variable]
                         if direction == "in":
                             in_args.append(Argument(arg_name, vartype))
@@ -780,13 +778,13 @@ class Service:
         scpd_body = requests.get(self.base_url + self.scpd_url, timeout=10).text
         tree = XML.fromstring(scpd_body.encode("utf-8"))
         # parse the state variables to get the relevant variable types
-        statevars = tree.findall("{}stateVariable".format(ns))
+        statevars = tree.findall(f"{ns}stateVariable")
         for state in statevars:
             # We are only interested if 'sendEvents' is 'yes', i.e this
             # is an eventable variable
             if state.attrib["sendEvents"] == "yes":
-                name = state.findtext("{}name".format(ns))
-                vartype = state.findtext("{}dataType".format(ns))
+                name = state.findtext(f"{ns}name")
+                vartype = state.findtext(f"{ns}dataType")
                 yield (name, vartype)
 
 

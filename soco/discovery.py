@@ -97,7 +97,7 @@ def discover(
             _ = socket.inet_aton(interface_addr)
         except OSError as e:
             raise ValueError(
-                "{} is not a valid IP address string".format(interface_addr)
+                f"{interface_addr} is not a valid IP address string"
             ) from e
         addresses = {interface_addr}
         _LOG.debug(

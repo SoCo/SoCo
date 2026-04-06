@@ -325,7 +325,7 @@ class Alarm:
         """Update an existing Alarm instance using the same arguments as __init__."""
         for attr, value in kwargs.items():
             if not hasattr(self, attr):
-                raise SoCoException("Alarm does not have atttribute {}".format(attr))
+                raise SoCoException(f"Alarm does not have attribute {attr}")
             setattr(self, attr, value)
 
     @property

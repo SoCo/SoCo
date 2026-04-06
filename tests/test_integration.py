@@ -507,7 +507,7 @@ class TestSonosPlaylist:
         else:
             hpl_i = max([int(x.item_id.split(":")[1]) for x in playlists])
         with pytest.raises(SoCoUPnPException):
-            soco.remove_sonos_playlist("SQ:{}".format(hpl_i + 1))
+            soco.remove_sonos_playlist(f"SQ:{hpl_i + 1}")
 
 
 class TestTimer:

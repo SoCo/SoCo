@@ -105,7 +105,7 @@ class EventParseException(SoCoException):
         self.__cause__ = cause
 
     def __str__(self):
-        return "Invalid metadata for '{}'".format(self.tag)
+        return f"Invalid metadata for '{self.tag}'"
 
 
 class SoCoFault:
@@ -142,4 +142,4 @@ class SoCoFault:
         )
 
     def __str__(self):
-        return "<{}: {}>".format(self.__class__.__name__, repr(self.exception))
+        return f"<{self.__class__.__name__}: {repr(self.exception)}>"

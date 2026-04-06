@@ -59,7 +59,7 @@ class SoapFault(SoCoException):
         super().__init__(faultcode, faultstring)
 
     def __str__(self):
-        return "{}: {}".format(self.faultcode, self.faultstring)
+        return f"{self.faultcode}: {self.faultstring}"
 
     def __repr__(self):
         return "SoapFault(faultcode={}, faultstring={}, detail={})".format(
@@ -160,7 +160,7 @@ class SoapMessage:
         headers = {"Content-Type": 'text/xml; charset="utf-8"'}
         if soap_action is not None:
             # FIXME The successful auth was with SOAP-Action
-            headers.update({"SOAPACTION": '"{}"'.format(soap_action)})
+            headers.update({"SOAPACTION": f'"{soap_action}"'})
         if http_headers is not None:
             headers.update(http_headers)
         return headers
@@ -179,7 +179,7 @@ class SoapMessage:
         """
 
         if soap_header is not None:
-            return "<s:Header>{}</s:Header>".format(soap_header)
+            return f"<s:Header>{soap_header}</s:Header>"
         else:
             return ""
 
