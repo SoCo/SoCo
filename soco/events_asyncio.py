@@ -70,12 +70,16 @@ import asyncio
 try:
     from aiohttp import ClientSession, ClientTimeout, web
 except ImportError as error:
-    print("""ImportError: {}:
+    print(
+        """ImportError: {}:
     Use of the SoCo events_asyncio module requires the 'aiohttp'
     package and its dependencies to be installed. aiohttp is not
     installed with SoCo by default due to potential issues installing
     the dependencies 'multidict' and 'yarl' on some platforms.
-    See: https://github.com/SoCo/SoCo/issues/819""".format(error))
+    See: https://github.com/SoCo/SoCo/issues/819""".format(
+            error
+        )
+    )
     sys.exit(1)
 
 # Event is imported for compatibility with events.py
@@ -279,7 +283,16 @@ class EventListener(EventListenerBase):
         """Stop the listener."""
         self.is_running = False
         if self.site:
-            await self.site.stop()
+            try:
+                await self.site.stop()
+            except (ValueError, OSError) as exc:
+                # The underlying socket may already be closed if async_stop
+                # races with another shutdown path (e.g. when stop_listening
+                # fires async_stop as an untracked task while a resubscribe is
+                # in progress). aiohttp's SockSite.stop() ultimately calls
+                # loop._stop_serving(sock), which raises ValueError on a
+                # closed fd. Tolerate and continue cleanup.
+                log.debug("site.stop() during async_stop: %r", exc)
             self.site = None
         if self.runner:
             await self.runner.cleanup()
@@ -296,7 +309,19 @@ class EventListener(EventListenerBase):
     # pylint: disable=unused-argument
     def stop_listening(self, address):
         """Stop the listener."""
-        asyncio.ensure_future(self.async_stop())
+        task = asyncio.ensure_future(self.async_stop())
+
+        def _swallow_exception(t):
+            # Consume any exception so it doesn't surface as
+            # "Task exception was never retrieved" — the task is
+            # fire-and-forget cleanup and async_stop is already
+            # tolerant of the common race conditions.
+            try:
+                t.result()
+            except Exception as exc:  # pylint: disable=broad-except
+                log.debug("async_stop scheduled by stop_listening raised: %r", exc)
+
+        task.add_done_callback(_swallow_exception)
 
 
 class Subscription(SubscriptionBase):
