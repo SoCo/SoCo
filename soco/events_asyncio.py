@@ -181,6 +181,15 @@ class EventListener(EventListenerBase):
         self.site = None
         self.session = None
         self.start_lock = None
+        # async_stop is serialized via stop_lock so overlapping callers
+        # don't double-close the same resources.
+        self.stop_lock = None
+        # stop_listening() schedules a deferred teardown via this task.
+        # A resubscribe within the grace window cancels the task and
+        # reuses the existing HTTP server, eliminating the
+        # teardown/rebuild churn (and FD races) on every renew cycle.
+        self._stop_grace_task = None
+        self._stop_grace_seconds = 5.0
 
     def start(self, any_zone):
         """A stub since the first subscribe calls async_start."""
@@ -202,6 +211,27 @@ class EventListener(EventListenerBase):
         if not self.start_lock:
             self.start_lock = asyncio.Lock()
         async with self.start_lock:
+            # If a deferred stop is pending from a recent stop_listening(),
+            # cancel it — the caller wants the listener up. If the runtime
+            # resources are still alive (the grace window has not yet
+            # expired), the listener can simply resume.
+            if (
+                self._stop_grace_task is not None
+                and not self._stop_grace_task.done()
+            ):
+                self._stop_grace_task.cancel()
+                self._stop_grace_task = None
+                if (
+                    self.site is not None
+                    and self.sock is not None
+                    and self.runner is not None
+                    and self.session is not None
+                ):
+                    self.is_running = True
+                    log.debug(
+                        "Event Listener resumed (deferred stop cancelled)"
+                    )
+                    return
             if self.is_running:
                 return
             # Use configured IP address if there is one, else detect
@@ -280,48 +310,98 @@ class EventListener(EventListenerBase):
         log.debug("Event listener running on %s", (self.ip_address, self.port))
 
     async def async_stop(self):
-        """Stop the listener."""
-        self.is_running = False
-        if self.site:
+        """Stop the listener. Idempotent and safe under concurrent calls.
+
+        Snapshots the runtime resources locally and clears the instance
+        attributes inside ``stop_lock``, then closes the snapshots
+        outside the lock. This way a concurrent ``async_start`` never
+        observes a half-torn-down listener, and a second overlapping
+        ``async_stop`` call sees the cleared attrs and returns early.
+        """
+        if not self.stop_lock:
+            self.stop_lock = asyncio.Lock()
+        async with self.stop_lock:
+            if (
+                not self.is_running
+                and self.site is None
+                and self.runner is None
+                and self.session is None
+                and self.sock is None
+            ):
+                # Already stopped (or never started) — nothing to do.
+                return
+            self.is_running = False
+            site, self.site = self.site, None
+            runner, self.runner = self.runner, None
+            session, self.session = self.session, None
+            sock, self.sock = self.sock, None
+            self.port = None
+            self.ip_address = None
+
+        # Tear down outside the lock; tolerate already-closed state.
+        if site is not None:
             try:
-                await self.site.stop()
+                await site.stop()
             except (ValueError, OSError) as exc:
-                # The underlying socket may already be closed if async_stop
-                # races with another shutdown path (e.g. when stop_listening
-                # fires async_stop as an untracked task while a resubscribe is
-                # in progress). aiohttp's SockSite.stop() ultimately calls
+                # aiohttp's SockSite.stop() ultimately calls
                 # loop._stop_serving(sock), which raises ValueError on a
                 # closed fd. Tolerate and continue cleanup.
                 log.debug("site.stop() during async_stop: %r", exc)
-            self.site = None
-        if self.runner:
-            await self.runner.cleanup()
-            self.runner = None
-        if self.session:
-            await self.session.close()
-            self.session = None
-        if self.sock:
-            self.sock.close()
-            self.sock = None
-        self.port = None
-        self.ip_address = None
+        if runner is not None:
+            try:
+                await runner.cleanup()
+            except Exception as exc:  # pylint: disable=broad-except
+                log.debug("runner.cleanup() during async_stop: %r", exc)
+        if session is not None:
+            try:
+                await session.close()
+            except Exception as exc:  # pylint: disable=broad-except
+                log.debug("session.close() during async_stop: %r", exc)
+        if sock is not None:
+            try:
+                sock.close()
+            except OSError as exc:
+                log.debug("sock.close() during async_stop: %r", exc)
+
+    async def _deferred_stop(self):
+        """Sleep the grace window; stop only if no resubscribe arrived."""
+        await asyncio.sleep(self._stop_grace_seconds)
+        if subscriptions_map.count == 0:
+            await self.async_stop()
+        else:
+            log.debug(
+                "deferred stop aborted: %d subscription(s) appeared during grace",
+                subscriptions_map.count,
+            )
 
     # pylint: disable=unused-argument
     def stop_listening(self, address):
-        """Stop the listener."""
-        task = asyncio.ensure_future(self.async_stop())
+        """Stop the listener after a short grace window.
+
+        A resubscribe within the grace window cancels the pending stop,
+        so the underlying HTTP server stays up across the
+        unsubscribe→subscribe cycle. Eliminates teardown/rebuild churn
+        on every resubscribe (and the FD races that follow).
+        """
+        if (
+            self._stop_grace_task is not None
+            and not self._stop_grace_task.done()
+        ):
+            # Replace any prior pending stop with a fresh timer.
+            self._stop_grace_task.cancel()
+        self._stop_grace_task = asyncio.ensure_future(self._deferred_stop())
 
         def _swallow_exception(t):
-            # Consume any exception so it doesn't surface as
-            # "Task exception was never retrieved" — the task is
-            # fire-and-forget cleanup and async_stop is already
-            # tolerant of the common race conditions.
+            if t.cancelled():
+                return
             try:
                 t.result()
             except Exception as exc:  # pylint: disable=broad-except
-                log.debug("async_stop scheduled by stop_listening raised: %r", exc)
+                log.debug(
+                    "async_stop scheduled by stop_listening raised: %r", exc
+                )
 
-        task.add_done_callback(_swallow_exception)
+        self._stop_grace_task.add_done_callback(_swallow_exception)
 
 
 class Subscription(SubscriptionBase):
