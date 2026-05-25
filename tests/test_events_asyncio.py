@@ -49,15 +49,12 @@ def restore_subscriptions_map():
     """
     smap = events_asyncio.subscriptions_map
     saved_subs = dict(smap.subscriptions)
-    saved_pending = smap._pending
     try:
         smap.subscriptions.clear()
-        smap._pending = 0
         yield smap
     finally:
         smap.subscriptions.clear()
         smap.subscriptions.update(saved_subs)
-        smap._pending = saved_pending
 
 
 # --------------------------------------------------------------------------
