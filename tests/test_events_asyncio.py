@@ -30,7 +30,6 @@ pytest.importorskip("aiohttp")
 
 from soco import events_asyncio  # noqa: E402
 
-
 # --------------------------------------------------------------------------
 # Shared fixtures
 # --------------------------------------------------------------------------
@@ -205,7 +204,8 @@ async def test_deferred_stop_runs_when_grace_expires_and_count_zero(
 
 @pytest.mark.asyncio
 async def test_deferred_stop_aborts_when_subscription_appears_in_grace(
-    caplog, restore_subscriptions_map,
+    caplog,
+    restore_subscriptions_map,
 ):
     """If a subscription appears during the grace window — even without
     a corresponding async_start — the deferred stop must abort."""
@@ -228,9 +228,7 @@ async def test_deferred_stop_aborts_when_subscription_appears_in_grace(
     listener.site.stop.assert_not_called()
     listener.runner.cleanup.assert_not_called()
     listener.session.close.assert_not_called()
-    assert any(
-        "deferred stop aborted" in r.message for r in caplog.records
-    )
+    assert any("deferred stop aborted" in r.message for r in caplog.records)
 
 
 @pytest.mark.asyncio

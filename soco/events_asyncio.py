@@ -70,16 +70,12 @@ import asyncio
 try:
     from aiohttp import ClientSession, ClientTimeout, web
 except ImportError as error:
-    print(
-        """ImportError: {}:
+    print("""ImportError: {}:
     Use of the SoCo events_asyncio module requires the 'aiohttp'
     package and its dependencies to be installed. aiohttp is not
     installed with SoCo by default due to potential issues installing
     the dependencies 'multidict' and 'yarl' on some platforms.
-    See: https://github.com/SoCo/SoCo/issues/819""".format(
-            error
-        )
-    )
+    See: https://github.com/SoCo/SoCo/issues/819""".format(error))
     sys.exit(1)
 
 # Event is imported for compatibility with events.py
@@ -221,10 +217,7 @@ class EventListener(EventListenerBase):
             # cancel it — the caller wants the listener up. If the runtime
             # resources are still alive (the grace window has not yet
             # expired), the listener can simply resume.
-            if (
-                self._stop_grace_task is not None
-                and not self._stop_grace_task.done()
-            ):
+            if self._stop_grace_task is not None and not self._stop_grace_task.done():
                 self._stop_grace_task.cancel()
                 self._stop_grace_task = None
                 if (
@@ -234,9 +227,7 @@ class EventListener(EventListenerBase):
                     and self.session is not None
                 ):
                     self.is_running = True
-                    log.debug(
-                        "Event Listener resumed (deferred stop cancelled)"
-                    )
+                    log.debug("Event Listener resumed (deferred stop cancelled)")
                     return
             if self.is_running:
                 return
@@ -411,10 +402,7 @@ class EventListener(EventListenerBase):
           so rapid consecutive ``stop_listening()`` calls coalesce into
           a single deferred teardown.
         """
-        if (
-            self._stop_grace_task is not None
-            and not self._stop_grace_task.done()
-        ):
+        if self._stop_grace_task is not None and not self._stop_grace_task.done():
             # Replace any prior pending stop with a fresh timer.
             self._stop_grace_task.cancel()
         self._stop_grace_task = asyncio.ensure_future(self._deferred_stop())
@@ -425,9 +413,7 @@ class EventListener(EventListenerBase):
             try:
                 t.result()
             except Exception as exc:  # pylint: disable=broad-except
-                log.debug(
-                    "async_stop scheduled by stop_listening raised: %r", exc
-                )
+                log.debug("async_stop scheduled by stop_listening raised: %r", exc)
 
         self._stop_grace_task.add_done_callback(_swallow_exception)
 
