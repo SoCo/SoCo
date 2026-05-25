@@ -189,6 +189,12 @@ class EventListener(EventListenerBase):
         # reuses the existing HTTP server, eliminating the
         # teardown/rebuild churn (and FD races) on every renew cycle.
         self._stop_grace_task = None
+        # Grace window (seconds) between stop_listening() being called
+        # and the deferred async_stop() actually running. Intentionally
+        # an instance attribute so consumers and tests can tune it
+        # (e.g. shorten for fast unit tests, lengthen for noisy
+        # resubscribe patterns). 5 s is the default; values < 0 are
+        # treated as "stop immediately on next event-loop tick".
         self._stop_grace_seconds = 5.0
 
     def start(self, any_zone):
@@ -310,7 +316,14 @@ class EventListener(EventListenerBase):
         log.debug("Event listener running on %s", (self.ip_address, self.port))
 
     async def async_stop(self):
-        """Stop the listener. Idempotent and safe under concurrent calls.
+        """Stop the listener immediately. Idempotent and concurrency-safe.
+
+        This is the prompt-shutdown path: resources are closed before the
+        coroutine returns. Callers that want a deterministic teardown at
+        process exit should ``await event_listener.async_stop()``
+        directly, since ``stop_listening()`` defers teardown by
+        ``_stop_grace_seconds`` (default 5 s) to support
+        unsubscribe→resubscribe reuse.
 
         Snapshots the runtime resources locally and clears the instance
         attributes inside ``stop_lock``, then closes the snapshots
@@ -378,10 +391,25 @@ class EventListener(EventListenerBase):
     def stop_listening(self, address):
         """Stop the listener after a short grace window.
 
-        A resubscribe within the grace window cancels the pending stop,
+        Called by ``EventListenerBase.stop()`` when the last subscription
+        is removed. Schedules teardown via ``_deferred_stop`` rather than
+        tearing down immediately: a resubscribe inside the grace window
+        (``_stop_grace_seconds``, default 5 s) cancels the pending stop,
         so the underlying HTTP server stays up across the
-        unsubscribe→subscribe cycle. Eliminates teardown/rebuild churn
-        on every resubscribe (and the FD races that follow).
+        unsubscribe→resubscribe cycle. Eliminates teardown/rebuild churn
+        (and the FD races that follow) on every renew.
+
+        Behaviour notes for callers:
+
+        * Resources are **not** released by the time this method returns
+          — the deferred task runs ``_stop_grace_seconds`` later.
+        * Consumers that subscribe once and exit (no resubscribe) will
+          see resources released ~``_stop_grace_seconds`` after the last
+          ``unsubscribe()``. For deterministic prompt shutdown at process
+          exit, ``await event_listener.async_stop()`` directly.
+        * Each call replaces any prior pending stop with a fresh timer,
+          so rapid consecutive ``stop_listening()`` calls coalesce into
+          a single deferred teardown.
         """
         if (
             self._stop_grace_task is not None

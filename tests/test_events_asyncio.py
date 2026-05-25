@@ -23,7 +23,42 @@ from unittest import mock
 
 import pytest
 
-from soco import events_asyncio
+# ``soco.events_asyncio`` imports aiohttp at module load. Skip the entire
+# test module when aiohttp isn't available so SoCo's default test job
+# (which doesn't install the optional asyncio stack) still passes.
+pytest.importorskip("aiohttp")
+
+from soco import events_asyncio  # noqa: E402
+
+
+# --------------------------------------------------------------------------
+# Shared fixtures
+# --------------------------------------------------------------------------
+
+
+@pytest.fixture
+def restore_subscriptions_map():
+    """Snapshot ``events_asyncio.subscriptions_map`` state, restore after.
+
+    Tests that mutate the module-level subscriptions map (to control which
+    branch of ``_deferred_stop`` runs) use this fixture so a mid-test
+    failure cannot leak state into subsequent tests in the module.
+
+    The fixture starts the test from a cleared state and yields the map
+    for convenience; the ``finally`` clause restores the snapshot
+    regardless of test outcome.
+    """
+    smap = events_asyncio.subscriptions_map
+    saved_subs = dict(smap.subscriptions)
+    saved_pending = smap._pending
+    try:
+        smap.subscriptions.clear()
+        smap._pending = 0
+        yield smap
+    finally:
+        smap.subscriptions.clear()
+        smap.subscriptions.update(saved_subs)
+        smap._pending = saved_pending
 
 
 # --------------------------------------------------------------------------
@@ -60,7 +95,9 @@ async def test_async_stop_tolerates_closed_socket(caplog):
 
 
 @pytest.mark.asyncio
-async def test_stop_listening_swallows_task_exception(caplog):
+async def test_stop_listening_swallows_task_exception(
+    caplog, restore_subscriptions_map
+):
     """An exception raised by the deferred async_stop must not surface as
     ``Task exception was never retrieved`` — the done-callback must
     consume it and log at DEBUG.
@@ -71,9 +108,8 @@ async def test_stop_listening_swallows_task_exception(caplog):
     # Force async_stop to raise so we can verify the spawned task's
     # exception is handled rather than escaping.
     listener.async_stop = mock.AsyncMock(side_effect=RuntimeError("boom"))
-    # Ensure the deferred-stop logic decides to actually call async_stop.
-    events_asyncio.subscriptions_map.subscriptions.clear()
-    events_asyncio.subscriptions_map._pending = 0
+    # restore_subscriptions_map starts in a cleared state so the deferred
+    # stop will actually invoke async_stop.
 
     with caplog.at_level(logging.DEBUG, logger="soco.events_asyncio"):
         listener.stop_listening(address=("127.0.0.1", 1400))
@@ -139,15 +175,16 @@ async def test_async_start_cancels_pending_deferred_stop_and_resumes():
 
 
 @pytest.mark.asyncio
-async def test_deferred_stop_runs_when_grace_expires_and_count_zero():
+async def test_deferred_stop_runs_when_grace_expires_and_count_zero(
+    restore_subscriptions_map,
+):
     """If no resubscribe arrives during the grace window and the
     subscription map is empty, the deferred stop actually runs."""
     listener = events_asyncio.EventListener()
     _populate_running_listener(listener)
     listener._stop_grace_seconds = 0.01
 
-    events_asyncio.subscriptions_map.subscriptions.clear()
-    events_asyncio.subscriptions_map._pending = 0
+    # restore_subscriptions_map ensures count == 0 so the deferred stop fires.
 
     # Capture mock references — async_stop will set the attrs to None.
     site_mock = listener.site
@@ -167,22 +204,22 @@ async def test_deferred_stop_runs_when_grace_expires_and_count_zero():
 
 
 @pytest.mark.asyncio
-async def test_deferred_stop_aborts_when_subscription_appears_in_grace(caplog):
+async def test_deferred_stop_aborts_when_subscription_appears_in_grace(
+    caplog, restore_subscriptions_map,
+):
     """If a subscription appears during the grace window — even without
     a corresponding async_start — the deferred stop must abort."""
     listener = events_asyncio.EventListener()
     _populate_running_listener(listener)
     listener._stop_grace_seconds = 0.05
 
-    events_asyncio.subscriptions_map.subscriptions.clear()
-    events_asyncio.subscriptions_map._pending = 0
-
     listener.stop_listening(address=("127.0.0.1", 1400))
 
-    # Insert a fake subscription before the grace expires.
+    # Insert a fake subscription before the grace expires. The fixture
+    # restores the map after the test regardless of outcome.
     fake_sub = mock.MagicMock()
     fake_sub.sid = "uuid:fake-1"
-    events_asyncio.subscriptions_map.subscriptions[fake_sub.sid] = fake_sub
+    restore_subscriptions_map.subscriptions[fake_sub.sid] = fake_sub
 
     with caplog.at_level(logging.DEBUG, logger="soco.events_asyncio"):
         await asyncio.sleep(0.15)
@@ -194,9 +231,6 @@ async def test_deferred_stop_aborts_when_subscription_appears_in_grace(caplog):
     assert any(
         "deferred stop aborted" in r.message for r in caplog.records
     )
-
-    # Cleanup module-level state for other tests.
-    events_asyncio.subscriptions_map.subscriptions.clear()
 
 
 @pytest.mark.asyncio
