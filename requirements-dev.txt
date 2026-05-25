@@ -1,13 +1,7 @@
 sphinx == 5.0.2
 sphinx_rtd_theme
 pytest >= 2.5
-# Required by tests/test_events_asyncio.py — the async test fixtures use
-# @pytest.mark.asyncio. Without it pytest treats the coroutines as plain
-# functions and the assertions never run.
 pytest-asyncio
-# Required by soco.events_asyncio, which the test module imports. Without
-# aiohttp installed, pytest's collection step would hard-error before the
-# importorskip in the test file could take effect.
 aiohttp
 graphviz
 flake8

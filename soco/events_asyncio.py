@@ -198,7 +198,7 @@ class EventListener(EventListenerBase):
         return
 
     def listen(self, ip_address):
-        """A stub since since async_listen is used."""
+        """A stub since async_listen is used."""
         return
 
     async def async_start(self, any_zone):
@@ -312,7 +312,7 @@ class EventListener(EventListenerBase):
         This is the prompt-shutdown path: resources are closed before the
         coroutine returns. Callers that want a deterministic teardown at
         process exit should ``await event_listener.async_stop()``
-        directly, since ``stop_listening()`` defers teardown by
+        directly; ``stop_listening()`` defers teardown by
         ``_stop_grace_seconds`` (default 5 s) to support
         unsubscribe→resubscribe reuse.
 
@@ -397,7 +397,7 @@ class EventListener(EventListenerBase):
         * Consumers that subscribe once and exit (no resubscribe) will
           see resources released ~``_stop_grace_seconds`` after the last
           ``unsubscribe()``. For deterministic prompt shutdown at process
-          exit, ``await event_listener.async_stop()`` directly.
+          exit, call ``await event_listener.async_stop()`` directly.
         * Each call replaces any prior pending stop with a fresh timer,
           so rapid consecutive ``stop_listening()`` calls coalesce into
           a single deferred teardown.

@@ -6,8 +6,8 @@ shutdown paths to guard against two regression families:
   1. Race tolerance — async_stop() must not raise when the underlying
      socket has already been closed by a concurrent shutdown path
      (manifests as ``ValueError: Invalid file descriptor: -1`` from
-     aiohttp's ``SockSite.stop()``), and stop_listening()'s
-     fire-and-forget task must not surface as
+     aiohttp's ``SockSite.stop()``), and exceptions from the task
+     spawned by stop_listening() must not surface as
      ``Task exception was never retrieved``.
 
   2. Deferred stop / refcounting — stop_listening() defers the actual

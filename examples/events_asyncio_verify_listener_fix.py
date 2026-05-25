@@ -16,7 +16,7 @@ and asserts the structural invariants that the fix guarantees:
      runs once the grace window expires; listener resources are released
      and ``is_running`` returns to ``False``.
 
-The test uses ``renderingControl`` rather than ``avTransport`` so it
+This script uses ``renderingControl`` rather than ``avTransport`` so it
 does not interfere with consumer applications that may have an
 ``avTransport`` subscription active against the same zone (e.g. a
 "now playing" orchestrator).
