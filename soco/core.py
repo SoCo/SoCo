@@ -2737,7 +2737,7 @@ class SoCo(_SocoSingletonBase):
         list operation must anticipate the new state of the playlist.
 
         If a comma formatted string to tracks is specified, then use
-        a similiar string to specify new_pos. Those operations should be
+        a similar string to specify new_pos. Those operations should be
         ordered from the end of the list to the beginning
 
         See the helper methods
