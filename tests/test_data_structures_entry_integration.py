@@ -131,7 +131,7 @@ def test_vendor_extended_didl_class(class_name, base_class, didl_xml_string, dat
 
 def test_from_didl_string_missing_upnp_class_raises():
     """Test that from_didl_string raises DIDLMetadataError when a DIDL item
-    has no upnp:class element (regression test for GitHub issue SoCo/#177460)."""
+    has no upnp:class element. """
     from soco.exceptions import DIDLMetadataError
 
     didl_missing_class = (
