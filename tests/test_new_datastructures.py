@@ -474,6 +474,7 @@ class TestDidlFavorite:
         with pytest.raises(DIDLMetadataError, match="no DIDL item"):
             _ = favorite.reference
 
+
 def test_didl_class_to_soco_class_generated_class_has_docstring():
     """Test that an automatically created subclass gets a docstring.
 
