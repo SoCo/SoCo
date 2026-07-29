@@ -406,3 +406,18 @@ def test_didl_class_to_soco_class_none_raises():
     with pytest.raises(DIDLMetadataError) as excinfo:
         data_structures.didl_class_to_soco_class(None)
     assert "None" in str(excinfo.value)
+
+
+def test_didl_class_to_soco_class_generated_class_has_docstring():
+    """Test that an automatically created subclass gets a docstring.
+
+    The class namespace must be keyed by the *string* "__doc__". Using a bare
+    __doc__ instead resolves to this module's docstring at function scope,
+    which leaves the generated class undocumented and pollutes its namespace.
+    """
+    didl_class = "object.item.audioItem.musicTrack.exampleVendorTrack"
+    soco_class = data_structures.didl_class_to_soco_class(didl_class)
+
+    assert soco_class.__doc__ == f"Class that represents a {didl_class}"
+    # The module docstring must not have leaked in as a namespace key.
+    assert data_structures.__doc__ not in soco_class.__dict__

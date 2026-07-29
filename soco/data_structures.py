@@ -92,7 +92,7 @@ def didl_class_to_soco_class(didl_class):
             (base_class,),
             {
                 "item_class": didl_class,
-                __doc__: f"Class that represents a {didl_class}",
+                "__doc__": f"Class that represents a {didl_class}",
             },
         )
         _DIDL_CLASS_TO_CLASS[didl_class] = cls
