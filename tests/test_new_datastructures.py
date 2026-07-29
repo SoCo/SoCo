@@ -406,3 +406,70 @@ def test_didl_class_to_soco_class_none_raises():
     with pytest.raises(DIDLMetadataError) as excinfo:
         data_structures.didl_class_to_soco_class(None)
     assert "None" in str(excinfo.value)
+
+
+class TestDidlFavorite:
+    """Testing the DidlFavorite class and its 'reference' property."""
+
+    # A minimal but valid resMD payload, holding a single music track.
+    reference_didl = (
+        '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"'
+        ' xmlns:dc="http://purl.org/dc/elements/1.1/"'
+        ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">'
+        '<item id="riid" parentID="rpid" restricted="true">'
+        "<dc:title>referenced_title</dc:title>"
+        "<upnp:class>object.item.audioItem.musicTrack</upnp:class>"
+        "</item>"
+        "</DIDL-Lite>"
+    )
+
+    # Well formed DIDL-Lite, but with no <item> or <container> child. The
+    # recovering XML parser also reduces truncated resMD to this.
+    empty_didl = '<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"/>'
+
+    @staticmethod
+    def make_favorite(**kwargs):
+        """Return a DidlFavorite, passing kwargs through to the constructor."""
+        return data_structures.DidlFavorite(
+            title="a_favorite", parent_id="pid", item_id="iid", **kwargs
+        )
+
+    def test_reference_returns_referenced_object(self):
+        favorite = self.make_favorite(
+            resource_meta_data=self.reference_didl,
+            resources=[data_structures.DidlResource("x-file-cifs://uri", "a:b:c:d")],
+        )
+
+        reference = favorite.reference
+
+        assert isinstance(reference, data_structures.DidlMusicTrack)
+        assert reference.title == "referenced_title"
+        # The resMD metadata lacks a <res> tag, so the favorite's own
+        # resources are copied across to make the reference playable.
+        assert reference.resources == favorite.resources
+
+    def test_reference_setter_round_trips(self):
+        favorite = self.make_favorite()
+        track = data_structures.DidlMusicTrack(
+            title="referenced_title",
+            parent_id="rpid",
+            item_id="riid",
+            resources=[data_structures.DidlResource("x-file-cifs://uri", "a:b:c:d")],
+        )
+
+        favorite.reference = track
+
+        assert favorite.reference.title == "referenced_title"
+        assert favorite.resources == track.resources
+
+    def test_reference_without_resource_meta_data_raises(self):
+        """A favorite with no <r:resMD> element must not raise AttributeError."""
+        favorite = self.make_favorite()
+        with pytest.raises(DIDLMetadataError, match="resource_meta_data"):
+            _ = favorite.reference
+
+    def test_reference_with_empty_resource_meta_data_raises(self):
+        """resMD that parses to zero items must not raise IndexError."""
+        favorite = self.make_favorite(resource_meta_data=self.empty_didl)
+        with pytest.raises(DIDLMetadataError, match="no DIDL item"):
+            _ = favorite.reference

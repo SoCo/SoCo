@@ -975,7 +975,12 @@ class DidlFavorite(DidlItem):
     # object available via the 'reference' property.
     @property
     def reference(self):
-        """The Didl object this favorite refers to."""
+        """The Didl object this favorite refers to.
+
+        Raises:
+            DIDLMetadataError: If the favorite has no ``resMD`` element, or if
+                its ``resMD`` element holds no DIDL item.
+        """
 
         # Import from_didl_string if it isn't present already. The import
         # happens here because it would cause cyclic import errors if the
@@ -986,7 +991,23 @@ class DidlFavorite(DidlItem):
 
             _FROM_DIDL_STRING_FUNCTION = data_structures_entry.from_didl_string
 
-        ref = _FROM_DIDL_STRING_FUNCTION(getattr(self, "resource_meta_data"))[0]
+        # Some speakers have been observed to return favorites without any
+        # resMD, or with a resMD that holds no item. Raise a SoCoException
+        # subclass rather than letting AttributeError or IndexError escape.
+        meta_data = getattr(self, "resource_meta_data", None)
+        if meta_data is None:
+            raise DIDLMetadataError(
+                "Favorite '%s' has no resource_meta_data (resMD) element" % self.title
+            )
+
+        references = _FROM_DIDL_STRING_FUNCTION(meta_data)
+        if not references:
+            raise DIDLMetadataError(
+                "Favorite '%s' has resource_meta_data containing no DIDL item"
+                % self.title
+            )
+
+        ref = references[0]
         # The resMD metadata lacks a <res> tag, so we use the resources from
         # the favorite to make 'reference' playable.
         ref.resources = self.resources
