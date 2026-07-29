@@ -399,3 +399,10 @@ def test_didl_object_inheritance():
         base_didl_class = ".".join(didl_class.split(".")[:-1])
         base_class = data_structures._DIDL_CLASS_TO_CLASS[base_didl_class]
         assert base_class == soco_class.__bases__[0]
+
+
+def test_didl_class_to_soco_class_none_raises():
+    """Test that didl_class_to_soco_class raises DIDLMetadataError when passed None."""
+    with pytest.raises(DIDLMetadataError) as excinfo:
+        data_structures.didl_class_to_soco_class(None)
+    assert "None" in str(excinfo.value)

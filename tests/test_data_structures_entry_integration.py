@@ -127,3 +127,22 @@ def test_vendor_extended_didl_class(class_name, base_class, didl_xml_string, dat
     assert item.__class__.__name__ == class_name
     assert base_class is item.__class__.__bases__[0]
     assert base_class._translation == item._translation
+
+
+def test_from_didl_string_missing_upnp_class_raises():
+    """Test that from_didl_string raises DIDLMetadataError when a DIDL item
+    has no upnp:class element (regression test for GitHub issue SoCo/#177460)."""
+    from soco.exceptions import DIDLMetadataError
+
+    didl_missing_class = (
+        '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/"'
+        ' xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"'
+        ' xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/">'
+        '<item id="1" parentID="0" restricted="true">'
+        "<dc:title>A Track Without Class</dc:title>"
+        "</item>"
+        "</DIDL-Lite>"
+    )
+    with pytest.raises(DIDLMetadataError) as excinfo:
+        from_didl_string(didl_missing_class)
+    assert "upnp:class" in str(excinfo.value)

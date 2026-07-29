@@ -34,6 +34,8 @@ def from_didl_string(string):
     for elt in root:
         if elt.tag.endswith("item") or elt.tag.endswith("container"):
             item_class = elt.findtext(ns_tag("upnp", "class"))
+            if item_class is None:
+                raise DIDLMetadataError("DIDL element has no upnp:class child element")
             cls = didl_class_to_soco_class(item_class)
             item = cls.from_element(elt)
             items.append(item)
