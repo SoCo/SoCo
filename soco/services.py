@@ -823,6 +823,22 @@ class ZoneGroupTopology(Service):
     """Sonos zone group topology service, for functions relating to network
     topology, diagnostics and updates."""
 
+    def _update_cache_on_event(self, event):
+        """Keep the shared ZoneGroupState in sync with ZGS events (issue #975)."""
+        zone_group_state = event.variables.get("zone_group_state")
+        if zone_group_state is None:
+            return
+
+        try:
+            self.soco.zone_group_state.process_payload(
+                payload=zone_group_state,
+                source="event",
+                source_ip=self.soco.ip_address,
+            )
+        except Exception:  # pylint: disable=broad-except
+            # A bad payload must not stop event delivery.
+            log.exception("Failed to process zone_group_state event")
+
 
 class GroupManagement(Service):
     """Sonos group management service, for services relating to groups."""

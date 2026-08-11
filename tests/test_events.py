@@ -1,9 +1,14 @@
 """Tests for the services module."""
 
+import logging
+from unittest import mock
+
 import pytest
 
 from soco.data_structures import DidlAudioLineIn
+from soco.events import EventNotifyHandler
 from soco.events_base import Event, parse_event_xml
+from soco.services import ZoneGroupTopology
 
 from conftest import DataLoader
 
@@ -124,3 +129,80 @@ def test_event_parsing_null_value():
     # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
     result = parse_event_xml(event_xml)
     assert result["current_track_uri"] is None
+
+
+def _zgt_service():
+    """A real ZoneGroupTopology service backed by mocks."""
+    zgs = mock.Mock()
+    soco = mock.Mock()
+    soco.ip_address = "192.168.1.100"
+    soco.zone_group_state = zgs
+    return ZoneGroupTopology(soco), zgs
+
+
+def test_update_cache_on_event_updates_zone_group_state():
+    """ZGS events must update the shared ZoneGroupState (issue #975)."""
+    service, zgs = _zgt_service()
+    event = Event("sid", "0", service, 123.0, {"zone_group_state": "<ZoneGroups/>"})
+
+    service._update_cache_on_event(event)
+
+    zgs.process_payload.assert_called_once_with(
+        payload="<ZoneGroups/>", source="event", source_ip="192.168.1.100"
+    )
+
+
+def test_update_cache_on_event_without_zone_group_state():
+    """Non-ZGS events must not touch the ZoneGroupState."""
+    service, zgs = _zgt_service()
+    event = Event("sid", "0", service, 123.0, {"transport_state": "PLAYING"})
+
+    service._update_cache_on_event(event)
+
+    zgs.process_payload.assert_not_called()
+
+
+def test_update_cache_on_event_zgs_failure_logs(caplog):
+    """A failing ZGS update must be logged, not raised (issue #975).
+
+    The generic event handler calls this hook before delivering the event, so
+    swallowing here is what keeps a bad payload from suppressing delivery.
+    """
+    service, zgs = _zgt_service()
+    zgs.process_payload.side_effect = ValueError("bad ZGS")
+    event = Event("sid", "0", service, 123.0, {"zone_group_state": "<ZoneGroups/>"})
+
+    with caplog.at_level(logging.ERROR, logger="soco.services"):
+        service._update_cache_on_event(event)  # must not raise
+
+    assert "Failed to process zone_group_state event" in caplog.text
+
+
+def test_handle_notification_delivers_event_despite_zgs_failure(caplog):
+    """A ZGS failure in the cache hook must not suppress event delivery.
+
+    Exercises the real chain: EventNotifyHandler.handle_notification ->
+    ZoneGroupTopology._update_cache_on_event -> subscription.send_event.
+    """
+    zgs = mock.Mock()
+    zgs.process_payload.side_effect = ValueError("bad ZGS")
+    soco = mock.Mock()
+    soco.ip_address = "192.168.1.100"
+    soco.zone_group_state = zgs
+    service = ZoneGroupTopology(soco)
+    subscription = mock.Mock()
+    subscription.service = service
+    subscriptions_map = mock.Mock()
+    subscriptions_map.get_subscription.return_value = subscription
+
+    # Bypass BaseHTTPRequestHandler.__init__, which needs a live request/socket.
+    handler = EventNotifyHandler.__new__(EventNotifyHandler)
+    handler.subscriptions_map = subscriptions_map
+    handler.log_event = mock.Mock()  # Isolate from handler init-dependent logging.
+
+    with caplog.at_level(logging.ERROR, logger="soco.services"):
+        handler.handle_notification({"seq": "0", "sid": "uuid:test_sid"}, DUMMY_EVENT)
+
+    handler.log_event.assert_called_once()
+    subscription.send_event.assert_called_once()
+    assert "Failed to process zone_group_state event" in caplog.text

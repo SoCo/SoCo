@@ -63,6 +63,7 @@ Example payload contents:
 
 import asyncio
 import logging
+import threading
 import time
 from weakref import WeakSet
 
@@ -114,6 +115,8 @@ class ZoneGroupState:
         self.all_zones = set()
         self.groups = set()
         self.visible_zones = set()
+        # Guards group set mutation and snapshotting against concurrent access.
+        self._lock = threading.RLock()
 
         self._cache_until = NEVER_TIME
         self._last_zgs = None
@@ -162,9 +165,28 @@ class ZoneGroupState:
 
     def clear_zone_groups(self):
         """Clear all known group sets."""
-        self.groups.clear()
-        self.all_zones.clear()
-        self.visible_zones.clear()
+        with self._lock:
+            self.groups.clear()
+            self.all_zones.clear()
+            self.visible_zones.clear()
+
+    def get_groups(self, soco):
+        """Poll if necessary and return a snapshot of the current groups."""
+        self.poll(soco)
+        with self._lock:
+            return self.groups.copy()
+
+    def get_all_zones(self, soco):
+        """Poll if necessary and return a snapshot of all zones."""
+        self.poll(soco)
+        with self._lock:
+            return self.all_zones.copy()
+
+    def get_visible_zones(self, soco):
+        """Poll if necessary and return a snapshot of the visible zones."""
+        self.poll(soco)
+        with self._lock:
+            return self.visible_zones.copy()
 
     def poll(self, soco):
         """Poll using the provided SoCo instance and process the payload."""
@@ -200,7 +222,20 @@ class ZoneGroupState:
         # SoCoUPnPException.
         try:
             zgs = soco.zoneGroupTopology.GetZoneGroupState()["ZoneGroupState"]
-            self.process_payload(payload=zgs, source="poll", source_ip=soco.ip_address)
+            # A subscription may have become active while the request was in
+            # flight; discard the result so it can't supersede event updates.
+            with self._lock:
+                if self.has_subscriptions:
+                    self.total_requests += 1
+                    _LOG.debug(
+                        "Subscription became active during poll for %s, "
+                        "discarding result",
+                        soco.ip_address,
+                    )
+                    return
+                self.process_payload(
+                    payload=zgs, source="poll", source_ip=soco.ip_address
+                )
             self._cache_until = time.monotonic() + POLLING_CACHE_TIMEOUT
             _LOG.debug("Extending ZGS cache by %ss", POLLING_CACHE_TIMEOUT)
 
@@ -290,26 +325,31 @@ class ZoneGroupState:
 
     def process_payload(self, payload, source, source_ip):
         """Update using the provided XML payload."""
-        self.total_requests += 1
-        tree = normalize_zgs_xml(payload)
-        normalized_zgs = str(tree)
-        if normalized_zgs == self._last_zgs:
+        # Serialize normalization and updates so concurrent payload processing
+        # cannot interleave. RLock: update_soco_instances() re-enters via
+        # clear_zone_groups().
+        with self._lock:
+            # Counted pre-parse so malformed payloads still count.
+            self.total_requests += 1
+            tree = normalize_zgs_xml(payload)
+            normalized_zgs = str(tree)
+            if normalized_zgs == self._last_zgs:
+                _LOG.debug(
+                    "Duplicate ZGS received from %s (%s), ignoring", source_ip, source
+                )
+                return
+
+            self.processed_count += 1
             _LOG.debug(
-                "Duplicate ZGS received from %s (%s), ignoring", source_ip, source
+                "Updating ZGS with %s payload from %s (%s/%s processed)",
+                source,
+                source_ip,
+                self.processed_count,
+                self.total_requests,
             )
-            return
 
-        self.processed_count += 1
-        _LOG.debug(
-            "Updating ZGS with %s payload from %s (%s/%s processed)",
-            source,
-            source_ip,
-            self.processed_count,
-            self.total_requests,
-        )
-
-        self.update_soco_instances(tree)
-        self._last_zgs = normalized_zgs
+            self.update_soco_instances(tree)
+            self._last_zgs = normalized_zgs
 
     def parse_zone_group_member(self, member_element):
         """Parse a ZoneGroupMember or Satellite element from Zone Group
