@@ -127,7 +127,9 @@ class Snapshot:
         if self.is_playing_queue:
             # playing from queue - save repeat, random, cross fade, track, etc.
             self.play_mode = self.device.play_mode
-            self.cross_fade = self.device.cross_fade
+            if self.is_coordinator:
+                # cross_fade is only readable on the coordinator (#621)
+                self.cross_fade = self.device.cross_fade
 
             # Get information about the currently playing track
             track_info = self.device.get_current_track_info()
