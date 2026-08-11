@@ -772,7 +772,12 @@ def get_listen_ip(ip_address):
         return config.EVENT_LISTENER_IP
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
+        # Non-blocking connect: safe from asyncio, local addr assigned anyway.
+        sock.setblocking(False)
         sock.connect((ip_address, config.EVENT_LISTENER_PORT))
+        return sock.getsockname()[0]
+    except BlockingIOError:
+        # EINPROGRESS; the local address is assigned either way.
         return sock.getsockname()[0]
     except OSError:
         return None

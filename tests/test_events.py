@@ -1,9 +1,12 @@
 """Tests for the services module."""
 
+from unittest import mock
+
 import pytest
 
+from soco import config
 from soco.data_structures import DidlAudioLineIn
-from soco.events_base import Event, parse_event_xml
+from soco.events_base import Event, get_listen_ip, parse_event_xml
 
 from conftest import DataLoader
 
@@ -124,3 +127,36 @@ def test_event_parsing_null_value():
     # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
     result = parse_event_xml(event_xml)
     assert result["current_track_uri"] is None
+
+
+def test_get_listen_ip_uses_non_blocking_connect():
+    """get_listen_ip must use a non-blocking UDP connect (#978)."""
+    sock = mock.Mock()
+    sock.getsockname.return_value = ("192.168.1.50", 12345)
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result == "192.168.1.50"
+    sock.setblocking.assert_called_once_with(False)
+    sock.connect.assert_called_once_with(("192.168.1.42", 1400))
+
+
+def test_get_listen_ip_connect_in_progress():
+    """A connect left in EINPROGRESS must still return the local IP."""
+    sock = mock.Mock()
+    sock.connect.side_effect = BlockingIOError("in progress")
+    sock.getsockname.return_value = ("192.168.1.50", 12345)
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result == "192.168.1.50"
+
+
+def test_get_listen_ip_connect_failure():
+    """An OSError from connect must return None."""
+    sock = mock.Mock()
+    sock.connect.side_effect = OSError("no route to host")
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result is None
