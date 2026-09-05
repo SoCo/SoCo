@@ -48,6 +48,9 @@
 
 [project.optional-dependencies]
     events_asyncio = ["aiohttp"]
+    # Needed to decrypt the configured music-service account payloads; without
+    # it the code falls back to an openssl executable.
+    music-services = ["cryptography"]
     testing = [
         "sphinx == 5.0.2",
         "sphinx_rtd_theme",
@@ -70,8 +73,12 @@
 [tool.black]
 target-version = ["py37"]
 
+[tool.setuptools.packages.find]
+    # Discover every subpackage (incl. soco.music_services.browser), so the
+    # built wheel never silently omits a module that soco imports.
+    include = ["soco*"]
+
 [tool.setuptools]
-    packages = ["soco", "soco.plugins", "soco.music_services"]
     include-package-data = false
 
 [tool.setuptools.dynamic.version]

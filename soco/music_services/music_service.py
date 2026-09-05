@@ -36,6 +36,7 @@ from ..exceptions import MusicServiceException, MusicServiceAuthException
 from .data_structures import parse_response, MusicServiceItem
 from .token_store import JsonFileTokenStore
 from ..soap import SoapFault, SoapMessage
+from ..utils import deprecated
 from ..xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -175,7 +176,7 @@ class MusicServiceSoapClient:
             method=method,
             parameters=[] if args is None else args,
             http_headers=self.http_headers,
-            soap_action="http://www.sonos.com/Services/1.1#{0}".format(method),
+            soap_action=f"http://www.sonos.com/Services/1.1#{method}",
             soap_header=self.get_soap_header(),
             namespace=self.namespace,
             timeout=self.timeout,
@@ -183,19 +184,21 @@ class MusicServiceSoapClient:
 
         try:
             result_elt = message.call()
+        except requests.exceptions.RequestException as exc:
+            # HTTP/connection failures from the provider are provider errors
+            raise MusicServiceException(
+                f"Error contacting {self.music_service.service_name}: {exc}"
+            ) from exc
         except SoapFault as exc:
-            if "Client.AuthTokenExpired" in exc.faultcode:
+            # Guard against faults with no code (eg Atmosphere)
+            if exc.faultcode and "Client.AuthTokenExpired" in exc.faultcode:
                 raise MusicServiceAuthException(
-                    "Authorization for {} expired, is invalid or has not yet been "
-                    "completed: [{} / {} / {}]".format(
-                        self.music_service.service_name,
-                        exc.faultcode,
-                        exc.faultstring,
-                        exc.detail,
-                    )
+                    f"Authorization for {self.music_service.service_name} "
+                    "expired, is invalid or has not yet been completed: "
+                    f"[{exc.faultcode} / {exc.faultstring} / {exc.detail}]"
                 ) from exc
 
-            if "Client.TokenRefreshRequired" in exc.faultcode:
+            if exc.faultcode and "Client.TokenRefreshRequired" in exc.faultcode:
                 log.debug(
                     "Auth token for %s expired, attempting to refresh",
                     self.music_service.service_name,
@@ -235,7 +238,7 @@ class MusicServiceSoapClient:
                         # If we didn't find the tokens, raise
                         raise MusicServiceAuthException(
                             "Got a TokenRefreshRequired but no new token was"
-                            " found in the reply: {}".format(exc.detail)
+                            f" found in the reply: {exc.detail}"
                         ) from exc
 
                 # Create new token pair and save it
@@ -252,12 +255,25 @@ class MusicServiceSoapClient:
                     method=method,
                     parameters=[] if args is None else args,
                     http_headers=self.http_headers,
-                    soap_action="http://www.sonos.com/Services/1.1#{0}".format(method),
+                    soap_action=f"http://www.sonos.com/Services/1.1#{method}",
                     soap_header=self.get_soap_header(),
                     namespace=self.namespace,
                     timeout=self.timeout,
                 )
-                result_elt = message.call()
+                try:
+                    result_elt = message.call()
+                except (SoapFault, XML.ParseError) as refresh_exc:
+                    # Refresh failed (eg account needs re-linking); fail cleanly
+                    raise MusicServiceAuthException(
+                        f"Token refresh for {self.music_service.service_name} "
+                        f"failed: [{getattr(refresh_exc, 'faultcode', None)} / "
+                        f"{getattr(refresh_exc, 'faultstring', refresh_exc)}]"
+                    ) from refresh_exc
+                except requests.exceptions.RequestException as refresh_exc:
+                    raise MusicServiceException(
+                        f"Error contacting {self.music_service.service_name} "
+                        f"while refreshing token: {refresh_exc}"
+                    ) from refresh_exc
             else:
                 log.exception(
                     "Unhandled SOAP Fault. Code: %s. Detail: %s. String: %s",
@@ -311,7 +327,7 @@ class MusicServiceSoapClient:
             return auth_parts["regUrl"], auth_parts["linkCode"], link_device_id
         raise MusicServiceAuthException(
             "begin_authentication() is not implemented "
-            "for auth type {}".format(self.music_service.auth_type)
+            f"for auth type {self.music_service.auth_type}"
         )
 
     def complete_authentication(self, link_code, link_device_id=None):
@@ -478,9 +494,7 @@ class MusicService:
         )
 
     def __repr__(self):
-        return "<{} '{}' at {}>".format(
-            self.__class__.__name__, self.service_name, hex(id(self))
-        )
+        return f"<{self.__class__.__name__} '{self.service_name}' at {hex(id(self))}>"
 
     def __str__(self):
         return self.__repr__()
@@ -607,39 +621,40 @@ class MusicService:
         for service in cls._get_music_services_data().values():
             if service_name == service["Name"]:
                 return service
-        raise MusicServiceException("Unknown music service: '%s'" % service_name)
+        raise MusicServiceException(f"Unknown music service: '{service_name}'")
 
-    def _get_search_prefix_map(self):
-        """Fetch and parse the service search category mapping.
+    def _get_search_variants(self):
+        """Fetch and parse the service search categories, keeping every variant.
 
-        Standard Sonos search categories are 'all', 'artists', 'albums',
-        'tracks', 'playlists', 'genres', 'stations', 'tags'. Not all are
-        available for each music service
+        A presentation map may declare several ``<SearchCategories>`` blocks
+        for the same logical category, each scoping the search differently.
+        Apple Music, for example, declares ``SearchTitle`` (the whole catalog)
+        and ``LibrarySearchTitle`` (only the user's saved library) with
+        distinct mapped ids (``artist`` vs ``libraryartist``).
+
+        Returns:
+            dict: Each key is a search category (eg ``'artists'``) and each
+            value is a list of ``(variant, mapped_id)`` pairs, ordered as they
+            appear in the presentation map. Standard Sonos search categories
+            include 'all', 'artists', 'albums', 'tracks', 'playlists',
+            'genres', 'stations', 'tags', but services may add custom ones.
         """
-        # TuneIn does not have a pmap. Its search keys are is search:station,
-        # search:show, search:host
-
-        # Presentation maps can also define custom categories. See eg
-        # http://sonos-pmap.ws.sonos.com/hypemachine_pmap.6.xml
-        # <SearchCategories>
-        # ...
-        #     <CustomCategory mappedId="SBLG" stringId="Blogs"/>
-        # </SearchCategories>
         # Is it already cached? If so, return it
         if self._search_prefix_map is not None:
             return self._search_prefix_map
         # Not cached. Fetch and parse presentation map
         self._search_prefix_map = {}
-        # Tunein is a special case. It has no pmap, but supports searching
+        # TuneIn does not have a pmap. Its search keys are is search:station,
+        # search:show, search:host
         if self.service_name == "TuneIn":
             self._search_prefix_map = {
-                "stations": "search:station",
-                "shows": "search:show",
-                "hosts": "search:host",
+                "stations": [("default", "search:station")],
+                "shows": [("default", "search:show")],
+                "hosts": [("default", "search:host")],
             }
             return self._search_prefix_map
 
-        # Certain music services delivers the presentation map not in an
+        # Certain music services deliver the presentation map not in an
         # information field of its own, but in a JSON 'manifest'. Get it
         # and extract the needed values.
         if (
@@ -658,22 +673,78 @@ class MusicService:
         log.debug("Fetching presentation map from %s", self.presentation_map_uri)
         pmap = requests.get(self.presentation_map_uri, timeout=9)
         pmap_root = XML.fromstring(pmap.content)
-        # Search translations can appear in Category or CustomCategory elements
-        categories = pmap_root.findall(".//SearchCategories/Category")
-        if categories is None:
-            return self._search_prefix_map
-        for category in categories:
-            # The latter part `or cat.get("id")` is added as a workaround for a
-            # Navidrome + bonob setup, where the category ids are delivered on this key
-            # instead of `mappedId` like for most other services. Reference:
-            # https://github.com/SoCo/SoCo/pull/869#issuecomment-991353397
-            self._search_prefix_map[category.get("id")] = category.get(
-                "mappedId"
-            ) or category.get("id")
-        custom_categories = pmap_root.findall(".//SearchCategories/CustomCategory")
-        for category in custom_categories:
-            self._search_prefix_map[category.get("stringId")] = category.get("mappedId")
+        # Presentation maps can also define custom categories. See eg
+        # http://sonos-pmap.ws.sonos.com/hypemachine_pmap.6.xml
+        # <SearchCategories>
+        # ...
+        #     <CustomCategory mappedId="SBLG" stringId="Blogs"/>
+        # </SearchCategories>
+        # Search translations can appear in Category or CustomCategory elements.
+        # Each SearchCategories block is one variant (its stringId names it,
+        # eg 'SearchTitle' for the catalog and 'LibrarySearchTitle' for the
+        # user's library). Entries for the same category across blocks are all
+        # preserved so callers can choose which variant to search.
+        for block in pmap_root.findall(".//SearchCategories"):
+            variant = block.get("stringId", "default")
+            for category in block.findall(".//Category"):
+                # The latter part `or cat.get("id")` is added as a workaround
+                # for a Navidrome + bonob setup, where the category ids are
+                # delivered on this key instead of `mappedId` like for most
+                # other services. Reference:
+                # https://github.com/SoCo/SoCo/pull/869#issuecomment-991353397
+                mapped_id = category.get("mappedId") or category.get("id")
+                self._search_prefix_map.setdefault(category.get("id"), []).append(
+                    (variant, mapped_id)
+                )
+            for category in block.findall(".//CustomCategory"):
+                self._search_prefix_map.setdefault(category.get("stringId"), []).append(
+                    (variant, category.get("mappedId"))
+                )
         return self._search_prefix_map
+
+    def _get_search_prefix_map(self):
+        """Fetch and parse the service search category mapping.
+
+        Standard Sonos search categories are 'all', 'artists', 'albums',
+        'tracks', 'playlists', 'genres', 'stations', 'tags'. Not all are
+        available for each music service.
+
+        Returns:
+            dict: The category-to-prefix mapping, using the first (default)
+            variant of each category. Use :meth:`_get_search_variants` for all
+            variants, or :meth:`available_search_variants` for their names.
+        """
+        # Fetch and parse the variants, then pick the default one per category
+        variants = self._get_search_variants()
+        return {
+            category: mapped_id
+            for category, entries in variants.items()
+            for _variant, mapped_id in (entries or [("", "")])[:1]
+        }
+
+    @property
+    def available_search_variants(self):
+        """dict: Every search variant offered per category.
+
+        Some services scope a search category in more than one way. Apple
+        Music, for example, offers ``'SearchTitle'`` (the whole catalog) and
+        ``'LibrarySearchTitle'`` (the user's saved library) for the same
+        categories. This maps each category to its list of variant names:
+
+        >>> print(apple_music.available_search_variants)
+        {'artists': ['SearchTitle', 'LibrarySearchTitle'], ...}
+
+        Services with a single search mode map each category to ``['default']``.
+
+        These names are accepted as the ``variant`` argument of
+        :meth:`MusicService.search` and
+        :meth:`MusicServiceBrowser.search` (with ``'all'`` searching every
+        variant at once).
+        """
+        return {
+            category: [variant for variant, _mapped in entries]
+            for category, entries in self._get_search_variants().items()
+        }
 
     @property
     def available_search_categories(self):
@@ -737,7 +808,7 @@ class MusicService:
         # account.serial_numbers
         # account = self.account
 
-        result = "soco://{}?sid={}&sn={}".format(item_id, self.service_id, 0)
+        result = f"soco://{item_id}?sid={self.service_id}&sn={0}"
         return result
 
     @property
@@ -749,14 +820,13 @@ class MusicService:
         """
         if self.auth_type == "DeviceLink":
             # It used to be that the second part (after the second _ was the username
-            desc = "SA_RINCON{service_type}_X_#Svc{service_type}-0-Token".format(
-                service_type=self.service_type
-            )
+            desc = f"SA_RINCON{self.service_type}_X_#Svc{self.service_type}-0-Token"
         else:
             # This seems to at least be the case for TuneIn
-            desc = "SA_RINCON{service_type}_".format(service_type=self.service_type)
+            desc = f"SA_RINCON{self.service_type}_"
         return desc
 
+    @deprecated("0.32", "soco.music_services.MusicServiceAccountManager", "0.35")
     def begin_authentication(self):
         """Perform the first part of a Device or App Link authentication session
 
@@ -785,6 +855,7 @@ class MusicService:
         ) = self.soap_client.begin_authentication()
         return reg_url
 
+    @deprecated("0.32", "soco.music_services.MusicServiceAccountManager", "0.35")
     def complete_authentication(self, link_code=None, link_device_id=None):
         """Completes a previously initiated device or app link authentication session
 
@@ -824,7 +895,6 @@ class MusicService:
     #    createItem(xs:string favorite)
     #    createTrialAccount(xs:string deviceId)
     #    deleteItem(xs:string favorite)
-    #    getAccount()
     #    getExtendedMetadata(xs:string id)
     #    getExtendedMetadataText(xs:string id, xs:string Type)
     #    getLastUpdate()
@@ -832,14 +902,22 @@ class MusicService:
     #    getMediaURI(xs:string id)
     #    getMetadata(xs:string id, xs:int index, xs:int count,xs:boolean
     #                recursive)
-    #    getScrollIndices(xs:string id)
     #    getSessionId(xs:string username, xs:string password)
+    #    getScrollIndices(xs:string id)
     #    mergeTrialccount(xs:string deviceId)
     #    rateItem(id id, xs:integer rating)
     #    search(xs:string id, xs:string term, xs:string index, xs:int count)
-    #    setPlayedSeconds(id id, xs:int seconds)
+    #    setPlayedSeconds(xs:string id, xs:int seconds)
 
-    def get_metadata(self, item="root", index=0, count=100, recursive=False):
+    def get_metadata(
+        self,
+        item="root",
+        index=0,
+        count=100,
+        recursive=False,
+        sort_order=None,
+        sort_ascending=None,
+    ):
         """Get metadata for a container or item.
 
         Args:
@@ -850,6 +928,10 @@ class MusicService:
             count (int): The maximum number of items to return. Default 100.
             recursive (bool): Whether the browse should recurse into sub-items
                 (Does not always work). Defaults to `False`.
+            sort_order (str, optional): A provider-supported sort key such as
+                ``'Artist'`` or ``'Album'``. Only sent when provided.
+            sort_ascending (bool, optional): Whether the sort is ascending.
+                Only sent when provided.
 
         Returns:
             ~collections.OrderedDict: The item or container's metadata,
@@ -864,18 +946,20 @@ class MusicService:
             item_id = item.id  # pylint: disable=no-member
         else:
             item_id = item
-        response = self.soap_client.call(
-            "getMetadata",
-            [
-                ("id", item_id),
-                ("index", index),
-                ("count", count),
-                ("recursive", 1 if recursive else 0),
-            ],
-        )
+        args = [
+            ("id", item_id),
+            ("index", index),
+            ("count", count),
+            ("recursive", 1 if recursive else 0),
+        ]
+        if sort_order:
+            args.append(("sortOrder", sort_order))
+        if sort_ascending is not None:
+            args.append(("sortAscending", 1 if sort_ascending else 0))
+        response = self.soap_client.call("getMetadata", args)
         return parse_response(self, response, "browse")
 
-    def search(self, category, term="", index=0, count=100):
+    def search(self, category, term="", index=0, count=100, variant=None):
         """Search for an item in a category.
 
         Args:
@@ -887,31 +971,76 @@ class MusicService:
             term (str): The term to search for.
             index (int): The starting index. Default 0.
             count (int): The maximum number of items to return. Default 100.
+            variant (str): Which search variant to use, or ``'all'`` to search
+                every variant the service offers and merge the results. When
+                omitted, the service's default (first) variant is searched,
+                matching the pre-variant behavior. See
+                :attr:`available_search_variants` for the variant names a
+                service supports.
 
         Returns:
-            ~collections.OrderedDict: The search results, or `None`.
+            SearchResult: The search results.
 
         See also:
             The Sonos `search API <http://musicpartners.sonos.com/node/86>`_
         """
-        search_category = self._get_search_prefix_map().get(category, None)
-        if search_category is None:
+        search_variants = self._get_search_variants().get(category, None)
+        if search_variants is None:
             raise MusicServiceException(
-                "%s does not support the '%s' search category"
-                % (self.service_name, category)
+                f"{self.service_name} does not support the '{category}' search category"
             )
 
-        response = self.soap_client.call(
-            "search",
-            [
-                ("id", search_category),
-                ("term", term),
-                ("index", index),
-                ("count", count),
-            ],
-        )
+        if variant is None:
+            # Backwards-compatible default: search only the first (default)
+            # variant, exactly as before variants existed.
+            search_variants = search_variants[:1]
 
-        return parse_response(self, response, category)
+        if variant not in (None, "all"):
+            search_variants = [
+                entry for entry in search_variants if entry[0] == variant
+            ]
+            if not search_variants:
+                raise MusicServiceException(
+                    "%s does not offer the '%s' search variant for '%s'; "
+                    "available variants: %s"
+                    % (
+                        self.service_name,
+                        variant,
+                        category,
+                        ", ".join(
+                            entry[0] for entry in self._get_search_variants()[category]
+                        ),
+                    )
+                )
+
+        results = []
+        total_matches = 0
+        for _variant, search_category in search_variants:
+            response = self.soap_client.call(
+                "search",
+                [
+                    ("id", search_category),
+                    ("term", term),
+                    ("index", index),
+                    ("count", count),
+                ],
+            )
+            result = parse_response(self, response, category)
+            results.append(result)
+            if result.total_matches is not None:
+                total_matches += result.total_matches
+
+        if len(results) == 1:
+            return results[0]
+
+        merged = results[0].__class__(
+            [item for result in results for item in result],
+            category,
+            sum(result.number_returned for result in results),
+            total_matches or None,
+            results[0].update_id,
+        )
+        return merged
 
     def get_media_metadata(self, item_id):
         """Get metadata for a media item.
@@ -1001,3 +1130,29 @@ class MusicService:
             "getExtendedMetadataText", [("id", item_id), ("type", metadata_type)]
         )
         return response.get("getExtendedMetadataTextResult", None)
+
+    def get_scroll_indices(self, item_id):
+        """Get the scroll indices for a container.
+
+        The provider returns the position and identity of jump-point items in
+        the container's sorted order, used for alphabetical navigation.
+
+        Args:
+            item_id (str): The id of a browsable container.
+
+        Returns:
+            ~collections.OrderedDict: The provider's scroll index entries.
+        """
+        response = self.soap_client.call("getScrollIndices", [("id", item_id)])
+        return response.get("getScrollIndicesResult", None)
+
+    def set_played_seconds(self, item_id, seconds):
+        """Report listening progress for an item to the provider.
+
+        Args:
+            item_id (str): The id of a playable item.
+            seconds (int): The number of seconds played so far.
+        """
+        self.soap_client.call(
+            "setPlayedSeconds", [("id", item_id), ("seconds", int(seconds))]
+        )

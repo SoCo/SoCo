@@ -3,10 +3,11 @@
 from unittest import mock
 import pytest
 
+import soco.music_services.music_service
 import soco.soap
-from soco.exceptions import MusicServiceException
+from soco.exceptions import MusicServiceAuthException, MusicServiceException
 from soco.music_services.accounts import Account
-from soco.music_services.music_service import MusicService
+from soco.music_services.music_service import MusicService, MusicServiceSoapClient
 
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
 from soco.music_services.token_store import JsonFileTokenStore
@@ -265,6 +266,204 @@ def test_tunein():
     assert tunein.service_type == "65031"
 
 
+PMAP_WITH_VARIANTS = """<?xml version="1.0" ?>
+<Presentation>
+  <PresentationMap type="Search">
+    <Match>
+      <SearchCategories stringId="SearchTitle">
+        <Category id="artists" mappedId="artist"/>
+        <Category id="albums" mappedId="album"/>
+      </SearchCategories>
+      <SearchCategories stringId="LibrarySearchTitle">
+        <Category id="artists" mappedId="libraryartist"/>
+        <Category id="albums" mappedId="libraryalbum"/>
+      </SearchCategories>
+    </Match>
+  </PresentationMap>
+</Presentation>
+"""
+
+MANIFEST_WITH_PMAP = (
+    """{"presentationMap": {"uri": "https://cf.ws.sonos.com/p/p/mock"}}"""
+)
+
+
+def _apple_music_service(monkeypatch):
+    """Build a MusicService backed by Apple-style manifest+pmap data."""
+    # The class-level services cache may have been populated by other tests
+    MusicService._music_services_data = None
+    monkeypatch.setattr(
+        MusicService,
+        "_get_music_services_data",
+        classmethod(
+            lambda cls: {
+                "52231": {
+                    "Name": "Apple Music",
+                    "Id": "204",
+                    "ServiceType": "52231",
+                    "Uri": "https://apple.invalid/smapi",
+                    "SecureUri": "https://apple.invalid/smapi",
+                    "Capabilities": "0",
+                    "Version": "1.1",
+                    "ContainerType": "MService",
+                    "Auth": "AppLink",
+                    "PresentationMapUri": None,
+                    "ManifestUri": "https://cf.ws.sonos.com/p/m/mock",
+                }
+            }
+        ),
+    )
+
+    def fake_get(url, timeout=9):
+        if url == "https://cf.ws.sonos.com/p/m/mock":
+            return mock.Mock(content=MANIFEST_WITH_PMAP.encode("utf-8"))
+        if url == "https://cf.ws.sonos.com/p/p/mock":
+            return mock.Mock(content=PMAP_WITH_VARIANTS.encode("utf-8"))
+        raise AssertionError("unexpected request to {}".format(url))
+
+    monkeypatch.setattr(soco.music_services.music_service.requests, "get", fake_get)
+    return MusicService("Apple Music")
+
+
+def test_search_variants_keep_every_pmap_block(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    variants = apple._get_search_variants()
+
+    assert variants == {
+        "artists": [
+            ("SearchTitle", "artist"),
+            ("LibrarySearchTitle", "libraryartist"),
+        ],
+        "albums": [
+            ("SearchTitle", "album"),
+            ("LibrarySearchTitle", "libraryalbum"),
+        ],
+    }
+    assert apple.available_search_variants == {
+        "artists": ["SearchTitle", "LibrarySearchTitle"],
+        "albums": ["SearchTitle", "LibrarySearchTitle"],
+    }
+    # The default prefix map uses the first (catalog) variant, not the last
+    assert apple._get_search_prefix_map() == {
+        "artists": "artist",
+        "albums": "album",
+    }
+
+
+def test_search_combines_all_variants(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    def fake_call(method, parameters=None):
+        parameters = parameters or []
+        search_id = dict(parameters)["id"]
+        item_id = "artist:1" if search_id == "artist" else "artist:9"
+        return {
+            "searchResult": {
+                "count": 1,
+                "mediaCollection": [
+                    {"id": item_id, "itemType": "artist", "title": "Artist"}
+                ],
+            }
+        }
+
+    apple.soap_client.call = fake_call
+
+    result = apple.search("artists", "miles", variant="all")
+
+    assert len(result) == 2
+    assert result[0].item_id.endswith("artist%3A1")
+    assert result[1].item_id.endswith("artist%3A9")
+    assert result.number_returned == 2
+
+
+def test_search_defaults_to_first_variant(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    def fake_call(method, parameters=None):
+        search_id = dict(parameters or [])["id"]
+        # The default search must use the first (catalog) variant only
+        assert search_id == "artist"
+        return {
+            "searchResult": {
+                "count": 1,
+                "mediaCollection": [
+                    {"id": "artist:1", "itemType": "artist", "title": "Artist"}
+                ],
+            }
+        }
+
+    apple.soap_client.call = fake_call
+
+    result = apple.search("artists", "miles")
+
+    assert len(result) == 1
+    assert result[0].item_id.endswith("artist%3A1")
+
+
+def test_search_single_variant(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    def fake_call(method, parameters=None):
+        search_id = dict(parameters or [])["id"]
+        assert search_id == "libraryartist"
+        return {
+            "searchResult": {
+                "count": 1,
+                "mediaCollection": [
+                    {"id": "artist:9", "itemType": "artist", "title": "Artist"}
+                ],
+            }
+        }
+
+    apple.soap_client.call = fake_call
+
+    result = apple.search("artists", "miles", variant="LibrarySearchTitle")
+
+    assert len(result) == 1
+    assert result[0].item_id.endswith("artist%3A9")
+
+
+def test_get_metadata_with_sort(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    def fake_call(method, parameters=None):
+        assert method == "getMetadata"
+        params = dict(parameters or [])
+        assert params["sortOrder"] == "Artist"
+        assert params["sortAscending"] == 0
+        return {
+            "getMetadataResult": {
+                "count": 1,
+                "mediaCollection": [
+                    {"id": "album:1", "itemType": "album", "title": "Album"}
+                ],
+            }
+        }
+
+    apple.soap_client.call = fake_call
+
+    result = apple.get_metadata("root", sort_order="Artist", sort_ascending=False)
+
+    assert len(result) == 1
+
+
+def test_get_metadata_omits_sort_when_unset(monkeypatch):
+    apple = _apple_music_service(monkeypatch)
+
+    def fake_call(method, parameters=None):
+        params = dict(parameters or [])
+        assert "sortOrder" not in params
+        assert "sortAscending" not in params
+        return {"getMetadataResult": {"count": 0, "mediaCollection": []}}
+
+    apple.soap_client.call = fake_call
+
+    result = apple.get_metadata("root")
+
+    assert len(result) == 0
+
+
 def test_search():
     spotify = MusicService("Spotify")
     # Set up dummy search categories
@@ -279,6 +478,98 @@ def test_search():
     with pytest.raises(MusicServiceException) as excinfo:
         spotify.search("badcategory")
     assert "support the 'badcategory' search category" in str(excinfo.value)
+
+
+def test_call_with_none_faultcode_raises_clean_error(monkeypatch):
+    """A provider returning a fault with no code at all (eg Atmosphere)
+    must raise a MusicServiceException, not crash on the faultcode check."""
+    client = MusicServiceSoapClient.__new__(MusicServiceSoapClient)
+    client.endpoint = "https://invalid/smapi"
+    client.timeout = 1
+    client.http_headers = {}
+    client.namespace = "http://www.sonos.com/Services/1.1"
+    client.get_soap_header = mock.Mock(return_value="<credentials/>")
+    client.music_service = mock.Mock(service_name="Atmosphere by Kollekt.fm")
+    client.token_store = mock.Mock()
+
+    message = mock.Mock()
+    message.call.side_effect = soco.soap.SoapFault(None, None, None)
+    monkeypatch.setattr(
+        soco.music_services.music_service,
+        "SoapMessage",
+        mock.Mock(return_value=message),
+    )
+
+    with pytest.raises(MusicServiceException):
+        client.call("getMetadata")
+
+
+def _soap_client_for(name):
+    """A bare MusicServiceSoapClient with only the attributes call() needs."""
+    client = MusicServiceSoapClient.__new__(MusicServiceSoapClient)
+    client.endpoint = "https://invalid/smapi"
+    client.timeout = 1
+    client.http_headers = {}
+    client.namespace = "http://www.sonos.com/Services/1.1"
+    client.get_soap_header = mock.Mock(return_value="<credentials/>")
+    client.music_service = mock.Mock(
+        service_name=name, service_id=0, auth_type="DeviceLink"
+    )
+    client.token_store = mock.Mock()
+    client._device = mock.Mock(household_id="household")
+    return client
+
+
+def test_call_wraps_http_errors_as_provider_errors(monkeypatch):
+    """HTTP 4xx/5xx from a provider (eg YouTube Music 403, Spectre 401) must
+    surface as a MusicServiceException, not a raw HTTPError."""
+    import requests
+
+    client = _soap_client_for("YouTube Music")
+    message = mock.Mock()
+    message.call.side_effect = requests.exceptions.HTTPError(
+        "403 Client Error: Forbidden"
+    )
+    monkeypatch.setattr(
+        soco.music_services.music_service,
+        "SoapMessage",
+        mock.Mock(return_value=message),
+    )
+
+    with pytest.raises(MusicServiceException) as excinfo:
+        client.call("getMetadata")
+    assert "403" in str(excinfo.value)
+
+
+def test_call_refresh_failure_raises_auth_error(monkeypatch):
+    """When the token-refresh re-call itself faults (eg Pandora's token can
+    only be fixed by re-linking in the Sonos app), surface a clean auth
+    error instead of a raw SoapFault escaping call()."""
+    from soco.xml import XML
+
+    client = _soap_client_for("Pandora")
+    detail = XML.Element("detail")
+    auth_token = XML.SubElement(detail, "{%s}authToken" % client.namespace)
+    auth_token.text = "new-token"
+    private_key = XML.SubElement(detail, "{%s}privateKey" % client.namespace)
+    private_key.text = "new-key"
+    refresh_fault = soco.soap.SoapFault(
+        "Client.TokenRefreshRequired", "TokenRefreshRequired", detail
+    )
+
+    message = mock.Mock()
+    message.call.side_effect = [refresh_fault, refresh_fault]
+    monkeypatch.setattr(
+        soco.music_services.music_service,
+        "SoapMessage",
+        mock.Mock(return_value=message),
+    )
+
+    with pytest.raises(MusicServiceAuthException) as excinfo:
+        client.call("search", [("id", "artists"), ("term", "a")])
+    assert "Token refresh for Pandora failed" in str(excinfo.value)
+    # The token pair from the first fault should have been saved
+    client.token_store.save_token_pair.assert_called_once()
 
 
 def test_sonos_uri_from_id():
@@ -305,6 +596,34 @@ def test_desc():
     assert spotify.desc == "SA_RINCON2311_X_#Svc2311-0-Token"
     spreaker = MusicService("Spreaker")
     assert spreaker.desc == "SA_RINCON41735_"
+
+
+def test_begin_authentication_is_deprecated():
+    spotify = MusicService("Spotify")
+    spotify.soap_client.begin_authentication = mock.Mock(
+        return_value=("https://reg.example/", "CODE", "dev")
+    )
+
+    with pytest.warns(
+        UserWarning, match="deprecated.*MusicServiceAccountManager"
+    ):
+        reg_url = spotify.begin_authentication()
+
+    assert reg_url == "https://reg.example/"
+
+
+def test_complete_authentication_is_deprecated():
+    spotify = MusicService("Spotify")
+    spotify.soap_client.complete_authentication = mock.Mock()
+
+    with pytest.warns(
+        UserWarning, match="deprecated.*MusicServiceAccountManager"
+    ):
+        spotify.complete_authentication("CODE")
+
+    spotify.soap_client.complete_authentication.assert_called_once_with(
+        "CODE", spotify.link_device_id
+    )
 
 
 # def test_desc_from_uri():
