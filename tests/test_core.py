@@ -4,7 +4,7 @@ import requests_mock
 
 from conftest import IP_ADDR
 from soco import SoCo
-from soco.core import ARC_ULTRA_PRODUCT_NAME
+from soco.core import ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME
 from soco.data_structures import to_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
@@ -545,6 +545,13 @@ class TestSoco:
         moco_zgs.renderingControl.SetEQ.assert_called_once_with(
             [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 1)]
         )
+
+        # Beam Ultra exposes the same speech enhancement switch
+        moco_zgs.speaker_info["model_name"] = (
+            "speaker prefix " + BEAM_ULTRA_PRODUCT_NAME
+        )
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "1"}
+        assert moco_zgs.speech_enhance_enabled == 1
 
 
 class TestAVTransport:

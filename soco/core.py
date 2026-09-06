@@ -568,6 +568,18 @@ class SoCo(_SocoSingletonBase):
         return self.speaker_info["model_name"].lower().endswith(ARC_ULTRA_PRODUCT_NAME)
 
     @property
+    def is_ultra_soundbar(self):
+        """bool: Is this zone an Ultra sound bar (Arc Ultra, Beam Ultra)?
+
+        Ultra sound bars expose a 5-level dialog level and a separate
+        speech enhancement on/off switch.
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+
+        return self.speaker_info["model_name"].lower().endswith(ULTRA_SOUNDBARS)
+
+    @property
     def play_mode(self):
         """str: The queue's play mode.
 
@@ -1495,7 +1507,7 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False if off, None if not supported.
         """
-        if not self.is_arc_ultra_soundbar:
+        if not self.is_ultra_soundbar:
             return None
 
         response = self.renderingControl.GetEQ(
@@ -1505,16 +1517,17 @@ class SoCo(_SocoSingletonBase):
 
     @speech_enhance_enabled.setter
     def speech_enhance_enabled(self, speech_mode):
-        """Switch on/off the arc ultra soundbar speech enhancement.
+        """Switch on/off the Ultra soundbar speech enhancement.
 
         :param speech_mode: Enable or disable dialog mode
         :type speech_mode: bool
         :raises NotSupportedException: If the device does not support
         speech enhancement.
         """
-        if not self.is_arc_ultra_soundbar:
+        if not self.is_ultra_soundbar:
             raise NotSupportedException(
-                "The device not a arc ultra and doesn't support speech_enhance_enabled."
+                "The device is not an Ultra soundbar and doesn't support "
+                "speech_enhance_enabled."
             )
         self.renderingControl.SetEQ(
             [
@@ -3102,6 +3115,7 @@ SOUNDBARS = (
     "arc sl",
     "arc ultra",
     "beam",
+    "beam ultra",
     "playbase",
     "playbar",
     "ray",
@@ -3109,6 +3123,8 @@ SOUNDBARS = (
 )
 
 ARC_ULTRA_PRODUCT_NAME = "arc ultra"
+BEAM_ULTRA_PRODUCT_NAME = "beam ultra"
+ULTRA_SOUNDBARS = (ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME)
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo
