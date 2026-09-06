@@ -65,7 +65,7 @@ class MusicLibrary:
         # Add on the full album art link, as the URI version
         # does not include the ipaddress
         if not url.startswith(("http:", "https:")):
-            url = "http://" + self.soco.ip_address + ":1400" + url
+            url = self.soco.base_url + url
         return url
 
     def _update_album_art_to_full_uri(self, item):

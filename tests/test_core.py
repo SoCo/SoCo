@@ -159,6 +159,32 @@ ZGS = (
     </ZoneGroupState>"""
 )
 
+AMP_MULTI_ZGS = """<ZoneGroupState>
+  <ZoneGroups>
+    <ZoneGroup Coordinator="RINCON_00112233445501400" ID="RINCON_00112233445501400:1">
+      <ZoneGroupMember UUID="RINCON_00112233445501400"
+        Location="http://192.0.2.10:1400/xml/device_description.xml"
+        ZoneName="Zone 1"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501500" ID="RINCON_00112233445501500:2">
+      <ZoneGroupMember UUID="RINCON_00112233445501500"
+        Location="http://192.0.2.10:1500/xml/device_description.xml"
+        ZoneName="Zone 2"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501600" ID="RINCON_00112233445501600:3">
+      <ZoneGroupMember UUID="RINCON_00112233445501600"
+        Location="http://192.0.2.10:1600/xml/device_description.xml"
+        ZoneName="Zone 3"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501700" ID="RINCON_00112233445501700:4">
+      <ZoneGroupMember UUID="RINCON_00112233445501700"
+        Location="http://192.0.2.10:1700/xml/device_description.xml"
+        ZoneName="Zone 4"/>
+    </ZoneGroup>
+  </ZoneGroups>
+  <VanishedDevices/>
+</ZoneGroupState>"""
+
 
 @pytest.fixture()
 def moco_zgs(moco):
@@ -1689,6 +1715,29 @@ class TestZoneGroupTopology:
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
+
+    def test_multi_zone_device_with_shared_ip(self, moco):
+        """Each advertised port represents a distinct virtual player."""
+        moco.zoneGroupTopology.GetZoneGroupState.return_value = {
+            "ZoneGroupState": AMP_MULTI_ZGS
+        }
+
+        zones = moco.visible_zones
+
+        assert {
+            (zone.ip_address, zone.port, zone.uid, zone.player_name) for zone in zones
+        } == {
+            ("192.0.2.10", 1400, "RINCON_00112233445501400", "Zone 1"),
+            ("192.0.2.10", 1500, "RINCON_00112233445501500", "Zone 2"),
+            ("192.0.2.10", 1600, "RINCON_00112233445501600", "Zone 3"),
+            ("192.0.2.10", 1700, "RINCON_00112233445501700", "Zone 4"),
+        }
+        assert {zone.base_url for zone in zones} == {
+            "http://192.0.2.10:1400",
+            "http://192.0.2.10:1500",
+            "http://192.0.2.10:1600",
+            "http://192.0.2.10:1700",
+        }
 
     def test_group_label(selfself, moco_zgs):
         g = moco_zgs.group

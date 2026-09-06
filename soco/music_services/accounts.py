@@ -72,7 +72,7 @@ class Account:
         # This returns an encrypted string, and, so far, we cannot decrypt it
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
-        settings_url = "http://{}:1400/status/accounts".format(device.ip_address)
+        settings_url = device.base_url + "/status/accounts"
         result = requests.get(settings_url, timeout=config.REQUEST_TIMEOUT).content
         log.debug("Account data: %s", result)
         return result
