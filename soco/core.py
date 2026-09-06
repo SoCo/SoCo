@@ -120,9 +120,14 @@ class _ArgsSingleton(type):
         key = cls._class_group if hasattr(cls, "_class_group") else cls
         if key not in cls._instances:
             cls._instances[key] = {}
-        if args not in cls._instances[key]:
-            cls._instances[key][args] = super().__call__(*args, **kwargs)
-        return cls._instances[key][args]
+        instance_key = (
+            cls._singleton_key(*args, **kwargs)
+            if hasattr(cls, "_singleton_key")
+            else args
+        )
+        if instance_key not in cls._instances[key]:
+            cls._instances[key][instance_key] = super().__call__(*args, **kwargs)
+        return cls._instances[key][instance_key]
 
 
 class _SocoSingletonBase(  # pylint: disable=no-init
@@ -176,8 +181,8 @@ class SoCo(_SocoSingletonBase):
     For any given set of arguments to __init__, only one instance of this class
     may be created. Subsequent attempts to create an instance with the same
     arguments will return the previously created instance. This means that all
-    SoCo instances created with the same ip address are in fact the *same* SoCo
-    instance, reflecting the real world position.
+    SoCo instances created with the same IP address and port are in fact the
+    *same* SoCo instance, reflecting the real world player endpoint.
 
     ..  rubric:: Basic Methods
     ..  autosummary::
@@ -325,8 +330,13 @@ class SoCo(_SocoSingletonBase):
     _class_group = "SoCo"
     zone_group_states = {}
 
+    @staticmethod
+    def _singleton_key(ip_address, port=1400):
+        """Return the network endpoint used to identify a player instance."""
+        return (ip_address, int(port))
+
     # pylint: disable=super-on-old-class
-    def __init__(self, ip_address):
+    def __init__(self, ip_address, port=1400):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
         super().__init__()
@@ -338,6 +348,10 @@ class SoCo(_SocoSingletonBase):
             raise ValueError("Not a valid IP address string") from error
         #: The speaker's ip address
         self.ip_address = ip_address
+        #: The speaker's UPnP port
+        self.port = int(port)
+        if not 1 <= self.port <= 65535:
+            raise ValueError("Not a valid port")
         self.speaker_info = {}  # Stores information about the current speaker
 
         # The services which we use
@@ -378,7 +392,14 @@ class SoCo(_SocoSingletonBase):
         return f"<{self.__class__.__name__} object at ip {self.ip_address}>"
 
     def __repr__(self):
-        return f'{self.__class__.__name__}("{self.ip_address}")'
+        if self.port == 1400:
+            return f'{self.__class__.__name__}("{self.ip_address}")'
+        return f'{self.__class__.__name__}("{self.ip_address}", {self.port})'
+
+    @property
+    def base_url(self):
+        """Return the base URL for this Sonos player."""
+        return f"http://{self.ip_address}:{self.port}"
 
     @property
     def boot_seqnum(self):
@@ -2176,8 +2197,7 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
         else:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/xml/device_description.xml",
-                timeout=timeout,
+                self.base_url + "/xml/device_description.xml", timeout=timeout
             )
             dom = XML.fromstring(response.content)
 
@@ -3004,8 +3024,7 @@ class SoCo(_SocoSingletonBase):
         # Retrieve information from the speaker's status URL
         try:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/status/batterystatus",
-                timeout=timeout,
+                self.base_url + "/status/batterystatus", timeout=timeout
             )
         except (ConnectTimeout, ReadTimeout) as error:
             raise TimeoutError from error

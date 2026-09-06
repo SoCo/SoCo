@@ -140,7 +140,7 @@ class Service:
         self.version = 1
         self.service_id = self.service_type
         #: str: The base URL for sending UPnP Actions.
-        self.base_url = f"http://{self.soco.ip_address}:1400"
+        self.base_url = self.soco.base_url
         #: str: The UPnP Control URL.
         self.control_url = f"/{self.service_type}/Control"
         #: str: The service control protocol description URL.

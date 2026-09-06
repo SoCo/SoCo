@@ -1,6 +1,6 @@
 """Tests for the SoCoSingletonBase and _ArgsSingleton classes in core."""
 
-from soco import soco_reset
+from soco import SoCo, soco_reset
 from soco.core import _SocoSingletonBase as Base
 
 
@@ -57,3 +57,16 @@ def test_soco_reset_clears_instances():
     soco_reset()
     instance_after = ASingleton("aa")
     assert instance_before is not instance_after
+
+
+def test_soco_instances_are_unique_per_port():
+    """A multi-zone device can expose multiple players on a single IP."""
+    default = SoCo("192.168.1.100")
+    alternate = SoCo("192.168.1.100", 1500)
+
+    assert default is SoCo("192.168.1.100")
+    assert default is SoCo("192.168.1.100", 1400)
+    assert default is SoCo("192.168.1.100", port=1400)
+    assert alternate is SoCo("192.168.1.100", 1500)
+    assert alternate is SoCo("192.168.1.100", port=1500)
+    assert default is not alternate
