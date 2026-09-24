@@ -1156,6 +1156,33 @@ def test_content_http_401_refreshes_by_default(monkeypatch):
     assert browser._children(envelope, "refreshAuthToken")
 
 
+def test_content_refresh_fault_raises_public_exception(monkeypatch):
+    """A failed refreshAuthToken must surface as a public exception.
+
+    A transient provider error (e.g. HTTP 504) during credential refresh
+    raises the private _BrowseSoapFault internally; it must be translated to
+    MusicServiceException so callers and tools only see public exceptions.
+    """
+    manifest = {
+        "endpoints": [{"type": "browse", "uri": "https://content.invalid/browse/v1"}]
+    }
+    session = FakeSession(
+        get_responses=[
+            FakeResponse(json_value=manifest),
+            FakeResponse(status_code=401),
+        ],
+        post_responses=[FakeResponse(status_code=504, content=b"gateway timeout")],
+    )
+    service = FakeService(manifest_uri="https://content.invalid/manifest.json")
+    monkeypatch.setattr(browser, "MusicService", lambda *_args, **_kwargs: service)
+    music_browser = MusicServiceBrowser(
+        "Example", account=make_account(), device=FakeDevice(), session=session
+    )
+
+    with pytest.raises(MusicServiceException, match="504"):
+        music_browser.get_metadata()
+
+
 def test_credential_refresh_is_enabled_by_default(monkeypatch):
     service = FakeService()
     monkeypatch.setattr(browser, "MusicService", lambda *_args, **_kwargs: service)

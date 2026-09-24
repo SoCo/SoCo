@@ -396,7 +396,12 @@ class MusicServiceBrowser:
                     f"{self.music_service.service_name} content browse "
                     "returned HTTP 401"
                 )
-            self._client.refresh_auth_token()
+            try:
+                self._client.refresh_auth_token()
+            except _BrowseSoapFault as fault:
+                # refreshAuthToken can fault (e.g. a transient HTTP 504); the
+                # private fault type must not escape the public boundary.
+                raise fault.as_music_service_exception() from fault
             headers = _content_headers(
                 self.music_service,
                 self.account,

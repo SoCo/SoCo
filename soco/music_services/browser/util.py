@@ -12,7 +12,7 @@ SMAPI_NS = "http://www.sonos.com/Services/1.1"
 # about Sonos controller identity strings, so this should not be replaced
 # with requests' default user agent merely for tidiness.
 DESKTOP_USER_AGENT = (
-    "Linux UPnP/1.0 Sonos/90.0-77070 " "(WDCR:Microsoft Windows NT 10.0.19045 64-bit)"
+    "Linux UPnP/1.0 Sonos/90.0-77070 " + "(WDCR:Microsoft Windows NT 10.0.19045 64-bit)"
 )
 
 

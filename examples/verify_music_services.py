@@ -436,12 +436,16 @@ def test_browse(browser):
         return {"status": "ok", "detail": "%d items" % result.count}
     except MusicServiceException as error:
         return {"status": "error", "detail": _scrub(error)}
+    except Exception as error:  # pylint: disable=broad-except
+        return {"status": "error", "detail": _scrub(error)}
 
 
 def test_search(browser):
     try:
         categories = browser.available_search_categories or []
     except MusicServiceException as error:
+        return {"status": "error", "detail": _scrub(error)}
+    except Exception as error:  # pylint: disable=broad-except
         return {"status": "error", "detail": _scrub(error)}
     if not categories:
         return {"status": "skipped", "detail": "no search categories"}
@@ -452,6 +456,8 @@ def test_search(browser):
             browser.search(category, "a")
             return {"status": "ok", "detail": "category %r" % category}
         except MusicServiceException as error:
+            return {"status": "error", "detail": _scrub(error)}
+        except Exception as error:  # pylint: disable=broad-except
             return {"status": "error", "detail": _scrub(error)}
     return {"status": "skipped", "detail": "no searchable category"}
 
@@ -478,6 +484,8 @@ def test_metadata(browser, item):
             ),
         }
     except MusicServiceException as error:
+        return {"status": "error", "detail": _scrub(error)}
+    except Exception as error:  # pylint: disable=broad-except
         return {"status": "error", "detail": _scrub(error)}
 
 
@@ -540,7 +548,7 @@ def test_configured_service(
     results = {"tests": {}}
     try:
         browser = MusicServiceBrowser(entry["name"], account=account, device=speaker)
-    except MusicServiceException as error:
+    except Exception as error:  # pylint: disable=broad-except
         results["tests"]["construct"] = {"status": "error", "detail": _scrub(error)}
         return results
 
@@ -548,7 +556,13 @@ def test_configured_service(
     results["tests"]["browse"] = test_browse(browser)
     results["tests"]["search"] = test_search(browser)
 
-    items = distinct_playable_items(browser, deadline)
+    # Defensive: a fault the browser does not normalize must record an error
+    # for this service rather than abort the whole household matrix.
+    try:
+        items = distinct_playable_items(browser, deadline)
+    except Exception as error:  # pylint: disable=broad-except
+        results["tests"]["browse"] = {"status": "error", "detail": _scrub(error)}
+        items = {}
     results["item_types"] = sorted(items)
     if items:
         metadata_type = _pick_metadata_item_type(items)
