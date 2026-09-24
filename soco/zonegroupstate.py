@@ -64,6 +64,7 @@ Example payload contents:
 import asyncio
 import logging
 import time
+from urllib.parse import urlparse
 from weakref import WeakSet
 
 from lxml import etree as LXML
@@ -325,8 +326,16 @@ class ZoneGroupState:
 
         # Example Location contents:
         #   http://192.168.1.100:1400/xml/device_description.xml
-        ip_addr = member_attribs["Location"].split("//")[1].split(":")[0]
-        zone = config.SOCO_CLASS(ip_addr)
+        location = urlparse(member_attribs["Location"])
+        ip_addr = location.hostname
+        port = location.port or 1400
+        # Preserve compatibility with instances initially created by discovery,
+        # which constructs default-port players using only their IP address.
+        zone = (
+            config.SOCO_CLASS(ip_addr)
+            if port == 1400
+            else config.SOCO_CLASS(ip_addr, port)
+        )
         for key, attrib in ZGS_ATTRIB_MAPPING.items():
             setattr(zone, attrib, member_attribs.get(key))
 
