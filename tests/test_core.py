@@ -407,6 +407,8 @@ class TestSoco:
             ("Sonos Playbase", True),
             ("Sonos Arc", True),
             ("Sonos Arc SL", True),
+            ("Sonos Arc Ultra", True),
+            ("Sonos Beam Ultra", True),
         ),
     )
     def test_soco_is_soundbar(self, moco, model_name):
@@ -550,8 +552,18 @@ class TestSoco:
         moco_zgs.speaker_info["model_name"] = (
             "speaker prefix " + BEAM_ULTRA_PRODUCT_NAME
         )
+        moco_zgs.renderingControl.GetEQ.reset_mock()
         moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "1"}
         assert moco_zgs.speech_enhance_enabled == 1
+        moco_zgs.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled")]
+        )
+
+        moco_zgs.renderingControl.SetEQ.reset_mock()
+        moco_zgs.speech_enhance_enabled = 0
+        moco_zgs.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 0)]
+        )
 
 
 class TestAVTransport:
