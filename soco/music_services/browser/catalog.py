@@ -166,6 +166,7 @@ class PresentationMap:
             dict: ``{"menu_item_overrides": [...], "now_playing_ratings":
             [...], "display_types": {...}}`` with string ids resolved.
         """
+
         def resolve(string_id):
             return string_tables.resolve(string_id, lang)
 

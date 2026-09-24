@@ -19,7 +19,8 @@ def main():
 
     # Pick a configured Spotify account from the selected Sonos system.
     account = next(
-        a for a in ConfiguredMusicServiceAccount.get_accounts(player)
+        a
+        for a in ConfiguredMusicServiceAccount.get_accounts(player)
         if a.service_id == SPOTIFY_SERVICE_ID
     )
     browser = MusicServiceBrowser("Spotify", account=account, device=player)

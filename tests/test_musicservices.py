@@ -604,9 +604,7 @@ def test_begin_authentication_is_deprecated():
         return_value=("https://reg.example/", "CODE", "dev")
     )
 
-    with pytest.warns(
-        UserWarning, match="deprecated.*MusicServiceAccountManager"
-    ):
+    with pytest.warns(UserWarning, match="deprecated.*MusicServiceAccountManager"):
         reg_url = spotify.begin_authentication()
 
     assert reg_url == "https://reg.example/"
@@ -616,9 +614,7 @@ def test_complete_authentication_is_deprecated():
     spotify = MusicService("Spotify")
     spotify.soap_client.complete_authentication = mock.Mock()
 
-    with pytest.warns(
-        UserWarning, match="deprecated.*MusicServiceAccountManager"
-    ):
+    with pytest.warns(UserWarning, match="deprecated.*MusicServiceAccountManager"):
         spotify.complete_authentication("CODE")
 
     spotify.soap_client.complete_authentication.assert_called_once_with(
