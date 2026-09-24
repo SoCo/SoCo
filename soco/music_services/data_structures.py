@@ -61,6 +61,7 @@ from urllib.parse import quote as quote_url
 
 import logging
 from ..data_structures import DidlResource, DidlItem, SearchResult
+from ..exceptions import MusicServiceException
 from ..utils import camel_to_underscore
 
 _LOG = logging.getLogger(__name__)
@@ -112,14 +113,18 @@ def parse_response(service, response, search_type):
     )
     items = []
     # The result to be parsed is in either searchResult or getMetadataResult
+    if not isinstance(response, dict):
+        response = {}  # non-dict replies fail cleanly below
     if "searchResult" in response:
         response = response["searchResult"]
     elif "getMetadataResult" in response:
         response = response["getMetadataResult"]
     else:
-        raise ValueError(
-            '"response" should contain either the key '
-            '"searchResult" or "getMetadataResult"'
+        # Some providers (eg PowerApp) reply without either key; fail cleanly.
+        raise MusicServiceException(
+            '"response" should contain either the key "searchResult" or '
+            '"getMetadataResult": '
+            f"{sorted(response)[:10] if isinstance(response, dict) else response}"
         )
 
     # Form the search metadata
@@ -173,7 +178,7 @@ BOOL_STRS = {"true", "false"}
 def bool_str(string):
     """Returns a boolean from a string imput of 'true' or 'false'"""
     if string not in BOOL_STRS:
-        raise ValueError('Invalid boolean string: "{}"'.format(string))
+        raise ValueError(f'Invalid boolean string: "{string}"')
     return string == "true"
 
 
@@ -206,8 +211,17 @@ class MetadataDictBase:
         self.metadata = {}
         for key, value in metadata_dict.items():
             if key in self._types:
-                convertion_callable = self._types[key]
-                value = convertion_callable(value)
+                # Keep the raw value if a provider sends a wrongly-typed field
+                try:
+                    value = self._types[key](value)
+                except (TypeError, ValueError):
+                    _LOG.debug(
+                        "Could not convert %s=%r to a %s for %s",
+                        key,
+                        value,
+                        self._types[key],
+                        self.__class__.__name__,
+                    )
             self.metadata[camel_to_underscore(key)] = value
 
     def __getattr__(self, key):
@@ -282,7 +296,7 @@ class MusicServiceItem(MetadataDictBase):
         # Form the item_id
         quoted_id = quote_url(content_dict["id"].encode("utf-8"))
         # The hex prefix remains a mistery for now
-        item_id = "0fffffff{}".format(quoted_id)
+        item_id = f"0fffffff{quoted_id}"
         # Form the uri
         is_track = cls == get_class("MediaMetadataTrack")
         uri = form_uri(item_id, music_service, is_track)

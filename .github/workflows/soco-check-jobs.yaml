@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get install graphviz libxml2-dev libxslt-dev python3-dev
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e ".[music-services]"
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
       - name: Lint with flake8 and pylint
@@ -50,3 +50,28 @@ jobs:
         if: matrix.python-version == '3.11'
         run: |
           make docs
+
+  Wheel-Install-Check:
+    name: Build wheel, install it, import every public package
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.11"
+      - name: Build the wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+      - name: Install the wheel into a clean environment
+        run: |
+          python -m venv /tmp/wheel-venv
+          /tmp/wheel-venv/bin/pip install dist/*.whl
+      - name: Import every public package from the installed wheel
+        # Source-tree tests and editable installs do not catch missing
+        # subpackages in the built artifact; the installed wheel is the
+        # ground truth.
+        working-directory: /tmp
+        run: |
+          /tmp/wheel-venv/bin/python -c "import soco, soco.plugins, soco.music_services, soco.music_services.browser"

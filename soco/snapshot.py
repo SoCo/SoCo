@@ -220,8 +220,9 @@ class Snapshot:
         else:
             # was playing a stream (radio station, file, or nothing)
             # reinstate uri and meta data
-            if self.media_uri != "":
-                self.device.play_uri(self.media_uri, self.media_metadata, start=False)
+            # An empty URI is meaningful: it clears a previously selected
+            # resource. Skipping it leaves a verifier's test resource loaded.
+            self.device.play_uri(self.media_uri, self.media_metadata, start=False)
 
     def _restore_volume(self, fade):
         """Reinstate volume.

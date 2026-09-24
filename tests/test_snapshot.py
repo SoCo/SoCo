@@ -61,3 +61,20 @@ def test_restore_queue_skipped_when_none(moco):
     moco.add_uri_to_queue = MagicMock()
     snap._restore_queue()
     moco.add_uri_to_queue.assert_not_called()
+
+
+def test_restore_empty_uri_clears_selected_resource():
+    """Restoring an empty source clears a resource selected by a test."""
+    device = MagicMock()
+    device.get_current_transport_info.return_value = {
+        "current_transport_state": "STOPPED"
+    }
+
+    snap = Snapshot(device)
+    snap.is_coordinator = True
+    snap.media_uri = ""
+    snap.media_metadata = ""
+
+    snap._restore_coordinator()
+
+    device.play_uri.assert_called_once_with("", "", start=False)

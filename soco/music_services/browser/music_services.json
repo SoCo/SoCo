@@ -1,0 +1,4881 @@
+{
+  "generated_at": "2026-08-14T18:57:25",
+  "households": {
+    "0c5378febe38": {
+      "generated_at": "2026-08-14T18:57:25",
+      "results": {
+        "1099": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "1157": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "12": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "5 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "no items",
+                  "status": "skipped"
+                },
+                "playback": {},
+                "search": {
+                  "detail": "category 'artists'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "5 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "no items",
+              "status": "skipped"
+            },
+            "playback": {},
+            "search": {
+              "detail": "category 'artists'",
+              "status": "ok"
+            }
+          }
+        },
+        "1412": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "1 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=None mime=None",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "vores-stream-id",
+                    "status": "ok",
+                    "title": "Reservatet.fm LIVE"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "1 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=None mime=None",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "vores-stream-id",
+                "status": "ok",
+                "title": "Reservatet.fm LIVE"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "144": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "1455": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "157": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "160": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "162": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/x-scpls",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "station_KEANFM",
+                    "status": "ok",
+                    "title": "KEAN 105.1 Today's Best Country | 105.1 KEAN-FM"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/x-scpls",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "station_KEANFM",
+                "status": "ok",
+                "title": "KEAN 105.1 Today's Best Country | 105.1 KEAN-FM"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "164": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "169": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "17": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "174": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "181": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "187": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "188": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "189": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "191": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "192": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "193": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "199": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "2": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "201": {
+          "accounts": 2,
+          "configured": true,
+          "item_types": [
+            "program",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "9 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=application/vnd.apple.mpegurl",
+                  "status": "ok"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "catalog:station:key:A1TH0G2Q4SNB7R",
+                    "status": "ok",
+                    "title": "Mellow Gold Radio"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "catalog:track:asin:B00EQRPFGC#erefid-fefe4c82-24cb-483b-8856-c6858060cb6c",
+                    "status": "ok",
+                    "title": "All Of Me"
+                  }
+                },
+                "search": {
+                  "detail": "category 'all'",
+                  "status": "ok"
+                }
+              }
+            },
+            {
+              "account": 2,
+              "tests": {
+                "browse": {
+                  "detail": "11 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=application/vnd.apple.mpegurl",
+                  "status": "ok"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "sp:container:station:algorithmic:playlist:playlistid:PPF9206B71412F436A963044D8F3E62553",
+                    "status": "ok",
+                    "title": "My Recent Plays and More"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "catalog:track:asin:B00136JD9Y#erefid-53f68e18-dcae-472e-a4dc-f15b967836be",
+                    "status": "ok",
+                    "title": "We Didn't Start the Fire"
+                  }
+                },
+                "search": {
+                  "detail": "category 'all'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "9 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=application/vnd.apple.mpegurl",
+              "status": "ok"
+            },
+            "playback": {
+              "program": {
+                "detail": "PLAYING",
+                "item_id": "catalog:station:key:A1TH0G2Q4SNB7R",
+                "status": "ok",
+                "title": "Mellow Gold Radio"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "catalog:track:asin:B00EQRPFGC#erefid-fefe4c82-24cb-483b-8856-c6858060cb6c",
+                "status": "ok",
+                "title": "All Of Me"
+              }
+            },
+            "search": {
+              "detail": "category 'all'",
+              "status": "ok"
+            }
+          }
+        },
+        "204": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "9 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "librarytrack:i.JL1aR0qTWeabR",
+                    "status": "ok",
+                    "title": "Rangers"
+                  }
+                },
+                "search": {
+                  "detail": "category 'artists'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "9 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "librarytrack:i.JL1aR0qTWeabR",
+                "status": "ok",
+                "title": "Rangers"
+              }
+            },
+            "search": {
+              "detail": "category 'artists'",
+              "status": "ok"
+            }
+          }
+        },
+        "210": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "212": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "213": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "217": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "218": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "220": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "221": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "222": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "223": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "10 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=None",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "streams:top40",
+                    "status": "ok",
+                    "title": "Top40"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "10 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=None",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "streams:top40",
+                "status": "ok",
+                "title": "Top40"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "226": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "230": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "18 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mpeg",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "nts1",
+                    "status": "ok",
+                    "title": "NTS - Live on 1"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "18 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mpeg",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "nts1",
+                "status": "ok",
+                "title": "NTS - Live on 1"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "233": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "234": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "235": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "7 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "channel:132",
+                    "status": "ok",
+                    "title": "P1"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "episode:2815537",
+                    "status": "ok",
+                    "title": "Ebba Witt-Brattstr\u00f6m"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "7 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "channel:132",
+                "status": "ok",
+                "title": "P1"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "episode:2815537",
+                "status": "ok",
+                "title": "Ebba Witt-Brattstr\u00f6m"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "236": {
+          "accounts": 2,
+          "configured": true,
+          "item_types": [
+            "program"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "2 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "Client.ItemNotFound: Sorry, we can't find that (HTTP 200)",
+                  "status": "error"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "ST:3208471858835808247",
+                    "status": "ok",
+                    "title": "Thumbprint Radio"
+                  }
+                },
+                "search": {
+                  "detail": "category 'all'",
+                  "status": "ok"
+                }
+              }
+            },
+            {
+              "account": 2,
+              "tests": {
+                "browse": {
+                  "detail": "1 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "Client.ItemNotFound: Sorry, we can't find that (HTTP 200)",
+                  "status": "error"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "ST:160756695996334042",
+                    "status": "ok",
+                    "title": "Shuffle"
+                  }
+                },
+                "search": {
+                  "detail": "category 'all'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "2 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "Client.ItemNotFound: Sorry, we can't find that (HTTP 200)",
+              "status": "error"
+            },
+            "playback": {
+              "program": {
+                "detail": "PLAYING",
+                "item_id": "ST:3208471858835808247",
+                "status": "ok",
+                "title": "Thumbprint Radio"
+              }
+            },
+            "search": {
+              "detail": "category 'all'",
+              "status": "ok"
+            }
+          }
+        },
+        "237": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "239": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "7 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "no items",
+                  "status": "skipped"
+                },
+                "playback": {},
+                "search": {
+                  "detail": "category 'Books'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "7 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "no items",
+              "status": "skipped"
+            },
+            "playback": {},
+            "search": {
+              "detail": "category 'Books'",
+              "status": "ok"
+            }
+          }
+        },
+        "254": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [
+            "stream"
+          ],
+          "tests": {
+            "browse": {
+              "detail": "6 items",
+              "status": "ok"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "not_added"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=None",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "TuneIn is not added to this household, so its content cannot be played; add the service first",
+                "status": "error"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "256": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "program",
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=application/x-mpegURL",
+                  "status": "ok"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "UPnP Error 701 received: Transition not available from x.x.x.x",
+                    "status": "error"
+                  },
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "R1-Program-stream:kamloops",
+                    "status": "ok",
+                    "title": "CBC Radio One Kamloops"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=application/x-mpegURL",
+              "status": "ok"
+            },
+            "playback": {
+              "program": {
+                "detail": "UPnP Error 701 received: Transition not available from x.x.x.x",
+                "status": "error"
+              },
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "R1-Program-stream:kamloops",
+                "status": "ok",
+                "title": "CBC Radio One Kamloops"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "259": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "6 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=application/x-mpegURL",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "scatriplem_svc_2mmm",
+                    "status": "ok",
+                    "title": "104.9 Triple M Sydney"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "6 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=application/x-mpegURL",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "scatriplem_svc_2mmm",
+                "status": "ok",
+                "title": "104.9 Triple M Sydney"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "261": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "6 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=application/x-mpegURL",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "scahit_svc_2day",
+                    "status": "ok",
+                    "title": "104.1 2DayFM"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "6 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=application/x-mpegURL",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "scahit_svc_2day",
+                "status": "ok",
+                "title": "104.1 2DayFM"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "265": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "8 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "/radios/powerfm/",
+                    "status": "ok",
+                    "title": "Power FM"
+                  }
+                },
+                "search": {
+                  "detail": "category 'artists'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "8 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "/radios/powerfm/",
+                "status": "ok",
+                "title": "Power FM"
+              }
+            },
+            "search": {
+              "detail": "category 'artists'",
+              "status": "ok"
+            }
+          }
+        },
+        "268": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "8 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "r:403364",
+                    "status": "ok",
+                    "title": "KBUE Que Buena 105.5 / 94.3 FM (US Only)"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "pe:1606458407:242903320",
+                    "status": "ok",
+                    "title": "Pandashow - Sin Picante - Agosto 13, 2026"
+                  }
+                },
+                "search": {
+                  "detail": "category 'genres'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "8 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "r:403364",
+                "status": "ok",
+                "title": "KBUE Que Buena 105.5 / 94.3 FM (US Only)"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "pe:1606458407:242903320",
+                "status": "ok",
+                "title": "Pandashow - Sin Picante - Agosto 13, 2026"
+              }
+            },
+            "search": {
+              "detail": "category 'genres'",
+              "status": "ok"
+            }
+          }
+        },
+        "270": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "100 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "Track:umphreys:2026:2026-08-13:4133856:34412020",
+                    "status": "ok",
+                    "title": "There's No Crying In Mexico [10:43]"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "100 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "Track:umphreys:2026:2026-08-13:4133856:34412020",
+                "status": "ok",
+                "title": "There's No Crying In Mexico [10:43]"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "271": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "273": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "275": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "276": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "277": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mpeg",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "live:p1",
+                    "status": "ok",
+                    "title": "NRK P1"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "podcast:hele_historien:l_ef6cb0fe-0241-4fc3-acb0-fe02412fc35c",
+                    "status": "ok",
+                    "title": "Smakebit: Terraskandalen"
+                  }
+                },
+                "search": {
+                  "detail": "category 'podcasts'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mpeg",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "live:p1",
+                "status": "ok",
+                "title": "NRK P1"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "podcast:hele_historien:l_ef6cb0fe-0241-4fc3-acb0-fe02412fc35c",
+                "status": "ok",
+                "title": "Smakebit: Terraskandalen"
+              }
+            },
+            "search": {
+              "detail": "category 'podcasts'",
+              "status": "ok"
+            }
+          }
+        },
+        "279": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=mpeg/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "global_svc_360",
+                    "status": "ok",
+                    "title": "Capital Anthems"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=mpeg/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "global_svc_360",
+                "status": "ok",
+                "title": "Capital Anthems"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "280": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "1 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "station:417",
+                    "status": "ok",
+                    "title": "WFAN Sports Radio 101.9 FM/66AM New York"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "1 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "station:417",
+                "status": "ok",
+                "title": "WFAN Sports Radio 101.9 FM/66AM New York"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "284": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "287": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "294": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "295": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "296": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "299": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "303": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "program"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "26 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=program mime=None",
+                  "status": "ok"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "sonos:2997",
+                    "status": "ok",
+                    "title": "Hit List"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "26 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=program mime=None",
+              "status": "ok"
+            },
+            "playback": {
+              "program": {
+                "detail": "PLAYING",
+                "item_id": "sonos:2997",
+                "status": "ok",
+                "title": "Hit List"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "305": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "306": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "307": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "308": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "program"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "ns1:Server.ServiceUnknownError: Not Supported (HTTP 500)",
+                  "status": "error"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "channel:0:2:resume",
+                    "status": "ok",
+                    "title": "The Main Mix"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "ns1:Server.ServiceUnknownError: Not Supported (HTTP 500)",
+              "status": "error"
+            },
+            "playback": {
+              "program": {
+                "detail": "PLAYING",
+                "item_id": "channel:0:2:resume",
+                "status": "ok",
+                "title": "The Main Mix"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "31": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "310": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "312": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "314": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "program"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "5 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "getMediaMetadata response did not contain a result",
+                  "status": "error"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "UPnP Error 501 received: Action Failed from x.x.x.x",
+                    "status": "error"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "5 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "getMediaMetadata response did not contain a result",
+              "status": "error"
+            },
+            "playback": {
+              "program": {
+                "detail": "UPnP Error 501 received: Action Failed from x.x.x.x",
+                "status": "error"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "315": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "3 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "live:1",
+                    "status": "ok",
+                    "title": "Convoy Live"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "3 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "live:1",
+                "status": "ok",
+                "title": "Convoy Live"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "317": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "321": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "42 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "527a4bbb-3555-486a-8322-8080f870943f",
+                    "status": "ok",
+                    "title": "80s80s MV"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "42 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "527a4bbb-3555-486a-8322-8080f870943f",
+                "status": "ok",
+                "title": "80s80s MV"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "322": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "324": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "19 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "HTTP: {\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.6.1\",\"title\":\"An error occurred while processing your request.\",\"status\":500,\"traceId\":\"00-87d58383808503966eb8e7e06f0c9c18-41837e599df54c41-00\"} (HTTP 500)",
+                  "status": "error"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "75NMKT",
+                    "status": "ok",
+                    "title": "Station Klank en Drank"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "19 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "HTTP: {\"type\":\"https://tools.ietf.org/html/rfc7231#section-6.6.1\",\"title\":\"An error occurred while processing your request.\",\"status\":500,\"traceId\":\"00-87d58383808503966eb8e7e06f0c9c18-41837e599df54c41-00\"} (HTTP 500)",
+              "status": "error"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "75NMKT",
+                "status": "ok",
+                "title": "Station Klank en Drank"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "326": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "26 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mpeg",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "deutschland",
+                    "status": "ok",
+                    "title": "Deutschland"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "26 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mpeg",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "deutschland",
+                "status": "ok",
+                "title": "Deutschland"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "327": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "329": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "33": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "330": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "6 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mpeg",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "STOPPED",
+                    "item_id": "cbaa_svc_6ACR",
+                    "status": "error",
+                    "title": "Radio NGM"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "ee64844d6ba976926772d379cdeb957b",
+                    "status": "ok",
+                    "title": "Interview with Erin Cornell of \u00c8irinn"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "6 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mpeg",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "STOPPED",
+                "item_id": "cbaa_svc_6ACR",
+                "status": "error",
+                "title": "Radio NGM"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "ee64844d6ba976926772d379cdeb957b",
+                "status": "ok",
+                "title": "Interview with Erin Cornell of \u00c8irinn"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "333": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "335": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "1 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mpegurl",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "1",
+                    "status": "ok",
+                    "title": "Lot Radio"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "1 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mpegurl",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "1",
+                "status": "ok",
+                "title": "Lot Radio"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "336": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "5 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "virginradiouk",
+                    "status": "ok",
+                    "title": "Virgin Radio UK"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "5 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "virginradiouk",
+                "status": "ok",
+                "title": "Virgin Radio UK"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "36": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "37": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "program",
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "15 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=application/x-mpegURL",
+                  "status": "ok"
+                },
+                "playback": {
+                  "program": {
+                    "detail": "PLAYING",
+                    "item_id": "channel-xtra:61893114-e9a5-b984-b7d7-cfdcb14e9369",
+                    "status": "ok",
+                    "title": "Queens of Pop"
+                  },
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "channel-linear:ad78ffbd-6cbd-e19e-27c5-043649ef4e8e",
+                    "status": "ok",
+                    "title": "CH 168 - SiriusXM Comedy Club"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "episode-audio:a38db32c-c599-6f12-3c33-c25d9dcb349c",
+                    "status": "ok",
+                    "title": "Move Over!"
+                  }
+                },
+                "search": {
+                  "detail": "category 'all'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "15 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=application/x-mpegURL",
+              "status": "ok"
+            },
+            "playback": {
+              "program": {
+                "detail": "PLAYING",
+                "item_id": "channel-xtra:61893114-e9a5-b984-b7d7-cfdcb14e9369",
+                "status": "ok",
+                "title": "Queens of Pop"
+              },
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "channel-linear:ad78ffbd-6cbd-e19e-27c5-043649ef4e8e",
+                "status": "ok",
+                "title": "CH 168 - SiriusXM Comedy Club"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "episode-audio:a38db32c-c599-6f12-3c33-c25d9dcb349c",
+                "status": "ok",
+                "title": "Move Over!"
+              }
+            },
+            "search": {
+              "detail": "category 'all'",
+              "status": "ok"
+            }
+          }
+        },
+        "44": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "5 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=track mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "TRACK:3a8gf",
+                    "status": "ok",
+                    "title": "outta time"
+                  }
+                },
+                "search": {
+                  "detail": "category 'artists'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "5 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=track mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "TRACK:3a8gf",
+                "status": "ok",
+                "title": "outta time"
+              }
+            },
+            "search": {
+              "detail": "category 'artists'",
+              "status": "ok"
+            }
+          }
+        },
+        "45": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "50": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "500": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "511": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "32 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "9434e351-ef87-4454-8b72-27a006731e3f",
+                    "status": "ok",
+                    "title": "90s90s Real 90s Radio"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "32 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "9434e351-ef87-4454-8b72-27a006731e3f",
+                "status": "ok",
+                "title": "90s90s Real 90s Radio"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "516": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "8 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/x-scpls",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "synphaera",
+                    "status": "ok",
+                    "title": "Synphaera Radio"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "8 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/x-scpls",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "synphaera",
+                "status": "ok",
+                "title": "Synphaera Radio"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "518": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "585": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream",
+            "track"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "9 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=None mime=None",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "station:FRANCEINTER",
+                    "status": "ok",
+                    "title": "France Inter"
+                  },
+                  "track": {
+                    "detail": "PLAYING",
+                    "item_id": "podcast:21f39fa3-e4d7-482b-b70a-f966a89ce669:ep:3eb6e34b-80a5-4db4-9869-2d0d8237b346",
+                    "status": "ok",
+                    "title": "La vie sous la terre"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "9 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=None mime=None",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "station:FRANCEINTER",
+                "status": "ok",
+                "title": "France Inter"
+              },
+              "track": {
+                "detail": "PLAYING",
+                "item_id": "podcast:21f39fa3-e4d7-482b-b70a-f966a89ce669:ep:3eb6e34b-80a5-4db4-9869-2d0d8237b346",
+                "status": "ok",
+                "title": "La vie sous la terre"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "6": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "633": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "635": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "666": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "711": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "4 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "no items",
+                  "status": "skipped"
+                },
+                "playback": {},
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "4 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "no items",
+              "status": "skipped"
+            },
+            "playback": {},
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "799": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "827": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "10 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "national",
+                    "status": "ok",
+                    "title": "National"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "10 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "national",
+                "status": "ok",
+                "title": "National"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "846": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "861": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        },
+        "894": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "16 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "stream_32",
+                    "status": "ok",
+                    "title": "80er-Radio harmony"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "16 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "stream_32",
+                "status": "ok",
+                "title": "80er-Radio harmony"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "895": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "37 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "stream_2",
+                    "status": "ok",
+                    "title": "HIT RADIO FFH"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "37 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "stream_2",
+                "status": "ok",
+                "title": "HIT RADIO FFH"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "896": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "23 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/aac",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "stream_29",
+                    "status": "ok",
+                    "title": "planet radio"
+                  }
+                },
+                "search": {
+                  "detail": "category 'stations'",
+                  "status": "ok"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "23 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/aac",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "stream_29",
+                "status": "ok",
+                "title": "planet radio"
+              }
+            },
+            "search": {
+              "detail": "category 'stations'",
+              "status": "ok"
+            }
+          }
+        },
+        "962": {
+          "accounts": 1,
+          "configured": true,
+          "item_types": [
+            "stream"
+          ],
+          "per_account_tests": [
+            {
+              "account": 1,
+              "tests": {
+                "browse": {
+                  "detail": "8 items",
+                  "status": "ok"
+                },
+                "metadata": {
+                  "detail": "itemType=stream mime=audio/mp3",
+                  "status": "ok"
+                },
+                "playback": {
+                  "stream": {
+                    "detail": "PLAYING",
+                    "item_id": "3",
+                    "status": "ok",
+                    "title": "Radio Paloma - Live"
+                  }
+                },
+                "search": {
+                  "detail": "no search categories",
+                  "status": "skipped"
+                }
+              }
+            }
+          ],
+          "tests": {
+            "browse": {
+              "detail": "8 items",
+              "status": "ok"
+            },
+            "metadata": {
+              "detail": "itemType=stream mime=audio/mp3",
+              "status": "ok"
+            },
+            "playback": {
+              "stream": {
+                "detail": "PLAYING",
+                "item_id": "3",
+                "status": "ok",
+                "title": "Radio Paloma - Live"
+              }
+            },
+            "search": {
+              "detail": "no search categories",
+              "status": "skipped"
+            }
+          }
+        },
+        "976": {
+          "accounts": 0,
+          "configured": false,
+          "item_types": [],
+          "tests": {
+            "browse": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "construct": {
+              "detail": "not added to this household",
+              "status": "auth_required"
+            },
+            "metadata": {
+              "detail": "not added",
+              "status": "skipped"
+            },
+            "search": {
+              "detail": "not added",
+              "status": "skipped"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": [
+    {
+      "auth": "DeviceLink",
+      "capabilities": "30421595",
+      "container_type": "MService",
+      "id": 2,
+      "name": "Deezer",
+      "uri": "https://api.deezer.com/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "30413379",
+      "container_type": "MService",
+      "id": 6,
+      "name": "iHeartRadio",
+      "uri": "https://sonos-od.iheart.com/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "30476819",
+      "container_type": "MService",
+      "id": 12,
+      "name": "Spotify",
+      "uri": "https://spotify-v5.ws.sonos.com/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360731",
+      "container_type": "MService",
+      "id": 17,
+      "name": "LiveOne",
+      "uri": "https://sonos.slacker.com/wsv1/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29370963",
+      "container_type": "MService",
+      "id": 31,
+      "name": "Qobuz",
+      "uri": "https://www.qobuz.com/api.xml/0.3/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 33,
+      "name": "Murfie",
+      "uri": "https://murfie.com/sonos/xmlapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "4198472",
+      "container_type": "MService",
+      "id": 36,
+      "name": "HEARTS of SPACE",
+      "uri": "https://sonos-api.hos.com/ws",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "31232577",
+      "container_type": "MService",
+      "id": 37,
+      "name": "SiriusXM",
+      "uri": "https://ce-sonos.siriusxm.com/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360705",
+      "container_type": "MService",
+      "id": 44,
+      "name": "Hype Machine",
+      "uri": "https://api.hypem.com/api/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360648",
+      "container_type": "MService",
+      "id": 45,
+      "name": "DMD2 Music",
+      "uri": "https://services.dmd2.com/sonos-api/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "12954113",
+      "container_type": "MService",
+      "id": 50,
+      "name": "YouSee Musik",
+      "uri": "https://yousee-smapi.api.247e.com/musicopen.svc",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29729288",
+      "container_type": "MService",
+      "id": 144,
+      "name": "Calm Radio",
+      "uri": "https://sonos.calmradio.com/app",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 157,
+      "name": "Bandcamp",
+      "uri": "https://sns.bandcamp.com/api/sonos/2/sonos_api",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29823491",
+      "container_type": "MService",
+      "id": 160,
+      "name": "SoundCloud",
+      "uri": "https://api.sonos.integrate.soundcloud.com/",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 162,
+      "name": "radioPup",
+      "uri": "https://sonos.townsquaremedia.com/index.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29372993",
+      "container_type": "MService",
+      "id": 164,
+      "name": "Saavn",
+      "uri": "https://www.saavn.com/apps/sonos/SonosAPI.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29364800",
+      "container_type": "MService",
+      "id": 169,
+      "name": "Tribe of Noise",
+      "uri": "https://sonos.tribeofnoise.com/server-v2.1.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "4239955",
+      "container_type": "MService",
+      "id": 174,
+      "name": "TIDAL",
+      "uri": "https://smapi.tidal.com/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29360707",
+      "container_type": "MService",
+      "id": 181,
+      "name": "Mixcloud",
+      "uri": "https://app.mixcloud.com/sonos-app/",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29393473",
+      "container_type": "MService",
+      "id": 187,
+      "name": "NhacCuaTui",
+      "uri": "https://sonos.nhaccuatui.com/sonos/api",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "4822529",
+      "container_type": "MService",
+      "id": 188,
+      "name": "AccuRadio",
+      "uri": "https://www.accuradio.com/arsonos/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 189,
+      "name": "SoundMachine",
+      "uri": "https://provider.sound-machine.com/sonosapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "22002259",
+      "container_type": "MService",
+      "id": 191,
+      "name": "Classical Archives",
+      "uri": "https://smapi.classicalarchives.com/endpoint",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29364736",
+      "container_type": "MService",
+      "id": 192,
+      "name": "focus@will",
+      "uri": "https://www.focusatwill.com/sonos/action",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29696577",
+      "container_type": "MService",
+      "id": 193,
+      "name": "Tunify for Business",
+      "uri": "https://apis.tunify.com/t4-sonos-music-api/services/Sonos.wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29659721",
+      "container_type": "MService",
+      "id": 199,
+      "name": "Qsic",
+      "uri": "https://sonos.getqsic.com/api",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32612873",
+      "container_type": "MService",
+      "id": 201,
+      "name": "Amazon Music",
+      "uri": "https://sonos.smapi.amazonmusic.com/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32477761",
+      "container_type": "MService",
+      "id": 204,
+      "name": "Apple Music",
+      "uri": "https://sonos-music.apple.com/ws/SonosSoap",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "4493888",
+      "container_type": "MService",
+      "id": 210,
+      "name": "Rockbot",
+      "uri": "https://api.rockbot.com/v4/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "31298113",
+      "container_type": "MService",
+      "id": 212,
+      "name": "Plex",
+      "uri": "https://sonos.plex.tv/v2.2/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29368832",
+      "container_type": "MService",
+      "id": 213,
+      "name": "Custom Channels",
+      "uri": "https://sonos.customchannels.net/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "29364738",
+      "container_type": "MService",
+      "id": 217,
+      "name": "FIT Radio Workout Music",
+      "uri": "https://www.fitradio.com/apisonos/ws",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 218,
+      "name": "Soundsuit.fm",
+      "uri": "https://api.soundsuit.fm/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "21340681",
+      "container_type": "MService",
+      "id": 220,
+      "name": "Claro M\u00fasica",
+      "uri": "https://sonos.claromusica.com/v2/SonosSoap/SonosWsdl.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29891155",
+      "container_type": "MService",
+      "id": 221,
+      "name": "LivePhish+",
+      "uri": "https://sonos.nugs.net/soap/livephishoauth",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29891155",
+      "container_type": "MService",
+      "id": 222,
+      "name": "nugs",
+      "uri": "https://sonos.nugs.net/soap/nugsoauth",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 223,
+      "name": "RauteMusik.FM",
+      "uri": "https://sonos-smapi.rautemusik.fm/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29996609",
+      "container_type": "MService",
+      "id": 226,
+      "name": "Storytel",
+      "uri": "https://sonosapi.storytel.com/sonos/1.0",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 230,
+      "name": "NTS Radio",
+      "uri": "https://www.nts.live/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "30388800",
+      "container_type": "MService",
+      "id": 233,
+      "name": "Pocket Casts",
+      "uri": "https://integrations.pocketcasts.com/service/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32875016",
+      "container_type": "MService",
+      "id": 234,
+      "name": "deliver.media",
+      "uri": "https://sonos-api.deliver.media/SonosService/delivermedia",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29430273",
+      "container_type": "MService",
+      "id": 235,
+      "name": "Sveriges Radio",
+      "uri": "https://sonos.sr.se/ws",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "31293953",
+      "container_type": "MService",
+      "id": 236,
+      "name": "Pandora",
+      "uri": "https://sonos.pandora.com/v2.1",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "31826441",
+      "container_type": "MService",
+      "id": 237,
+      "name": "storePlay",
+      "uri": "https://v2.api.storeplay.com.au/sonos/service",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "30520913",
+      "container_type": "MService",
+      "id": 239,
+      "name": "Audible",
+      "uri": "https://sonos.audible.com/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29364801",
+      "container_type": "MService",
+      "id": 254,
+      "name": "TuneIn",
+      "uri": "https://legato.radiotime.com/Radio.asmx",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4788800",
+      "container_type": "MService",
+      "id": 256,
+      "name": "CBC Radio & Music",
+      "uri": "https://cbcmusic-sonos-beta.azurewebsites.net/SonosService.svc",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360705",
+      "container_type": "MService",
+      "id": 259,
+      "name": "Triple M",
+      "uri": "https://sonoslb.radioapi.io/scatriplem",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360705",
+      "container_type": "MService",
+      "id": 261,
+      "name": "Hit Network",
+      "uri": "https://sonoslb.radioapi.io/scahit",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 265,
+      "name": "PowerApp",
+      "uri": "https://api.powergroup.com.tr/Sonos/",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "20972033",
+      "container_type": "MService",
+      "id": 268,
+      "name": "myTuner Radio",
+      "uri": "https://sonos.mytuner.mobi/api/v2/sonos/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29364800",
+      "container_type": "MService",
+      "id": 270,
+      "name": "Relisten",
+      "uri": "https://sonos.relisten.net/mp3",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29962816",
+      "container_type": "MService",
+      "id": 271,
+      "name": "IDAGIO",
+      "uri": "https://idg-prod-sonos.herokuapp.com/smapi/action",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 273,
+      "name": "Klassik Radio Plus",
+      "uri": "https://klassikradioplus.de/sonos/smapi/v2",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360649",
+      "container_type": "MService",
+      "id": 275,
+      "name": "Art Radio - RadioArt.com",
+      "uri": "https://sonos.radioart.com/server/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29438528",
+      "container_type": "MService",
+      "id": 276,
+      "name": "Jukeboxy Music for Business",
+      "uri": "https://sonos.jukeboxy.com/Sonos.asmx?wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29401601",
+      "container_type": "MService",
+      "id": 277,
+      "name": "NRK Radio",
+      "uri": "https://psapi.nrk.no/sonos/sonos.svc",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360705",
+      "container_type": "MService",
+      "id": 279,
+      "name": "Global Player",
+      "uri": "https://sonoslb.radioapi.io/global",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 280,
+      "name": "Audacy",
+      "uri": "https://sonos.audacy.com/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32473609",
+      "container_type": "MService",
+      "id": 284,
+      "name": "YouTube Music",
+      "uri": "https://music.googleapis.com/v1:sendRequest",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "30736896",
+      "container_type": "MService",
+      "id": 287,
+      "name": "ton\u00edque",
+      "uri": "https://sonos.tonique.com/ws",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29889025",
+      "container_type": "MService",
+      "id": 294,
+      "name": "Radio Javan",
+      "uri": "https://rjsonos.app/musicservice",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "33391105",
+      "container_type": "MService",
+      "id": 295,
+      "name": "Soundtrack",
+      "uri": "https://sms.soundtrackyourbrand.com/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29733377",
+      "container_type": "MService",
+      "id": 296,
+      "name": "Pandora CloudCover",
+      "uri": "https://api-sonos.cloudcovermusic.com/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 299,
+      "name": "POSmusic",
+      "uri": "https://api.posmusic.com/sonos/v1/action",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "13648393",
+      "container_type": "MService",
+      "id": 303,
+      "name": "Sonos Radio",
+      "uri": "https://sali.sonos.superhi.fi/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29987392",
+      "container_type": "MService",
+      "id": 305,
+      "name": "Libby by OverDrive",
+      "uri": "https://libbysonos.overdrive.com/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29426176",
+      "container_type": "MService",
+      "id": 306,
+      "name": "Atmosphere by Kollekt.fm",
+      "uri": "https://sonos-smapi.service.kollekt.fm/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "4391488",
+      "container_type": "MService",
+      "id": 307,
+      "name": "Bookmate",
+      "uri": "https://sonos.bookmate.com/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "12587520",
+      "container_type": "MService",
+      "id": 308,
+      "name": "Radio Paradise",
+      "uri": "https://api.radioparadise.com/sonos/soap/server.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29364801",
+      "container_type": "MService",
+      "id": 310,
+      "name": "iBroadcast",
+      "uri": "https://sonos.ibroadcast.com/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 312,
+      "name": "Radioshop",
+      "uri": "https://smapi.radioshop.net/SonosService.svc",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29430336",
+      "container_type": "MService",
+      "id": 314,
+      "name": "JazzGroove.org",
+      "uri": "https://sonos.jazzgroove.org/listen",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 315,
+      "name": "Convoy Network",
+      "uri": "https://sonos.convoynetwork.com/musicservice",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29362689",
+      "container_type": "MService",
+      "id": 317,
+      "name": "Yogi Tunes",
+      "uri": "https://yogi-tunes.ca/server.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360641",
+      "container_type": "MService",
+      "id": 321,
+      "name": "80s80s - REAL 80s Radio",
+      "uri": "https://sonos80s.regiocast.customers.nuuk.de/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "30736897",
+      "container_type": "MService",
+      "id": 322,
+      "name": "Activaire",
+      "uri": "https://smapi.sonos.activaire.com/musicservice",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 324,
+      "name": "Piraten.FM",
+      "uri": "https://piraten.fm/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 326,
+      "name": "Schlager Radio",
+      "uri": "https://sonos.schlagerradio.de/wsdl/schlagerradio",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "4570707",
+      "container_type": "MService",
+      "id": 327,
+      "name": "iChill Music Service",
+      "uri": "https://upgrade.ichillmusic.com/sonoscallback-production.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29458952",
+      "container_type": "MService",
+      "id": 329,
+      "name": "Music Your Brand",
+      "uri": "https://api.musicyourbrand.com/sonos/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360705",
+      "container_type": "MService",
+      "id": 330,
+      "name": "Community Radio Plus",
+      "uri": "https://sonoslb.radioapi.io/cbaa",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29364817",
+      "container_type": "MService",
+      "id": 333,
+      "name": "TuneIn (New)",
+      "uri": "https://sonos.tunein.com/SMRadio.asmx",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4194816",
+      "container_type": "MService",
+      "id": 335,
+      "name": "The Lot Radio",
+      "uri": "https://wy8hgbmpdj.us-east-1.awsapprunner.com/wsdl?wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4194816",
+      "container_type": "MService",
+      "id": 336,
+      "name": "Virgin Radio UK",
+      "uri": "https://api.news.co.uk/audio/v1/smapi/virginradio/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "DeviceLink",
+      "capabilities": "32891401",
+      "container_type": "Preload",
+      "id": 500,
+      "name": "Sonos Backgrounds",
+      "uri": "https://sonos-prod.mymood.com/api/Sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "23437833",
+      "container_type": "MService",
+      "id": 511,
+      "name": "90s90s Radio",
+      "uri": "https://sonos90s.regiocast.customers.nuuk.de/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "31826441",
+      "container_type": "MService",
+      "id": 516,
+      "name": "SomaFM Radio",
+      "uri": "https://sonos.somafm.com/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "31826441",
+      "container_type": "MService",
+      "id": 518,
+      "name": "Familystream",
+      "uri": "https://web.familystream.com/api/sonos/v2.1/endpoint.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "31826441",
+      "container_type": "MService",
+      "id": 585,
+      "name": "Radio France",
+      "uri": "https://api.radiofrance.fr/voiceapi/sonos/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "4302344",
+      "container_type": "MService",
+      "id": 633,
+      "name": "Spectre",
+      "uri": "https://vauxhall.spectre-music.com/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32875017",
+      "container_type": "MService",
+      "id": 635,
+      "name": "Harmony",
+      "uri": "https://harmony-sonos-prod.moodmedia.com/api/Sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32875016",
+      "container_type": "MService",
+      "id": 666,
+      "name": "RadioSparx Royalty-Free Music",
+      "uri": "https://www.radiosparx.com/module/radiosparx/sonos/default.cfm",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "29360640",
+      "container_type": "MService",
+      "id": 711,
+      "name": "LITT Live",
+      "uri": "https://dash-api.com/sonos/MusicBrainzPHP/SonosAPI.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "32875016",
+      "container_type": "MService",
+      "id": 799,
+      "name": "amidAudio",
+      "uri": "https://amidaudio.com/api/integration/sonos/smapi",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "7381504",
+      "container_type": "MService",
+      "id": 827,
+      "name": "Radio Energy",
+      "uri": "https://sonos.nrj.customers.nuuk.de/wsdl",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "29729280",
+      "container_type": "MService",
+      "id": 846,
+      "name": "Download Player",
+      "uri": "https://sonos.musicstylingonline.com/ws",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "6332929",
+      "container_type": "MService",
+      "id": 861,
+      "name": "Astiga",
+      "uri": "https://sonos.asti.ga/ws/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4235777",
+      "container_type": "MService",
+      "id": 894,
+      "name": "80er-Radio harmony",
+      "uri": "https://resource.harmonyfm.de/digital/sonos/soap.php?station=harmonyfm",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4235777",
+      "container_type": "MService",
+      "id": 895,
+      "name": "HIT RADIO FFH",
+      "uri": "https://resource.ffh.de/digital/sonos/soap.php?station=ffh",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "4235777",
+      "container_type": "MService",
+      "id": 896,
+      "name": "planet radio",
+      "uri": "https://resource.planetradio.de/digital/sonos/soap.php?station=planet",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "6726144",
+      "container_type": "MService",
+      "id": 962,
+      "name": "Radio Paloma",
+      "uri": "https://sonos.konsole-labs.com/radiopaloma.php",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "5547529",
+      "container_type": "MService",
+      "id": 976,
+      "name": "Music Source",
+      "uri": "https://europe-west1-music-source-68a2d.cloudfunctions.net/app/",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "24158729",
+      "container_type": "MService",
+      "id": 1099,
+      "name": "Melodial - Music For Retail",
+      "uri": "https://api.melodial.com/sonos/v1",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "7381504",
+      "container_type": "MService",
+      "id": 1157,
+      "name": "HearDis! Instore Radio",
+      "uri": "https://stream.heardis.com/sonos/soap",
+      "version": "1.1"
+    },
+    {
+      "auth": "Anonymous",
+      "capabilities": "12624384",
+      "container_type": "MService",
+      "id": 1412,
+      "name": "Reservatet.fm",
+      "uri": "https://reservatet.fm/api/sonos",
+      "version": "1.1"
+    },
+    {
+      "auth": "AppLink",
+      "capabilities": "24158720",
+      "container_type": "MService",
+      "id": 1455,
+      "name": "Tonada",
+      "uri": "https://api.tonada.com/v1/smapi",
+      "version": "1.1"
+    }
+  ]
+}
