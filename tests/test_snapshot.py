@@ -1,9 +1,24 @@
 """Tests for the snapshot module."""
 
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from soco.data_structures import DidlMusicTrack, DidlResource
 from soco.snapshot import Snapshot
+
+QUEUE_URI = "x-rincon-queue:RINCON_000XXX1400#0"
+
+
+def playing_local_queue(moco):
+    """Point the mock device at its local queue, as returned by GetMediaInfo."""
+    moco.avTransport.GetMediaInfo.return_value = {
+        "CurrentURI": QUEUE_URI,
+        "CurrentURIMetaData": "",
+    }
+    return patch.object(
+        moco,
+        "get_current_track_info",
+        return_value={"playlist_position": "", "position": ""},
+    )
 
 
 def make_track(uri, protocol_info="http-get:*:audio/mpeg:*"):
@@ -61,3 +76,29 @@ def test_restore_queue_skipped_when_none(moco):
     moco.add_uri_to_queue = MagicMock()
     snap._restore_queue()
     moco.add_uri_to_queue.assert_not_called()
+
+
+def test_snapshot_skips_cross_fade_when_not_coordinator(moco):
+    """cross_fade must not be read on a non-coordinator (#621)."""
+    with playing_local_queue(moco):
+        with patch.object(
+            type(moco), "is_coordinator", new_callable=PropertyMock, return_value=False
+        ):
+            snap = Snapshot(moco)
+            assert snap.snapshot() is False
+    assert snap.cross_fade is None
+
+
+def test_snapshot_saves_cross_fade_when_coordinator(moco):
+    """cross_fade is saved when the device is a coordinator."""
+    with playing_local_queue(moco):
+        with patch.object(
+            type(moco), "is_coordinator", new_callable=PropertyMock, return_value=True
+        ):
+            with patch.object(
+                type(moco), "cross_fade", new_callable=PropertyMock, return_value=False
+            ) as cross_fade:
+                snap = Snapshot(moco)
+                assert snap.snapshot() is True
+    cross_fade.assert_called_once()
+    assert snap.cross_fade is False
