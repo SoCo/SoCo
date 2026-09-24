@@ -142,7 +142,7 @@ def _zgt_service():
 
 
 def test_update_cache_on_event_updates_zone_group_state():
-    """ZGS events must update the shared ZoneGroupState (issue #975)."""
+    """ZGS events must update the shared ZoneGroupState."""
     service, zgs = _zgt_service()
     event = Event("sid", "0", service, 123.0, {"zone_group_state": "<ZoneGroups/>"})
 
@@ -164,7 +164,7 @@ def test_update_cache_on_event_without_zone_group_state():
 
 
 def test_update_cache_on_event_zgs_failure_logs(caplog):
-    """A failing ZGS update must be logged, not raised (issue #975).
+    """A failing ZGS update must be logged, not raised.
 
     The generic event handler calls this hook before delivering the event, so
     swallowing here is what keeps a bad payload from suppressing delivery.

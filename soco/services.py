@@ -824,7 +824,12 @@ class ZoneGroupTopology(Service):
     topology, diagnostics and updates."""
 
     def _update_cache_on_event(self, event):
-        """Keep the shared ZoneGroupState in sync with ZGS events (issue #975)."""
+        """Keep the shared ZoneGroupState in sync with ZGS events.
+
+        The shared-state update is safe without extra locking here because
+        process_payload() serializes updates under the ZoneGroupState lock.
+        """
+        super()._update_cache_on_event(event)
         zone_group_state = event.variables.get("zone_group_state")
         if zone_group_state is None:
             return

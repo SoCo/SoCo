@@ -226,6 +226,9 @@ class ZoneGroupState:
             # flight; discard the result so it can't supersede event updates.
             with self._lock:
                 if self.has_subscriptions:
+                    # If this is the very first poll, the group sets stay
+                    # empty until the subscription's initial NOTIFY (which
+                    # carries the full topology) has been processed.
                     self.total_requests += 1
                     _LOG.debug(
                         "Subscription became active during poll for %s, "
@@ -297,20 +300,20 @@ class ZoneGroupState:
 
     def update_zgs_by_event_default(self, speaker):
         """
-        Update the ZGS using the default events module.
+        Update the ZGS using the default events module. When the event is
+        received, the notify handler updates the ZGS via the service's
+        '_update_cache_on_event' hook before it reaches the event queue.
         """
         sub = speaker.zoneGroupTopology.subscribe()
-        event = sub.events.get(timeout=1.0)
+        sub.events.get(timeout=1.0)
         sub.unsubscribe()
-        zgs = event.variables.get("zone_group_state")
-        self.process_payload(payload=zgs, source="event", source_ip=speaker.ip_address)
 
     @staticmethod
     async def update_zgs_by_event_asyncio(speaker):
         """
         Update ZGS using events_asyncio. When the event is received,
-        the events_asyncio notify handler will call 'process_payload' with
-        the updated ZGS.
+        the events_asyncio notify handler updates the ZGS via the service's
+        '_update_cache_on_event' hook.
         """
         from . import events_asyncio  # pylint: disable=C0415
 
