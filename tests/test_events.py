@@ -138,7 +138,7 @@ def test_get_listen_ip_uses_non_blocking_connect():
             result = get_listen_ip("192.168.1.42")
     assert result == "192.168.1.50"
     sock.setblocking.assert_called_once_with(False)
-    sock.connect.assert_called_once_with(("192.168.1.42", 1400))
+    sock.connect.assert_called_once_with(("192.168.1.42", config.EVENT_LISTENER_PORT))
 
 
 def test_get_listen_ip_connect_in_progress():
