@@ -18,6 +18,8 @@ Warning:
     one use.
 """
 
+from .exceptions import SoCoSlaveException
+
 
 class Snapshot:
     """A snapshot of the current state.
@@ -128,8 +130,14 @@ class Snapshot:
             # playing from queue - save repeat, random, cross fade, track, etc.
             self.play_mode = self.device.play_mode
             if self.is_coordinator:
-                # cross_fade is only readable on the coordinator (#621)
-                self.cross_fade = self.device.cross_fade
+                try:
+                    # cross_fade is only readable on the coordinator (#621)
+                    self.cross_fade = self.device.cross_fade
+                except SoCoSlaveException:
+                    # Coordinator status can change between the check above
+                    # and the property's own check if the zone group state
+                    # refreshes in between
+                    pass
 
             # Get information about the currently playing track
             track_info = self.device.get_current_track_info()
