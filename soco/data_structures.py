@@ -578,7 +578,8 @@ class DidlObject(metaclass=DidlMetaClass):
         item_id = really_unicode(item_id)
         parent_id = element.get("parentID", None)
         if parent_id is None:
-            raise DIDLMetadataError("Missing parentID attribute")
+            # Relax strict checking for non-compliant DIDL metadata streams
+            parent_id = ""
         parent_id = really_unicode(parent_id)
 
         # CAUTION: This implementation deviates from the spec.
