@@ -1,4 +1,4 @@
-"""Tests for the services module."""
+"""Tests for the events_base module."""
 
 from unittest import mock
 
