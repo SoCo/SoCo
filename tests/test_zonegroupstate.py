@@ -56,9 +56,9 @@ def test_get_groups_blocks_while_payload_is_being_processed():
     try:
         assert reader_started.wait(timeout=5), "reader never started"
         # The reader is executing; it must not be able to finish.
-        assert not reader_finished.wait(timeout=0.1), (
-            "get_groups() returned while the ZGS was being mutated"
-        )
+        assert not reader_finished.wait(
+            timeout=0.1
+        ), "get_groups() returned while the ZGS was being mutated"
     finally:
         release_writer.set()  # Don't leave the writer thread blocked on failure.
     writer.join(timeout=5)
