@@ -34,6 +34,7 @@ from .exceptions import (
     NotSupportedException,
     SoCoNotVisibleException,
 )
+from .favorites import Favorites
 from .music_library import MusicLibrary
 from .services import (
     DeviceProperties,
@@ -354,6 +355,8 @@ class SoCo(_SocoSingletonBase):
         self.audioIn = AudioIn(self)
 
         self.music_library = MusicLibrary(self)
+
+        self.favorites = Favorites(self)
 
         # Some private attributes
         self._boot_seqnum = None

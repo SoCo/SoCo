@@ -83,6 +83,21 @@ class NotSupportedException(SoCoException):
     """Raised when something is not supported by the device"""
 
 
+class FavoritesFullError(SoCoException):
+    """Raised when the Sonos favorites list is at capacity.
+
+    Sonos limits the number of favorites that can be stored; the speaker
+    returns UPnP error 805 once the limit is reached.
+    """
+
+
+class FavoritesAlreadyAddedError(SoCoException):
+    """Raised when an item is already in the Sonos favorites list.
+
+    The speaker returns UPnP error 803 for a duplicate favorite.
+    """
+
+
 class EventParseException(SoCoException):
     """Raised when a parsing exception occurs during event handling.
 
