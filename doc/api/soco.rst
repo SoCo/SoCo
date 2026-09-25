@@ -24,6 +24,7 @@ Submodules
    soco.discovery
    soco.events
    soco.exceptions
+   soco.favorites
    soco.groups
    soco.ms_data_structures
    soco.music_library

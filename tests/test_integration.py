@@ -961,3 +961,54 @@ class TestMusicLibrary:
         """Test getting favorites from the music library"""
         search_result = soco.music_library.get_music_library_information(search_type)
         assert isinstance(search_result, SearchResult)
+
+
+class TestFavorites:
+    """Integration tests for the favorites write API.
+
+    Creates a disposable favorite from the first queue track, exercises
+    add/update/remove on the real speaker, and cleans up afterwards.
+    """
+
+    @pytest.fixture(autouse=True)
+    def cleanup_favorite(self, soco):
+        """Remove the test favorite after each test, however it ends."""
+        self.favorite_title = "zSocoTestFavorite42"
+        yield
+        for favorite in soco.favorites.get_sonos_favorites():
+            if favorite.title.startswith(self.favorite_title):
+                soco.favorites.remove_from_favorites(favorite)
+
+    def test_add_update_remove_favorite(self, soco):
+        """Round-trip a favorite: add, verify, rename, verify, remove."""
+        track = soco.get_queue()[0]
+        favorite = soco.favorites.add_to_favorites(
+            track, title=self.favorite_title, description="SoCo test"
+        )
+        wait()
+        assert favorite.item_id.startswith("FV:2/")
+
+        favorites = soco.favorites.get_sonos_favorites()
+        created = [f for f in favorites if f.title == self.favorite_title]
+        assert len(created) == 1
+        assert created[0].item_id == favorite.item_id
+        assert created[0].reference is not None
+
+        soco.favorites.update_favorite(favorite, title=self.favorite_title + " renamed")
+        wait()
+        renamed = [
+            f
+            for f in soco.favorites.get_sonos_favorites()
+            if f.item_id == favorite.item_id
+        ]
+        assert len(renamed) == 1
+        assert renamed[0].title == self.favorite_title + " renamed"
+
+        soco.favorites.remove_from_favorites(favorite)
+        wait()
+        remaining = [
+            f
+            for f in soco.favorites.get_sonos_favorites()
+            if f.item_id == favorite.item_id
+        ]
+        assert remaining == []
