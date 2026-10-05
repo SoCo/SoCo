@@ -70,3 +70,22 @@ def test_soco_instances_are_unique_per_port():
     assert alternate is SoCo("192.168.1.100", 1500)
     assert alternate is SoCo("192.168.1.100", port=1500)
     assert default is not alternate
+
+
+def test_subclass_with_other_constructor_args():
+    """Subclass args that don't fit SoCo._singleton_key fall back to args."""
+
+    class KwargSoCo(SoCo):
+        def __init__(self, ip_address, session=None):
+            super().__init__(ip_address)
+
+    class PositionalSoCo(SoCo):
+        def __init__(self, ip_address, name):
+            super().__init__(ip_address)
+
+    assert KwargSoCo("192.168.1.101", session="s") is KwargSoCo(
+        "192.168.1.101", session="s"
+    )
+    assert PositionalSoCo("192.168.1.102", "kitchen") is not PositionalSoCo(
+        "192.168.1.102", "lounge"
+    )

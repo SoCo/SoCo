@@ -120,11 +120,14 @@ class _ArgsSingleton(type):
         key = cls._class_group if hasattr(cls, "_class_group") else cls
         if key not in cls._instances:
             cls._instances[key] = {}
-        instance_key = (
-            cls._singleton_key(*args, **kwargs)
-            if hasattr(cls, "_singleton_key")
-            else args
-        )
+        instance_key = args
+        if hasattr(cls, "_singleton_key"):
+            # Subclasses (e.g. via config.SOCO_CLASS) may have constructor
+            # arguments that don't fit _singleton_key; fall back to args.
+            try:
+                instance_key = cls._singleton_key(*args, **kwargs)
+            except (TypeError, ValueError):
+                pass
         if instance_key not in cls._instances[key]:
             cls._instances[key][instance_key] = super().__call__(*args, **kwargs)
         return cls._instances[key][instance_key]

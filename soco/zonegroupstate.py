@@ -331,11 +331,21 @@ class ZoneGroupState:
         port = location.port or 1400
         # Preserve compatibility with instances initially created by discovery,
         # which constructs default-port players using only their IP address.
-        zone = (
-            config.SOCO_CLASS(ip_addr)
-            if port == 1400
-            else config.SOCO_CLASS(ip_addr, port)
-        )
+        if port == 1400:
+            zone = config.SOCO_CLASS(ip_addr)
+        else:
+            try:
+                zone = config.SOCO_CLASS(ip_addr, port)
+            except TypeError:
+                # A custom config.SOCO_CLASS may not accept a port argument;
+                # fall back to the default-port instance, as before.
+                _LOG.warning(
+                    "%s does not accept a port; treating %s:%s as port 1400",
+                    config.SOCO_CLASS.__name__,
+                    ip_addr,
+                    port,
+                )
+                zone = config.SOCO_CLASS(ip_addr)
         for key, attrib in ZGS_ATTRIB_MAPPING.items():
             setattr(zone, attrib, member_attribs.get(key))
 

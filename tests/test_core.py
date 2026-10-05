@@ -1739,6 +1739,23 @@ class TestZoneGroupTopology:
             "http://192.0.2.10:1700",
         }
 
+    def test_multi_zone_device_with_portless_soco_class(self, moco):
+        """A custom SOCO_CLASS without a port argument doesn't break parsing."""
+
+        class PortlessSoCo(SoCo):
+            def __init__(self, ip_address):
+                super().__init__(ip_address)
+
+        moco.zoneGroupTopology.GetZoneGroupState.return_value = {
+            "ZoneGroupState": AMP_MULTI_ZGS
+        }
+        with mock.patch("soco.config.SOCO_CLASS", PortlessSoCo):
+            zones = moco.visible_zones
+
+        assert {(zone.ip_address, zone.port) for zone in zones} == {
+            ("192.0.2.10", 1400)
+        }
+
     def test_group_label(selfself, moco_zgs):
         g = moco_zgs.group
         # Have to mock out group members zone group state here since
