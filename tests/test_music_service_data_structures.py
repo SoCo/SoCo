@@ -186,7 +186,7 @@ def test_get_class():
         cls = data_structures.get_class("Nonsense")
 
 
-@pytest.mark.parametrize("response, correct", zip(RESPONSES, PARSE_RESULTS))
+@pytest.mark.parametrize("response, correct", list(zip(RESPONSES, PARSE_RESULTS)))
 def test_parse_response(response, correct):
     """Test the parse_response function"""
     music_service = Mock()
