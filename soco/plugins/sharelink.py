@@ -111,7 +111,9 @@ class TIDALShare(ShareClass):
     """TIDAL share class."""
 
     def canonical_uri(self, uri):
-        match = re.search(r"https://tidal.*[:/](album|track|playlist)[:/]([\w-]+)", uri)
+        match = re.search(
+            r"https://(?:listen\.)?tidal.*[:/](album|track|playlist)[:/]([\w-]+)", uri
+        )
         if match:
             return "tidal:" + match.group(1) + ":" + match.group(2)
 
@@ -132,7 +134,7 @@ class DeezerShare(ShareClass):
 
     def canonical_uri(self, uri):
         match = re.search(
-            r"https://www.deezer.*[:/](album|track|playlist)[:/]([\w-]+)", uri
+            r"https://(?:www\.)?deezer.*[:/](album|track|playlist)[:/]([\w-]+)", uri
         )
         if match:
             return "deezer:" + match.group(1) + ":" + match.group(2)
@@ -157,6 +159,10 @@ class AppleMusicShare(ShareClass):
         match = re.search(
             r"https://music\.apple\.com/\w+/album/[^/]+/\d+\?i=(\d+)", uri
         )
+        if match:
+            return "song:" + match.group(1)
+        # https://music.apple.com/us/song/black-velvet/217503142
+        match = re.search(r"https://music\.apple\.com/\w+/song/[^/]+/(\d+)", uri)
         if match:
             return "song:" + match.group(1)
 
@@ -234,6 +240,7 @@ class ShareLinkPlugin(SoCoPlugin):
             int: The index of the new item in the queue.
         """
         fault = SoCoException("Unsupported URI: " + uri)
+        dc_title = kwargs.pop("dc_title", "")
 
         for service in self.services:
             if service.canonical_uri(uri):
@@ -242,7 +249,6 @@ class ShareLinkPlugin(SoCoPlugin):
 
                 enqueue_uri = magic[share_type]["prefix"] + encoded_uri
 
-                dc_title = kwargs.pop("dc_title", "")
                 metadata_template = (
                     '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                     '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata'
