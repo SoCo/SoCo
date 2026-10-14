@@ -34,7 +34,7 @@ import warnings
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode, first_cap
 from .xml import XML, ns_tag
-from .data_structure_quirks import apply_resource_quirks
+from .data_structure_quirks import apply_object_quirks, apply_resource_quirks
 
 # Due to cyclic import problems, we only import from_didl_string at runtime.
 # from data_structures_entry import from_didl_string
@@ -568,6 +568,9 @@ class DidlObject(metaclass=DidlMetaClass):
                 " got '{}'".format(cls.item_class, item_class)
             )
 
+        # Check for and fix non-spec compliant behavior in the incoming data
+        element = apply_object_quirks(element)
+
         # parent_id, item_id  and restricted are stored as attributes on the
         # element
         item_id = element.get("id", None)
@@ -576,8 +579,7 @@ class DidlObject(metaclass=DidlMetaClass):
         item_id = really_unicode(item_id)
         parent_id = element.get("parentID", None)
         if parent_id is None:
-            # Relax strict checking for non-compliant DIDL metadata streams
-            parent_id = ""
+            raise DIDLMetadataError("Missing parentID attribute")
         parent_id = really_unicode(parent_id)
 
         # CAUTION: This implementation deviates from the spec.
