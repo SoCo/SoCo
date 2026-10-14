@@ -161,6 +161,12 @@ def test_add_share_link_to_queue_tries_next_service_on_failure():
     ]
     plugin = ShareLinkPlugin(soco)
 
-    assert plugin.add_share_link_to_queue("spotify:track:4uLU6hMCjMI75M1A2tKUQC") == 1
-    metadata = soco.avTransport.AddURIToQueue.call_args[0][0][2][1]
+    uri = "spotify:track:4uLU6hMCjMI75M1A2tKUQC"
+    assert plugin.add_share_link_to_queue(uri, dc_title="Title") == 1
+    assert soco.avTransport.AddURIToQueue.call_count == 2
+    metadata = dict(soco.avTransport.AddURIToQueue.call_args[0][0])[
+        "EnqueuedURIMetaData"
+    ]
     assert "SA_RINCON3079_X_#Svc3079-0-Token" in metadata
+    # The title is used for the second attempt too
+    assert "<dc:title>Title</dc:title>" in metadata

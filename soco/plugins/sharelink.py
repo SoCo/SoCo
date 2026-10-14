@@ -240,6 +240,7 @@ class ShareLinkPlugin(SoCoPlugin):
             int: The index of the new item in the queue.
         """
         fault = SoCoException("Unsupported URI: " + uri)
+        dc_title = kwargs.pop("dc_title", "")
 
         for service in self.services:
             if service.canonical_uri(uri):
@@ -248,7 +249,6 @@ class ShareLinkPlugin(SoCoPlugin):
 
                 enqueue_uri = magic[share_type]["prefix"] + encoded_uri
 
-                dc_title = kwargs.pop("dc_title", "")
                 metadata_template = (
                     '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                     '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata'
