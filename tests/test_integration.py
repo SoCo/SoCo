@@ -36,11 +36,13 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
-    # Only one is used per test session, hence the decorator
+    # Only one is used for all the tests in this module, hence the decorator.
+    # It is module scoped so that the tear down runs before tests in other
+    # modules reset the SoCo singletons (see reset_soco in conftest.py)
     ip = request.config.option.IP
     if ip is None:
         pytest.fail("No ip address specified. Use the --ip option.")
