@@ -17,8 +17,16 @@ THISDIR = path.dirname(path.abspath(__file__))
 
 
 @pytest.fixture(autouse=True)
-def reset_soco():
-    """Reset the singletons between tests to prevent state leakage."""
+def reset_soco(request):
+    """Reset the singletons between tests to prevent state leakage.
+
+    Integration tests are excluded: they share one SoCo instance, which must
+    stay registered as the singleton for its IP address so that zone group
+    state updates (e.g. is_coordinator) are applied to it.
+    """
+    if request.node.get_closest_marker("integration"):
+        yield
+        return
     soco_reset()
     yield
     soco_reset()
