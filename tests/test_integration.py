@@ -536,6 +536,33 @@ class TestTimer:
             )
 
 
+@pytest.fixture(scope="class")
+def restore_sonos_playlists(request, soco):
+    """A fixture which cleans up after the sonos playlist tests.
+
+    Defined at module level rather than as a method, since class-scoped
+    fixture methods are deprecated. Attributes are set on the test class.
+    """
+    cls = request.cls
+    if cls.existing_playlists is None:
+        cls.existing_playlists = soco.get_sonos_playlists()
+    if cls.playlist_name in [x.title for x in cls.existing_playlists]:
+        msg = "%s is an existing playlist." % cls.playlist_name
+        pytest.fail(msg)
+
+    queue_list = soco.get_queue()
+    if len(queue_list) < 2:
+        msg = "You must have 3 or more items in your queue for testing."
+        pytest.fail(msg)
+    playlist = soco.create_sonos_playlist_from_queue(cls.playlist_name)
+    cls.queue_length = soco.queue_size
+    cls.test_playlist = playlist
+    yield
+
+    soco.contentDirectory.DestroyObject([("ObjectID", cls.test_playlist.item_id)])
+
+
+@pytest.mark.usefixtures("restore_sonos_playlists")
 class TestReorderSonosPlaylist:
     """Integration tests for Sonos Playlist Management."""
 
@@ -543,27 +570,6 @@ class TestReorderSonosPlaylist:
     playlist_name = "zSocoTestPlayList42"
     test_playlist = None
     queue_length = None
-
-    @pytest.fixture(autouse=True, scope="class")
-    @classmethod
-    def restore_sonos_playlists(cls, soco):
-        """A fixture which cleans up after each sonos playlist test."""
-        if cls.existing_playlists is None:
-            cls.existing_playlists = soco.get_sonos_playlists()
-        if cls.playlist_name in [x.title for x in cls.existing_playlists]:
-            msg = "%s is an existing playlist." % cls.playlist_name
-            pytest.fail(msg)
-
-        queue_list = soco.get_queue()
-        if len(queue_list) < 2:
-            msg = "You must have 3 or more items in your queue for testing."
-            pytest.fail(msg)
-        playlist = soco.create_sonos_playlist_from_queue(cls.playlist_name)
-        cls.queue_length = soco.queue_size
-        cls.test_playlist = playlist
-        yield
-
-        soco.contentDirectory.DestroyObject([("ObjectID", cls.test_playlist.item_id)])
 
     def _reset_spl_contents(self, soco):
         """Ensure test playlist matches queue for each test."""
