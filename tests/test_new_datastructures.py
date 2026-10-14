@@ -186,6 +186,22 @@ class TestDidlObject:
         didl_object = data_structures.DidlObject.from_element(elt)
         assert didl_object.item_class == "object"
 
+    def test_didl_object_from_element_missing_parent_id(self, caplog):
+        """Test that a missing parentID is quirked to an empty string"""
+        elt = XML.fromstring(self.didl_xml.replace('parentID="pid" ', ""))
+        with caplog.at_level("DEBUG", logger="soco.data_structure_quirks"):
+            didl_object = data_structures.DidlObject.from_element(elt)
+        assert didl_object.parent_id == ""
+        assert didl_object.item_id == "iid"
+        assert "Object quirk applied for missing parentID" in caplog.text
+
+    def test_didl_object_from_element_missing_id(self):
+        """Test that a missing id is still an error"""
+        elt = XML.fromstring(self.didl_xml.replace('id="iid" ', ""))
+        with pytest.raises(DIDLMetadataError) as excinfo:
+            _ = data_structures.DidlObject.from_element(elt)
+        assert "Missing id attribute" in str(excinfo.value)
+
     def test_didl_object_from_wrong_class(self):
         # mismatched upnp class
         bad_elt1 = XML.fromstring(
