@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 from soco.data_structures import DidlMusicTrack, DidlResource
+from soco.exceptions import SoCoSlaveException
 from soco.snapshot import Snapshot
 
 QUEUE_URI = "x-rincon-queue:RINCON_000XXX1400#0"
@@ -102,3 +103,53 @@ def test_snapshot_saves_cross_fade_when_coordinator(moco):
                 assert snap.snapshot() is True
     cross_fade.assert_called_once()
     assert snap.cross_fade is False
+
+
+def test_snapshot_skips_cross_fade_when_coordinator_status_changes(moco):
+    """cross_fade is skipped if the device stops being coordinator mid-snapshot."""
+    with playing_local_queue(moco):
+        with patch.object(
+            type(moco), "is_coordinator", new_callable=PropertyMock, return_value=True
+        ):
+            with patch.object(
+                type(moco),
+                "cross_fade",
+                new_callable=PropertyMock,
+                side_effect=SoCoSlaveException,
+            ):
+                snap = Snapshot(moco)
+                assert snap.snapshot() is True
+    assert snap.cross_fade is None
+
+
+def restore_queue_position(moco, cross_fade):
+    """Run the coordinator restore for a snapshot taken while playing the queue.
+
+    Returns the mock for the cross_fade property.
+    """
+    snap = Snapshot(moco)
+    snap.is_playing_queue = True
+    snap.playlist_position = 1
+    snap.track_position = ""
+    snap.play_mode = "NORMAL"
+    snap.cross_fade = cross_fade
+    with patch.object(moco, "get_current_transport_info", return_value=None):
+        with patch.object(moco, "play_from_queue"):
+            with patch.object(type(moco), "play_mode", new_callable=PropertyMock):
+                with patch.object(
+                    type(moco), "cross_fade", new_callable=PropertyMock
+                ) as cross_fade_mock:
+                    snap._restore_coordinator()
+    return cross_fade_mock
+
+
+def test_restore_skips_cross_fade_when_not_saved(moco):
+    """cross_fade is not restored if it could not be read during the snapshot."""
+    cross_fade_mock = restore_queue_position(moco, cross_fade=None)
+    cross_fade_mock.assert_not_called()
+
+
+def test_restore_sets_cross_fade_when_saved(moco):
+    """cross_fade is restored when it was saved during the snapshot."""
+    cross_fade_mock = restore_queue_position(moco, cross_fade=True)
+    cross_fade_mock.assert_called_once_with(True)

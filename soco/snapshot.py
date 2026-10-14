@@ -220,7 +220,9 @@ class Snapshot:
             # reinstate track, position, play mode, cross fade
             # Need to make sure there is a proper track selected first
             self.device.play_mode = self.play_mode
-            self.device.cross_fade = self.cross_fade
+            # cross_fade is None if it could not be read during the snapshot
+            if self.cross_fade is not None:
+                self.device.cross_fade = self.cross_fade
 
         elif self.is_playing_cloud_queue:
             # was playing a cloud queue started by Alexa
