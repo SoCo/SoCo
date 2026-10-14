@@ -593,6 +593,14 @@ class TestSoco:
 
 
 class TestAVTransport:
+    @pytest.fixture
+    def moco_queue_3(self, moco):
+        """A moco with a mocked 3-track queue."""
+        with mock.patch.object(
+            SoCo, "queue_size", new_callable=mock.PropertyMock, return_value=3
+        ):
+            yield moco
+
     @pytest.mark.parametrize(
         "playmode",
         [
@@ -889,6 +897,126 @@ class TestAVTransport:
         )
         assert queue_size == 384
         moco.contentDirectory.reset_mock()
+
+    def test_soco_reorder_queue(self, moco_queue_3):
+        """ReorderTracksInQueue uses 1-based indices and update id 0."""
+        moco_queue_3.reorder_queue(1, 1, 0)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 2),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_block(self, moco_queue_3):
+        """A block move passes through as a single native call."""
+        moco_queue_3.reorder_queue(1, 2, 0)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 2),
+                ("NumberOfTracks", 2),
+                ("InsertBefore", 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_to_end(self, moco_queue_3):
+        """Moving to the end uses queue_length + 1 as InsertBefore."""
+        moco_queue_3.reorder_queue(0, 1, 3)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 4),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_noop_positions(self, moco_queue_3):
+        moco_queue_3.reorder_queue(1, 1, 1)
+        moco_queue_3.reorder_queue(1, 1, 2)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_reorder_queue_invalid_args(self, moco_queue_3):
+        for args in [(-1, 1, 0), (1, 3, 0), (0, 0, 0), (0, 1, -1), (0, 2, 1)]:
+            with pytest.raises(ValueError):
+                moco_queue_3.reorder_queue(*args)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_reorder_queue_past_end(self, moco_queue_3):
+        """An insert_before past the end of the queue moves to the end."""
+        moco_queue_3.reorder_queue(0, 1, 10)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 4),
+                ("UpdateID", 0),
+            ]
+        )
+        moco_queue_3.avTransport.reset_mock()
+        # The last track is already at the end
+        moco_queue_3.reorder_queue(2, 1, 10)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "start, new_pos, insert_before",
+        [
+            (2, 0, 1),  # [A, B, C] -> [C, A, B]
+            (0, 1, 3),  # [A, B, C] -> [B, A, C]
+            (0, 2, 4),  # [A, B, C] -> [B, C, A]
+            (1, 0, 1),  # [A, B, C] -> [B, A, C]
+        ],
+    )
+    def test_soco_move_in_queue(self, moco_queue_3, start, new_pos, insert_before):
+        """new_pos is the track's position after the move, as for a list."""
+        moco_queue_3.move_in_queue(start, new_pos)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", start + 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", insert_before),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_move_in_queue_same_position(self, moco_queue_3):
+        moco_queue_3.move_in_queue(1, 1)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_move_in_queue_invalid_args(self, moco_queue_3):
+        for args in [(0, 3), (0, -1), (3, 0), (-1, 0)]:
+            with pytest.raises(ValueError):
+                moco_queue_3.move_in_queue(*args)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_remove_range_from_queue(self, moco):
+        """RemoveTrackRangeFromQueue uses a 1-based starting index."""
+        moco.avTransport.RemoveTrackRangeFromQueue.return_value = {"NewUpdateID": "9"}
+        result = moco.remove_range_from_queue(2, 3, update_id=5)
+        moco.avTransport.RemoveTrackRangeFromQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("UpdateID", 5),
+                ("StartingIndex", 3),
+                ("NumberOfTracks", 3),
+            ]
+        )
+        assert result == 9
+        moco.avTransport.reset_mock()
+
+    def test_soco_remove_range_from_queue_invalid_args(self, moco):
+        for args in [(-1, 1), (0, 0)]:
+            with pytest.raises(ValueError):
+                moco.remove_range_from_queue(*args)
+        moco.avTransport.RemoveTrackRangeFromQueue.assert_not_called()
 
     def test_join(self, moco_zgs):
         moco2 = mock.Mock()

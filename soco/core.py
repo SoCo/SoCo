@@ -221,7 +221,10 @@ class SoCo(_SocoSingletonBase):
         add_uri_to_queue
         add_multiple_to_queue
         remove_from_queue
+        remove_range_from_queue
         clear_queue
+        reorder_queue
+        move_in_queue
 
     ..  rubric:: Group Management
     ..  autosummary::
@@ -2488,6 +2491,116 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
             ]
         )
+
+    @only_on_master
+    def remove_range_from_queue(self, start, num_tracks, update_id=0):
+        """Remove a block of tracks from the queue.
+
+        Args:
+            start (int): The 0-based index of the first track to remove.
+            num_tracks (int): The number of tracks to remove.
+            update_id (int): The queue update id to operate on, or 0 for
+                the current queue state.
+
+        Returns:
+            int: The new queue update id.
+
+        Raises:
+            ValueError: If ``start`` is negative or ``num_tracks`` is less
+                than 1. A range beyond the end of the queue is rejected by
+                the speaker.
+        """
+        if start < 0 or num_tracks <= 0:
+            raise ValueError("Invalid start or num_tracks")
+        response = self.avTransport.RemoveTrackRangeFromQueue(
+            [
+                ("InstanceID", 0),
+                ("UpdateID", update_id),
+                ("StartingIndex", start + 1),  # Sonos indices are 1-based
+                ("NumberOfTracks", num_tracks),
+            ]
+        )
+        return int(response["NewUpdateID"])
+
+    @only_on_master
+    def reorder_queue(self, start, num_tracks, insert_before):
+        """Move a block of tracks within the queue.
+
+        ``insert_before`` is evaluated against the queue before the move;
+        pass the queue length (or more) to move the block to the end.
+
+        Args:
+            start (int): The 0-based index of the first track to move.
+            num_tracks (int): The number of tracks to move.
+            insert_before (int): The 0-based index before which to insert
+                the block.
+
+        Raises:
+            ValueError: If the arguments are out of range, or
+                ``insert_before`` falls inside the moved block.
+        """
+        self._reorder_queue(start, num_tracks, insert_before, self.queue_size)
+
+    def _reorder_queue(self, start, num_tracks, insert_before, queue_length):
+        """Move a block of tracks within a queue of the given length.
+
+        See :py:meth:`reorder_queue`.
+        """
+        if (
+            start < 0
+            or num_tracks <= 0
+            or insert_before < 0
+            or start + num_tracks > queue_length
+            or start < insert_before < start + num_tracks
+        ):
+            raise ValueError(
+                "Invalid start, num_tracks or insert_before for queue of "
+                "length %d" % queue_length
+            )
+        # Anything past the end of the queue means "move to the end"
+        insert_before = min(insert_before, queue_length)
+        if insert_before in (start, start + num_tracks):
+            return  # Already in position
+        self.avTransport.ReorderTracksInQueue(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", start + 1),
+                ("NumberOfTracks", num_tracks),
+                ("InsertBefore", insert_before + 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    @only_on_master
+    def move_in_queue(self, start, new_pos):
+        """Move a single track to a new position in the queue.
+
+        This is a convenience method for :py:meth:`reorder_queue`. As with
+        :py:meth:`move_in_sonos_playlist`, ``new_pos`` is the position of the
+        track after the move, as when moving an item within a Python list.
+
+        Example::
+
+            # Swap the first two tracks
+            device.move_in_queue(0, 1)
+
+        Args:
+            start (int): The 0-based index of the track to move.
+            new_pos (int): The 0-based index the track should have after the
+                move.
+
+        Raises:
+            ValueError: If ``start`` or ``new_pos`` is out of range.
+        """
+        queue_length = self.queue_size
+        if not 0 <= new_pos < queue_length:
+            raise ValueError(
+                "Invalid new_pos %d for queue of length %d" % (new_pos, queue_length)
+            )
+        # reorder_queue inserts before an index in the queue as it was before
+        # the move, so moving a track later needs the index after new_pos
+        insert_before = new_pos + 1 if new_pos > start else new_pos
+        self._reorder_queue(start, 1, insert_before, queue_length)
 
     @deprecated("0.13", "soco.music_library.get_favorite_radio_shows", "0.15", True)
     def get_favorite_radio_shows(self, start=0, max_items=100):
