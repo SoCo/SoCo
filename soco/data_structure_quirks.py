@@ -8,9 +8,8 @@ in this module. Besides from keeping the main implementation clean and
 following the specification, this has the added advantage of making it easier
 to track how many quiks are out there.
 
-The implementation of the quirks at this point is just a single function which
-applies quirks to the DIDL-Lite resources, with the options of adding one that
-applies them to DIDL-Lite objects.
+The quirks are implemented as two functions, one which applies quirks to
+DIDL-Lite resources and one which applies them to DIDL-Lite objects.
 
 """
 
@@ -40,3 +39,14 @@ def apply_resource_quirks(resource):
         if not resource.text:
             resource.text = ""
     return resource
+
+
+def apply_object_quirks(element):
+    """Apply DIDL-Lite object quirks"""
+    # Some metadata, e.g. the enqueued_transport_uri_meta_data in events from
+    # some music services, has been known not to supply the mandatory parentID
+    # attribute, so if it is missing supply an empty one
+    if "parentID" not in element.attrib:
+        _LOG.debug("Object quirk applied for missing parentID, setting to ''")
+        element.set("parentID", "")
+    return element

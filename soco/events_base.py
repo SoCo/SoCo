@@ -590,8 +590,7 @@ class SubscriptionBase:
         else:
             try:
                 self.events.put(event)
-            # pylint: disable=broad-except
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-exception-caught
                 log.warning("Error putting event %s, ex=%s", event, ex)
 
     # pylint: disable=missing-docstring
