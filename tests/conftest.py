@@ -4,7 +4,6 @@ Add the --ip command line option, and skip all tests marked the with
 'integration' marker unless the option is included
 """
 
-import codecs
 import json
 from os import path
 from unittest import mock
@@ -110,7 +109,7 @@ class DataLoader:
     def load_xml(self, filename):
         """Return XML string loaded from filename under ``self.data_sub_dir``"""
         xml_string = ""
-        with codecs.open(path.join(self.data_dir, filename), encoding="utf-8") as file_:
+        with open(path.join(self.data_dir, filename), encoding="utf-8") as file_:
             for line in file_:
                 # Allow for indenting the XML source
                 xml_string += line.lstrip(" ")

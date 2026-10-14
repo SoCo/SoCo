@@ -582,8 +582,7 @@ def contactable(speakers):
                 _LOG.debug("%s is contactable", speaker.ip_address)
                 contactable_speakers.add(speaker)
             # The exception is unimportant
-            # pylint: disable=bare-except
-            except:  # noqa: E722
+            except:  # noqa: E722 pylint: disable=bare-except
                 _LOG.debug("%s is not contactable", speaker.ip_address)
 
     contactable_speakers = set()
@@ -719,8 +718,7 @@ def _is_sonos(ip_address):
         _ = config.SOCO_CLASS(ip_address).is_visible
         return True
     # The exception is unimportant
-    # pylint: disable=bare-except
-    except:  # noqa: E722
+    except:  # noqa: E722 pylint: disable=bare-except
         return False
 
 

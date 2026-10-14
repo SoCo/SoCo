@@ -18,6 +18,8 @@ Warning:
     one use.
 """
 
+from .exceptions import SoCoSlaveException
+
 
 class Snapshot:
     """A snapshot of the current state.
@@ -127,7 +129,15 @@ class Snapshot:
         if self.is_playing_queue:
             # playing from queue - save repeat, random, cross fade, track, etc.
             self.play_mode = self.device.play_mode
-            self.cross_fade = self.device.cross_fade
+            if self.is_coordinator:
+                try:
+                    # cross_fade is only readable on the coordinator (#621)
+                    self.cross_fade = self.device.cross_fade
+                except SoCoSlaveException:
+                    # Coordinator status can change between the check above
+                    # and the property's own check if the zone group state
+                    # refreshes in between
+                    pass
 
             # Get information about the currently playing track
             track_info = self.device.get_current_track_info()
@@ -210,7 +220,9 @@ class Snapshot:
             # reinstate track, position, play mode, cross fade
             # Need to make sure there is a proper track selected first
             self.device.play_mode = self.play_mode
-            self.device.cross_fade = self.cross_fade
+            # cross_fade is None if it could not be read during the snapshot
+            if self.cross_fade is not None:
+                self.device.cross_fade = self.cross_fade
 
         elif self.is_playing_cloud_queue:
             # was playing a cloud queue started by Alexa

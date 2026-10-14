@@ -5,6 +5,7 @@
 
 import pytest
 
+from soco import SoCo
 from soco.exceptions import SoCoUPnPException, UnknownSoCoException
 from soco.services import ContentDirectory, Service, Action, Argument, Vartype
 
@@ -115,6 +116,7 @@ def service():
 
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
+    mock_soco.base_url = "http://192.168.1.101:1400"
     mock_service = Service(mock_soco)
     return mock_service
 
@@ -125,6 +127,7 @@ def content_directory_service():
 
     mock_soco = mock.MagicMock()
     mock_soco.ip_address = "192.168.1.101"
+    mock_soco.base_url = "http://192.168.1.101:1400"
     mock_service = ContentDirectory(mock_soco)
     return mock_service
 
@@ -138,6 +141,13 @@ def test_init_defaults(service):
     assert service.control_url == "/Service/Control"
     assert service.scpd_url == "/xml/Service1.xml"
     assert service.event_subscription_url == "/Service/Event"
+
+
+def test_init_alternate_port():
+    """Check that services preserve a player's non-default UPnP port."""
+    service = Service(SoCo("192.168.1.101", 1500))
+
+    assert service.base_url == "http://192.168.1.101:1500"
 
 
 def test_method_dispatcher_function_creation(service):
