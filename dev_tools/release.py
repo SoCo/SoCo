@@ -16,11 +16,14 @@ Requirements: git; the GitHub CLI ``gh`` (``brew install gh``, then
 requirements-dev.txt; PyPI credentials in ~/.pypirc or the keyring.
 """
 
+import argparse
 import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
+import sys
 import urllib.error
 import urllib.request
 
@@ -444,3 +447,397 @@ class Runner:
             if step.ready is None or step.ready():
                 return
             self.say(f"  Not done yet. {step.hint}")
+
+
+MILESTONES_API = "repos/{owner}/{repo}/milestones"
+
+
+def publish_steps(repo, version, after):
+    """Steps shared by both flows: tag, build, upload, GitHub release."""
+    tag = f"v{version}"
+    dist = [f"dist/soco-{version}.tar.gz", f"dist/soco-{version}-py3-none-any.whl"]
+
+    def tag_and_push():
+        if not repo.local_tag_exists(tag):
+            repo.shell.run("git", "tag", "-a", tag, "-m", f"Version {version}")
+        repo.shell.run("git", "push", "origin", f"refs/tags/{tag}")
+
+    tag_step = Step(
+        f"Tag {tag} and push the tag",
+        CONFIRM,
+        lambda: repo.remote_tag_exists(tag),
+        run=tag_and_push,
+        commands=[
+            shlex.join(("git", "tag", "-a", tag, "-m", f"Version {version}")),
+            f"git push origin refs/tags/{tag}",
+        ],
+        requires=(after,),
+    )
+
+    def build():
+        for name in ("build", "dist", "soco.egg-info"):
+            shutil.rmtree(repo.path(name), ignore_errors=True)
+        repo.shell.run(sys.executable, "-m", "build", repo.root)
+
+    build_step = Step(
+        "Build the distributions",
+        AUTO,
+        lambda: repo.on_pypi(version) or all(repo.exists(name) for name in dist),
+        run=build,
+        requires=(tag_step,),
+    )
+    upload_args = (
+        sys.executable,
+        "-m",
+        "twine",
+        "upload",
+        "--repository",
+        "pypi",
+        *[repo.path(name) for name in dist],
+    )
+    upload = Step(
+        f"Upload soco {version} to PyPI",
+        CONFIRM,
+        lambda: repo.on_pypi(version),
+        run=lambda: repo.shell.run(*upload_args),
+        commands=[shlex.join(upload_args)],
+        requires=(build_step,),
+    )
+    gh_args = (
+        "gh",
+        "release",
+        "create",
+        tag,
+        "--title",
+        f"SoCo {tag} Release Notes",
+        "--generate-notes",
+        "--verify-tag",
+    )
+    github_release = Step(
+        f"Create the GitHub release for {tag}",
+        CONFIRM,
+        lambda: repo.github_release_exists(tag),
+        run=lambda: repo.shell.run(*gh_args),
+        commands=[shlex.join(gh_args)],
+        requires=(tag_step,),
+    )
+    return [tag_step, build_step, upload, github_release]
+
+
+def main_release_steps(repo, version):  # pylint: disable=too-many-locals
+    """Steps for a main release X.Y.0 from master."""
+    major, minor, _ = parse_version(version)
+    tag = f"v{version}"
+    next_minor = f"{major}.{minor + 1}.0"
+    next_dev = next_dev_version(version)
+    old_branch = previous_fixes_branch(version)
+    new_branch = fixes_branch(version)
+    notes_file = f"{RELEASES_DIR}/{version}.rst"
+    push_args = ("git", "push", "origin", "master")
+
+    def released():
+        return repo.remote_tag_exists(tag) or repo.committed_version("HEAD") == version
+
+    create_args = ("gh", "api", MILESTONES_API, "-f", f"title=v{next_minor}")
+    create_milestone = Step(
+        f"Create milestone v{next_minor}",
+        CONFIRM,
+        lambda: repo.milestone(next_minor) is not None,
+        run=lambda: repo.shell.run(*create_args),
+        commands=[shlex.join(create_args)],
+    )
+
+    def show_milestone():
+        milestone = repo.milestone(version)
+        if milestone is None:
+            print(f"  There is no {version} milestone.")
+            return
+        print(
+            f"  Milestone {milestone['title']}: {milestone['open_issues']} open, "
+            f"{milestone['closed_issues']} closed issues"
+        )
+        print(f"  {milestone['html_url']}")
+
+    review = Step(
+        f"Review the {version} milestone",
+        MANUAL,
+        released,
+        run=show_milestone,
+        hint=f"Move unfinished issues to v{next_minor} or later.",
+    )
+
+    def notes_ready():
+        return (
+            repo.exists(notes_file)
+            and repo.read(notes_file) != release_notes_template(version)
+            and version in index_entries(repo.read(INDEX_FILE))
+        )
+
+    def prepare_notes():
+        if not repo.exists(notes_file):
+            repo.write(notes_file, release_notes_template(version))
+            print(f"  Created {notes_file} from the template.")
+        index = repo.read(INDEX_FILE)
+        updated = add_release_to_index(index, version)
+        if updated != index:
+            repo.write(INDEX_FILE, updated)
+            print(f"  Added {version} to {INDEX_FILE}.")
+
+    notes = Step(
+        f"Write the release notes in {notes_file}",
+        MANUAL,
+        notes_ready,
+        run=prepare_notes,
+        ready=notes_ready,
+        hint=f"Edit {notes_file}; it must differ from the template.",
+    )
+
+    def commit_release():
+        repo.write(INIT_FILE, set_version(repo.read(INIT_FILE), version))
+        repo.shell.run("git", "add", INIT_FILE, INDEX_FILE, notes_file)
+        repo.shell.run("git", "commit", "-m", f"Release {tag}")
+
+    commit = Step(
+        f"Set version {version} and commit",
+        AUTO,
+        released,
+        run=commit_release,
+        requires=(notes,),
+    )
+    push = Step(
+        "Push master",
+        CONFIRM,
+        lambda: repo.remote_tag_exists(tag)
+        or repo.committed_version("origin/master") == version,
+        run=lambda: repo.shell.run(*push_args),
+        commands=[shlex.join(push_args)],
+        requires=(commit,),
+    )
+    tag_step, build, upload, github_release = publish_steps(repo, version, push)
+
+    def milestone_closed():
+        milestone = repo.milestone(version)
+        return milestone is None or milestone["state"] == "closed"
+
+    def close_milestone():
+        number = repo.milestone(version)["number"]
+        repo.shell.run(
+            "gh",
+            "api",
+            "--method",
+            "PATCH",
+            f"{MILESTONES_API}/{number}",
+            "-f",
+            "state=closed",
+        )
+
+    close = Step(
+        f"Close the {version} milestone",
+        CONFIRM,
+        milestone_closed,
+        run=close_milestone,
+        commands=[f"gh api --method PATCH {MILESTONES_API}/<number> -f state=closed"],
+        requires=(github_release,),
+    )
+
+    def create_branch():
+        if not repo.local_branch_exists(new_branch):
+            repo.shell.run("git", "branch", new_branch, tag)
+        repo.shell.run("git", "push", "--set-upstream", "origin", new_branch)
+
+    branch = Step(
+        f"Create and push {new_branch}",
+        CONFIRM,
+        lambda: repo.remote_branch_exists(new_branch),
+        run=create_branch,
+        commands=[
+            f"git branch {new_branch} {tag}",
+            f"git push --set-upstream origin {new_branch}",
+        ],
+        requires=(tag_step,),
+    )
+
+    def start_next():
+        workflow = repo.read(WORKFLOW_FILE)
+        repo.write(WORKFLOW_FILE, replace_fixes_branch(workflow, old_branch, new_branch))
+        repo.write(INIT_FILE, set_version(repo.read(INIT_FILE), next_dev))
+        repo.shell.run("git", "add", WORKFLOW_FILE, INIT_FILE)
+        repo.shell.run("git", "commit", "-m", f"Start {major}.{minor + 1} development")
+
+    start = Step(
+        f"Set version {next_dev}, test {new_branch} in CI, and commit",
+        AUTO,
+        lambda: repo.committed_version("HEAD") == next_dev,
+        run=start_next,
+        requires=(branch,),
+    )
+    push_next = Step(
+        "Push master",
+        CONFIRM,
+        lambda: repo.committed_version("origin/master") == next_dev,
+        run=lambda: repo.shell.run(*push_args),
+        commands=[shlex.join(push_args)],
+        requires=(start,),
+    )
+    return [
+        create_milestone,
+        review,
+        notes,
+        commit,
+        push,
+        tag_step,
+        build,
+        upload,
+        github_release,
+        close,
+        branch,
+        start,
+        push_next,
+    ]
+
+
+def fix_release_steps(repo, version):
+    """Steps for a fix release X.Y.N from the X.Y fixes branch."""
+    tag = f"v{version}"
+    branch = fixes_branch(version)
+    push_args = ("git", "push", "origin", branch)
+
+    def bumped():
+        return repo.remote_tag_exists(tag) or repo.committed_version("HEAD") == version
+
+    def show_candidates():
+        output = repo.shell.query("git", "cherry", "-v", "HEAD", "origin/master")
+        candidates = [line[2:] for line in output.splitlines() if line.startswith("+ ")]
+        print(f"  {len(candidates)} commit(s) on master have no equivalent on {branch}:")
+        for line in candidates:
+            print(f"    {line}")
+
+    cherry = Step(
+        "Cherry-pick fixes from master",
+        MANUAL,
+        bumped,
+        run=show_candidates,
+        ready=lambda: not repo.changed_tracked_files(),
+        hint="Cherry-pick each fix with 'git cherry-pick <sha>'; "
+        "the working tree must be clean to continue.",
+    )
+
+    def bump():
+        repo.write(INIT_FILE, set_version(repo.read(INIT_FILE), version))
+        repo.shell.run("git", "add", INIT_FILE)
+        repo.shell.run("git", "commit", "-m", f"Bump version to {tag}")
+
+    bump_step = Step(f"Set version {version} and commit", AUTO, bumped, run=bump)
+    push = Step(
+        f"Push {branch}",
+        CONFIRM,
+        lambda: repo.remote_tag_exists(tag)
+        or repo.committed_version(f"origin/{branch}") == version,
+        run=lambda: repo.shell.run(*push_args),
+        commands=[shlex.join(push_args)],
+        requires=(bump_step,),
+    )
+    return [cherry, bump_step, push, *publish_steps(repo, version, push)]
+
+
+def preflight(repo, branch, check_index):
+    """Return a list of problems that should stop the release."""
+    problems = []
+    own_files = {INIT_FILE, INDEX_FILE, WORKFLOW_FILE}
+    other = [name for name in repo.changed_tracked_files() if name not in own_files]
+    if other:
+        problems.append("Uncommitted changes to tracked files: " + ", ".join(other))
+    current = repo.current_branch()
+    if current != branch:
+        problems.append(f"On branch {current}: switch to {branch} first")
+    else:
+        behind = repo.commits_behind(branch)
+        if behind:
+            problems.append(f"{branch} is {behind} commit(s) behind origin: pull first")
+    if not repo.shell.ok("gh", "auth", "status"):
+        problems.append(
+            "gh is missing or not logged in: brew install gh, then gh auth login"
+        )
+    for module in ("build", "twine"):
+        if not repo.shell.ok(sys.executable, "-m", module, "--version"):
+            problems.append(
+                f"Python package '{module}' is missing: "
+                "pip install -r requirements-dev.txt"
+            )
+    if check_index:
+        missing = missing_index_entries(
+            repo.read(INDEX_FILE), os.listdir(repo.path(RELEASES_DIR))
+        )
+        if missing:
+            problems.append(
+                f"{INDEX_FILE} lists entries with no file: {', '.join(missing)}"
+            )
+    return problems
+
+
+def parse_args(argv):
+    """Parse the command line."""
+    parser = argparse.ArgumentParser(
+        description="Make a SoCo release. Re-run the same command to resume.",
+        epilog="Requires git, gh (logged in), and build and twine from "
+        "requirements-dev.txt.",
+    )
+    parser.add_argument(
+        "kind",
+        choices=("main", "fix"),
+        help="'main' for X.Y.0 from master; 'fix' for X.Y.N from vX.Y.fixes",
+    )
+    parser.add_argument("version", help="the version to release, e.g. 0.32.0")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="show what would be done without changing anything",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv=None, repo=None):
+    """Run a release; return the exit status."""
+    args = parse_args(argv)
+    repo = repo or Repo(Shell())
+    resume = f"python dev_tools/release.py {args.kind} {args.version}"
+    try:
+        version = normalise_version(args.version)
+        repo.fetch()
+        if args.kind == "main":
+            branch = "master"
+            validate_main(version, repo.working_version())
+            steps = main_release_steps(repo, version)
+        else:
+            branch = fixes_branch(version)
+            major, minor, _ = parse_version(version)
+            validate_fix(version, repo.tags(f"v{major}.{minor}.*"))
+            steps = fix_release_steps(repo, version)
+        problems = preflight(repo, branch, check_index=args.kind == "main")
+        for problem in problems:
+            print(f"Pre-flight: {problem}")
+        if problems and not args.dry_run:
+            raise ReleaseError("Pre-flight checks failed")
+        skipped = Runner(steps, dry_run=args.dry_run).run()
+    except Quit:
+        print(f"Stopped. Re-run '{resume}' to continue.")
+        return 0
+    except KeyboardInterrupt:
+        print(f"\nStopped. Re-run '{resume}' to continue.")
+        return 130
+    except ReleaseError as exc:
+        print(f"Error: {exc}")
+        print(f"Fix the problem, then re-run '{resume}'.")
+        return 1
+    if args.dry_run:
+        print("Dry run: nothing was changed.")
+    elif skipped:
+        print("Finished, but these steps were skipped: " + "; ".join(skipped))
+        print(f"Re-run '{resume}' to do them.")
+    else:
+        print(f"Release {version} is complete.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

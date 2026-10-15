@@ -3,8 +3,10 @@
 import importlib.util
 import io
 import json
+import os
 import pathlib
 import re
+import shutil
 import sys
 import urllib.error
 
@@ -396,3 +398,382 @@ class TestRunner:
         with pytest.raises(ReleaseError, match="'second' needs 'first'"):
             self.run([first, second], ["n"])
         assert ran == []
+
+
+class SimShell:
+    """Stands in for Shell: records commands and applies their effects."""
+
+    def __init__(self):
+        self.repo = None
+        self.calls = []
+        self.runs = []
+        self.ok_result = True
+
+    def query(self, *args):
+        self.calls.append(args)
+        if args[:2] == ("git", "cherry"):
+            return "+ abc123 Fix a bug\n- def456 Already picked"
+        raise AssertionError(f"unexpected query: {args}")
+
+    def ok(self, *args):
+        self.calls.append(args)
+        return self.ok_result
+
+    def run(self, *args):
+        self.runs.append(args)
+        repo = self.repo
+        if args[:2] == ("git", "commit"):
+            repo.committed["HEAD"] = repo.working_version()
+        elif args[:4] == ("git", "push", "--set-upstream", "origin"):
+            repo.remote_branches.add(args[4])
+        elif args[:3] == ("git", "push", "origin") and args[3].startswith("refs/tags/"):
+            repo.remote_tags.add(args[3][len("refs/tags/") :])
+        elif args[:3] == ("git", "push", "origin"):
+            repo.committed[f"origin/{args[3]}"] = repo.committed["HEAD"]
+        elif args[1:3] == ("-m", "build"):
+            version = repo.working_version()
+            os.makedirs(repo.path("dist"), exist_ok=True)
+            for name in (f"soco-{version}.tar.gz", f"soco-{version}-py3-none-any.whl"):
+                with open(repo.path(f"dist/{name}"), "w", encoding="utf-8"):
+                    pass
+        elif args[1:3] == ("-m", "twine"):
+            repo.pypi.add(repo.working_version())
+        elif args[:3] == ("gh", "release", "create"):
+            repo.gh_releases.add(args[3])
+        elif args[:2] == ("gh", "api"):
+            field = args[args.index("-f") + 1]
+            if field.startswith("title="):
+                repo.add_milestone(field[len("title=") :])
+            else:
+                number = int(args[args.index("-f") - 1].rsplit("/", 1)[1])
+                for milestone in repo.milestones.values():
+                    if milestone["number"] == number:
+                        milestone["state"] = "closed"
+
+
+class SimRepo(release.Repo):
+    """A Repo whose git/GitHub/PyPI state lives in memory; files are real."""
+
+    def __init__(self, root, branch):
+        shell = SimShell()
+        super().__init__(shell, str(root))
+        shell.repo = self
+        self.branch = branch
+        version = self.working_version()
+        self.committed = {"HEAD": version, f"origin/{branch}": version}
+        self.tag_list = []
+        self.remote_tags = set()
+        self.remote_branches = set()
+        self.pypi = set()
+        self.gh_releases = set()
+        self.milestones = {}
+        self.changed = []
+        self.behind = 0
+
+    def add_milestone(self, title, state="open"):
+        self.milestones[title] = {
+            "title": title,
+            "number": len(self.milestones) + 1,
+            "state": state,
+            "open_issues": 0,
+            "closed_issues": 3,
+            "html_url": "https://example.invalid/milestone",
+        }
+
+    def fetch(self):
+        pass
+
+    def current_branch(self):
+        return self.branch
+
+    def committed_version(self, ref):
+        return self.committed[ref]
+
+    def tags(self, pattern):
+        return list(self.tag_list)
+
+    def local_tag_exists(self, tag):
+        return tag in self.remote_tags
+
+    def local_branch_exists(self, branch):
+        return branch in self.remote_branches
+
+    def remote_tag_exists(self, tag):
+        return tag in self.remote_tags
+
+    def remote_branch_exists(self, branch):
+        return branch in self.remote_branches
+
+    def commits_behind(self, branch):
+        return self.behind
+
+    def changed_tracked_files(self):
+        return list(self.changed)
+
+    def on_pypi(self, version):
+        return version in self.pypi
+
+    def github_release_exists(self, tag):
+        return tag in self.gh_releases
+
+    def milestone(self, title):
+        for name in (title, f"v{title}"):
+            if name in self.milestones:
+                return self.milestones[name]
+        return None
+
+
+def copy_repo_files(root):
+    for name in (release.INIT_FILE, release.WORKFLOW_FILE):
+        dest = root / name
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(REPO_ROOT / name, dest)
+    shutil.copytree(REPO_ROOT / release.RELEASES_DIR, root / release.RELEASES_DIR)
+
+
+def set_file_version(root, version):
+    init = root / release.INIT_FILE
+    init.write_text(release.set_version(init.read_text(encoding="utf-8"), version))
+
+
+def make_main_sim(root, version="5.7.0-dev"):
+    """A master checkout at 5.7.0-dev whose CI tests v5.6.fixes."""
+    copy_repo_files(root)
+    set_file_version(root, version)
+    workflow = root / release.WORKFLOW_FILE
+    text = workflow.read_text(encoding="utf-8")
+    workflow.write_text(
+        release.replace_fixes_branch(text, current_fixes_branch(text), "v5.6.fixes")
+    )
+    return SimRepo(root, "master")
+
+
+def make_fix_sim(root):
+    """A v9.1.fixes checkout at 9.1.4."""
+    copy_repo_files(root)
+    set_file_version(root, "9.1.4")
+    repo = SimRepo(root, "v9.1.fixes")
+    repo.tag_list = ["v9.1.3", "v9.1.4"]
+    return repo
+
+
+def write_notes(root, version="5.7.0"):
+    (root / release.RELEASES_DIR / f"{version}.rst").write_text("Real notes\n")
+    index = root / release.INDEX_FILE
+    index.write_text(release.add_release_to_index(index.read_text(), version))
+
+
+def dry_run_statuses(steps):
+    said = []
+    release.Runner(steps, dry_run=True, say=said.append).run()
+    return statuses(said)
+
+
+class TestMainFlow:
+    def test_fresh_main_release_dry_run(self, tmp_path):
+        repo = make_main_sim(tmp_path)
+        assert dry_run_statuses(release.main_release_steps(repo, "5.7.0")) == [
+            "would run",  # create milestone v5.8.0
+            "manual",  # review milestone
+            "manual",  # release notes
+            "would run",  # commit
+            "would run",  # push master: HEAD == origin, but not yet released
+            "would run",  # tag
+            "would run",  # build
+            "would run",  # upload
+            "would run",  # GitHub release
+            "done",  # close milestone: there is no 5.7.0 milestone
+            "would run",  # fixes branch
+            "would run",  # start next development
+            "would run",  # push master
+        ]
+        assert repo.shell.runs == []
+
+    def test_full_main_release(self, tmp_path):
+        repo = make_main_sim(tmp_path)
+        repo.add_milestone("v5.7.0")
+
+        def write_the_notes():
+            (tmp_path / release.RELEASES_DIR / "5.7.0.rst").write_text("Notes\n")
+            return ""
+
+        answers = ["y", "", write_the_notes, "y", "y", "y", "y", "y", "y", "y"]
+        runner = release.Runner(
+            release.main_release_steps(repo, "5.7.0"),
+            ask=scripted(answers),
+            say=lambda line: None,
+        )
+        assert runner.run() == []
+
+        assert repo.committed["origin/master"] == "5.8.0-dev"
+        assert "v5.7.0" in repo.remote_tags
+        assert "5.7.0" in repo.pypi
+        assert "v5.7.0" in repo.gh_releases
+        assert repo.milestones["v5.7.0"]["state"] == "closed"
+        assert "v5.8.0" in repo.milestones
+        assert "v5.7.fixes" in repo.remote_branches
+        workflow = repo.read(release.WORKFLOW_FILE)
+        assert workflow.count("'v5.7.fixes'") == 2
+        assert "'v5.6.fixes'" not in workflow
+        assert release.index_entries(repo.read(release.INDEX_FILE))[0] == "5.7.0"
+        assert (
+            "git",
+            "add",
+            release.INIT_FILE,
+            release.INDEX_FILE,
+            "doc/releases/5.7.0.rst",
+        ) in repo.shell.runs
+        assert ("git", "commit", "-m", "Release v5.7.0") in repo.shell.runs
+        assert ("git", "commit", "-m", "Start 5.8 development") in repo.shell.runs
+
+    def test_resume_after_pypi_upload(self, tmp_path):
+        repo = make_main_sim(tmp_path, version="5.7.0")
+        write_notes(tmp_path)
+        repo.remote_tags.add("v5.7.0")
+        repo.pypi.add("5.7.0")
+        assert dry_run_statuses(release.main_release_steps(repo, "5.7.0")) == [
+            "would run",  # create milestone v5.8.0
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "done",
+            "would run",  # GitHub release
+            "done",
+            "would run",  # fixes branch
+            "would run",
+            "would run",
+        ]
+
+    def test_resume_after_unpushed_dev_bump(self, tmp_path):
+        repo = make_main_sim(tmp_path, version="5.8.0-dev")
+        workflow = tmp_path / release.WORKFLOW_FILE
+        workflow.write_text(workflow.read_text().replace("v5.6.fixes", "v5.7.fixes"))
+        write_notes(tmp_path)
+        repo.committed["origin/master"] = "5.7.0"
+        repo.remote_tags.add("v5.7.0")
+        repo.pypi.add("5.7.0")
+        repo.gh_releases.add("v5.7.0")
+        repo.remote_branches.add("v5.7.fixes")
+        repo.add_milestone("v5.8.0")
+        runner = release.Runner(
+            release.main_release_steps(repo, "5.7.0"),
+            ask=scripted(["y"]),
+            say=lambda line: None,
+        )
+        runner.run()
+        assert repo.committed["origin/master"] == "5.8.0-dev"
+
+
+class TestFixFlow:
+    def test_full_fix_release(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        runner = release.Runner(
+            release.fix_release_steps(repo, "9.1.5"),
+            ask=scripted(["", "y", "y", "y", "y"]),
+            say=lambda line: None,
+        )
+        assert runner.run() == []
+        assert repo.committed["origin/v9.1.fixes"] == "9.1.5"
+        assert "v9.1.5" in repo.remote_tags
+        assert "9.1.5" in repo.pypi
+        assert "v9.1.5" in repo.gh_releases
+        assert ("git", "commit", "-m", "Bump version to v9.1.5") in repo.shell.runs
+
+    def test_cherry_pick_step_waits_for_clean_tree(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.changed = ["soco/core.py"]
+
+        def resolve():
+            repo.changed = []
+            return ""
+
+        said = []
+        steps = release.fix_release_steps(repo, "9.1.5")[:1]
+        release.Runner(steps, ask=scripted(["", resolve]), say=said.append).run()
+        assert any(line.startswith("  Not done yet.") for line in said)
+
+
+class TestPreflight:
+    def test_clean(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        assert release.preflight(repo, "v9.1.fixes", check_index=False) == []
+
+    def test_own_files_allowed(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.changed = [release.INIT_FILE, release.INDEX_FILE, release.WORKFLOW_FILE]
+        assert release.preflight(repo, "v9.1.fixes", check_index=False) == []
+
+    def test_other_changes_flagged(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.changed = ["soco/core.py"]
+        problems = release.preflight(repo, "v9.1.fixes", check_index=False)
+        assert len(problems) == 1
+        assert "soco/core.py" in problems[0]
+
+    def test_wrong_branch(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        problems = release.preflight(repo, "master", check_index=False)
+        assert problems == ["On branch v9.1.fixes: switch to master first"]
+
+    def test_behind_origin(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.behind = 2
+        problems = release.preflight(repo, "v9.1.fixes", check_index=False)
+        assert problems == ["v9.1.fixes is 2 commit(s) behind origin: pull first"]
+
+    def test_missing_tools(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.shell.ok_result = False
+        problems = release.preflight(repo, "v9.1.fixes", check_index=False)
+        assert len(problems) == 3
+        assert "gh auth login" in problems[0]
+        assert "'build'" in problems[1]
+        assert "'twine'" in problems[2]
+
+    def test_index_entry_without_file(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        (tmp_path / release.INDEX_FILE).write_text(
+            ".. toctree::\n   :maxdepth: 1\n\n   9.9\n"
+        )
+        problems = release.preflight(repo, "v9.1.fixes", check_index=True)
+        assert problems == [f"{release.INDEX_FILE} lists entries with no file: 9.9"]
+
+
+class TestMain:
+    def test_invalid_version(self, tmp_path, capsys):
+        assert release.main(["fix", "9.1"], repo=make_fix_sim(tmp_path)) == 1
+        out = capsys.readouterr().out
+        assert "Invalid version" in out
+        assert "re-run 'python dev_tools/release.py fix 9.1'" in out
+
+    def test_preflight_failure_stops(self, tmp_path, capsys):
+        repo = make_fix_sim(tmp_path)
+        repo.branch = "master"
+        assert release.main(["fix", "9.1.5"], repo=repo) == 1
+        assert "Pre-flight checks failed" in capsys.readouterr().out
+        assert repo.shell.runs == []
+
+    def test_dry_run_reports_preflight_and_lists_steps(self, tmp_path, capsys):
+        repo = make_fix_sim(tmp_path)
+        repo.branch = "master"
+        assert release.main(["fix", "9.1.5", "--dry-run"], repo=repo) == 0
+        out = capsys.readouterr().out
+        assert "Pre-flight: On branch master" in out
+        assert "[7/7] Create the GitHub release for v9.1.5: would run" in out
+        assert repo.shell.runs == []
+
+    def test_keyboard_interrupt(self, tmp_path, capsys, monkeypatch):
+        def interrupt(self):
+            raise KeyboardInterrupt
+
+        monkeypatch.setattr(release.Runner, "run", interrupt)
+        assert release.main(["fix", "9.1.5"], repo=make_fix_sim(tmp_path)) == 130
+        assert "Stopped. Re-run" in capsys.readouterr().out
+
+    def test_complete_fix_release(self, tmp_path, capsys, monkeypatch):
+        monkeypatch.setattr("builtins.input", scripted(["", "y", "y", "y", "y"]))
+        assert release.main(["fix", "v9.1.5"], repo=make_fix_sim(tmp_path)) == 0
+        assert "Release 9.1.5 is complete." in capsys.readouterr().out
