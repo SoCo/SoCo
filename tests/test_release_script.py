@@ -1,8 +1,12 @@
 """Tests for dev_tools/release.py."""
 
 import importlib.util
+import io
+import json
 import pathlib
 import re
+import sys
+import urllib.error
 
 import pytest
 
@@ -128,3 +132,126 @@ class TestFileEdits:
         assert underline == "*" * len(title)
         assert "**SoCo 0.32.0**" in text
         assert "https://github.com/SoCo/SoCo/releases/tag/v0.32.0" in text
+
+
+class FakeShell:
+    """Answers queries from a dict of canned responses."""
+
+    def __init__(self, responses=None, ok_commands=()):
+        self.responses = responses or {}
+        self.ok_commands = set(ok_commands)
+        self.calls = []
+
+    def query(self, *args):
+        self.calls.append(args)
+        if args not in self.responses:
+            raise AssertionError(f"unexpected query: {args}")
+        return self.responses[args]
+
+    def ok(self, *args):
+        self.calls.append(args)
+        return args in self.ok_commands
+
+    def run(self, *args):
+        self.calls.append(args)
+
+
+MILESTONES = (
+    "gh",
+    "api",
+    "repos/{owner}/{repo}/milestones?state=all&per_page=100",
+)
+
+
+class TestShell:
+    def test_query_returns_output(self):
+        out = release.Shell().query(sys.executable, "-c", "print(' x ')")
+        assert out == " x"
+
+    def test_query_failure_includes_stderr(self):
+        script = "import sys; sys.stderr.write('boom'); sys.exit(3)"
+        with pytest.raises(ReleaseError, match="boom"):
+            release.Shell().query(sys.executable, "-c", script)
+
+    def test_query_missing_command(self):
+        with pytest.raises(ReleaseError, match="Command not found"):
+            release.Shell().query("no-such-command-soco-release")
+
+    def test_ok(self):
+        assert release.Shell().ok(sys.executable, "-c", "pass")
+        assert not release.Shell().ok(sys.executable, "-c", "raise SystemExit(1)")
+
+    def test_ok_missing_command(self):
+        assert release.Shell().ok("no-such-command-soco-release") is False
+
+    def test_run_failure(self):
+        with pytest.raises(ReleaseError, match="exit code 2"):
+            release.Shell().run(sys.executable, "-c", "raise SystemExit(2)")
+
+
+class TestRepo:
+    def test_read_write_exists(self, tmp_path):
+        repo = release.Repo(FakeShell(), str(tmp_path))
+        assert not repo.exists("a/b.txt")
+        (tmp_path / "a").mkdir()
+        repo.write("a/b.txt", "text\n")
+        assert repo.exists("a/b.txt")
+        assert repo.read("a/b.txt") == "text\n"
+
+    def test_committed_version(self):
+        shell = FakeShell(
+            {
+                (
+                    "git",
+                    "show",
+                    f"origin/master:{release.INIT_FILE}",
+                ): '__version__ = "1.2.0"'
+            }
+        )
+        assert release.Repo(shell).committed_version("origin/master") == "1.2.0"
+
+    def test_remote_tag_exists(self):
+        ref = "refs/tags/v1.2.0"
+        query = ("git", "ls-remote", "--tags", "origin", ref)
+        shell = FakeShell({query: "abc\t" + ref})
+        assert release.Repo(shell).remote_tag_exists("v1.2.0")
+        shell.responses[query] = ""
+        assert not release.Repo(shell).remote_tag_exists("v1.2.0")
+
+    def test_changed_tracked_files(self):
+        status = " M soco/__init__.py\nM  doc/releases/index.rst\nR  old.py -> new.py"
+        shell = FakeShell(
+            {("git", "status", "--porcelain", "--untracked-files=no"): status}
+        )
+        assert release.Repo(shell).changed_tracked_files() == [
+            "soco/__init__.py",
+            "doc/releases/index.rst",
+            "new.py",
+        ]
+
+    def test_milestone_matches_with_or_without_v(self):
+        data = [{"title": "v0.31.0", "number": 28, "state": "closed"}]
+        repo = release.Repo(FakeShell({MILESTONES: json.dumps(data)}))
+        assert repo.milestone("0.31.0")["number"] == 28
+        assert repo.milestone("0.32.0") is None
+
+    def test_on_pypi(self, monkeypatch):
+        monkeypatch.setattr(
+            release.urllib.request, "urlopen", lambda url, timeout: io.BytesIO(b"{}")
+        )
+        assert release.Repo(FakeShell()).on_pypi("0.31.5")
+
+    def test_on_pypi_not_found(self, monkeypatch):
+        def not_found(url, timeout):
+            raise urllib.error.HTTPError(url, 404, "Not Found", None, None)
+
+        monkeypatch.setattr(release.urllib.request, "urlopen", not_found)
+        assert not release.Repo(FakeShell()).on_pypi("9.9.9")
+
+    def test_on_pypi_unreachable(self, monkeypatch):
+        def unreachable(url, timeout):
+            raise urllib.error.URLError("no network")
+
+        monkeypatch.setattr(release.urllib.request, "urlopen", unreachable)
+        with pytest.raises(ReleaseError, match="Cannot reach PyPI"):
+            release.Repo(FakeShell()).on_pypi("0.31.5")

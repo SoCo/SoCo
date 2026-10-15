@@ -16,7 +16,13 @@ Requirements: git; the GitHub CLI ``gh`` (``brew install gh``, then
 requirements-dev.txt; PyPI credentials in ~/.pypirc or the keyring.
 """
 
+import json
+import os
 import re
+import shlex
+import subprocess
+import urllib.error
+import urllib.request
 
 INIT_FILE = "soco/__init__.py"
 INDEX_FILE = "doc/releases/index.rst"
@@ -176,3 +182,155 @@ def release_notes_template(version):
         "Please see the GitHub release page for further details:\n"
         f"https://github.com/SoCo/SoCo/releases/tag/v{version}\n"
     )
+
+
+class Shell:
+    """Runs external commands. query() and ok() only read; run() changes."""
+
+    @staticmethod
+    def _capture(args):
+        try:
+            return subprocess.run(args, capture_output=True, text=True, check=False)
+        except FileNotFoundError as exc:
+            raise ReleaseError(f"Command not found: {args[0]}") from exc
+
+    def query(self, *args):
+        """Return the output of a read-only command."""
+        result = self._capture(args)
+        if result.returncode != 0:
+            raise ReleaseError(
+                f"'{shlex.join(args)}' failed:\n{result.stderr.strip()}"
+            )
+        return result.stdout.rstrip()
+
+    def ok(self, *args):
+        """Return whether a read-only command succeeds."""
+        try:
+            return self._capture(args).returncode == 0
+        except ReleaseError:
+            return False
+
+    def run(self, *args):
+        """Run a command that changes something, showing its output."""
+        print(f"  $ {shlex.join(args)}")
+        try:
+            result = subprocess.run(args, check=False)
+        except FileNotFoundError as exc:
+            raise ReleaseError(f"Command not found: {args[0]}") from exc
+        if result.returncode != 0:
+            raise ReleaseError(
+                f"'{shlex.join(args)}' failed with exit code {result.returncode}"
+            )
+
+
+class Repo:
+    """The state of the repository, its origin, GitHub and PyPI."""
+
+    def __init__(self, shell, root="."):
+        self.shell = shell
+        self.root = root
+
+    def path(self, name):
+        """Return the path of a file in the repository."""
+        return os.path.join(self.root, name)
+
+    def read(self, name):
+        """Return the text of a file in the repository."""
+        with open(self.path(name), encoding="utf-8", newline="") as file:
+            return file.read()
+
+    def write(self, name, text):
+        """Replace the text of a file in the repository."""
+        with open(self.path(name), "w", encoding="utf-8", newline="") as file:
+            file.write(text)
+
+    def exists(self, name):
+        """Return whether a file exists in the repository."""
+        return os.path.exists(self.path(name))
+
+    def working_version(self):
+        """Return __version__ from the working copy of INIT_FILE."""
+        return read_version(self.read(INIT_FILE))
+
+    def committed_version(self, ref):
+        """Return __version__ from INIT_FILE at a commit, e.g. 'HEAD'."""
+        return read_version(self.shell.query("git", "show", f"{ref}:{INIT_FILE}"))
+
+    def current_branch(self):
+        """Return the name of the checked-out branch."""
+        return self.shell.query("git", "rev-parse", "--abbrev-ref", "HEAD")
+
+    def fetch(self):
+        """Fetch branches and tags from origin."""
+        self.shell.query("git", "fetch", "origin", "--tags")
+
+    def tags(self, pattern):
+        """Return the local tags matching a glob pattern."""
+        return self.shell.query("git", "tag", "--list", pattern).split()
+
+    def local_tag_exists(self, tag):
+        """Return whether a tag exists locally."""
+        return self.shell.ok("git", "rev-parse", "-q", "--verify", f"refs/tags/{tag}")
+
+    def local_branch_exists(self, branch):
+        """Return whether a branch exists locally."""
+        return self.shell.ok(
+            "git", "rev-parse", "-q", "--verify", f"refs/heads/{branch}"
+        )
+
+    def remote_tag_exists(self, tag):
+        """Return whether a tag exists on origin."""
+        return bool(
+            self.shell.query("git", "ls-remote", "--tags", "origin", f"refs/tags/{tag}")
+        )
+
+    def remote_branch_exists(self, branch):
+        """Return whether a branch exists on origin."""
+        return bool(
+            self.shell.query(
+                "git", "ls-remote", "--heads", "origin", f"refs/heads/{branch}"
+            )
+        )
+
+    def commits_behind(self, branch):
+        """Return how many commits HEAD is behind origin/branch."""
+        return int(
+            self.shell.query("git", "rev-list", "--count", f"HEAD..origin/{branch}")
+        )
+
+    def changed_tracked_files(self):
+        """Return the tracked files with staged or unstaged changes."""
+        status = self.shell.query(
+            "git", "status", "--porcelain", "--untracked-files=no"
+        )
+        return [line[3:].split(" -> ")[-1] for line in status.splitlines()]
+
+    def on_pypi(self, version):
+        """Return whether this version of soco is on PyPI."""
+        try:
+            with urllib.request.urlopen(PYPI_URL.format(version), timeout=15):
+                return True
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                return False
+            raise ReleaseError(
+                f"PyPI returned HTTP {exc.code} for soco {version}"
+            ) from exc
+        except urllib.error.URLError as exc:
+            raise ReleaseError(f"Cannot reach PyPI: {exc.reason}") from exc
+
+    def github_release_exists(self, tag):
+        """Return whether a GitHub release exists for a tag."""
+        return self.shell.ok("gh", "release", "view", tag)
+
+    def milestone(self, title):
+        """Return the GitHub milestone named title or vtitle, or None."""
+        milestones = json.loads(
+            self.shell.query(
+                "gh", "api", "repos/{owner}/{repo}/milestones?state=all&per_page=100"
+            )
+        )
+        for milestone in milestones:
+            if milestone["title"] in (title, f"v{title}"):
+                return milestone
+        return None
