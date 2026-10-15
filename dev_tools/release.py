@@ -334,3 +334,113 @@ class Repo:
             if milestone["title"] in (title, f"v{title}"):
                 return milestone
         return None
+
+
+AUTO = "auto"  # runs without asking
+CONFIRM = "confirm"  # irreversible: asks y/n/q first
+MANUAL = "manual"  # waits for the maintainer
+
+
+class Step:  # pylint: disable=too-few-public-methods,too-many-instance-attributes
+    """One release step.
+
+    ``is_done()`` checks the real state of the repository and remotes, so
+    re-running the script skips steps that are already done. For a manual
+    step, ``run`` prepares the step and ``ready()`` (if given) must be true
+    before the release continues.
+    """
+
+    # pylint: disable=too-many-arguments
+    def __init__(
+        self,
+        title,
+        kind,
+        is_done,
+        *,
+        run=None,
+        commands=(),
+        ready=None,
+        hint="",
+        requires=(),
+    ):
+        self.title = title
+        self.kind = kind
+        self.is_done = is_done
+        self.run = run
+        self.commands = list(commands)
+        self.ready = ready
+        self.hint = hint
+        self.requires = tuple(requires)
+
+
+class Runner:
+    """Runs release steps in order, skipping those already done."""
+
+    def __init__(self, steps, dry_run=False, ask=None, say=print):
+        self.steps = steps
+        self.dry_run = dry_run
+        self.ask = ask or input
+        self.say = say
+        self.skipped = []
+
+    def _ask(self, prompt):
+        try:
+            return self.ask(prompt).strip().lower()
+        except EOFError as exc:
+            raise Quit() from exc
+
+    def _show_commands(self, step):
+        for command in step.commands:
+            self.say(f"      $ {command}")
+
+    def run(self):
+        """Run the steps; return the titles of any the maintainer skipped."""
+        total = len(self.steps)
+        for number, step in enumerate(self.steps, 1):
+            label = f"[{number}/{total}] {step.title}"
+            if step.is_done():
+                self.say(f"{label}: done")
+                continue
+            if self.dry_run:
+                self.say(f"{label}: {'manual' if step.kind == MANUAL else 'would run'}")
+                self._show_commands(step)
+                continue
+            self.say(label)
+            for required in step.requires:
+                if not required.is_done():
+                    raise ReleaseError(
+                        f"'{step.title}' needs '{required.title}', which is not done"
+                    )
+            if step.kind == CONFIRM:
+                self._confirm_and_run(step)
+            elif step.kind == AUTO:
+                step.run()
+            else:
+                self._wait_for_manual(step)
+        return self.skipped
+
+    def _confirm_and_run(self, step):
+        self._show_commands(step)
+        while True:
+            answer = self._ask("  Run this step? [y/n/q] ")
+            if answer == "y":
+                step.run()
+                return
+            if answer == "n":
+                self.say("  Skipped.")
+                self.skipped.append(step.title)
+                return
+            if answer == "q":
+                raise Quit()
+
+    def _wait_for_manual(self, step):
+        if step.run:
+            step.run()
+        if step.hint:
+            self.say(f"  {step.hint}")
+        while True:
+            if self._ask("  Press Enter when done (q to quit) ") == "q":
+                raise Quit()
+            if step.ready is None or step.ready():
+                return
+            self.say(f"  Not done yet. {step.hint}")

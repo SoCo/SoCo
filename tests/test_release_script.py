@@ -255,3 +255,144 @@ class TestRepo:
         monkeypatch.setattr(release.urllib.request, "urlopen", unreachable)
         with pytest.raises(ReleaseError, match="Cannot reach PyPI"):
             release.Repo(FakeShell()).on_pypi("0.31.5")
+
+
+def scripted(answers):
+    """Return an ask() that gives each answer in turn; callables are called."""
+    remaining = list(answers)
+
+    def ask(prompt):
+        assert remaining, f"unexpected prompt: {prompt}"
+        answer = remaining.pop(0)
+        return answer() if callable(answer) else answer
+
+    return ask
+
+
+def eof(prompt):
+    raise EOFError
+
+
+def statuses(said):
+    return [line.rsplit(": ", 1)[1] for line in said if line.startswith("[")]
+
+
+class TestRunner:
+    @staticmethod
+    def run(steps, answers=(), dry_run=False, ask=None):
+        said = []
+        runner = release.Runner(
+            steps, dry_run=dry_run, ask=ask or scripted(answers), say=said.append
+        )
+        return said, runner.run()
+
+    def test_done_steps_are_skipped(self):
+        ran = []
+        step = release.Step(
+            "a", release.AUTO, lambda: True, run=lambda: ran.append("a")
+        )
+        said, _ = self.run([step])
+        assert ran == []
+        assert said == ["[1/1] a: done"]
+
+    def test_auto_step_runs_without_asking(self):
+        ran = []
+        step = release.Step(
+            "a", release.AUTO, lambda: False, run=lambda: ran.append("a")
+        )
+        self.run([step])
+        assert ran == ["a"]
+
+    def test_dry_run_runs_and_asks_nothing(self):
+        ran = []
+        steps = [
+            release.Step(
+                "a",
+                release.CONFIRM,
+                lambda: False,
+                run=lambda: ran.append("a"),
+                commands=["git push"],
+            ),
+            release.Step(
+                "b", release.MANUAL, lambda: False, run=lambda: ran.append("b")
+            ),
+        ]
+        said, _ = self.run(steps, dry_run=True)
+        assert ran == []
+        assert said == ["[1/2] a: would run", "      $ git push", "[2/2] b: manual"]
+
+    def test_confirm_yes_runs(self):
+        ran = []
+        step = release.Step(
+            "a", release.CONFIRM, lambda: False, run=lambda: ran.append("a")
+        )
+        self.run([step], ["y"])
+        assert ran == ["a"]
+
+    def test_confirm_no_skips_and_continues(self):
+        ran = []
+        steps = [
+            release.Step(
+                "a", release.CONFIRM, lambda: False, run=lambda: ran.append("a")
+            ),
+            release.Step("b", release.AUTO, lambda: False, run=lambda: ran.append("b")),
+        ]
+        _, skipped = self.run(steps, ["n"])
+        assert ran == ["b"]
+        assert skipped == ["a"]
+
+    def test_confirm_asks_again_after_unknown_answer(self):
+        ran = []
+        step = release.Step(
+            "a", release.CONFIRM, lambda: False, run=lambda: ran.append("a")
+        )
+        self.run([step], ["maybe", "Y"])
+        assert ran == ["a"]
+
+    def test_quit(self):
+        step = release.Step("a", release.CONFIRM, lambda: False, run=lambda: None)
+        with pytest.raises(release.Quit):
+            self.run([step], ["q"])
+
+    def test_eof_quits(self):
+        step = release.Step("a", release.CONFIRM, lambda: False, run=lambda: None)
+        with pytest.raises(release.Quit):
+            self.run([step], ask=eof)
+
+    def test_manual_waits_until_ready(self):
+        state = {"ready": False}
+        prepared = []
+
+        def finish():
+            state["ready"] = True
+            return ""
+
+        step = release.Step(
+            "m",
+            release.MANUAL,
+            lambda: False,
+            run=lambda: prepared.append(1),
+            ready=lambda: state["ready"],
+            hint="do it",
+        )
+        said, _ = self.run([step], ["", finish])
+        assert prepared == [1]
+        assert "  Not done yet. do it" in said
+
+    def test_manual_without_ready_continues_on_enter(self):
+        step = release.Step("m", release.MANUAL, lambda: False)
+        self.run([step], [""])
+
+    def test_unmet_requirement_stops(self):
+        ran = []
+        first = release.Step("first", release.CONFIRM, lambda: False, run=lambda: None)
+        second = release.Step(
+            "second",
+            release.AUTO,
+            lambda: False,
+            run=lambda: ran.append(2),
+            requires=(first,),
+        )
+        with pytest.raises(ReleaseError, match="'second' needs 'first'"):
+            self.run([first, second], ["n"])
+        assert ran == []
