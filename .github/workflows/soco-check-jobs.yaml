@@ -14,7 +14,7 @@ on:
 jobs:
   SoCo-Check-Jobs:
     name: SoCo Check Jobs (${{ matrix.python-version }})
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -47,6 +47,6 @@ jobs:
         run: |
           black --check soco tests
       - name: Test documentation build
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.14'
         run: |
           make docs
