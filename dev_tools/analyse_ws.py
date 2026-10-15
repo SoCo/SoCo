@@ -4,6 +4,7 @@
 """ Script to analyse ws dumps """
 
 import argparse
+import codecs
 import math
 import os
 import re
@@ -86,7 +87,7 @@ class AnalyzeWS:
             this_dir = os.path.dirname(os.path.abspath(__file__))
             with open(os.path.join(this_dir, "analyse_ws.ini")) as file__:
                 self.config = ConfigParser()
-                self.config.read_file(file__)
+                self.config.readfp(file__)
         except OSError:
             self.config = None
         self.pages = {}
@@ -190,11 +191,8 @@ class AnalyzeWS:
         """Write a single message to file"""
         filename = self.__create_file_name(message_no)
         try:
-            with open(
-                filename,
-                mode="w",
-                encoding=self.messages[message_no].encoding,
-                newline="",
+            with codecs.open(
+                filename, mode="w", encoding=self.messages[message_no].encoding
             ) as file__:
                 file__.write(self.messages[message_no].output)
         except OSError as excep:
