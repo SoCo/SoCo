@@ -161,7 +161,7 @@ class FakeShell:
 MILESTONES = (
     "gh",
     "api",
-    "repos/{owner}/{repo}/milestones?state=all&per_page=100",
+    "repos/SoCo/SoCo/milestones?state=all&per_page=100",
 )
 
 
@@ -249,6 +249,30 @@ class TestRepo:
 
         monkeypatch.setattr(release.urllib.request, "urlopen", not_found)
         assert not release.Repo(FakeShell()).on_pypi("9.9.9")
+
+    def test_on_pypi_timeout(self, monkeypatch):
+        def timeout(url, timeout):
+            raise TimeoutError("timed out")
+
+        monkeypatch.setattr(release.urllib.request, "urlopen", timeout)
+        with pytest.raises(ReleaseError, match="Cannot reach PyPI"):
+            release.Repo(FakeShell()).on_pypi("0.31.5")
+
+    def test_find_commit(self):
+        query = ("git", "rev-list", "-1", "--grep=^Release v1.2.0$", "origin/master")
+        shell = FakeShell({query: "abc123"})
+        assert release.Repo(shell).find_commit("origin/master", "Release v1.2.0") == (
+            "abc123"
+        )
+        shell.responses[query] = ""
+        with pytest.raises(ReleaseError, match="No commit 'Release v1.2.0'"):
+            release.Repo(shell).find_commit("origin/master", "Release v1.2.0")
+
+    def test_github_release_uses_soco_repo(self):
+        view = ("gh", "release", "view", "v1.2.0", "-R", "SoCo/SoCo")
+        assert release.Repo(FakeShell(ok_commands=[view])).github_release_exists(
+            "v1.2.0"
+        )
 
     def test_on_pypi_unreachable(self, monkeypatch):
         def unreachable(url, timeout):
@@ -385,6 +409,18 @@ class TestRunner:
         step = release.Step("m", release.MANUAL, lambda: False)
         self.run([step], [""])
 
+    def test_confirm_shows_preview(self):
+        step = release.Step(
+            "a",
+            release.CONFIRM,
+            lambda: False,
+            run=lambda: None,
+            commands=["git push"],
+            preview=lambda: ["abc123 Fix a bug"],
+        )
+        said, _ = self.run([step], ["n"])
+        assert said[:3] == ["[1/1] a", "      $ git push", "      abc123 Fix a bug"]
+
     def test_unmet_requirement_stops(self):
         ran = []
         first = release.Step("first", release.CONFIRM, lambda: False, run=lambda: None)
@@ -424,6 +460,9 @@ class SimShell:
         repo = self.repo
         if args[:2] == ("git", "commit"):
             repo.committed["HEAD"] = repo.working_version()
+            repo.commits[args[3]] = f"{len(repo.commits) + 1:040x}"
+        elif args[:3] == ("git", "tag", "-a"):
+            repo.local_tags[args[3]] = args[-1]
         elif args[:4] == ("git", "push", "--set-upstream", "origin"):
             repo.remote_branches.add(args[4])
         elif args[:3] == ("git", "push", "origin") and args[3].startswith("refs/tags/"):
@@ -469,6 +508,10 @@ class SimRepo(release.Repo):
         self.milestones = {}
         self.changed = []
         self.behind = 0
+        self.commits = {}
+        self.local_tags = {}
+        self.origin = "git@github.com:SoCo/SoCo.git"
+        self.unpushed_commits = []
 
     def add_milestone(self, title, state="open"):
         self.milestones[title] = {
@@ -493,7 +536,21 @@ class SimRepo(release.Repo):
         return list(self.tag_list)
 
     def local_tag_exists(self, tag):
-        return tag in self.remote_tags
+        return tag in self.local_tags
+
+    def local_tag_commit(self, tag):
+        return self.local_tags.get(tag)
+
+    def find_commit(self, ref, subject):
+        if subject not in self.commits:
+            raise ReleaseError(f"No commit '{subject}' on {ref}")
+        return self.commits[subject]
+
+    def origin_url(self):
+        return self.origin
+
+    def unpushed(self, branch):
+        return list(self.unpushed_commits)
 
     def local_branch_exists(self, branch):
         return branch in self.remote_branches
@@ -625,6 +682,64 @@ class TestMainFlow:
         ) in repo.shell.runs
         assert ("git", "commit", "-m", "Release v5.7.0") in repo.shell.runs
         assert ("git", "commit", "-m", "Start 5.8 development") in repo.shell.runs
+        release_sha = repo.commits["Release v5.7.0"]
+        assert (
+            "git",
+            "tag",
+            "-a",
+            "v5.7.0",
+            "-m",
+            "Version 5.7.0",
+            release_sha,
+        ) in repo.shell.runs
+        worktree_adds = [
+            r for r in repo.shell.runs if r[:3] == ("git", "worktree", "add")
+        ]
+        assert len(worktree_adds) == 1
+        assert worktree_adds[0][-1] == "v5.7.0"
+        builds = [r for r in repo.shell.runs if r[1:3] == ("-m", "build")]
+        assert builds[0][3:5] == ("--outdir", repo.path("dist"))
+        assert builds[0][5] == worktree_adds[0][-2]
+        assert ("git", "worktree", "remove", "--force", worktree_adds[0][-2]) in (
+            repo.shell.runs
+        )
+        gh_create = [r for r in repo.shell.runs if r[:3] == ("gh", "release", "create")]
+        assert gh_create[0][-2:] == ("-R", "SoCo/SoCo")
+
+    def test_stale_local_tag_rejected(self, tmp_path):
+        repo = make_main_sim(tmp_path, version="5.7.0")
+        write_notes(tmp_path)
+        repo.add_milestone("v5.8.0")
+        repo.commits["Release v5.7.0"] = "a" * 40
+        repo.local_tags["v5.7.0"] = "b" * 40
+        runner = release.Runner(
+            release.main_release_steps(repo, "5.7.0"),
+            ask=scripted(["y"]),
+            say=lambda line: None,
+        )
+        with pytest.raises(ReleaseError, match="points at bbbbbbbbbbbb"):
+            runner.run()
+        assert "v5.7.0" not in repo.remote_tags
+
+    def test_stale_dist_is_rebuilt(self, tmp_path):
+        repo = make_main_sim(tmp_path, version="5.7.0")
+        write_notes(tmp_path)
+        repo.remote_tags.add("v5.7.0")
+        (tmp_path / "dist").mkdir()
+        for name in ("soco-5.7.0.tar.gz", "soco-5.7.0-py3-none-any.whl"):
+            (tmp_path / "dist" / name).write_text("stale")
+        statuses_ = dry_run_statuses(release.main_release_steps(repo, "5.7.0"))
+        assert statuses_[6] == "would run"  # build
+
+    def test_push_preview_lists_unpushed_commits(self, tmp_path):
+        repo = make_main_sim(tmp_path)
+        repo.unpushed_commits = ["abc123 Release v5.7.0", "def456 Stray commit"]
+        push = release.main_release_steps(repo, "5.7.0")[4]
+        assert push.preview() == [
+            "Commits to push:",
+            "abc123 Release v5.7.0",
+            "def456 Stray commit",
+        ]
 
     def test_resume_after_pypi_upload(self, tmp_path):
         repo = make_main_sim(tmp_path, version="5.7.0")
@@ -697,6 +812,19 @@ class TestFixFlow:
 
 
 class TestPreflight:
+    def test_origin_must_be_soco(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.origin = "git@github.com:someone/SoCo.git"
+        problems = release.preflight(repo, "v9.1.fixes", check_index=False)
+        assert problems == [
+            "origin is git@github.com:someone/SoCo.git, not SoCo/SoCo on GitHub"
+        ]
+
+    def test_https_origin_accepted(self, tmp_path):
+        repo = make_fix_sim(tmp_path)
+        repo.origin = "https://github.com/SoCo/SoCo"
+        assert release.preflight(repo, "v9.1.fixes", check_index=False) == []
+
     def test_clean(self, tmp_path):
         repo = make_fix_sim(tmp_path)
         assert release.preflight(repo, "v9.1.fixes", check_index=False) == []

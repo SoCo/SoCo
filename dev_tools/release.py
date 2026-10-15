@@ -24,6 +24,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 
@@ -32,6 +33,9 @@ INDEX_FILE = "doc/releases/index.rst"
 RELEASES_DIR = "doc/releases"
 WORKFLOW_FILE = ".github/workflows/soco-check-jobs.yaml"
 PYPI_URL = "https://pypi.org/pypi/soco/{}/json"
+GITHUB_REPO = "SoCo/SoCo"
+MILESTONES_API = f"repos/{GITHUB_REPO}/milestones"
+ORIGIN_RE = re.compile(r"github\.com[:/]SoCo/SoCo(\.git)?/?$")
 
 
 class ReleaseError(Exception):
@@ -279,6 +283,29 @@ class Repo:
             "git", "rev-parse", "-q", "--verify", f"refs/heads/{branch}"
         )
 
+    def local_tag_commit(self, tag):
+        """Return the commit a local tag points at, or None if there is none."""
+        if not self.local_tag_exists(tag):
+            return None
+        return self.shell.query("git", "rev-parse", f"{tag}^{{commit}}")
+
+    def find_commit(self, ref, subject):
+        """Return the newest commit on ref whose subject is exactly subject."""
+        sha = self.shell.query("git", "rev-list", "-1", f"--grep=^{subject}$", ref)
+        if not sha:
+            raise ReleaseError(f"No commit '{subject}' on {ref}")
+        return sha
+
+    def origin_url(self):
+        """Return the URL of the origin remote."""
+        return self.shell.query("git", "remote", "get-url", "origin")
+
+    def unpushed(self, branch):
+        """Return 'sha subject' lines for commits on HEAD not on origin/branch."""
+        return self.shell.query(
+            "git", "log", "--oneline", f"origin/{branch}..HEAD"
+        ).splitlines()
+
     def remote_tag_exists(self, tag):
         """Return whether a tag exists on origin."""
         return bool(
@@ -319,17 +346,17 @@ class Repo:
             ) from exc
         except urllib.error.URLError as exc:
             raise ReleaseError(f"Cannot reach PyPI: {exc.reason}") from exc
+        except OSError as exc:
+            raise ReleaseError(f"Cannot reach PyPI: {exc}") from exc
 
     def github_release_exists(self, tag):
         """Return whether a GitHub release exists for a tag."""
-        return self.shell.ok("gh", "release", "view", tag)
+        return self.shell.ok("gh", "release", "view", tag, "-R", GITHUB_REPO)
 
     def milestone(self, title):
         """Return the GitHub milestone named title or vtitle, or None."""
         milestones = json.loads(
-            self.shell.query(
-                "gh", "api", "repos/{owner}/{repo}/milestones?state=all&per_page=100"
-            )
+            self.shell.query("gh", "api", f"{MILESTONES_API}?state=all&per_page=100")
         )
         for milestone in milestones:
             if milestone["title"] in (title, f"v{title}"):
@@ -363,6 +390,7 @@ class Step:  # pylint: disable=too-few-public-methods,too-many-instance-attribut
         ready=None,
         hint="",
         requires=(),
+        preview=None,
     ):
         self.title = title
         self.kind = kind
@@ -372,6 +400,7 @@ class Step:  # pylint: disable=too-few-public-methods,too-many-instance-attribut
         self.ready = ready
         self.hint = hint
         self.requires = tuple(requires)
+        self.preview = preview
 
 
 class Runner:
@@ -422,6 +451,9 @@ class Runner:
 
     def _confirm_and_run(self, step):
         self._show_commands(step)
+        if step.preview:
+            for line in step.preview():
+                self.say(f"      {line}")
         while True:
             answer = self._ask("  Run this step? [y/n/q] ")
             if answer == "y":
@@ -447,17 +479,35 @@ class Runner:
             self.say(f"  Not done yet. {step.hint}")
 
 
-MILESTONES_API = "repos/{owner}/{repo}/milestones"
+def unpushed_preview(repo, branch):
+    """Return lines listing the commits a push of branch would publish."""
+    return ["Commits to push:", *repo.unpushed(branch)]
 
 
-def publish_steps(repo, version, after):
-    """Steps shared by both flows: tag, build, upload, GitHub release."""
+def publish_steps(repo, version, after, branch, subject):
+    """Steps shared by both flows: tag, build, upload, GitHub release.
+
+    The tag goes on the commit on origin/branch whose subject is
+    ``subject`` (the release or version bump commit), never on whatever
+    HEAD happens to be, and the build is made from a clean checkout of
+    the tag.
+    """
     tag = f"v{version}"
     dist = [f"dist/soco-{version}.tar.gz", f"dist/soco-{version}-py3-none-any.whl"]
 
+    def release_commit():
+        return repo.find_commit(f"origin/{branch}", subject)
+
     def tag_and_push():
-        if not repo.local_tag_exists(tag):
-            repo.shell.run("git", "tag", "-a", tag, "-m", f"Version {version}")
+        sha = release_commit()
+        existing = repo.local_tag_commit(tag)
+        if existing is None:
+            repo.shell.run("git", "tag", "-a", tag, "-m", f"Version {version}", sha)
+        elif existing != sha:
+            raise ReleaseError(
+                f"Local tag {tag} points at {existing[:12]}, not the release "
+                f"commit {sha[:12]}; delete it with 'git tag -d {tag}'"
+            )
         repo.shell.run("git", "push", "origin", f"refs/tags/{tag}")
 
     tag_step = Step(
@@ -466,21 +516,33 @@ def publish_steps(repo, version, after):
         lambda: repo.remote_tag_exists(tag),
         run=tag_and_push,
         commands=[
-            shlex.join(("git", "tag", "-a", tag, "-m", f"Version {version}")),
+            shlex.join(("git", "tag", "-a", tag, "-m", f"Version {version}"))
+            + f" <'{subject}' commit on origin/{branch}>",
             f"git push origin refs/tags/{tag}",
         ],
+        preview=lambda: [f"Release commit: {release_commit()} {subject}"],
         requires=(after,),
     )
 
     def build():
-        for name in ("build", "dist", "soco.egg-info"):
-            shutil.rmtree(repo.path(name), ignore_errors=True)
-        repo.shell.run(sys.executable, "-m", "build", repo.root)
+        shutil.rmtree(repo.path("dist"), ignore_errors=True)
+        scratch = tempfile.mkdtemp(prefix="soco-release-")
+        checkout = os.path.join(scratch, "src")
+        repo.shell.run("git", "worktree", "add", "--detach", checkout, tag)
+        try:
+            repo.shell.run(
+                sys.executable, "-m", "build", "--outdir", repo.path("dist"), checkout
+            )
+        finally:
+            repo.shell.run("git", "worktree", "remove", "--force", checkout)
+            shutil.rmtree(scratch, ignore_errors=True)
 
+    # Always rebuild unless the release is already on PyPI: files left in
+    # dist/ may not have been built from the tag.
     build_step = Step(
-        "Build the distributions",
+        f"Build the distributions from a clean checkout of {tag}",
         AUTO,
-        lambda: repo.on_pypi(version) or all(repo.exists(name) for name in dist),
+        lambda: repo.on_pypi(version),
         run=build,
         requires=(tag_step,),
     )
@@ -499,7 +561,7 @@ def publish_steps(repo, version, after):
         lambda: repo.on_pypi(version),
         run=lambda: repo.shell.run(*upload_args),
         commands=[shlex.join(upload_args)],
-        requires=(build_step,),
+        requires=(tag_step,),
     )
     gh_args = (
         "gh",
@@ -510,6 +572,8 @@ def publish_steps(repo, version, after):
         f"SoCo {tag} Release Notes",
         "--generate-notes",
         "--verify-tag",
+        "-R",
+        GITHUB_REPO,
     )
     github_release = Step(
         f"Create the GitHub release for {tag}",
@@ -609,9 +673,12 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
         or repo.committed_version("origin/master") == version,
         run=lambda: repo.shell.run(*push_args),
         commands=[shlex.join(push_args)],
+        preview=lambda: unpushed_preview(repo, "master"),
         requires=(commit,),
     )
-    tag_step, build, upload, github_release = publish_steps(repo, version, push)
+    tag_step, build, upload, github_release = publish_steps(
+        repo, version, push, "master", f"Release {tag}"
+    )
 
     def milestone_closed():
         milestone = repo.milestone(version)
@@ -677,6 +744,7 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
         lambda: repo.committed_version("origin/master") == next_dev,
         run=lambda: repo.shell.run(*push_args),
         commands=[shlex.join(push_args)],
+        preview=lambda: unpushed_preview(repo, "master"),
         requires=(start,),
     )
     return [
@@ -737,14 +805,19 @@ def fix_release_steps(repo, version):
         or repo.committed_version(f"origin/{branch}") == version,
         run=lambda: repo.shell.run(*push_args),
         commands=[shlex.join(push_args)],
+        preview=lambda: unpushed_preview(repo, branch),
         requires=(bump_step,),
     )
-    return [cherry, bump_step, push, *publish_steps(repo, version, push)]
+    publish = publish_steps(repo, version, push, branch, f"Bump version to {tag}")
+    return [cherry, bump_step, push, *publish]
 
 
 def preflight(repo, branch, check_index):
     """Return a list of problems that should stop the release."""
     problems = []
+    origin = repo.origin_url()
+    if not ORIGIN_RE.search(origin):
+        problems.append(f"origin is {origin}, not {GITHUB_REPO} on GitHub")
     own_files = {INIT_FILE, INDEX_FILE, WORKFLOW_FILE}
     other = [name for name in repo.changed_tracked_files() if name not in own_files]
     if other:
