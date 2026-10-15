@@ -201,9 +201,7 @@ class Shell:
         """Return the output of a read-only command."""
         result = self._capture(args)
         if result.returncode != 0:
-            raise ReleaseError(
-                f"'{shlex.join(args)}' failed:\n{result.stderr.strip()}"
-            )
+            raise ReleaseError(f"'{shlex.join(args)}' failed:\n{result.stderr.strip()}")
         return result.stdout.rstrip()
 
     def ok(self, *args):
@@ -659,7 +657,9 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
 
     def start_next():
         workflow = repo.read(WORKFLOW_FILE)
-        repo.write(WORKFLOW_FILE, replace_fixes_branch(workflow, old_branch, new_branch))
+        repo.write(
+            WORKFLOW_FILE, replace_fixes_branch(workflow, old_branch, new_branch)
+        )
         repo.write(INIT_FILE, set_version(repo.read(INIT_FILE), next_dev))
         repo.shell.run("git", "add", WORKFLOW_FILE, INIT_FILE)
         repo.shell.run("git", "commit", "-m", f"Start {major}.{minor + 1} development")
@@ -708,7 +708,9 @@ def fix_release_steps(repo, version):
     def show_candidates():
         output = repo.shell.query("git", "cherry", "-v", "HEAD", "origin/master")
         candidates = [line[2:] for line in output.splitlines() if line.startswith("+ ")]
-        print(f"  {len(candidates)} commit(s) on master have no equivalent on {branch}:")
+        print(
+            f"  {len(candidates)} commit(s) on master have no equivalent on {branch}:"
+        )
         for line in candidates:
             print(f"    {line}")
 
