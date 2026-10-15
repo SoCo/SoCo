@@ -16,6 +16,7 @@ from .data_structures import (
     DidlObject,
     DidlFavorite,
     DidlPerson,
+    DidlResource,
     to_didl_string,
 )
 from .exceptions import (
@@ -25,12 +26,17 @@ from .exceptions import (
 )
 
 
+def _escape_xml(value):
+    """Escape a string for inclusion in DIDL XML, including double quotes."""
+    return escape(value, {'"': "&quot;"})
+
+
 class Favorites:
     """The Sonos favorites list.
 
-    Provides read access to the favorites (e.g. :meth:`get_sonos_favorites`)
-    and write access (:meth:`add_to_favorites`,
-    :meth:`remove_from_favorites`, :meth:`update_favorite`).
+    Write access to the favorites (:meth:`add`, :meth:`remove`,
+    :meth:`update`, :meth:`rename`). For reading the list, use
+    `MusicLibrary`, e.g. ``device.music_library.get_sonos_favorites()``.
     """
 
     # pylint: disable=invalid-name, protected-access
@@ -44,36 +50,6 @@ class Favorites:
         self.soco = soco if soco is not None else discovery.any_soco()
         self.contentDirectory = self.soco.contentDirectory
 
-    def get_sonos_favorites(self, *args, **kwargs):
-        """Get the Sonos favorites list.
-
-        For details of the arguments, see `MusicLibrary.get_music_library_information
-        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
-        """
-        return self.soco.music_library.get_music_library_information(
-            "sonos_favorites", *args, **kwargs
-        )
-
-    def get_favorite_radio_stations(self, *args, **kwargs):
-        """Get the favorite radio stations from Sonos' Radio app.
-
-        For details of the arguments, see `MusicLibrary.get_music_library_information
-        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
-        """
-        return self.soco.music_library.get_music_library_information(
-            "radio_stations", *args, **kwargs
-        )
-
-    def get_favorite_radio_shows(self, *args, **kwargs):
-        """Get the favorite radio shows from Sonos' Radio app.
-
-        For details of the arguments, see `MusicLibrary.get_music_library_information
-        <#soco.music_library.MusicLibrary.get_music_library_information>`_.
-        """
-        return self.soco.music_library.get_music_library_information(
-            "radio_shows", *args, **kwargs
-        )
-
     @staticmethod
     def _favorite_object_id(favorite):
         """Return the item id of a favorite from a `DidlFavorite` or id."""
@@ -81,7 +57,7 @@ class Favorites:
             return favorite.item_id
         return str(favorite)
 
-    def add_to_favorites(self, item, title=None, description=None):
+    def add(self, item, title=None, description=None):
         """Add an item to the Sonos favorites list.
 
         Args:
@@ -98,11 +74,15 @@ class Favorites:
                 alongside the favorite, e.g. the artist name.
 
         Returns:
-            DidlFavorite: The newly created favorite.
+            DidlFavorite: The newly created favorite. Its resources are
+                playable, including the synthesized container URI stored
+                for resource-less service containers.
 
         Raises:
             TypeError: if ``item`` is not a `DidlObject`.
-            ValueError: if ``item`` has no resource with a URI to add.
+            ValueError: if ``item`` has no resource with a URI to add,
+                or if ``title`` or ``description`` is an empty string;
+                empty values are not supported by the speaker.
             FavoritesFullError: if the favorites list is at capacity.
             FavoritesAlreadyAddedError: if the item is already a favorite.
             SoCoUPnPException: if the item cannot be added for another
@@ -113,14 +93,19 @@ class Favorites:
 
                 album = next(device.music_library.get_albums())
                 track = next(album.get_tracks())
-                device.favorites.add_to_favorites(track)
+                device.favorites.add(track)
         """
         if not isinstance(item, DidlObject):
-            raise TypeError("item must be a DidlObject, got %r" % type(item))
+            raise TypeError(f"item must be a DidlObject, got {type(item)!r}")
+        if (title if title is not None else item.title) == "":
+            raise ValueError("title cannot be empty; dc:title is required")
+        if description == "":
+            raise ValueError("description cannot be emptied")
         if item.resources and item.resources[0].uri:
             uri = item.get_uri()
             protocol_info = item.resources[0].protocol_info
             favorite_type = "instantPlay"
+            synthesized_uri = False
         elif isinstance(item, DidlContainer) and item.item_id:
             # Service containers carry no resource of their own. Playable
             # ones (albums, playlists) are stored as instantPlay favorites
@@ -132,10 +117,12 @@ class Favorites:
                 uri = None
                 protocol_info = None
                 favorite_type = "shortcut"
+                synthesized_uri = False
             else:
                 uri = "x-rincon-cpcontainer:" + item.item_id
                 protocol_info = "x-rincon-cpcontainer:*:*:*"
                 favorite_type = "instantPlay"
+                synthesized_uri = True
         else:
             raise ValueError(
                 "item must have a resource with a URI to be added as a favorite"
@@ -148,12 +135,12 @@ class Favorites:
             r"<upnp:albumArtURI>.*?</upnp:albumArtURI>", "", to_didl_string(item)
         )
         album_art_uri = getattr(item, "album_art_uri", None)
-        new_title = escape(title if title is not None else item.title, {'"': "&quot;"})
+        new_title = _escape_xml(title if title is not None else item.title)
         res = ""
         if uri is not None:
             res = "<res"
             if protocol_info:
-                res += ' protocolInfo="%s"' % escape(protocol_info, {'"': "&quot;"})
+                res += f' protocolInfo="{_escape_xml(protocol_info)}"'
             res += ">" + escape(uri) + "</res>"
         elements = (
             '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements/1.1/" '
@@ -166,11 +153,9 @@ class Favorites:
             "<r:ordinal>0</r:ordinal>" + res + f"<r:type>{favorite_type}</r:type>"
         )
         if album_art_uri:
-            elements += "<upnp:albumArtURI>%s</upnp:albumArtURI>" % escape(
-                album_art_uri
-            )
+            elements += f"<upnp:albumArtURI>{escape(album_art_uri)}</upnp:albumArtURI>"
         if description:
-            escaped_description = escape(description, {'"': "&quot;"})
+            escaped_description = _escape_xml(description)
             elements += f"<r:description>{escaped_description}</r:description>"
         elements += f"<r:resMD>{escape(inner)}</r:resMD></item></DIDL-Lite>"
 
@@ -181,7 +166,7 @@ class Favorites:
         except SoCoUPnPException as exc:
             if exc.error_code == "805":
                 raise FavoritesFullError(
-                    "The Sonos favorites list is full (UPnP error %s)" % exc.error_code
+                    f"The Sonos favorites list is full (UPnP error {exc.error_code})"
                 ) from exc
             if exc.error_code == "803":
                 raise FavoritesAlreadyAddedError(
@@ -197,15 +182,19 @@ class Favorites:
             restricted=False,
         )
         favorite.reference = item
+        if synthesized_uri:
+            # Give the returned favorite the synthesized resource so it is playable.
+            favorite.resources = [DidlResource(uri, protocol_info)]
         return favorite
 
-    def remove_from_favorites(self, favorite):
+    def remove(self, favorite):
         """Remove a favorite from the Sonos favorites list.
 
         Args:
             favorite: The favorite to remove. Either a `DidlFavorite`
-                object (as returned by :meth:`get_sonos_favorites`) or
-                its item id as a string, e.g. ``"FV:2/28"``.
+                object (as returned by
+                `MusicLibrary.get_sonos_favorites`) or its item id as a
+                string, e.g. ``"FV:2/28"``.
 
         Raises:
             SoCoUPnPException: if the favorite does not exist (error 701).
@@ -213,8 +202,8 @@ class Favorites:
         Example:
             Remove the first favorite::
 
-                favorite = device.favorites.get_sonos_favorites()[0]
-                device.favorites.remove_from_favorites(favorite)
+                favorite = device.music_library.get_sonos_favorites()[0]
+                device.favorites.remove(favorite)
         """
         object_id = self._favorite_object_id(favorite)
         self.contentDirectory.DestroyObject([("ObjectID", object_id)])
@@ -227,10 +216,10 @@ class Favorites:
         the placeholder ``UpdateObject`` expects in ``CurrentTagValue``
         for a property that does not yet exist on the object.
         """
-        match = re.search(r"(<%s>.*?</%s>)" % (tag, tag), didl, flags=re.DOTALL)
+        match = re.search(f"(<{tag}>.*?</{tag}>)", didl, flags=re.DOTALL)
         return match.group(1) if match else ""
 
-    def update_favorite(self, favorite, title=None, description=None):
+    def update(self, favorite, title=None, description=None):
         """Update the metadata of a favorite.
 
         Currently supports updating the ``title`` and ``description``
@@ -255,8 +244,8 @@ class Favorites:
         Example:
             Rename the first favorite::
 
-                favorite = device.favorites.get_sonos_favorites()[0]
-                device.favorites.update_favorite(
+                favorite = device.music_library.get_sonos_favorites()[0]
+                device.favorites.update(
                     favorite, title="My Fave", description="By Artist"
                 )
         """
@@ -288,8 +277,8 @@ class Favorites:
         current_values = []
         new_values = []
         for tag, value in updates:
-            escaped = escape(str(value), {'"': "&quot;"})
-            new_fragment = "<%s>%s</%s>" % (tag, escaped, tag)
+            escaped = _escape_xml(str(value))
+            new_fragment = f"<{tag}>{escaped}</{tag}>"
             current_fragment = self._extract_element(result, tag)
             # Note: commas are sent unescaped. Sonos parses TagValueList as
             # XML fragments and stores the spec's \, escaping literally.
@@ -306,10 +295,10 @@ class Favorites:
             ]
         )
 
-    def rename_favorite(self, favorite, new_title):
+    def rename(self, favorite, new_title):
         """Rename a favorite in the Sonos favorites list.
 
-        Convenience wrapper around :meth:`update_favorite`.
+        Convenience wrapper around :meth:`update`.
 
         Args:
             favorite: The favorite to rename. Either a `DidlFavorite`
@@ -320,4 +309,4 @@ class Favorites:
             SoCoUPnPException: if the favorite does not exist (error 701)
                 or the title cannot be updated.
         """
-        self.update_favorite(favorite, title=new_title)
+        self.update(favorite, title=new_title)
