@@ -36,13 +36,11 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
-    # Only one is used for all the tests in this module, hence the decorator.
-    # It is module scoped so that the tear down runs before tests in other
-    # modules reset the SoCo singletons (see reset_soco in conftest.py)
+    # Only one is used per test session, hence the decorator
     ip = request.config.option.IP
     if ip is None:
         pytest.fail("No ip address specified. Use the --ip option.")
@@ -536,33 +534,6 @@ class TestTimer:
             )
 
 
-@pytest.fixture(scope="class")
-def restore_sonos_playlists(request, soco):
-    """A fixture which cleans up after the sonos playlist tests.
-
-    Defined at module level rather than as a method, since class-scoped
-    fixture methods are deprecated. Attributes are set on the test class.
-    """
-    cls = request.cls
-    if cls.existing_playlists is None:
-        cls.existing_playlists = soco.get_sonos_playlists()
-    if cls.playlist_name in [x.title for x in cls.existing_playlists]:
-        msg = "%s is an existing playlist." % cls.playlist_name
-        pytest.fail(msg)
-
-    queue_list = soco.get_queue()
-    if len(queue_list) < 2:
-        msg = "You must have 3 or more items in your queue for testing."
-        pytest.fail(msg)
-    playlist = soco.create_sonos_playlist_from_queue(cls.playlist_name)
-    cls.queue_length = soco.queue_size
-    cls.test_playlist = playlist
-    yield
-
-    soco.contentDirectory.DestroyObject([("ObjectID", cls.test_playlist.item_id)])
-
-
-@pytest.mark.usefixtures("restore_sonos_playlists")
 class TestReorderSonosPlaylist:
     """Integration tests for Sonos Playlist Management."""
 
@@ -570,6 +541,26 @@ class TestReorderSonosPlaylist:
     playlist_name = "zSocoTestPlayList42"
     test_playlist = None
     queue_length = None
+
+    @pytest.fixture(autouse=True, scope="class")
+    def restore_sonos_playlists(self, soco):
+        """A fixture which cleans up after each sonos playlist test."""
+        if self.existing_playlists is None:
+            self.existing_playlists = soco.get_sonos_playlists()
+        if self.playlist_name in [x.title for x in self.existing_playlists]:
+            msg = "%s is an existing playlist." % self.playlist_name
+            pytest.fail(msg)
+
+        queue_list = soco.get_queue()
+        if len(queue_list) < 2:
+            msg = "You must have 3 or more items in your queue for testing."
+            pytest.fail(msg)
+        playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
+        self.__class__.queue_length = soco.queue_size
+        self.__class__.test_playlist = playlist
+        yield
+
+        soco.contentDirectory.DestroyObject([("ObjectID", self.test_playlist.item_id)])
 
     def _reset_spl_contents(self, soco):
         """Ensure test playlist matches queue for each test."""
