@@ -104,3 +104,75 @@ def validate_fix(version, tags):
             f"The next fix release of {major}.{minor} is "
             f"{major}.{minor}.{latest + 1}, not {version}"
         )
+
+
+VERSION_LINE_RE = re.compile(r'^__version__ = "([^"]*)"$', re.MULTILINE)
+INDEX_ENTRY_RE = re.compile(r"^   (\d\S*)$", re.MULTILINE)
+
+
+def read_version(init_text):
+    """Return the __version__ value from the text of INIT_FILE."""
+    found = VERSION_LINE_RE.findall(init_text)
+    if len(found) != 1:
+        raise ReleaseError(
+            f"Expected one __version__ line in {INIT_FILE}, found {len(found)}"
+        )
+    return found[0]
+
+
+def set_version(init_text, version):
+    """Return the text of INIT_FILE with __version__ set to version."""
+    read_version(init_text)
+    return VERSION_LINE_RE.sub(f'__version__ = "{version}"', init_text)
+
+
+def index_entries(index_text):
+    """Return the release entries in the INDEX_FILE toctree, in order."""
+    return INDEX_ENTRY_RE.findall(index_text)
+
+
+def add_release_to_index(index_text, name):
+    """Return INDEX_FILE text with name as the first entry (if absent)."""
+    if name in index_entries(index_text):
+        return index_text
+    first = INDEX_ENTRY_RE.search(index_text)
+    if first is None:
+        raise ReleaseError(f"No release entries found in {INDEX_FILE}")
+    return index_text[: first.start()] + f"   {name}\n" + index_text[first.start() :]
+
+
+def missing_index_entries(index_text, filenames):
+    """Return the index entries that have no matching .rst file."""
+    return [
+        entry for entry in index_entries(index_text) if f"{entry}.rst" not in filenames
+    ]
+
+
+def replace_fixes_branch(workflow_text, old, new):
+    """Return WORKFLOW_FILE text with the old fixes branch replaced.
+
+    If the new branch is already there, the text is returned unchanged, so
+    the edit can be repeated when a release is resumed.
+    """
+    old_quoted, new_quoted = f"'{old}'", f"'{new}'"
+    if old_quoted in workflow_text:
+        return workflow_text.replace(old_quoted, new_quoted)
+    if new_quoted in workflow_text:
+        return workflow_text
+    raise ReleaseError(f"{WORKFLOW_FILE} mentions neither {old} nor {new}")
+
+
+def release_notes_template(version):
+    """Return the skeleton release notes for a main release."""
+    major, minor, _ = parse_version(version)
+    title = f"SoCo {major}.{minor} Release Notes"
+    return (
+        f"{title}\n"
+        f"{'*' * len(title)}\n"
+        "\n"
+        f"**SoCo {version}** (Released on YYYY-MM-DD) contains new features as\n"
+        "well as internal improvements.\n"
+        "\n"
+        "Please see the GitHub release page for further details:\n"
+        f"https://github.com/SoCo/SoCo/releases/tag/v{version}\n"
+    )
