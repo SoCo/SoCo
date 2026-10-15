@@ -47,6 +47,6 @@ jobs:
         run: |
           black --check soco tests
       - name: Test documentation build
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.14'
         run: |
           make docs

@@ -123,8 +123,8 @@ intersphinx_mapping = {
 # Shortcuts to Github Issues etc. Use them like this:
 # :issue:`123` (which will generate a link to issue 123)
 extlinks = {
-    "issue": ("https://github.com/SoCo/SoCo/issues/%s", "#"),
-    "PR": ("https://github.com/SoCo/SoCo/pull/%s", "#"),
+    "issue": ("https://github.com/SoCo/SoCo/issues/%s", "#%s"),
+    "PR": ("https://github.com/SoCo/SoCo/pull/%s", "#%s"),
 }
 
 # Document members by default, and in source order. This allows the stub files

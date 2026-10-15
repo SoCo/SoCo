@@ -1,2 +1,2 @@
-sphinx == 5.0.2
+sphinx >= 7.4.7, < 10
 sphinx-rtd-theme
