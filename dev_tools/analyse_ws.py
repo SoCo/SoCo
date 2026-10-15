@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # pylint: disable=E0611,R0913
 
-""" Script to analyse ws dumps """
+"""Script to analyse ws dumps"""
 
 import argparse
 import math
