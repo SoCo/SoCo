@@ -19,7 +19,7 @@ See dev_tools/README.md for the steps, prompts and troubleshooting.
 """
 
 import argparse
-import json
+import datetime
 import os
 import re
 import shlex
@@ -36,7 +36,6 @@ RELEASES_DIR = "doc/releases"
 WORKFLOW_FILE = ".github/workflows/soco-check-jobs.yaml"
 PYPI_URL = "https://pypi.org/pypi/soco/{}/json"
 GITHUB_REPO = "SoCo/SoCo"
-MILESTONES_API = f"repos/{GITHUB_REPO}/milestones"
 ORIGIN_RE = re.compile(r"github\.com[:/]SoCo/SoCo(\.git)?/?$")
 
 
@@ -177,15 +176,18 @@ def replace_fixes_branch(workflow_text, old, new):
     raise ReleaseError(f"{WORKFLOW_FILE} mentions neither {old} nor {new}")
 
 
-def release_notes_template(version):
-    """Return the skeleton release notes for a main release."""
+def release_notes_template(version, released_on):
+    """Return the release notes for a main release released on a date.
+
+    ``released_on`` is an ISO date string, e.g. '2026-10-15'.
+    """
     major, minor, _ = parse_version(version)
     title = f"SoCo {major}.{minor} Release Notes"
     return (
         f"{title}\n"
         f"{'*' * len(title)}\n"
         "\n"
-        f"**SoCo {version}** (Released on YYYY-MM-DD) contains new features as\n"
+        f"**SoCo {version}** (Released on {released_on}) contains new features as\n"
         "well as internal improvements.\n"
         "\n"
         "Please see the GitHub release page for further details:\n"
@@ -354,16 +356,6 @@ class Repo:
     def github_release_exists(self, tag):
         """Return whether a GitHub release exists for a tag."""
         return self.shell.ok("gh", "release", "view", tag, "-R", GITHUB_REPO)
-
-    def milestone(self, title):
-        """Return the GitHub milestone named title or vtitle, or None."""
-        milestones = json.loads(
-            self.shell.query("gh", "api", f"{MILESTONES_API}?state=all&per_page=100")
-        )
-        for milestone in milestones:
-            if milestone["title"] in (title, f"v{title}"):
-                return milestone
-        return None
 
 
 AUTO = "auto"  # runs without asking
@@ -588,11 +580,15 @@ def publish_steps(repo, version, after, branch, subject):
     return [tag_step, build_step, upload, github_release]
 
 
-def main_release_steps(repo, version):  # pylint: disable=too-many-locals
-    """Steps for a main release X.Y.0 from master."""
+def main_release_steps(repo, version, today=None):
+    """Steps for a main release X.Y.0 from master.
+
+    ``today`` (an ISO date string) is the release date written into the
+    release notes; it defaults to the current date.
+    """
+    released_on = today or datetime.date.today().isoformat()
     major, minor, _ = parse_version(version)
     tag = f"v{version}"
-    next_minor = f"{major}.{minor + 1}.0"
     next_dev = next_dev_version(version)
     old_branch = previous_fixes_branch(version)
     new_branch = fixes_branch(version)
@@ -602,71 +598,21 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
     def released():
         return repo.remote_tag_exists(tag) or repo.committed_version("HEAD") == version
 
-    create_args = ("gh", "api", MILESTONES_API, "-f", f"title=v{next_minor}")
-    create_milestone = Step(
-        f"Create milestone v{next_minor}",
-        CONFIRM,
-        lambda: repo.milestone(next_minor) is not None,
-        run=lambda: repo.shell.run(*create_args),
-        commands=[shlex.join(create_args)],
-    )
-
-    def show_milestone():
-        milestone = repo.milestone(version)
-        if milestone is None:
-            print(f"  There is no {version} milestone.")
-            return
-        print(
-            f"  Milestone {milestone['title']}: {milestone['open_issues']} open, "
-            f"{milestone['closed_issues']} closed issues"
-        )
-        print(f"  {milestone['html_url']}")
-
-    review = Step(
-        f"Review the {version} milestone",
-        MANUAL,
-        released,
-        run=show_milestone,
-        hint=f"Move unfinished issues to v{next_minor} or later.",
-    )
-
-    def notes_ready():
-        return (
-            repo.exists(notes_file)
-            and repo.read(notes_file) != release_notes_template(version)
-            and version in index_entries(repo.read(INDEX_FILE))
-        )
-
-    def prepare_notes():
-        if not repo.exists(notes_file):
-            repo.write(notes_file, release_notes_template(version))
-            print(f"  Created {notes_file} from the template.")
-        index = repo.read(INDEX_FILE)
-        updated = add_release_to_index(index, version)
-        if updated != index:
-            repo.write(INDEX_FILE, updated)
-            print(f"  Added {version} to {INDEX_FILE}.")
-
-    notes = Step(
-        f"Write the release notes in {notes_file}",
-        MANUAL,
-        notes_ready,
-        run=prepare_notes,
-        ready=notes_ready,
-        hint=f"Edit {notes_file}; it must differ from the template.",
-    )
-
     def commit_release():
+        if not repo.exists(notes_file):
+            repo.write(notes_file, release_notes_template(version, released_on))
+            print(f"  Created {notes_file}.")
+        index = repo.read(INDEX_FILE)
+        repo.write(INDEX_FILE, add_release_to_index(index, version))
         repo.write(INIT_FILE, set_version(repo.read(INIT_FILE), version))
         repo.shell.run("git", "add", INIT_FILE, INDEX_FILE, notes_file)
         repo.shell.run("git", "commit", "-m", f"Release {tag}")
 
     commit = Step(
-        f"Set version {version} and commit",
+        f"Add {notes_file}, set version {version} and commit",
         AUTO,
         released,
         run=commit_release,
-        requires=(notes,),
     )
     push = Step(
         "Push master",
@@ -678,34 +624,8 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
         preview=lambda: unpushed_preview(repo, "master"),
         requires=(commit,),
     )
-    tag_step, build, upload, github_release = publish_steps(
-        repo, version, push, "master", f"Release {tag}"
-    )
-
-    def milestone_closed():
-        milestone = repo.milestone(version)
-        return milestone is None or milestone["state"] == "closed"
-
-    def close_milestone():
-        number = repo.milestone(version)["number"]
-        repo.shell.run(
-            "gh",
-            "api",
-            "--method",
-            "PATCH",
-            f"{MILESTONES_API}/{number}",
-            "-f",
-            "state=closed",
-        )
-
-    close = Step(
-        f"Close the {version} milestone",
-        CONFIRM,
-        milestone_closed,
-        run=close_milestone,
-        commands=[f"gh api --method PATCH {MILESTONES_API}/<number> -f state=closed"],
-        requires=(github_release,),
-    )
+    publish = publish_steps(repo, version, push, "master", f"Release {tag}")
+    tag_step = publish[0]
 
     def create_branch():
         if not repo.local_branch_exists(new_branch):
@@ -749,21 +669,7 @@ def main_release_steps(repo, version):  # pylint: disable=too-many-locals
         preview=lambda: unpushed_preview(repo, "master"),
         requires=(start,),
     )
-    return [
-        create_milestone,
-        review,
-        notes,
-        commit,
-        push,
-        tag_step,
-        build,
-        upload,
-        github_release,
-        close,
-        branch,
-        start,
-        push_next,
-    ]
+    return [commit, push, *publish, branch, start, push_next]
 
 
 def fix_release_steps(repo, version):

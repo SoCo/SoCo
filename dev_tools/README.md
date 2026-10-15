@@ -4,9 +4,8 @@
 
 `release.py` takes a maintainer through a SoCo release, from the version
 bump to the GitHub release. It runs the routine steps itself, waits for you
-on the steps that need judgement (milestone review, release notes,
-cherry-picks), and asks before anything that can't be undone (pushes,
-tags, the PyPI upload, GitHub changes).
+while you pick the fixes for a fix release, and asks before anything that
+can't be undone (pushes, tags, the PyPI upload, the GitHub release).
 
 It supports two kinds of release:
 
@@ -35,8 +34,8 @@ python dev_tools/release.py fix 0.32.1              # a fix release
 
 `--dry-run` runs the pre-flight checks and lists each step as `done`,
 `would run` or `manual`, with the commands it would run. It changes
-nothing. It does fetch from origin, and reads milestones and releases from
-GitHub and versions from PyPI.
+nothing. It does fetch from origin, and reads releases from GitHub and
+versions from PyPI.
 
 ### Pre-flight checks
 
@@ -60,25 +59,23 @@ the latest `vX.Y.*` tag.
 
 **Main release** (`main X.Y.0`, on `master`):
 
-1. Create milestone `vX.Y+1.0` if it doesn't exist (confirm).
-2. Review milestone `X.Y.0`: the script shows its open and closed issue
-   counts while you move any unfinished issues on (manual).
-3. Write the release notes: the script creates `doc/releases/X.Y.0.rst`
-   from a template and adds it to `doc/releases/index.rst`, then waits
-   until you have edited it (manual).
-4. Set `__version__` to `X.Y.0` and commit the notes, index and version as
-   `Release vX.Y.0`.
-5. Push `master` (confirm; the prompt lists the commits being pushed).
-6. Tag the `Release vX.Y.0` commit as `vX.Y.0` and push the tag (confirm;
+1. Add the release notes, `doc/releases/X.Y.0.rst`, with today's date as
+   the release date, and list them in `doc/releases/index.rst`. Set
+   `__version__` to `X.Y.0`, then commit all three as `Release vX.Y.0`.
+   The notes are short and point to the GitHub release, whose notes are
+   generated from the merged PRs. To write your own notes instead, create
+   the file before running the script; it never overwrites an existing
+   file.
+2. Push `master` (confirm; the prompt lists the commits being pushed).
+3. Tag the `Release vX.Y.0` commit as `vX.Y.0` and push the tag (confirm;
    the prompt shows the commit).
-7. Build the sdist and wheel from a clean checkout of the tag.
-8. Upload to PyPI with twine (confirm).
-9. Create the GitHub release with auto-generated notes (confirm).
-10. Close milestone `X.Y.0` (confirm).
-11. Create `vX.Y.fixes` from the tag and push it (confirm).
-12. On `master`, set `__version__` to `X.Y+1.0-dev` and switch the CI
-    workflow from `vX.Y-1.fixes` to `vX.Y.fixes`, then commit.
-13. Push `master` (confirm).
+4. Build the sdist and wheel from a clean checkout of the tag.
+5. Upload to PyPI with twine (confirm).
+6. Create the GitHub release with auto-generated notes (confirm).
+7. Create `vX.Y.fixes` from the tag and push it (confirm).
+8. On `master`, set `__version__` to `X.Y+1.0-dev` and switch the CI
+   workflow from `vX.Y-1.fixes` to `vX.Y.fixes`, then commit.
+9. Push `master` (confirm).
 
 **Fix release** (`fix X.Y.N`, on `vX.Y.fixes`):
 
@@ -87,7 +84,7 @@ the latest `vX.Y.*` tag.
    fixes you want (manual; the working tree must be clean to continue).
 2. Set `__version__` to `X.Y.N` and commit it as `Bump version to vX.Y.N`.
 3. Push the fixes branch (confirm).
-4. Tag, build, upload and create the GitHub release, as in main steps 6–9.
+4. Tag, build, upload and create the GitHub release, as in main steps 3–6.
 
 ### Prompts
 
@@ -96,9 +93,8 @@ the latest `vX.Y.*` tag.
   - `n` skips it. Any later step that depends on it then stops with an
     error instead of running out of order.
   - `q` stops the script.
-- **Manual steps** wait for Enter, then check that the step is really
-  done, for example that the release notes differ from the template.
-  `q` stops the script.
+- **The cherry-pick step** in a fix release waits for Enter, and checks
+  that the working tree is clean before continuing. `q` stops the script.
 - Ctrl-C and Ctrl-D also stop the script cleanly.
 
 ### Resuming
