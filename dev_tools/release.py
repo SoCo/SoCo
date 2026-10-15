@@ -14,6 +14,8 @@ steps that are already done are detected and skipped.
 Requirements: git; the GitHub CLI ``gh`` (``brew install gh``, then
 ``gh auth login``); the ``build`` and ``twine`` packages from
 requirements-dev.txt; PyPI credentials in ~/.pypirc or the keyring.
+
+See dev_tools/README.md for the steps, prompts and troubleshooting.
 """
 
 import argparse
