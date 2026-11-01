@@ -5,11 +5,11 @@ on:
   push:
     branches:
       - master
-      - 'v0.32.fixes'
+      - 'v*.fixes'
   pull_request:
     branches:
       - master
-      - 'v0.32.fixes'
+      - 'v*.fixes'
 
 jobs:
   SoCo-Check-Jobs:
