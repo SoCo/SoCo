@@ -45,8 +45,8 @@ Before doing anything, the script checks the following:
 - You're on the right branch (`master`, or `vX.Y.fixes` for a fix release)
   and not behind `origin`.
 - There are no uncommitted changes to tracked files, apart from the files
-  the script edits itself (`soco/__init__.py`, `doc/releases/index.rst`
-  and the CI workflow). Untracked files are fine.
+  the script edits itself (`soco/__init__.py` and `doc/releases/index.rst`).
+  Untracked files are fine.
 - `gh` is logged in, and `build` and `twine` are installed.
 - For a main release, every entry in `doc/releases/index.rst` has a
   matching file.
@@ -73,8 +73,8 @@ the latest `vX.Y.*` tag.
 5. Upload to PyPI with twine (confirm).
 6. Create the GitHub release with auto-generated notes (confirm).
 7. Create `vX.Y.fixes` from the tag and push it (confirm).
-8. On `master`, set `__version__` to `X.Y+1.0-dev` and switch the CI
-   workflow from `vX.Y-1.fixes` to `vX.Y.fixes`, then commit.
+8. On `master`, set `__version__` to `X.Y+1.0-dev` and commit. CI runs on
+   every `vX.Y.fixes` branch, so the workflow needs no change.
 9. Push `master` (confirm).
 
 **Fix release** (`fix X.Y.N`, on `vX.Y.fixes`):
