@@ -36,7 +36,6 @@ class TestVersions:
     def test_derived_names(self):
         assert release.normalise_version("v0.32.0") == "0.32.0"
         assert release.fixes_branch("0.32.0") == "v0.32.fixes"
-        assert release.previous_fixes_branch("0.32.0") == "v0.31.fixes"
         assert release.next_dev_version("0.32.0") == "0.33.0-dev"
 
     @pytest.mark.parametrize("current", ["0.32.0-dev", "0.32.0", "0.33.0-dev"])
@@ -66,10 +65,6 @@ class TestVersions:
 
 def real_file(name):
     return (REPO_ROOT / name).read_text(encoding="utf-8")
-
-
-def current_fixes_branch(workflow_text):
-    return re.search(r"'(v\d+\.\d+\.fixes)'", workflow_text).group(1)
 
 
 INDEX = ".. toctree::\n   :maxdepth: 1\n\n   0.31.0\n   0.30\n"
@@ -111,20 +106,12 @@ class TestFileEdits:
             "0.30"
         ]
 
-    def test_replace_fixes_branch_on_real_workflow(self):
-        text = real_file(release.WORKFLOW_FILE)
-        old = current_fixes_branch(text)
-        updated = release.replace_fixes_branch(text, old, "v9.9.fixes")
-        assert f"'{old}'" not in updated
-        assert updated.count("'v9.9.fixes'") == 2
-
-    def test_replace_fixes_branch_is_idempotent(self):
-        text = "branches:\n  - 'v0.32.fixes'\n"
-        assert release.replace_fixes_branch(text, "v0.31.fixes", "v0.32.fixes") == text
-
-    def test_replace_fixes_branch_with_neither_branch(self):
-        with pytest.raises(ReleaseError, match="neither"):
-            release.replace_fixes_branch("branches: []\n", "v0.31.fixes", "v0.32.fixes")
+    def test_ci_runs_on_every_fixes_branch(self):
+        # New fixes branches are cut from a release tag, so CI must not name
+        # a particular one.
+        workflow = real_file(".github/workflows/soco-check-jobs.yaml")
+        assert workflow.count("- 'v*.fixes'") == 2
+        assert not re.search(r"v\d+\.\d+\.fixes", workflow)
 
     def test_release_notes_template_matches_0_32_0_notes(self):
         text = release.release_notes_template("0.32.0", "2026-10-15")
@@ -549,10 +536,9 @@ class SimRepo(release.Repo):
 
 
 def copy_repo_files(root):
-    for name in (release.INIT_FILE, release.WORKFLOW_FILE):
-        dest = root / name
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy(REPO_ROOT / name, dest)
+    dest = root / release.INIT_FILE
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(REPO_ROOT / release.INIT_FILE, dest)
     shutil.copytree(REPO_ROOT / release.RELEASES_DIR, root / release.RELEASES_DIR)
 
 
@@ -562,14 +548,9 @@ def set_file_version(root, version):
 
 
 def make_main_sim(root, version="5.7.0-dev"):
-    """A master checkout at 5.7.0-dev whose CI tests v5.6.fixes."""
+    """A master checkout at 5.7.0-dev."""
     copy_repo_files(root)
     set_file_version(root, version)
-    workflow = root / release.WORKFLOW_FILE
-    text = workflow.read_text(encoding="utf-8")
-    workflow.write_text(
-        release.replace_fixes_branch(text, current_fixes_branch(text), "v5.6.fixes")
-    )
     return SimRepo(root, "master")
 
 
@@ -628,9 +609,6 @@ class TestMainFlow:
         )
         assert not [r for r in repo.shell.runs if r[:2] == ("gh", "api")]
         assert "v5.7.fixes" in repo.remote_branches
-        workflow = repo.read(release.WORKFLOW_FILE)
-        assert workflow.count("'v5.7.fixes'") == 2
-        assert "'v5.6.fixes'" not in workflow
         assert release.index_entries(repo.read(release.INDEX_FILE))[0] == "5.7.0"
         assert (
             "git",
@@ -728,8 +706,6 @@ class TestMainFlow:
 
     def test_resume_after_unpushed_dev_bump(self, tmp_path):
         repo = make_main_sim(tmp_path, version="5.8.0-dev")
-        workflow = tmp_path / release.WORKFLOW_FILE
-        workflow.write_text(workflow.read_text().replace("v5.6.fixes", "v5.7.fixes"))
         write_notes(tmp_path)
         repo.committed["origin/master"] = "5.7.0"
         repo.remote_tags.add("v5.7.0")
@@ -794,7 +770,7 @@ class TestPreflight:
 
     def test_own_files_allowed(self, tmp_path):
         repo = make_fix_sim(tmp_path)
-        repo.changed = [release.INIT_FILE, release.INDEX_FILE, release.WORKFLOW_FILE]
+        repo.changed = [release.INIT_FILE, release.INDEX_FILE]
         assert release.preflight(repo, "v9.1.fixes", check_index=False) == []
 
     def test_other_changes_flagged(self, tmp_path):
