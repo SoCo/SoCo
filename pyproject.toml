@@ -15,7 +15,6 @@
     classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -36,14 +35,11 @@
         "Topic :: Software Development :: Libraries :: Python Modules"
     ]
     requires-python = ">=3.6"
-    dynamic = ["version", "dependencies"]
+    dynamic = ["version", "dependencies", "license"]
 
 [[project.authors]]
     name = "The SoCo-Team"
     email = "python-soco@googlegroups.com"
-
-[project.license]
-    text = "MIT License"
 
 [project.urls]
     Homepage = "https://github.com/SoCo/SoCo"
