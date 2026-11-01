@@ -3183,12 +3183,16 @@ class SoCo(_SocoSingletonBase):
 def soco_reset():
     """Reset the SoCo module.
 
-    Clears out the singleton instance cache. Use this to reset SoCo state,
-    for example when testing. Note that this does not close any open
-    connections or release other resources. This function is not thread-safe
-    and must not be called while the API is in use from other threads.
+    Clears out the singleton instance cache and the zone group states. Use
+    this to reset SoCo state, for example when testing. Note that this does
+    not close any open connections or release other resources. This function
+    is not thread-safe and must not be called while the API is in use from
+    other threads. Unsubscribe from events before calling it, because the
+    zone group states track active subscriptions.
     """
     _ArgsSingleton._instances.clear()
+    # Zone group states hold instances created before the reset
+    SoCo.zone_group_states.clear()
 
 
 # definition section
