@@ -101,6 +101,19 @@ class TestFileEdits:
         with pytest.raises(ReleaseError, match="No release entries"):
             release.add_release_to_index(".. toctree::\n", "0.32.0")
 
+    def test_set_version_keeps_crlf(self):
+        # Files in a Windows checkout have CRLF line endings
+        text = '"""SoCo."""\r\n__version__ = "0.32.0"\r\n'
+        assert release.read_version(text) == "0.32.0"
+        updated = release.set_version(text, "0.33.0-dev")
+        assert updated == '"""SoCo."""\r\n__version__ = "0.33.0-dev"\r\n'
+
+    def test_add_release_to_index_keeps_crlf(self):
+        text = INDEX.replace("\n", "\r\n")
+        updated = release.add_release_to_index(text, "0.32.0")
+        assert release.index_entries(updated) == ["0.32.0", "0.31.0", "0.30"]
+        assert updated == text.replace("   0.31.0", "   0.32.0\r\n   0.31.0")
+
     def test_missing_index_entries(self):
         assert release.missing_index_entries(INDEX, ["0.31.0.rst", "index.rst"]) == [
             "0.30"
