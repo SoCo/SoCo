@@ -113,8 +113,10 @@ def validate_fix(version, tags):
         )
 
 
-VERSION_LINE_RE = re.compile(r'^__version__ = "([^"]*)"$', re.MULTILINE)
-INDEX_ENTRY_RE = re.compile(r"^   (\d\S*)$", re.MULTILINE)
+# Files are read with their line endings kept, which are CRLF in a Windows
+# checkout, so a line may end in \r.
+VERSION_LINE_RE = re.compile(r'^__version__ = "([^"]*)"(?=\r?$)', re.MULTILINE)
+INDEX_ENTRY_RE = re.compile(r"^   (\d\S*)\r?$", re.MULTILINE)
 
 
 def read_version(init_text):
@@ -145,7 +147,9 @@ def add_release_to_index(index_text, name):
     first = INDEX_ENTRY_RE.search(index_text)
     if first is None:
         raise ReleaseError(f"No release entries found in {INDEX_FILE}")
-    return index_text[: first.start()] + f"   {name}\n" + index_text[first.start() :]
+    newline = "\r\n" if "\r\n" in index_text else "\n"
+    entry = f"   {name}{newline}"
+    return index_text[: first.start()] + entry + index_text[first.start() :]
 
 
 def missing_index_entries(index_text, filenames):
