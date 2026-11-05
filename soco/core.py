@@ -85,6 +85,9 @@ AUDIO_INPUT_FORMATS = {
 }
 
 
+_LOG = logging.getLogger(__name__)
+
+
 def _create_uri_didl_item(uri, title, mime_type):
     """Create a DIDL item for an HTTP media URI."""
     resource = DidlResource(uri=uri, protocol_info=f"http-get:*:{mime_type}:*")
@@ -94,9 +97,6 @@ def _create_uri_didl_item(uri, title, mime_type):
         item_id="1",
         resources=[resource],
     )
-
-
-_LOG = logging.getLogger(__name__)
 
 
 class _ArgsSingleton(type):
@@ -850,8 +850,9 @@ class SoCo(_SocoSingletonBase):
             start (bool): If the URI that has been set should start playing.
             force_radio (bool): forces a uri to play as a radio stream.
             mime_type (str): The MIME type of the media. If provided without
-                explicit metadata, DIDL metadata with the corresponding
-                protocol info is generated.
+                explicit metadata, track-style DIDL metadata with the
+                corresponding protocol info is generated. Explicit metadata
+                takes precedence.
             kwargs: additional arguments such as timeout.
 
         On a Sonos controller music is shown with one of the following display
@@ -892,7 +893,10 @@ class SoCo(_SocoSingletonBase):
            not forced to to Radio format.
 
         """
-        if meta == "" and mime_type is not None:
+        if mime_type and force_radio:
+            raise ValueError("mime_type cannot be used with force_radio=True")
+
+        if meta == "" and mime_type:
             meta = to_didl_string(_create_uri_didl_item(uri, title, mime_type))
         elif meta == "" and title != "":
             meta_template = (
@@ -2442,7 +2446,7 @@ class SoCo(_SocoSingletonBase):
         Returns:
             int: The index of the new item in the queue.
         """
-        if mime_type is not None:
+        if mime_type:
             item = _create_uri_didl_item(uri, title, mime_type)
         else:
             res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
@@ -2894,12 +2898,16 @@ class SoCo(_SocoSingletonBase):
             )
         except SoCoUPnPException as err:
             if "Error 402 received" in str(err):
-                raise ValueError("invalid sleep_time_seconds, must be integer \
-                    value between 0 and 86399 inclusive or None") from err
+                raise ValueError(
+                    "invalid sleep_time_seconds, must be integer \
+                    value between 0 and 86399 inclusive or None"
+                ) from err
             raise
         except ValueError as error:
-            raise ValueError("invalid sleep_time_seconds, must be integer \
-                value between 0 and 86399 inclusive or None") from error
+            raise ValueError(
+                "invalid sleep_time_seconds, must be integer \
+                value between 0 and 86399 inclusive or None"
+            ) from error
 
     @only_on_master
     def get_sleep_timer(self):
