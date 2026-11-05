@@ -848,12 +848,18 @@ class SoCo(_SocoSingletonBase):
             meta (str): The metadata to show in the player, DIDL format.
             title (str): The title to show in the player (if no meta).
             start (bool): If the URI that has been set should start playing.
-            force_radio (bool): forces a uri to play as a radio stream.
+            force_radio (bool): Forces a URI to play as a radio stream. Cannot
+                be used together with ``mime_type``.
             mime_type (str): The MIME type of the media. If provided without
                 explicit metadata, track-style DIDL metadata with the
-                corresponding protocol info is generated. Explicit metadata
-                takes precedence.
+                corresponding protocol info is generated. Cannot be used
+                together with ``force_radio=True``. Explicit metadata takes
+                precedence.
             kwargs: additional arguments such as timeout.
+
+        Raises:
+            ValueError: If ``mime_type`` and ``force_radio=True`` are both
+                provided.
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
