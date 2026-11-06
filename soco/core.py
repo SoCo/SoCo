@@ -35,6 +35,7 @@ from .exceptions import (
     NotSupportedException,
     SoCoNotVisibleException,
 )
+from . import update
 from .favorites import Favorites
 from .music_library import MusicLibrary
 from .services import (
@@ -2929,6 +2930,51 @@ class SoCo(_SocoSingletonBase):
             return int(times[0]) * 3600 + int(times[1]) * 60 + int(times[2])
         else:
             return None
+
+    def check_for_update(self, timeout=None):
+        """Check whether a software update is available for this speaker.
+
+        The speaker asks the update server for the household's update
+        manifest, and the target version for this speaker is looked up in it.
+
+        Args:
+            timeout: How long to wait for the manifest download, passed to
+                `requests.get`.
+
+        Returns:
+            ~soco.update.UpdateStatus: The installed and latest versions, or
+            `None` if the speaker doesn't offer an update manifest.
+        """
+        response = self.zoneGroupTopology.CheckForUpdate(
+            [
+                ("UpdateType", "Software"),
+                ("CachedOnly", "0"),
+                ("Version", ""),
+            ]
+        )
+        item = update.parse_update_item(response.get("UpdateItem"))
+        if item is None or not item.manifest_url:
+            return None
+        info = self.get_speaker_info(refresh=True, timeout=timeout)
+        model, submodel = update.parse_hardware_version(info["hardware_version"])
+        manifest = update.UpdateManifest.fetch(item.manifest_url, timeout=timeout)
+        version, url = manifest.target(model, submodel, info["software_version"])
+        return update.UpdateStatus(info["software_version"], version, url)
+
+    def begin_software_update(self, update_url, flags=update.FLAG_PROGRESS_MONITORED):
+        """Start a software update of this speaker.
+
+        Only this speaker is updated. Use :func:`soco.update.monitor_update`
+        to follow its progress when the
+        :data:`~soco.update.FLAG_PROGRESS_MONITORED` flag is set.
+
+        Args:
+            update_url (str): The ``update_url`` from :meth:`check_for_update`.
+            flags (int): ``BeginSoftwareUpdate`` flags.
+        """
+        self.zoneGroupTopology.BeginSoftwareUpdate(
+            [("UpdateURL", update_url), ("Flags", flags), ("ExtraOptions", "")]
+        )
 
     @only_on_master
     def reorder_sonos_playlist(self, sonos_playlist, tracks, new_pos, update_id=0):

@@ -31,5 +31,6 @@ Submodules
    soco.services
    soco.snapshot
    soco.soap
+   soco.update
    soco.utils
    soco.xml
