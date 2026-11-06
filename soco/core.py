@@ -21,6 +21,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import config
 from .data_structures import (
+    DidlMusicTrack,
     DidlObject,
     DidlPlaylistContainer,
     DidlResource,
@@ -83,7 +84,19 @@ AUDIO_INPUT_FORMATS = {
     118489148: "Dolby TrueHD 7.1",
 }
 
+
 _LOG = logging.getLogger(__name__)
+
+
+def _create_uri_didl_item(uri, title, mime_type):
+    """Create a DIDL item for an HTTP media URI."""
+    resource = DidlResource(uri=uri, protocol_info=f"http-get:*:{mime_type}:*")
+    return DidlMusicTrack(
+        title=title,
+        parent_id="0",
+        item_id="1",
+        resources=[resource],
+    )
 
 
 class _ArgsSingleton(type):
@@ -812,7 +825,14 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_uri(
-        self, uri="", meta="", title="", start=True, force_radio=False, **kwargs
+        self,
+        uri="",
+        meta="",
+        title="",
+        start=True,
+        force_radio=False,
+        mime_type=None,
+        **kwargs,
     ):
         """Play a URI.
 
@@ -828,8 +848,18 @@ class SoCo(_SocoSingletonBase):
             meta (str): The metadata to show in the player, DIDL format.
             title (str): The title to show in the player (if no meta).
             start (bool): If the URI that has been set should start playing.
-            force_radio (bool): forces a uri to play as a radio stream.
+            force_radio (bool): Forces a URI to play as a radio stream. Cannot
+                be used together with ``mime_type``.
+            mime_type (str): The MIME type of the media. If provided without
+                explicit metadata, track-style DIDL metadata with the
+                corresponding protocol info is generated. Cannot be used
+                together with ``force_radio=True``. Explicit metadata takes
+                precedence.
             kwargs: additional arguments such as timeout.
+
+        Raises:
+            ValueError: If ``mime_type`` and ``force_radio=True`` are both
+                provided.
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
@@ -869,7 +899,12 @@ class SoCo(_SocoSingletonBase):
            not forced to to Radio format.
 
         """
-        if meta == "" and title != "":
+        if mime_type and force_radio:
+            raise ValueError("mime_type cannot be used with force_radio=True")
+
+        if meta == "" and mime_type:
+            meta = to_didl_string(_create_uri_didl_item(uri, title, mime_type))
+        elif meta == "" and title != "":
             meta_template = (
                 '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                 '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
@@ -2391,15 +2426,37 @@ class SoCo(_SocoSingletonBase):
         return self.music_library.get_music_library_information(*args, **kwargs)
 
     @only_on_master
-    def add_uri_to_queue(self, uri, position=0, as_next=False, **kwargs):
+    def add_uri_to_queue(
+        self,
+        uri,
+        position=0,
+        as_next=False,
+        title="",
+        mime_type=None,
+        **kwargs,
+    ):
         """Add the URI to the queue.
 
-        For arguments and return value see `add_to_queue`.
+        Args:
+            uri (str): URI of the media to add.
+            position (int): The index (1-based) at which the URI should be
+                added. Default is 0 (add URI at the end of the queue).
+            as_next (bool): Whether this URI should be played as the next
+                track in shuffle mode.
+            title (str): The title to show in the player.
+            mime_type (str): The MIME type of the media. If provided, the
+                corresponding HTTP protocol info is included in the DIDL
+                metadata.
+            kwargs: additional arguments such as timeout.
+
+        Returns:
+            int: The index of the new item in the queue.
         """
-        # FIXME: The res.protocol_info should probably represent the mime type
-        # etc of the uri. But this seems OK.
-        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
-        item = DidlObject(resources=res, title="", parent_id="", item_id="")
+        if mime_type:
+            item = _create_uri_didl_item(uri, title, mime_type)
+        else:
+            res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+            item = DidlObject(resources=res, title=title, parent_id="", item_id="")
         return self.add_to_queue(item, position, as_next, **kwargs)
 
     @only_on_master
