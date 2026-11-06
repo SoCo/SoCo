@@ -5,7 +5,8 @@ import requests_mock
 from conftest import IP_ADDR
 from soco import SoCo
 from soco.core import ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME
-from soco.data_structures import to_didl_string
+from soco.data_structures import DidlMusicTrack, to_didl_string
+from soco.data_structures_entry import from_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
@@ -768,6 +769,79 @@ class TestAVTransport:
                 ),
             ]
         )
+
+    def test_soco_play_uri_with_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+
+        moco.play_uri(uri, title="Example track", mime_type="audio/mpeg")
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        metadata = dict(arguments)["CurrentURIMetaData"]
+        item = from_didl_string(metadata)[0]
+        assert isinstance(item, DidlMusicTrack)
+        assert item.title == "Example track"
+        assert item.resources[0].uri == uri
+        assert item.resources[0].protocol_info == "http-get:*:audio/mpeg:*"
+
+    def test_soco_play_uri_explicit_metadata_takes_precedence(self, moco):
+        metadata = "<DIDL-Lite />"
+
+        moco.play_uri(
+            "https://example.com/audio/stream",
+            meta=metadata,
+            mime_type="audio/mpeg",
+        )
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        assert dict(arguments)["CurrentURIMetaData"] == metadata
+
+    def test_soco_play_uri_rejects_mime_type_with_force_radio(self, moco):
+        with pytest.raises(
+            ValueError, match="mime_type cannot be used with force_radio=True"
+        ):
+            moco.play_uri(
+                "https://example.com/audio/stream",
+                mime_type="audio/mpeg",
+                force_radio=True,
+            )
+
+        moco.avTransport.SetAVTransportURI.assert_not_called()
+
+    def test_soco_play_uri_ignores_empty_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+
+        moco.play_uri(uri, mime_type="")
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        assert dict(arguments)["CurrentURIMetaData"] == ""
+
+    def test_soco_add_uri_to_queue_with_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+        moco.avTransport.AddURIToQueue.return_value = {"FirstTrackNumberEnqueued": "1"}
+
+        position = moco.add_uri_to_queue(
+            uri, title="Example track", mime_type="audio/mpeg"
+        )
+
+        arguments = moco.avTransport.AddURIToQueue.call_args.args[0]
+        assert dict(arguments)["EnqueuedURI"] == uri
+        item = from_didl_string(dict(arguments)["EnqueuedURIMetaData"])[0]
+        assert isinstance(item, DidlMusicTrack)
+        assert item.title == "Example track"
+        assert item.resources[0].uri == uri
+        assert item.resources[0].protocol_info == "http-get:*:audio/mpeg:*"
+        assert position == 1
+
+    def test_soco_add_uri_to_queue_with_title_and_empty_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+        moco.avTransport.AddURIToQueue.return_value = {"FirstTrackNumberEnqueued": "1"}
+
+        moco.add_uri_to_queue(uri, title="Example track", mime_type="")
+
+        arguments = moco.avTransport.AddURIToQueue.call_args.args[0]
+        item = from_didl_string(dict(arguments)["EnqueuedURIMetaData"])[0]
+        assert item.title == "Example track"
+        assert item.resources[0].protocol_info == "x-rincon-playlist:*:*:*"
 
     def test_soco_pause(self, moco):
         moco.pause()
