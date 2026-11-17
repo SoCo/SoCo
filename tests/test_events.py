@@ -8,7 +8,12 @@ import pytest
 from soco import config
 from soco.data_structures import DidlAudioLineIn
 from soco.events import EventNotifyHandler
-from soco.events_base import Event, get_listen_ip, parse_event_xml
+from soco.events_base import (
+    Event,
+    get_listen_ip,
+    parse_event_xml,
+    redact_event_content,
+)
 from soco.services import ZoneGroupTopology
 
 from conftest import DataLoader
@@ -101,6 +106,29 @@ def test_event_parsing():
     assert event_dict["zone_group_id"] == "RINCON_000XXXX01400:57"
 
 
+def test_event_parsing_redacts_third_party_media_servers():
+    """The ThirdPartyMediaServersX blob holds music service credentials, so its
+    value must not be passed on to event subscribers."""
+    event_dict = parse_event_xml(DUMMY_EVENT)
+    assert event_dict["third_party_media_servers_x"] == "[redacted]"
+
+
+@pytest.mark.parametrize("content", [DUMMY_EVENT, DUMMY_EVENT.encode("utf-8")])
+def test_redact_event_content(content):
+    redacted = redact_event_content(content)
+    assert type(redacted) is type(content)
+    as_text = redacted if isinstance(redacted, str) else redacted.decode("utf-8")
+    assert "s+3N9Lby8yoJD/QOC4W" not in as_text
+    assert "<ThirdPartyMediaServersX>[redacted]</ThirdPartyMediaServersX>" in as_text
+    # The rest of the event is untouched
+    assert "RINCON_000EXXXXXX0:56:0" in as_text
+
+
+def test_redact_event_content_without_blob():
+    content = b"<e:propertyset><e:property><Foo>bar</Foo></e:property></e:propertyset>"
+    assert redact_event_content(content) == content
+
+
 def test_event_parsing_linein():
     xml_message = DATA_LOADER.load_xml("source_linein.xml")
     result = parse_event_xml(xml_message)
@@ -127,7 +155,8 @@ def test_event_parsing_null_value():
         "</e:property>"
         "</e:propertyset>"
     )
-    # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
+    # Before the fix this raised
+    # AttributeError: 'NoneType' has no attribute 'startswith'
     result = parse_event_xml(event_xml)
     assert result["current_track_uri"] is None
 
@@ -240,3 +269,26 @@ def test_get_listen_ip_connect_failure():
         with mock.patch("soco.events_base.socket.socket", return_value=sock):
             result = get_listen_ip("192.168.1.42")
     assert result is None
+
+
+def test_handle_notification_redacts_logged_content(caplog):
+    """The debug log of the raw event must not include the
+    ThirdPartyMediaServersX blob."""
+    service, _ = _zgt_service()
+    subscription = mock.Mock()
+    subscription.service = service
+    subscriptions_map = mock.Mock()
+    subscriptions_map.get_subscription.return_value = subscription
+
+    handler = EventNotifyHandler.__new__(EventNotifyHandler)
+    handler.subscriptions_map = subscriptions_map
+    handler.log_event = mock.Mock()
+
+    with caplog.at_level(logging.DEBUG, logger="soco.events_base"):
+        handler.handle_notification(
+            {"seq": "0", "sid": "uuid:test_sid"}, DUMMY_EVENT.encode("utf-8")
+        )
+
+    assert "Event content:" in caplog.text
+    assert "s+3N9Lby8yoJD/QOC4W" not in caplog.text
+    assert "[redacted]" in caplog.text

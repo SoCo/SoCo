@@ -74,7 +74,8 @@ class Account:
         log.debug("Fetching account data from %s", device)
         settings_url = device.base_url + "/status/accounts"
         result = requests.get(settings_url, timeout=config.REQUEST_TIMEOUT).content
-        log.debug("Account data: %s", result)
+        # Don't log the content: it may contain account credentials
+        log.debug("Account data: %d bytes", len(result))
         return result
 
     @classmethod
