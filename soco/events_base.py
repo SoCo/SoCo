@@ -10,6 +10,7 @@
 import atexit
 from functools import lru_cache
 import logging
+import re
 import socket
 import time
 import threading
@@ -23,6 +24,37 @@ from .utils import camel_to_underscore
 from .xml import XML
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
+
+# Evented variables whose values contain credentials. The
+# ThirdPartyMediaServersX blob holds the household's music service accounts,
+# including access and refresh tokens. It is encrypted, but it has been
+# reported that it can be decrypted using information available on the LAN.
+# See https://github.com/SoCo/SoCo/issues/1009
+REDACTED_VARIABLES = ("ThirdPartyMediaServersX",)
+REDACTED_VALUE = "[redacted]"
+
+_REDACT_PATTERN = "(<({tags})>).*?(</\\2>)".format(tags="|".join(REDACTED_VARIABLES))
+_REDACT_RE_STR = re.compile(_REDACT_PATTERN, re.DOTALL)
+_REDACT_RE_BYTES = re.compile(_REDACT_PATTERN.encode("ascii"), re.DOTALL)
+
+
+def redact_event_content(content):
+    """Redact the values of credential-bearing variables in a raw event body.
+
+    Used so that the raw event body can be logged safely.
+
+    Args:
+        content (str or bytes): the raw body of a UPnP event.
+
+    Returns:
+        str or bytes: the content, of the same type as was passed in, with
+        the values of `REDACTED_VARIABLES` replaced by ``[redacted]``.
+    """
+    if isinstance(content, bytes):
+        return _REDACT_RE_BYTES.sub(
+            b"\\1" + REDACTED_VALUE.encode("ascii") + b"\\3", content
+        )
+    return _REDACT_RE_STR.sub("\\1" + REDACTED_VALUE + "\\3", content)
 
 
 @lru_cache()
@@ -121,6 +153,8 @@ def parse_event_xml(xml_event):
                         result[tag][channel] = value
                     else:
                         result[tag] = value
+            elif variable.tag in REDACTED_VARIABLES:
+                result[camel_to_underscore(variable.tag)] = REDACTED_VALUE
             else:
                 result[camel_to_underscore(variable.tag)] = variable.text
     return result
@@ -229,7 +263,7 @@ class EventNotifyHandlerBase:
         if subscription:
             service = subscription.service
             self.log_event(seq, service.service_id, timestamp)
-            log.debug("Event content: %s", content)
+            log.debug("Event content: %s", redact_event_content(content))
             variables = parse_event_xml(content)
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)
