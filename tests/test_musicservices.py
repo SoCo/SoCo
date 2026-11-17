@@ -1,5 +1,6 @@
 """Tests for the music_service module."""
 
+import logging
 from unittest import mock
 import pytest
 
@@ -10,6 +11,9 @@ from soco.music_services.music_service import MusicService
 
 # Typical account data from http://{Sonos-ip}:1400/status/accounts
 from soco.music_services.token_store import JsonFileTokenStore
+
+# Keep a reference to the real method, which the autouse fixture patches out
+_REAL_GET_ACCOUNT_XML = Account._get_account_xml
 
 ACCOUNT_DATA = """<?xml version="1.0" ?>
 <ZPSupportInfo type="User">
@@ -322,3 +326,17 @@ def test_desc():
 #     assert desc_from_uri(NO_DATA) == "RINCON_AssociatedZPUDN"
 #     HTTP = "http://archive.org/download/TenD/TenD2005-07-16t10Wonderboy_64kb.mp3"
 #     assert desc_from_uri(HTTP) == "RINCON_AssociatedZPUDN"
+
+
+def test_get_account_xml_does_not_log_content(caplog):
+    """The account data may contain credentials, so it must not be logged."""
+    device = mock.Mock()
+    device.base_url = "http://192.168.1.100:1400"
+    response = mock.Mock()
+    response.content = b"<Accounts><Key>secret-key-value</Key></Accounts>"
+    with mock.patch(
+        "soco.music_services.accounts.requests.get", return_value=response
+    ), caplog.at_level(logging.DEBUG, logger="soco.music_services.accounts"):
+        assert _REAL_GET_ACCOUNT_XML(device) == response.content
+    assert "Account data:" in caplog.text
+    assert "secret-key-value" not in caplog.text
