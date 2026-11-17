@@ -155,7 +155,8 @@ def test_event_parsing_null_value():
         "</e:property>"
         "</e:propertyset>"
     )
-    # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
+    # Before the fix this raised
+    # AttributeError: 'NoneType' has no attribute 'startswith'
     result = parse_event_xml(event_xml)
     assert result["current_track_uri"] is None
 
