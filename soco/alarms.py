@@ -4,8 +4,8 @@ import logging
 import re
 from datetime import datetime, timedelta
 
-from . import discovery
-from .core import _SocoSingletonBase, PLAY_MODES
+from . import config, discovery
+from .core import _ArgsSingleton, _SocoSingletonBase, PLAY_MODES
 from .exceptions import SoCoException
 from .xml import XML
 
@@ -59,6 +59,11 @@ class Alarms(_SocoSingletonBase):
 
     Is a singleton and every `Alarms()` object will return the same instance.
 
+    Alarms are stored per Sonos household. If speakers from more than one
+    household are in use, pass a household ID to get a separate singleton
+    for each household: ``Alarms(zone.household_id)``. `Alarms()` without a
+    household ID is a shared instance that is not bound to a household.
+
     Example use:
 
         >>> get_alarms()
@@ -99,8 +104,20 @@ class Alarms(_SocoSingletonBase):
 
     _class_group = "Alarms"
 
-    def __init__(self):
-        """Initialize the instance."""
+    @staticmethod
+    def _singleton_key(household_id=None):
+        """Return the singleton key, so `Alarms()` keeps its legacy key."""
+        return () if household_id is None else (household_id,)
+
+    def __init__(self, household_id=None):
+        """Initialize the instance.
+
+        Args:
+            household_id (str, optional): The ID of the Sonos household
+                these alarms belong to. If `None`, the instance is not bound
+                to a household.
+        """
+        self.household_id = household_id
         self.alarms = {}
         self.alarms_skipped = {}
         self._last_zone_used = None
@@ -119,6 +136,11 @@ class Alarms(_SocoSingletonBase):
         self.last_uid, last_id = alarm_list_version.split(":")
         self.last_id = int(last_id)
         self._last_alarm_list_version = alarm_list_version
+
+    def __repr__(self):
+        return "<{} household:{} at {}>".format(
+            self.__class__.__name__, self.household_id, hex(id(self))
+        )
 
     def __iter__(self):
         """Return an interator for all alarms."""
@@ -139,12 +161,26 @@ class Alarms(_SocoSingletonBase):
     def update(self, zone=None):
         """Update all alarms and current alarm list version.
 
+        Args:
+            zone (`SoCo`, optional): The zone to query. If `None`, the last
+                zone used is queried, or else any known zone (from this
+                instance's household, if `household_id` is set).
+
         Raises:
             SoCoException: If the 'CurrentAlarmListVersion' value is unexpected.
                 May occur if the provided zone is from a different household.
+                If `household_id` is set, raised if the zone belongs to a
+                different household or no zone of the household is known.
         """
         if zone is None:
-            zone = self._last_zone_used or discovery.any_soco()
+            zone = self._last_zone_used or self._any_zone()
+
+        if self.household_id is not None and zone.household_id != self.household_id:
+            raise SoCoException(
+                "Zone {} belongs to household {}, not {}".format(
+                    zone.uid, zone.household_id, self.household_id
+                )
+            )
 
         self._last_zone_used = zone
 
@@ -193,6 +229,21 @@ class Alarms(_SocoSingletonBase):
         for alarm_id in list(self.alarms):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
+
+    def _any_zone(self):
+        """Return a known zone to query, from this household if set."""
+        if self.household_id is None:
+            return discovery.any_soco()
+        cls = config.SOCO_CLASS
+        # pylint: disable=no-member, protected-access
+        for zone in list(cls._instances.get(cls._class_group, {}).values()):
+            if zone.is_visible and zone.household_id == self.household_id:
+                return zone
+        raise SoCoException(
+            "No known zone in household {}; pass a zone to update()".format(
+                self.household_id
+            )
+        )
 
     def update_skipped(self, zone):
         """Update the zone for any skipped alarms and move to main list if possible."""
@@ -419,12 +470,12 @@ class Alarm:
         if self.alarm_id is None:
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response["AssignedID"]
-            alarms = Alarms()
-            if alarms.last_id == int(self.alarm_id) - 1:
-                alarms.last_alarm_list_version = "{}:{}".format(
-                    alarms.last_uid, self.alarm_id
-                )
-            alarms.alarms[self.alarm_id] = self
+            for alarms in _alarms_for_zone(self.zone):
+                if alarms.last_id == int(self.alarm_id) - 1:
+                    alarms.last_alarm_list_version = "{}:{}".format(
+                        alarms.last_uid, self.alarm_id
+                    )
+                alarms.alarms[self.alarm_id] = self
         else:
             # The alarm has been saved before. Update it instead.
             args.insert(0, ("ID", self.alarm_id))
@@ -441,8 +492,8 @@ class Alarm:
             bool: If the removal was sucessful.
         """
         result = self.zone.alarmClock.DestroyAlarm([("ID", self.alarm_id)])
-        alarms = Alarms()
-        alarms.alarms.pop(self.alarm_id, None)
+        for alarms in _alarms_for_zone(self.zone):
+            alarms.alarms.pop(self.alarm_id, None)
         self._alarm_id = None
         return result
 
@@ -512,6 +563,30 @@ class Alarm:
         )
 
 
+def _alarms_for_zone(zone):
+    """Return the `Alarms` containers to keep in sync for alarms on ``zone``.
+
+    This is the legacy `Alarms()` instance and, if one has already been
+    created, the instance for the zone's household. No household instance is
+    created as a side effect.
+    """
+    containers = [Alarms()]
+    # pylint: disable=protected-access
+    keyed = {
+        key: alarms
+        for key, alarms in _ArgsSingleton._instances.get(
+            Alarms._class_group, {}
+        ).items()
+        if key != ()
+    }
+    # Only query the household ID when a household instance may need it.
+    if keyed:
+        household_alarms = keyed.get((zone.household_id,))
+        if household_alarms is not None:
+            containers.append(household_alarms)
+    return containers
+
+
 def get_alarms(zone=None):
     """Get a set of all alarms known to the Sonos system.
 
@@ -521,6 +596,10 @@ def get_alarms(zone=None):
 
     Returns:
         set: A set of `Alarm` instances
+
+    Note:
+        Uses the shared `Alarms()` instance. With more than one Sonos
+        household, use ``Alarms(household_id).update(zone)`` instead.
     """
     alarms = Alarms()
     alarms.update(zone)
