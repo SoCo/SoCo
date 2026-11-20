@@ -249,8 +249,8 @@ def test_alarms_update_without_zone_uses_household_zone():
     zone_b.alarmClock.ListAlarms.assert_not_called()
 
 
-def test_alarm_save_and_remove_update_household_and_legacy():
-    """save() and remove() keep the legacy and the household instance in sync."""
+def test_alarm_save_and_remove_update_household_instance():
+    """save() and remove() only update the household instance when it exists."""
     zone_a = _mock_zone("RINCON_A", "HH_A")
     household = Alarms("HH_A")
     household.update(zone_a)
@@ -259,12 +259,10 @@ def test_alarm_save_and_remove_update_household_and_legacy():
     alarm.save()
     assert household["6"] is alarm
     assert household.last_alarm_list_version == "RINCON_A:6"
-    assert Alarms()["6"] is alarm
 
     alarm.remove()
     assert household.get("6") is None
-    assert Alarms().get("6") is None
-    assert set(_ArgsSingleton._instances["Alarms"]) == {(), ("HH_A",)}
+    assert set(_ArgsSingleton._instances["Alarms"]) == {("HH_A",)}
 
 
 def test_alarm_save_without_household_instance_skips_household_lookup():

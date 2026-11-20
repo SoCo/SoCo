@@ -470,12 +470,12 @@ class Alarm:
         if self.alarm_id is None:
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response["AssignedID"]
-            for alarms in _alarms_for_zone(self.zone):
-                if alarms.last_id == int(self.alarm_id) - 1:
-                    alarms.last_alarm_list_version = "{}:{}".format(
-                        alarms.last_uid, self.alarm_id
-                    )
-                alarms.alarms[self.alarm_id] = self
+            alarms = _alarms_for_zone(self.zone)
+            if alarms.last_id == int(self.alarm_id) - 1:
+                alarms.last_alarm_list_version = "{}:{}".format(
+                    alarms.last_uid, self.alarm_id
+                )
+            alarms.alarms[self.alarm_id] = self
         else:
             # The alarm has been saved before. Update it instead.
             args.insert(0, ("ID", self.alarm_id))
@@ -492,8 +492,7 @@ class Alarm:
             bool: If the removal was sucessful.
         """
         result = self.zone.alarmClock.DestroyAlarm([("ID", self.alarm_id)])
-        for alarms in _alarms_for_zone(self.zone):
-            alarms.alarms.pop(self.alarm_id, None)
+        _alarms_for_zone(self.zone).alarms.pop(self.alarm_id, None)
         self._alarm_id = None
         return result
 
@@ -564,27 +563,19 @@ class Alarm:
 
 
 def _alarms_for_zone(zone):
-    """Return the `Alarms` containers to keep in sync for alarms on ``zone``.
+    """Return the `Alarms` instance that caches alarms for ``zone``.
 
-    This is the legacy `Alarms()` instance and, if one has already been
-    created, the instance for the zone's household. No household instance is
-    created as a side effect.
+    This is the instance for the zone's household if one has been created,
+    otherwise the shared `Alarms()` instance.
     """
-    containers = [Alarms()]
     # pylint: disable=protected-access
-    keyed = {
-        key: alarms
-        for key, alarms in _ArgsSingleton._instances.get(
-            Alarms._class_group, {}
-        ).items()
-        if key != ()
-    }
-    # Only query the household ID when a household instance may need it.
-    if keyed:
-        household_alarms = keyed.get((zone.household_id,))
+    instances = _ArgsSingleton._instances.get(Alarms._class_group, {})
+    # Only query the household ID when household instances are in use.
+    if any(key != () for key in instances):
+        household_alarms = instances.get((zone.household_id,))
         if household_alarms is not None:
-            containers.append(household_alarms)
-    return containers
+            return household_alarms
+    return Alarms()
 
 
 def get_alarms(zone=None):
