@@ -164,7 +164,9 @@ class Alarms(_SocoSingletonBase):
         Args:
             zone (`SoCo`, optional): The zone to query. If `None`, the last
                 zone used is queried, or else any known zone (from this
-                instance's household, if `household_id` is set).
+                instance's household, if `household_id` is set). If
+                `household_id` is set and the last zone used cannot be
+                reached, another known zone of the household is queried.
 
         Raises:
             SoCoException: If the 'CurrentAlarmListVersion' value is unexpected.
@@ -172,6 +174,13 @@ class Alarms(_SocoSingletonBase):
                 If `household_id` is set, raised if the zone belongs to a
                 different household or no zone of the household is known.
         """
+        # Only a remembered zone of a household instance is replaced if it
+        # cannot be reached. Alarms() keeps its existing behaviour.
+        can_fall_back = (
+            zone is None
+            and self._last_zone_used is not None
+            and self.household_id is not None
+        )
         if zone is None:
             zone = self._last_zone_used or self._any_zone()
 
@@ -182,9 +191,17 @@ class Alarms(_SocoSingletonBase):
                 )
             )
 
-        self._last_zone_used = zone
+        try:
+            response = zone.alarmClock.ListAlarms()
+        except OSError:
+            if not can_fall_back:
+                raise
+            # The last zone used is unreachable, e.g. it was unplugged or
+            # its network went down. Try another zone of the household.
+            zone = self._any_zone(exclude=zone)
+            response = zone.alarmClock.ListAlarms()
 
-        response = zone.alarmClock.ListAlarms()
+        self._last_zone_used = zone
         current_alarm_list_version = response["CurrentAlarmListVersion"]
 
         if self.last_alarm_list_version:
@@ -233,13 +250,20 @@ class Alarms(_SocoSingletonBase):
             if not new_alarms.get(alarm_id):
                 self.alarms.pop(alarm_id)
 
-    def _any_zone(self):
-        """Return a known zone to query, from this household if set."""
+    def _any_zone(self, exclude=None):
+        """Return a known zone to query, from this household if set.
+
+        Args:
+            exclude (`SoCo`, optional): A zone not to return. Only used when
+                `household_id` is set.
+        """
         if self.household_id is None:
             return discovery.any_soco()
         cls = config.SOCO_CLASS
         # pylint: disable=no-member, protected-access
         for zone in list(cls._instances.get(cls._class_group, {}).values()):
+            if zone is exclude:
+                continue
             # household_id first: it is cached and avoids fetching topology.
             try:
                 if zone.household_id == self.household_id and zone.is_visible:
@@ -479,7 +503,7 @@ class Alarm:
         if self.alarm_id is None:
             # Resolve the cache before creating the alarm, so a failed lookup
             # cannot leave an alarm on the speaker that is missing from it.
-            alarms = self._alarms or _alarms_for_zone(self.zone)
+            alarms = self._owning_alarms()
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response["AssignedID"]
             if alarms.last_id == int(self.alarm_id) - 1:
@@ -503,11 +527,27 @@ class Alarm:
         Returns:
             bool: If the removal was sucessful.
         """
-        alarms = self._alarms or _alarms_for_zone(self.zone)
+        alarms = self._owning_alarms()
         result = self.zone.alarmClock.DestroyAlarm([("ID", self.alarm_id)])
         alarms.alarms.pop(self.alarm_id, None)
         self._alarm_id = None
         return result
+
+    def _owning_alarms(self):
+        """Return the `Alarms` instance that caches this alarm.
+
+        This is the instance that cached it, if that instance is still the
+        current singleton. It is not after `soco_reset`, which clears the
+        singletons. Otherwise, see `_alarms_for_zone`.
+        """
+        alarms = self._alarms
+        if alarms is not None:
+            # pylint: disable=protected-access
+            instances = _ArgsSingleton._instances.get(Alarms._class_group, {})
+            key = Alarms._singleton_key(alarms.household_id)
+            if instances.get(key) is alarms:
+                return alarms
+        return _alarms_for_zone(self.zone)
 
     @property
     def alarm_id(self):

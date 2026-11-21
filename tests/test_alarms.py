@@ -337,3 +337,58 @@ def test_remove_alarm_by_id_updates_shared_instance():
     assert remove_alarm_by_id(zone_a, "1")
 
     assert Alarms().get("1") is None
+
+
+def test_alarms_update_falls_back_when_last_zone_unreachable():
+    """update() without a zone tries another household zone if the last fails."""
+    zone_a1 = _mock_zone("RINCON_A1", "HH_A")
+    zone_a2 = _mock_zone("RINCON_A2", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a1)
+    zone_a1.alarmClock.ListAlarms.side_effect = RequestsConnectionError("offline")
+    zone_a2.alarmClock.ListAlarms.return_value = _alarm_list(
+        "RINCON_A1:7", "1", "RINCON_A1"
+    )
+    zone_a2.all_zones = {zone_a1, zone_a2}
+
+    with patch.dict(
+        _ArgsSingleton._instances, {"SoCo": {("a1",): zone_a1, ("a2",): zone_a2}}
+    ):
+        household.update()
+
+    zone_a2.alarmClock.ListAlarms.assert_called_once()
+    assert household.last_alarm_list_version == "RINCON_A1:7"
+    assert household._last_zone_used is zone_a2  # pylint: disable=protected-access
+
+
+def test_alarms_update_without_fallback_raises():
+    """An unreachable zone still raises if it was passed in, or for Alarms()."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    Alarms("HH_A").update(zone_a)
+    Alarms().update(zone_a)
+    zone_a.alarmClock.ListAlarms.side_effect = RequestsConnectionError("offline")
+
+    with pytest.raises(RequestsConnectionError):
+        Alarms("HH_A").update(zone_a)
+    with pytest.raises(RequestsConnectionError):
+        Alarms().update()
+
+
+def test_alarm_save_and_remove_after_reset_use_current_instance():
+    """After a reset, save() and remove() do not use the cleared instance."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    old_household = Alarms("HH_A")
+    old_household.update(zone_a)
+    alarm = old_household["1"]
+
+    # As soco_reset() does
+    _ArgsSingleton._instances.pop("Alarms")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    household.alarms["1"] = alarm
+
+    alarm.remove()
+    assert household.get("1") is None
+    alarm.save()
+    assert household["6"] is alarm
+    assert old_household.get("6") is None
