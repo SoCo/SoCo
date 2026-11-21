@@ -4,7 +4,8 @@ from datetime import time
 from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
-from soco.alarms import Alarm, Alarms, is_valid_recurrence
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from soco.alarms import Alarm, Alarms, is_valid_recurrence, remove_alarm_by_id
 from soco.core import _ArgsSingleton
 from soco.exceptions import SoCoException
 
@@ -170,3 +171,224 @@ def test_save_raises_when_zone_is_none(moco):
     alarm._alarm_id = None  # pylint: disable=protected-access
     with pytest.raises(SoCoException, match="zone is not set"):
         alarm.save()
+
+
+def _alarm_list(version, alarm_id, room_uuid):
+    return {
+        "CurrentAlarmListVersion": version,
+        "CurrentAlarmList": "<Alarms>"
+        f'<Alarm ID="{alarm_id}" StartTime="07:00:00" Duration="" Recurrence="DAILY" '
+        f'Enabled="1" RoomUUID="{room_uuid}" ProgramURI="x-rincon-buzzer:0" '
+        'ProgramMetaData="" PlayMode="NORMAL" Volume="25" '
+        'IncludeLinkedZones="0"/>'
+        "</Alarms>",
+    }
+
+
+def _mock_zone(uid, household_id, alarm_id="1"):
+    zone = MagicMock()
+    zone.uid = uid
+    zone.household_id = household_id
+    zone.is_visible = True
+    zone.all_zones = {zone}
+    zone.alarmClock.ListAlarms.return_value = _alarm_list(f"{uid}:5", alarm_id, uid)
+    zone.alarmClock.CreateAlarm.return_value = {"AssignedID": "6"}
+    return zone
+
+
+def test_alarms_singleton_per_household():
+    """Alarms instances are singletons per household and Alarms() is separate."""
+    assert Alarms() is Alarms()
+    assert Alarms(household_id=None) is Alarms()
+    assert Alarms("HH_A") is Alarms("HH_A")
+    assert Alarms(household_id="HH_A") is Alarms("HH_A")
+    assert Alarms("HH_A") is not Alarms("HH_B")
+    assert Alarms("HH_A") is not Alarms()
+    assert Alarms("HH_A").household_id == "HH_A"
+    assert Alarms().household_id is None
+
+
+def test_alarms_households_are_independent():
+    """Households with the same alarm IDs update without affecting each other."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    zone_b = _mock_zone("RINCON_B", "HH_B")
+
+    Alarms("HH_A").update(zone_a)
+    Alarms("HH_B").update(zone_b)
+    zone_a.alarmClock.ListAlarms.return_value = _alarm_list(
+        "RINCON_A:7", "1", "RINCON_A"
+    )
+    Alarms("HH_A").update(zone_a)
+
+    assert Alarms("HH_A")["1"].zone is zone_a
+    assert Alarms("HH_A").last_alarm_list_version == "RINCON_A:7"
+    assert Alarms("HH_B")["1"].zone is zone_b
+    assert Alarms("HH_B").last_alarm_list_version == "RINCON_B:5"
+    assert len(Alarms()) == 0
+
+
+def test_alarms_update_rejects_other_household():
+    """A household instance refuses to update from another household's zone."""
+    zone_b = _mock_zone("RINCON_B", "HH_B")
+    with pytest.raises(SoCoException, match="belongs to household HH_B, not HH_A"):
+        Alarms("HH_A").update(zone_b)
+    zone_b.alarmClock.ListAlarms.assert_not_called()
+
+
+def test_alarms_update_without_zone_uses_household_zone():
+    """update() without a zone picks a known zone from its own household."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    zone_b = _mock_zone("RINCON_B", "HH_B")
+    with patch.dict(
+        _ArgsSingleton._instances, {"SoCo": {("b",): zone_b, ("a",): zone_a}}
+    ):
+        Alarms("HH_A").update()
+        with pytest.raises(SoCoException, match="No known zone in household HH_C"):
+            Alarms("HH_C").update()
+
+    zone_a.alarmClock.ListAlarms.assert_called_once()
+    zone_b.alarmClock.ListAlarms.assert_not_called()
+
+
+def test_alarm_save_and_remove_update_household_instance():
+    """save() and remove() only update the household instance when it exists."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+
+    alarm = Alarm(zone_a)
+    alarm.save()
+    assert household["6"] is alarm
+    assert household.last_alarm_list_version == "RINCON_A:6"
+
+    alarm.remove()
+    assert household.get("6") is None
+    assert set(_ArgsSingleton._instances["Alarms"]) == {("HH_A",)}
+
+
+def test_alarm_save_without_household_instance_skips_household_lookup():
+    """save() does not query the household ID when only Alarms() is in use."""
+    zone = MagicMock()
+    type(zone).household_id = PropertyMock(side_effect=AssertionError)
+    zone.uid = "RINCON_A"
+    zone.alarmClock.CreateAlarm.return_value = {"AssignedID": "6"}
+
+    alarm = Alarm(zone)
+    alarm.save()
+
+    assert Alarms()["6"] is alarm
+    assert set(_ArgsSingleton._instances["Alarms"]) == {()}
+
+
+def test_alarms_update_without_zone_skips_unreachable_zone():
+    """update() without a zone skips known zones that cannot be reached."""
+    stale = MagicMock()
+    type(stale).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("offline")
+    )
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    with patch.dict(
+        _ArgsSingleton._instances, {"SoCo": {("s",): stale, ("a",): zone_a}}
+    ):
+        Alarms("HH_A").update()
+
+    zone_a.alarmClock.ListAlarms.assert_called_once()
+
+
+def test_alarm_remove_does_not_query_household():
+    """remove() uses the instance that cached the alarm, before DestroyAlarm."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    alarm = household["1"]
+    type(zone_a).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("timeout")
+    )
+
+    alarm.remove()
+
+    zone_a.alarmClock.DestroyAlarm.assert_called_once()
+    assert household.get("1") is None
+    assert alarm.alarm_id is None
+
+
+def test_alarm_save_household_lookup_fails_before_create():
+    """A failed household lookup in save() happens before CreateAlarm."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    type(zone_a).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("timeout")
+    )
+
+    alarm = Alarm(zone_a)
+    with pytest.raises(RequestsConnectionError):
+        alarm.save()
+
+    zone_a.alarmClock.CreateAlarm.assert_not_called()
+    assert alarm.alarm_id is None
+
+
+def test_remove_alarm_by_id_updates_shared_instance():
+    """remove_alarm_by_id() removes the alarm from the shared Alarms()."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    Alarms("HH_A").update(zone_a)
+
+    assert remove_alarm_by_id(zone_a, "1")
+
+    assert Alarms().get("1") is None
+
+
+def test_alarms_update_falls_back_when_last_zone_unreachable():
+    """update() without a zone tries another household zone if the last fails."""
+    zone_a1 = _mock_zone("RINCON_A1", "HH_A")
+    zone_a2 = _mock_zone("RINCON_A2", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a1)
+    zone_a1.alarmClock.ListAlarms.side_effect = RequestsConnectionError("offline")
+    zone_a2.alarmClock.ListAlarms.return_value = _alarm_list(
+        "RINCON_A1:7", "1", "RINCON_A1"
+    )
+    zone_a2.all_zones = {zone_a1, zone_a2}
+
+    with patch.dict(
+        _ArgsSingleton._instances, {"SoCo": {("a1",): zone_a1, ("a2",): zone_a2}}
+    ):
+        household.update()
+
+    zone_a2.alarmClock.ListAlarms.assert_called_once()
+    assert household.last_alarm_list_version == "RINCON_A1:7"
+    assert household._last_zone_used is zone_a2  # pylint: disable=protected-access
+
+
+def test_alarms_update_without_fallback_raises():
+    """An unreachable zone still raises if it was passed in, or for Alarms()."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    Alarms("HH_A").update(zone_a)
+    Alarms().update(zone_a)
+    zone_a.alarmClock.ListAlarms.side_effect = RequestsConnectionError("offline")
+
+    with pytest.raises(RequestsConnectionError):
+        Alarms("HH_A").update(zone_a)
+    with pytest.raises(RequestsConnectionError):
+        Alarms().update()
+
+
+def test_alarm_save_and_remove_after_reset_use_current_instance():
+    """After a reset, save() and remove() do not use the cleared instance."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    old_household = Alarms("HH_A")
+    old_household.update(zone_a)
+    alarm = old_household["1"]
+
+    # As soco_reset() does
+    _ArgsSingleton._instances.pop("Alarms")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    household.alarms["1"] = alarm
+
+    alarm.remove()
+    assert household.get("1") is None
+    alarm.save()
+    assert household["6"] is alarm
+    assert old_household.get("6") is None
