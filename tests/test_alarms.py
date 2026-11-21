@@ -4,7 +4,8 @@ from datetime import time
 from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
-from soco.alarms import Alarm, Alarms, is_valid_recurrence
+from requests.exceptions import ConnectionError as RequestsConnectionError
+from soco.alarms import Alarm, Alarms, is_valid_recurrence, remove_alarm_by_id
 from soco.core import _ArgsSingleton
 from soco.exceptions import SoCoException
 
@@ -277,3 +278,62 @@ def test_alarm_save_without_household_instance_skips_household_lookup():
 
     assert Alarms()["6"] is alarm
     assert set(_ArgsSingleton._instances["Alarms"]) == {()}
+
+
+def test_alarms_update_without_zone_skips_unreachable_zone():
+    """update() without a zone skips known zones that cannot be reached."""
+    stale = MagicMock()
+    type(stale).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("offline")
+    )
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    with patch.dict(
+        _ArgsSingleton._instances, {"SoCo": {("s",): stale, ("a",): zone_a}}
+    ):
+        Alarms("HH_A").update()
+
+    zone_a.alarmClock.ListAlarms.assert_called_once()
+
+
+def test_alarm_remove_does_not_query_household():
+    """remove() uses the instance that cached the alarm, before DestroyAlarm."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    alarm = household["1"]
+    type(zone_a).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("timeout")
+    )
+
+    alarm.remove()
+
+    zone_a.alarmClock.DestroyAlarm.assert_called_once()
+    assert household.get("1") is None
+    assert alarm.alarm_id is None
+
+
+def test_alarm_save_household_lookup_fails_before_create():
+    """A failed household lookup in save() happens before CreateAlarm."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    household = Alarms("HH_A")
+    household.update(zone_a)
+    type(zone_a).household_id = PropertyMock(
+        side_effect=RequestsConnectionError("timeout")
+    )
+
+    alarm = Alarm(zone_a)
+    with pytest.raises(RequestsConnectionError):
+        alarm.save()
+
+    zone_a.alarmClock.CreateAlarm.assert_not_called()
+    assert alarm.alarm_id is None
+
+
+def test_remove_alarm_by_id_updates_shared_instance():
+    """remove_alarm_by_id() removes the alarm from the shared Alarms()."""
+    zone_a = _mock_zone("RINCON_A", "HH_A")
+    Alarms("HH_A").update(zone_a)
+
+    assert remove_alarm_by_id(zone_a, "1")
+
+    assert Alarms().get("1") is None

@@ -213,13 +213,16 @@ class Alarms(_SocoSingletonBase):
             existing_alarm = self.alarms.get(alarm_id) or old_skipped.get(alarm_id)
             if existing_alarm:
                 existing_alarm.update(**kwargs)
+                existing_alarm._alarms = self  # pylint: disable=protected-access
                 if existing_alarm.zone is None:
                     self.alarms_skipped[alarm_id] = existing_alarm
                 else:
                     self.alarms[alarm_id] = existing_alarm
             else:
                 new_alarm = Alarm(**kwargs)
-                new_alarm._alarm_id = alarm_id  # pylint: disable=protected-access
+                # pylint: disable=protected-access
+                new_alarm._alarm_id = alarm_id
+                new_alarm._alarms = self
                 if new_alarm.zone is None:
                     self.alarms_skipped[alarm_id] = new_alarm
                 else:
@@ -237,8 +240,12 @@ class Alarms(_SocoSingletonBase):
         cls = config.SOCO_CLASS
         # pylint: disable=no-member, protected-access
         for zone in list(cls._instances.get(cls._class_group, {}).values()):
-            if zone.is_visible and zone.household_id == self.household_id:
-                return zone
+            # household_id first: it is cached and avoids fetching topology.
+            try:
+                if zone.household_id == self.household_id and zone.is_visible:
+                    return zone
+            except (OSError, SoCoException):
+                continue
         raise SoCoException(
             "No known zone in household {}; pass a zone to update()".format(
                 self.household_id
@@ -365,6 +372,8 @@ class Alarm:
         self.include_linked_zones = include_linked_zones
         self.room_uuid = room_uuid
         self._alarm_id = None
+        # The `Alarms` instance that caches this alarm, set when it is cached.
+        self._alarms = None
 
     def __repr__(self):
         middle = str(self.start_time.strftime(TIME_FORMAT))
@@ -468,14 +477,17 @@ class Alarm:
             ("IncludeLinkedZones", "1" if self.include_linked_zones else "0"),
         ]
         if self.alarm_id is None:
+            # Resolve the cache before creating the alarm, so a failed lookup
+            # cannot leave an alarm on the speaker that is missing from it.
+            alarms = self._alarms or _alarms_for_zone(self.zone)
             response = self.zone.alarmClock.CreateAlarm(args)
             self._alarm_id = response["AssignedID"]
-            alarms = _alarms_for_zone(self.zone)
             if alarms.last_id == int(self.alarm_id) - 1:
                 alarms.last_alarm_list_version = "{}:{}".format(
                     alarms.last_uid, self.alarm_id
                 )
             alarms.alarms[self.alarm_id] = self
+            self._alarms = alarms
         else:
             # The alarm has been saved before. Update it instead.
             args.insert(0, ("ID", self.alarm_id))
@@ -491,8 +503,9 @@ class Alarm:
         Returns:
             bool: If the removal was sucessful.
         """
+        alarms = self._alarms or _alarms_for_zone(self.zone)
         result = self.zone.alarmClock.DestroyAlarm([("ID", self.alarm_id)])
-        _alarms_for_zone(self.zone).alarms.pop(self.alarm_id, None)
+        alarms.alarms.pop(self.alarm_id, None)
         self._alarm_id = None
         return result
 
@@ -563,7 +576,7 @@ class Alarm:
 
 
 def _alarms_for_zone(zone):
-    """Return the `Alarms` instance that caches alarms for ``zone``.
+    """Return the `Alarms` instance to cache a new alarm for ``zone``.
 
     This is the instance for the zone's household if one has been created,
     otherwise the shared `Alarms()` instance.
@@ -571,7 +584,7 @@ def _alarms_for_zone(zone):
     # pylint: disable=protected-access
     instances = _ArgsSingleton._instances.get(Alarms._class_group, {})
     # Only query the household ID when household instances are in use.
-    if any(key != () for key in instances):
+    if any(key != () for key in list(instances)):
         household_alarms = instances.get((zone.household_id,))
         if household_alarms is not None:
             return household_alarms
@@ -607,6 +620,11 @@ def remove_alarm_by_id(zone, alarm_id):
 
     Returns:
         bool: `True` if the alarm is found and removed, `False` otherwise.
+
+    Note:
+        Uses the shared `Alarms()` instance. With more than one Sonos
+        household, use ``Alarms(household_id)`` to find the alarm and call
+        `Alarm.remove` instead.
     """
     alarms = Alarms()
     alarms.update(zone)
