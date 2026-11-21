@@ -545,8 +545,9 @@ class Alarm:
             # pylint: disable=protected-access
             instances = _ArgsSingleton._instances.get(Alarms._class_group, {})
             key = Alarms._singleton_key(alarms.household_id)
-            if instances.get(key) is alarms:
-                return alarms
+            current = instances.get(key)
+            if current is alarms:
+                return current
         return _alarms_for_zone(self.zone)
 
     @property
