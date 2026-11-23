@@ -140,7 +140,7 @@ class Service:
         self.version = 1
         self.service_id = self.service_type
         #: str: The base URL for sending UPnP Actions.
-        self.base_url = f"http://{self.soco.ip_address}:1400"
+        self.base_url = self.soco.base_url
         #: str: The UPnP Control URL.
         self.control_url = f"/{self.service_type}/Control"
         #: str: The service control protocol description URL.
@@ -822,6 +822,27 @@ class SystemProperties(Service):
 class ZoneGroupTopology(Service):
     """Sonos zone group topology service, for functions relating to network
     topology, diagnostics and updates."""
+
+    def _update_cache_on_event(self, event):
+        """Keep the shared ZoneGroupState in sync with ZGS events.
+
+        The shared-state update is safe without extra locking here because
+        process_payload() serializes updates under the ZoneGroupState lock.
+        """
+        super()._update_cache_on_event(event)
+        zone_group_state = event.variables.get("zone_group_state")
+        if zone_group_state is None:
+            return
+
+        try:
+            self.soco.zone_group_state.process_payload(
+                payload=zone_group_state,
+                source="event",
+                source_ip=self.soco.ip_address,
+            )
+        except Exception:  # pylint: disable=broad-except
+            # A bad payload must not stop event delivery.
+            log.exception("Failed to process zone_group_state event")
 
 
 class GroupManagement(Service):

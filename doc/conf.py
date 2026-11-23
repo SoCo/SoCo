@@ -12,8 +12,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
+import datetime
 import os
+import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 import soco  # noqa: E402
@@ -58,7 +59,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "SoCo"
-copyright = "2015-2024, The SoCo Team"
+copyright = f"2015-{datetime.date.today().year}, The SoCo Team"
 author = "`The SoCo Team"
 
 # The version info for the project you're documenting, acts as replacement for
@@ -123,8 +124,8 @@ intersphinx_mapping = {
 # Shortcuts to Github Issues etc. Use them like this:
 # :issue:`123` (which will generate a link to issue 123)
 extlinks = {
-    "issue": ("https://github.com/SoCo/SoCo/issues/%s", "#"),
-    "PR": ("https://github.com/SoCo/SoCo/pull/%s", "#"),
+    "issue": ("https://github.com/SoCo/SoCo/issues/%s", "#%s"),
+    "PR": ("https://github.com/SoCo/SoCo/pull/%s", "#%s"),
 }
 
 # Document members by default, and in source order. This allows the stub files

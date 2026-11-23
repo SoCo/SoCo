@@ -5,24 +5,24 @@ on:
   push:
     branches:
       - master
-      - 'v0.31.fixes'
+      - 'v*.fixes'
   pull_request:
     branches:
       - master
-      - 'v0.31.fixes'
+      - 'v*.fixes'
 
 jobs:
   SoCo-Check-Jobs:
     name: SoCo Check Jobs (${{ matrix.python-version }})
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -45,19 +45,19 @@ jobs:
         if: >-
           ${{ startsWith(matrix.python-version, '3.1') }}
         run: |
-          black --check soco tests
+          black --check soco tests dev_tools
       - name: Test documentation build
-        if: matrix.python-version == '3.11'
+        if: matrix.python-version == '3.14'
         run: |
           make docs
 
   Wheel-Install-Check:
     name: Build wheel, install it, import every public package
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - name: Build the wheel
@@ -75,3 +75,26 @@ jobs:
         working-directory: /tmp
         run: |
           /tmp/wheel-venv/bin/python -c "import soco, soco.plugins, soco.music_services, soco.music_services.browser"
+  SoCo-OS-Tests:
+    name: SoCo Tests (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+        python-version: ["3.15"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Test with pytest
+        run: |
+          pytest

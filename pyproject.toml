@@ -1,6 +1,7 @@
 [build-system]
     requires = [
-        "setuptools >= 78.1.1; python_version >= '3.9'",
+        "setuptools >= 84.1.0; python_version >= '3.10'",
+        "setuptools >= 78.1.1; python_version == '3.9'",
         "setuptools >= 75.3.4; python_version == '3.8'",
         "setuptools >= 68.0.0; python_version == '3.7'",
         "setuptools == 58.2.0; python_version == '3.6'"
@@ -14,7 +15,6 @@
     classifiers = [
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
@@ -25,6 +25,7 @@
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
+        "Programming Language :: Python :: 3.15",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: Implementation :: CPython",
         "Programming Language :: Python :: Implementation :: PyPy",
@@ -34,14 +35,11 @@
         "Topic :: Software Development :: Libraries :: Python Modules"
     ]
     requires-python = ">=3.6"
-    dynamic = ["version", "dependencies"]
+    dynamic = ["version", "dependencies", "license"]
 
 [[project.authors]]
     name = "The SoCo-Team"
     email = "python-soco@googlegroups.com"
-
-[project.license]
-    text = "MIT License"
 
 [project.urls]
     Homepage = "https://github.com/SoCo/SoCo"
@@ -52,7 +50,8 @@
     # it the code falls back to an openssl executable.
     music-services = ["cryptography"]
     testing = [
-        "sphinx == 5.0.2",
+        "sphinx >= 7.4.7, < 10; python_version >= '3.9'",
+        "sphinx == 5.0.2; python_version < '3.9'",
         "sphinx_rtd_theme",
         "pytest >= 2.5",
         "pytest-asyncio",

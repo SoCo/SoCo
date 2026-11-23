@@ -21,6 +21,7 @@ from requests.exceptions import ConnectTimeout, ReadTimeout
 
 from . import config
 from .data_structures import (
+    DidlMusicTrack,
     DidlObject,
     DidlPlaylistContainer,
     DidlResource,
@@ -34,6 +35,7 @@ from .exceptions import (
     NotSupportedException,
     SoCoNotVisibleException,
 )
+from .favorites import Favorites
 from .music_library import MusicLibrary
 from .services import (
     DeviceProperties,
@@ -82,7 +84,19 @@ AUDIO_INPUT_FORMATS = {
     118489148: "Dolby TrueHD 7.1",
 }
 
+
 _LOG = logging.getLogger(__name__)
+
+
+def _create_uri_didl_item(uri, title, mime_type):
+    """Create a DIDL item for an HTTP media URI."""
+    resource = DidlResource(uri=uri, protocol_info=f"http-get:*:{mime_type}:*")
+    return DidlMusicTrack(
+        title=title,
+        parent_id="0",
+        item_id="1",
+        resources=[resource],
+    )
 
 
 class _ArgsSingleton(type):
@@ -120,9 +134,17 @@ class _ArgsSingleton(type):
         key = cls._class_group if hasattr(cls, "_class_group") else cls
         if key not in cls._instances:
             cls._instances[key] = {}
-        if args not in cls._instances[key]:
-            cls._instances[key][args] = super().__call__(*args, **kwargs)
-        return cls._instances[key][args]
+        instance_key = args
+        if hasattr(cls, "_singleton_key"):
+            # Subclasses (e.g. via config.SOCO_CLASS) may have constructor
+            # arguments that don't fit _singleton_key; fall back to args.
+            try:
+                instance_key = cls._singleton_key(*args, **kwargs)
+            except (TypeError, ValueError):
+                pass
+        if instance_key not in cls._instances[key]:
+            cls._instances[key][instance_key] = super().__call__(*args, **kwargs)
+        return cls._instances[key][instance_key]
 
 
 class _SocoSingletonBase(  # pylint: disable=no-init
@@ -176,8 +198,8 @@ class SoCo(_SocoSingletonBase):
     For any given set of arguments to __init__, only one instance of this class
     may be created. Subsequent attempts to create an instance with the same
     arguments will return the previously created instance. This means that all
-    SoCo instances created with the same ip address are in fact the *same* SoCo
-    instance, reflecting the real world position.
+    SoCo instances created with the same IP address and port are in fact the
+    *same* SoCo instance, reflecting the real world player endpoint.
 
     ..  rubric:: Basic Methods
     ..  autosummary::
@@ -213,7 +235,10 @@ class SoCo(_SocoSingletonBase):
         add_uri_to_queue
         add_multiple_to_queue
         remove_from_queue
+        remove_range_from_queue
         clear_queue
+        reorder_queue
+        move_in_queue
 
     ..  rubric:: Group Management
     ..  autosummary::
@@ -325,8 +350,13 @@ class SoCo(_SocoSingletonBase):
     _class_group = "SoCo"
     zone_group_states = {}
 
+    @staticmethod
+    def _singleton_key(ip_address, port=1400):
+        """Return the network endpoint used to identify a player instance."""
+        return (ip_address, int(port))
+
     # pylint: disable=super-on-old-class
-    def __init__(self, ip_address):
+    def __init__(self, ip_address, port=1400):
         # Note: Creation of a SoCo instance should be as cheap and quick as
         # possible. Do not make any network calls here
         super().__init__()
@@ -338,6 +368,10 @@ class SoCo(_SocoSingletonBase):
             raise ValueError("Not a valid IP address string") from error
         #: The speaker's ip address
         self.ip_address = ip_address
+        #: The speaker's UPnP port
+        self.port = int(port)
+        if not 1 <= self.port <= 65535:
+            raise ValueError("Not a valid port")
         self.speaker_info = {}  # Stores information about the current speaker
 
         # The services which we use
@@ -354,6 +388,8 @@ class SoCo(_SocoSingletonBase):
         self.audioIn = AudioIn(self)
 
         self.music_library = MusicLibrary(self)
+
+        self.favorites = Favorites(self)
 
         # Some private attributes
         self._boot_seqnum = None
@@ -378,7 +414,14 @@ class SoCo(_SocoSingletonBase):
         return f"<{self.__class__.__name__} object at ip {self.ip_address}>"
 
     def __repr__(self):
-        return f'{self.__class__.__name__}("{self.ip_address}")'
+        if self.port == 1400:
+            return f'{self.__class__.__name__}("{self.ip_address}")'
+        return f'{self.__class__.__name__}("{self.ip_address}", {self.port})'
+
+    @property
+    def base_url(self):
+        """Return the base URL for this Sonos player."""
+        return f"http://{self.ip_address}:{self.port}"
 
     @property
     def boot_seqnum(self):
@@ -566,6 +609,18 @@ class SoCo(_SocoSingletonBase):
             self.get_speaker_info()
 
         return self.speaker_info["model_name"].lower().endswith(ARC_ULTRA_PRODUCT_NAME)
+
+    @property
+    def is_ultra_soundbar(self):
+        """bool: Is this zone an Ultra sound bar (Arc Ultra, Beam Ultra)?
+
+        Ultra sound bars expose a 5-level dialog level and a separate
+        speech enhancement on/off switch.
+        """
+        if not self.speaker_info:
+            self.get_speaker_info()
+
+        return self.speaker_info["model_name"].lower().endswith(ULTRA_SOUNDBARS)
 
     @property
     def play_mode(self):
@@ -770,7 +825,14 @@ class SoCo(_SocoSingletonBase):
 
     @only_on_master
     def play_uri(
-        self, uri="", meta="", title="", start=True, force_radio=False, **kwargs
+        self,
+        uri="",
+        meta="",
+        title="",
+        start=True,
+        force_radio=False,
+        mime_type=None,
+        **kwargs,
     ):
         """Play a URI.
 
@@ -786,8 +848,18 @@ class SoCo(_SocoSingletonBase):
             meta (str): The metadata to show in the player, DIDL format.
             title (str): The title to show in the player (if no meta).
             start (bool): If the URI that has been set should start playing.
-            force_radio (bool): forces a uri to play as a radio stream.
+            force_radio (bool): Forces a URI to play as a radio stream. Cannot
+                be used together with ``mime_type``.
+            mime_type (str): The MIME type of the media. If provided without
+                explicit metadata, track-style DIDL metadata with the
+                corresponding protocol info is generated. Cannot be used
+                together with ``force_radio=True``. Explicit metadata takes
+                precedence.
             kwargs: additional arguments such as timeout.
+
+        Raises:
+            ValueError: If ``mime_type`` and ``force_radio=True`` are both
+                provided.
 
         On a Sonos controller music is shown with one of the following display
         formats and controls:
@@ -827,7 +899,12 @@ class SoCo(_SocoSingletonBase):
            not forced to to Radio format.
 
         """
-        if meta == "" and title != "":
+        if mime_type and force_radio:
+            raise ValueError("mime_type cannot be used with force_radio=True")
+
+        if meta == "" and mime_type:
+            meta = to_didl_string(_create_uri_didl_item(uri, title, mime_type))
+        elif meta == "" and title != "":
             meta_template = (
                 '<DIDL-Lite xmlns:dc="http://purl.org/dc/elements'
                 '/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/" '
@@ -1495,7 +1572,7 @@ class SoCo(_SocoSingletonBase):
 
         True if on, False if off, None if not supported.
         """
-        if not self.is_arc_ultra_soundbar:
+        if not self.is_ultra_soundbar:
             return None
 
         response = self.renderingControl.GetEQ(
@@ -1505,16 +1582,17 @@ class SoCo(_SocoSingletonBase):
 
     @speech_enhance_enabled.setter
     def speech_enhance_enabled(self, speech_mode):
-        """Switch on/off the arc ultra soundbar speech enhancement.
+        """Switch on/off the Ultra soundbar speech enhancement.
 
         :param speech_mode: Enable or disable dialog mode
         :type speech_mode: bool
         :raises NotSupportedException: If the device does not support
         speech enhancement.
         """
-        if not self.is_arc_ultra_soundbar:
+        if not self.is_ultra_soundbar:
             raise NotSupportedException(
-                "The device not a arc ultra and doesn't support speech_enhance_enabled."
+                "The device is not an Ultra soundbar and doesn't support "
+                "speech_enhance_enabled."
             )
         self.renderingControl.SetEQ(
             [
@@ -1666,8 +1744,7 @@ class SoCo(_SocoSingletonBase):
     @property
     def all_groups(self):
         """set of :class:`soco.groups.ZoneGroup`: All available groups."""
-        self.zone_group_state.poll(self)
-        return self.zone_group_state.groups.copy()
+        return self.zone_group_state.get_groups(self)
 
     @property
     def group(self):
@@ -1696,14 +1773,12 @@ class SoCo(_SocoSingletonBase):
     @property
     def all_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All available zones."""
-        self.zone_group_state.poll(self)
-        return self.zone_group_state.all_zones.copy()
+        return self.zone_group_state.get_all_zones(self)
 
     @property
     def visible_zones(self):
         """set of :class:`soco.groups.ZoneGroup`: All visible zones."""
-        self.zone_group_state.poll(self)
-        return self.zone_group_state.visible_zones.copy()
+        return self.zone_group_state.get_visible_zones(self)
 
     def partymode(self):
         """Put all the speakers in the network in the same group, a.k.a Party
@@ -2176,8 +2251,7 @@ class SoCo(_SocoSingletonBase):
             return self.speaker_info
         else:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/xml/device_description.xml",
-                timeout=timeout,
+                self.base_url + "/xml/device_description.xml", timeout=timeout
             )
             dom = XML.fromstring(response.content)
 
@@ -2352,15 +2426,37 @@ class SoCo(_SocoSingletonBase):
         return self.music_library.get_music_library_information(*args, **kwargs)
 
     @only_on_master
-    def add_uri_to_queue(self, uri, position=0, as_next=False, **kwargs):
+    def add_uri_to_queue(
+        self,
+        uri,
+        position=0,
+        as_next=False,
+        title="",
+        mime_type=None,
+        **kwargs,
+    ):
         """Add the URI to the queue.
 
-        For arguments and return value see `add_to_queue`.
+        Args:
+            uri (str): URI of the media to add.
+            position (int): The index (1-based) at which the URI should be
+                added. Default is 0 (add URI at the end of the queue).
+            as_next (bool): Whether this URI should be played as the next
+                track in shuffle mode.
+            title (str): The title to show in the player.
+            mime_type (str): The MIME type of the media. If provided, the
+                corresponding HTTP protocol info is included in the DIDL
+                metadata.
+            kwargs: additional arguments such as timeout.
+
+        Returns:
+            int: The index of the new item in the queue.
         """
-        # FIXME: The res.protocol_info should probably represent the mime type
-        # etc of the uri. But this seems OK.
-        res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
-        item = DidlObject(resources=res, title="", parent_id="", item_id="")
+        if mime_type:
+            item = _create_uri_didl_item(uri, title, mime_type)
+        else:
+            res = [DidlResource(uri=uri, protocol_info="x-rincon-playlist:*:*:*")]
+            item = DidlObject(resources=res, title=title, parent_id="", item_id="")
         return self.add_to_queue(item, position, as_next, **kwargs)
 
     @only_on_master
@@ -2455,6 +2551,116 @@ class SoCo(_SocoSingletonBase):
                 ("InstanceID", 0),
             ]
         )
+
+    @only_on_master
+    def remove_range_from_queue(self, start, num_tracks, update_id=0):
+        """Remove a block of tracks from the queue.
+
+        Args:
+            start (int): The 0-based index of the first track to remove.
+            num_tracks (int): The number of tracks to remove.
+            update_id (int): The queue update id to operate on, or 0 for
+                the current queue state.
+
+        Returns:
+            int: The new queue update id.
+
+        Raises:
+            ValueError: If ``start`` is negative or ``num_tracks`` is less
+                than 1. A range beyond the end of the queue is rejected by
+                the speaker.
+        """
+        if start < 0 or num_tracks <= 0:
+            raise ValueError("Invalid start or num_tracks")
+        response = self.avTransport.RemoveTrackRangeFromQueue(
+            [
+                ("InstanceID", 0),
+                ("UpdateID", update_id),
+                ("StartingIndex", start + 1),  # Sonos indices are 1-based
+                ("NumberOfTracks", num_tracks),
+            ]
+        )
+        return int(response["NewUpdateID"])
+
+    @only_on_master
+    def reorder_queue(self, start, num_tracks, insert_before):
+        """Move a block of tracks within the queue.
+
+        ``insert_before`` is evaluated against the queue before the move;
+        pass the queue length (or more) to move the block to the end.
+
+        Args:
+            start (int): The 0-based index of the first track to move.
+            num_tracks (int): The number of tracks to move.
+            insert_before (int): The 0-based index before which to insert
+                the block.
+
+        Raises:
+            ValueError: If the arguments are out of range, or
+                ``insert_before`` falls inside the moved block.
+        """
+        self._reorder_queue(start, num_tracks, insert_before, self.queue_size)
+
+    def _reorder_queue(self, start, num_tracks, insert_before, queue_length):
+        """Move a block of tracks within a queue of the given length.
+
+        See :py:meth:`reorder_queue`.
+        """
+        if (
+            start < 0
+            or num_tracks <= 0
+            or insert_before < 0
+            or start + num_tracks > queue_length
+            or start < insert_before < start + num_tracks
+        ):
+            raise ValueError(
+                "Invalid start, num_tracks or insert_before for queue of "
+                "length %d" % queue_length
+            )
+        # Anything past the end of the queue means "move to the end"
+        insert_before = min(insert_before, queue_length)
+        if insert_before in (start, start + num_tracks):
+            return  # Already in position
+        self.avTransport.ReorderTracksInQueue(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", start + 1),
+                ("NumberOfTracks", num_tracks),
+                ("InsertBefore", insert_before + 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    @only_on_master
+    def move_in_queue(self, start, new_pos):
+        """Move a single track to a new position in the queue.
+
+        This is a convenience method for :py:meth:`reorder_queue`. As with
+        :py:meth:`move_in_sonos_playlist`, ``new_pos`` is the position of the
+        track after the move, as when moving an item within a Python list.
+
+        Example::
+
+            # Swap the first two tracks
+            device.move_in_queue(0, 1)
+
+        Args:
+            start (int): The 0-based index of the track to move.
+            new_pos (int): The 0-based index the track should have after the
+                move.
+
+        Raises:
+            ValueError: If ``start`` or ``new_pos`` is out of range.
+        """
+        queue_length = self.queue_size
+        if not 0 <= new_pos < queue_length:
+            raise ValueError(
+                "Invalid new_pos %d for queue of length %d" % (new_pos, queue_length)
+            )
+        # reorder_queue inserts before an index in the queue as it was before
+        # the move, so moving a track later needs the index after new_pos
+        insert_before = new_pos + 1 if new_pos > start else new_pos
+        self._reorder_queue(start, 1, insert_before, queue_length)
 
     @deprecated("0.13", "soco.music_library.get_favorite_radio_shows", "0.15", True)
     def get_favorite_radio_shows(self, start=0, max_items=100):
@@ -3004,8 +3210,7 @@ class SoCo(_SocoSingletonBase):
         # Retrieve information from the speaker's status URL
         try:
             response = requests.get(
-                "http://" + self.ip_address + ":1400/status/batterystatus",
-                timeout=timeout,
+                self.base_url + "/status/batterystatus", timeout=timeout
             )
         except (ConnectTimeout, ReadTimeout) as error:
             raise TimeoutError from error
@@ -3035,12 +3240,16 @@ class SoCo(_SocoSingletonBase):
 def soco_reset():
     """Reset the SoCo module.
 
-    Clears out the singleton instance cache. Use this to reset SoCo state,
-    for example when testing. Note that this does not close any open
-    connections or release other resources. This function is not thread-safe
-    and must not be called while the API is in use from other threads.
+    Clears out the singleton instance cache and the zone group states. Use
+    this to reset SoCo state, for example when testing. Note that this does
+    not close any open connections or release other resources. This function
+    is not thread-safe and must not be called while the API is in use from
+    other threads. Unsubscribe from events before calling it, because the
+    zone group states track active subscriptions.
     """
     _ArgsSingleton._instances.clear()
+    # Zone group states hold instances created before the reset
+    SoCo.zone_group_states.clear()
 
 
 # definition section
@@ -3102,6 +3311,7 @@ SOUNDBARS = (
     "arc sl",
     "arc ultra",
     "beam",
+    "beam ultra",
     "playbase",
     "playbar",
     "ray",
@@ -3109,6 +3319,8 @@ SOUNDBARS = (
 )
 
 ARC_ULTRA_PRODUCT_NAME = "arc ultra"
+BEAM_ULTRA_PRODUCT_NAME = "beam ultra"
+ULTRA_SOUNDBARS = (ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME)
 
 if config.SOCO_CLASS is None:
     config.SOCO_CLASS = SoCo

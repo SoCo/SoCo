@@ -1,9 +1,20 @@
-"""Tests for the services module."""
+"""Tests for the events_base module."""
+
+import logging
+from unittest import mock
 
 import pytest
 
+from soco import config
 from soco.data_structures import DidlAudioLineIn
-from soco.events_base import Event, parse_event_xml
+from soco.events import EventNotifyHandler
+from soco.events_base import (
+    Event,
+    get_listen_ip,
+    parse_event_xml,
+    redact_event_content,
+)
+from soco.services import ZoneGroupTopology
 
 from conftest import DataLoader
 
@@ -95,6 +106,29 @@ def test_event_parsing():
     assert event_dict["zone_group_id"] == "RINCON_000XXXX01400:57"
 
 
+def test_event_parsing_redacts_third_party_media_servers():
+    """The ThirdPartyMediaServersX blob holds music service credentials, so its
+    value must not be passed on to event subscribers."""
+    event_dict = parse_event_xml(DUMMY_EVENT)
+    assert event_dict["third_party_media_servers_x"] == "[redacted]"
+
+
+@pytest.mark.parametrize("content", [DUMMY_EVENT, DUMMY_EVENT.encode("utf-8")])
+def test_redact_event_content(content):
+    redacted = redact_event_content(content)
+    assert type(redacted) is type(content)
+    as_text = redacted if isinstance(redacted, str) else redacted.decode("utf-8")
+    assert "s+3N9Lby8yoJD/QOC4W" not in as_text
+    assert "<ThirdPartyMediaServersX>[redacted]</ThirdPartyMediaServersX>" in as_text
+    # The rest of the event is untouched
+    assert "RINCON_000EXXXXXX0:56:0" in as_text
+
+
+def test_redact_event_content_without_blob():
+    content = b"<e:propertyset><e:property><Foo>bar</Foo></e:property></e:propertyset>"
+    assert redact_event_content(content) == content
+
+
 def test_event_parsing_linein():
     xml_message = DATA_LOADER.load_xml("source_linein.xml")
     result = parse_event_xml(xml_message)
@@ -121,6 +155,140 @@ def test_event_parsing_null_value():
         "</e:property>"
         "</e:propertyset>"
     )
-    # Before the fix this raised AttributeError: 'NoneType' has no attribute 'startswith'
+    # Before the fix this raised
+    # AttributeError: 'NoneType' has no attribute 'startswith'
     result = parse_event_xml(event_xml)
     assert result["current_track_uri"] is None
+
+
+def _zgt_service():
+    """A real ZoneGroupTopology service backed by mocks."""
+    zgs = mock.Mock()
+    soco = mock.Mock()
+    soco.ip_address = "192.168.1.100"
+    soco.zone_group_state = zgs
+    return ZoneGroupTopology(soco), zgs
+
+
+def test_update_cache_on_event_updates_zone_group_state():
+    """ZGS events must update the shared ZoneGroupState."""
+    service, zgs = _zgt_service()
+    event = Event("sid", "0", service, 123.0, {"zone_group_state": "<ZoneGroups/>"})
+
+    service._update_cache_on_event(event)
+
+    zgs.process_payload.assert_called_once_with(
+        payload="<ZoneGroups/>", source="event", source_ip="192.168.1.100"
+    )
+
+
+def test_update_cache_on_event_without_zone_group_state():
+    """Non-ZGS events must not touch the ZoneGroupState."""
+    service, zgs = _zgt_service()
+    event = Event("sid", "0", service, 123.0, {"transport_state": "PLAYING"})
+
+    service._update_cache_on_event(event)
+
+    zgs.process_payload.assert_not_called()
+
+
+def test_update_cache_on_event_zgs_failure_logs(caplog):
+    """A failing ZGS update must be logged, not raised.
+
+    The generic event handler calls this hook before delivering the event, so
+    swallowing here is what keeps a bad payload from suppressing delivery.
+    """
+    service, zgs = _zgt_service()
+    zgs.process_payload.side_effect = ValueError("bad ZGS")
+    event = Event("sid", "0", service, 123.0, {"zone_group_state": "<ZoneGroups/>"})
+
+    with caplog.at_level(logging.ERROR, logger="soco.services"):
+        service._update_cache_on_event(event)  # must not raise
+
+    assert "Failed to process zone_group_state event" in caplog.text
+
+
+def test_handle_notification_delivers_event_despite_zgs_failure(caplog):
+    """A ZGS failure in the cache hook must not suppress event delivery.
+
+    Exercises the real chain: EventNotifyHandler.handle_notification ->
+    ZoneGroupTopology._update_cache_on_event -> subscription.send_event.
+    """
+    zgs = mock.Mock()
+    zgs.process_payload.side_effect = ValueError("bad ZGS")
+    soco = mock.Mock()
+    soco.ip_address = "192.168.1.100"
+    soco.zone_group_state = zgs
+    service = ZoneGroupTopology(soco)
+    subscription = mock.Mock()
+    subscription.service = service
+    subscriptions_map = mock.Mock()
+    subscriptions_map.get_subscription.return_value = subscription
+
+    # Bypass BaseHTTPRequestHandler.__init__, which needs a live request/socket.
+    handler = EventNotifyHandler.__new__(EventNotifyHandler)
+    handler.subscriptions_map = subscriptions_map
+    handler.log_event = mock.Mock()  # Isolate from handler init-dependent logging.
+
+    with caplog.at_level(logging.ERROR, logger="soco.services"):
+        handler.handle_notification({"seq": "0", "sid": "uuid:test_sid"}, DUMMY_EVENT)
+
+    handler.log_event.assert_called_once()
+    subscription.send_event.assert_called_once()
+    assert "Failed to process zone_group_state event" in caplog.text
+
+
+def test_get_listen_ip_uses_non_blocking_connect():
+    """get_listen_ip must use a non-blocking UDP connect (#978)."""
+    sock = mock.Mock()
+    sock.getsockname.return_value = ("192.168.1.50", 12345)
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result == "192.168.1.50"
+    sock.setblocking.assert_called_once_with(False)
+    sock.connect.assert_called_once_with(("192.168.1.42", config.EVENT_LISTENER_PORT))
+
+
+def test_get_listen_ip_connect_in_progress():
+    """A connect left in EINPROGRESS must still return the local IP."""
+    sock = mock.Mock()
+    sock.connect.side_effect = BlockingIOError("in progress")
+    sock.getsockname.return_value = ("192.168.1.50", 12345)
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result == "192.168.1.50"
+
+
+def test_get_listen_ip_connect_failure():
+    """An OSError from connect must return None."""
+    sock = mock.Mock()
+    sock.connect.side_effect = OSError("no route to host")
+    with mock.patch.object(config, "EVENT_LISTENER_IP", None):
+        with mock.patch("soco.events_base.socket.socket", return_value=sock):
+            result = get_listen_ip("192.168.1.42")
+    assert result is None
+
+
+def test_handle_notification_redacts_logged_content(caplog):
+    """The debug log of the raw event must not include the
+    ThirdPartyMediaServersX blob."""
+    service, _ = _zgt_service()
+    subscription = mock.Mock()
+    subscription.service = service
+    subscriptions_map = mock.Mock()
+    subscriptions_map.get_subscription.return_value = subscription
+
+    handler = EventNotifyHandler.__new__(EventNotifyHandler)
+    handler.subscriptions_map = subscriptions_map
+    handler.log_event = mock.Mock()
+
+    with caplog.at_level(logging.DEBUG, logger="soco.events_base"):
+        handler.handle_notification(
+            {"seq": "0", "sid": "uuid:test_sid"}, DUMMY_EVENT.encode("utf-8")
+        )
+
+    assert "Event content:" in caplog.text
+    assert "s+3N9Lby8yoJD/QOC4W" not in caplog.text
+    assert "[redacted]" in caplog.text

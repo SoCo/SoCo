@@ -34,7 +34,7 @@ import warnings
 from .exceptions import DIDLMetadataError
 from .utils import really_unicode, first_cap
 from .xml import XML, ns_tag
-from .data_structure_quirks import apply_resource_quirks
+from .data_structure_quirks import apply_object_quirks, apply_resource_quirks
 
 # Due to cyclic import problems, we only import from_didl_string at runtime.
 # from data_structures_entry import from_didl_string
@@ -569,6 +569,9 @@ class DidlObject(metaclass=DidlMetaClass):
                 "UPnP class is incorrect. Expected '{}',"
                 " got '{}'".format(cls.item_class, item_class)
             )
+
+        # Check for and fix non-spec compliant behavior in the incoming data
+        element = apply_object_quirks(element)
 
         # parent_id, item_id  and restricted are stored as attributes on the
         # element

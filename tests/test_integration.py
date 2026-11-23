@@ -36,11 +36,13 @@ from soco.exceptions import SoCoUPnPException
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def soco(request):
     """Set up and tear down the soco fixture used by all tests."""
     # Get the ip address from the command line, and create the soco object
-    # Only one is used per test session, hence the decorator
+    # Only one is used for all the tests in this module, hence the decorator.
+    # It is module scoped so that the tear down runs before tests in other
+    # modules reset the SoCo singletons (see reset_soco in conftest.py)
     ip = request.config.option.IP
     if ip is None:
         pytest.fail("No ip address specified. Use the --ip option.")
@@ -534,6 +536,33 @@ class TestTimer:
             )
 
 
+@pytest.fixture(scope="class")
+def restore_sonos_playlists(request, soco):
+    """A fixture which cleans up after the sonos playlist tests.
+
+    Defined at module level rather than as a method, since class-scoped
+    fixture methods are deprecated. Attributes are set on the test class.
+    """
+    cls = request.cls
+    if cls.existing_playlists is None:
+        cls.existing_playlists = soco.get_sonos_playlists()
+    if cls.playlist_name in [x.title for x in cls.existing_playlists]:
+        msg = "%s is an existing playlist." % cls.playlist_name
+        pytest.fail(msg)
+
+    queue_list = soco.get_queue()
+    if len(queue_list) < 2:
+        msg = "You must have 3 or more items in your queue for testing."
+        pytest.fail(msg)
+    playlist = soco.create_sonos_playlist_from_queue(cls.playlist_name)
+    cls.queue_length = soco.queue_size
+    cls.test_playlist = playlist
+    yield
+
+    soco.contentDirectory.DestroyObject([("ObjectID", cls.test_playlist.item_id)])
+
+
+@pytest.mark.usefixtures("restore_sonos_playlists")
 class TestReorderSonosPlaylist:
     """Integration tests for Sonos Playlist Management."""
 
@@ -541,26 +570,6 @@ class TestReorderSonosPlaylist:
     playlist_name = "zSocoTestPlayList42"
     test_playlist = None
     queue_length = None
-
-    @pytest.fixture(autouse=True, scope="class")
-    def restore_sonos_playlists(self, soco):
-        """A fixture which cleans up after each sonos playlist test."""
-        if self.existing_playlists is None:
-            self.existing_playlists = soco.get_sonos_playlists()
-        if self.playlist_name in [x.title for x in self.existing_playlists]:
-            msg = "%s is an existing playlist." % self.playlist_name
-            pytest.fail(msg)
-
-        queue_list = soco.get_queue()
-        if len(queue_list) < 2:
-            msg = "You must have 3 or more items in your queue for testing."
-            pytest.fail(msg)
-        playlist = soco.create_sonos_playlist_from_queue(self.playlist_name)
-        self.__class__.queue_length = soco.queue_size
-        self.__class__.test_playlist = playlist
-        yield
-
-        soco.contentDirectory.DestroyObject([("ObjectID", self.test_playlist.item_id)])
 
     def _reset_spl_contents(self, soco):
         """Ensure test playlist matches queue for each test."""
@@ -961,3 +970,57 @@ class TestMusicLibrary:
         """Test getting favorites from the music library"""
         search_result = soco.music_library.get_music_library_information(search_type)
         assert isinstance(search_result, SearchResult)
+
+
+class TestFavorites:
+    """Integration tests for the favorites write API.
+
+    Creates a disposable favorite from the first queue track, exercises
+    add/update/remove on the real speaker, and cleans up afterwards.
+    """
+
+    @pytest.fixture(autouse=True)
+    def cleanup_favorite(self, soco):
+        """Remove the test favorite after each test, however it ends."""
+        self.favorite_title = "zSocoTestFavorite42"
+        yield
+        for favorite in soco.music_library.get_sonos_favorites():
+            if favorite.title.startswith(self.favorite_title):
+                soco.favorites.remove(favorite)
+
+    def test_add_update_remove_favorite(self, soco):
+        """Round-trip a favorite: add, verify, rename, verify, remove."""
+        queue = soco.get_queue()
+        if len(queue) == 0:
+            pytest.skip("Speaker queue is empty")
+        track = queue[0]
+        favorite = soco.favorites.add(
+            track, title=self.favorite_title, description="SoCo test"
+        )
+        wait()
+        assert favorite.item_id.startswith("FV:2/")
+
+        favorites = soco.music_library.get_sonos_favorites()
+        created = [f for f in favorites if f.title == self.favorite_title]
+        assert len(created) == 1
+        assert created[0].item_id == favorite.item_id
+        assert created[0].reference is not None
+
+        soco.favorites.update(favorite, title=self.favorite_title + " renamed")
+        wait()
+        renamed = [
+            f
+            for f in soco.music_library.get_sonos_favorites()
+            if f.item_id == favorite.item_id
+        ]
+        assert len(renamed) == 1
+        assert renamed[0].title == self.favorite_title + " renamed"
+
+        soco.favorites.remove(favorite)
+        wait()
+        remaining = [
+            f
+            for f in soco.music_library.get_sonos_favorites()
+            if f.item_id == favorite.item_id
+        ]
+        assert remaining == []

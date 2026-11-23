@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 
-""" Dump all known UPnP commands """
+"""Dump all known UPnP commands"""
 
 import argparse
 import re

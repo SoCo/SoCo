@@ -85,6 +85,7 @@ from .events_base import Event  # noqa: F401
 from .events_base import (  # noqa: E402
     get_listen_ip,
     parse_event_xml,
+    redact_event_content,
     EventNotifyHandlerBase,
     EventListenerBase,
     SubscriptionBase,
@@ -123,7 +124,7 @@ class EventNotifyHandler(EventNotifyHandlerBase):
             timestamp = time.time()
             service = subscription.service
             self.log_event(seq, service.service_id, timestamp)
-            log.debug("Event content: %s", content)
+            log.debug("Event content: %s", redact_event_content(content))
             if "x-sonos-http" in content:
                 # parse_event_xml will generate I/O if
                 # x-sonos-http is in the content
@@ -132,15 +133,6 @@ class EventNotifyHandler(EventNotifyHandlerBase):
                 )
             else:
                 variables = parse_event_xml(content)
-
-            if "zone_group_state" in variables:
-                # Pass ZGS payload to associated SoCo instance to update
-                # attributes. Keeps cache warm and avoids network calls.
-                service.soco.zone_group_state.process_payload(
-                    payload=variables["zone_group_state"],
-                    source="event",
-                    source_ip=service.soco.ip_address,
-                )
 
             # Build the Event object
             event = Event(sid, seq, service, timestamp, variables)

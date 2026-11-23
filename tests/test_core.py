@@ -4,8 +4,9 @@ import requests_mock
 
 from conftest import IP_ADDR
 from soco import SoCo
-from soco.core import ARC_ULTRA_PRODUCT_NAME
-from soco.data_structures import to_didl_string
+from soco.core import ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME
+from soco.data_structures import DidlMusicTrack, to_didl_string
+from soco.data_structures_entry import from_didl_string
 from soco.exceptions import (
     SoCoSlaveException,
     SoCoUPnPException,
@@ -158,6 +159,32 @@ ZGS = (
       <VanishedDevices></VanishedDevices>
     </ZoneGroupState>"""
 )
+
+AMP_MULTI_ZGS = """<ZoneGroupState>
+  <ZoneGroups>
+    <ZoneGroup Coordinator="RINCON_00112233445501400" ID="RINCON_00112233445501400:1">
+      <ZoneGroupMember UUID="RINCON_00112233445501400"
+        Location="http://192.0.2.10:1400/xml/device_description.xml"
+        ZoneName="Zone 1"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501500" ID="RINCON_00112233445501500:2">
+      <ZoneGroupMember UUID="RINCON_00112233445501500"
+        Location="http://192.0.2.10:1500/xml/device_description.xml"
+        ZoneName="Zone 2"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501600" ID="RINCON_00112233445501600:3">
+      <ZoneGroupMember UUID="RINCON_00112233445501600"
+        Location="http://192.0.2.10:1600/xml/device_description.xml"
+        ZoneName="Zone 3"/>
+    </ZoneGroup>
+    <ZoneGroup Coordinator="RINCON_00112233445501700" ID="RINCON_00112233445501700:4">
+      <ZoneGroupMember UUID="RINCON_00112233445501700"
+        Location="http://192.0.2.10:1700/xml/device_description.xml"
+        ZoneName="Zone 4"/>
+    </ZoneGroup>
+  </ZoneGroups>
+  <VanishedDevices/>
+</ZoneGroupState>"""
 
 
 @pytest.fixture()
@@ -407,6 +434,8 @@ class TestSoco:
             ("Sonos Playbase", True),
             ("Sonos Arc", True),
             ("Sonos Arc SL", True),
+            ("Sonos Arc Ultra", True),
+            ("Sonos Beam Ultra", True),
         ),
     )
     def test_soco_is_soundbar(self, moco, model_name):
@@ -546,8 +575,33 @@ class TestSoco:
             [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 1)]
         )
 
+        # Beam Ultra exposes the same speech enhancement switch
+        moco_zgs.speaker_info["model_name"] = (
+            "speaker prefix " + BEAM_ULTRA_PRODUCT_NAME
+        )
+        moco_zgs.renderingControl.GetEQ.reset_mock()
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "1"}
+        assert moco_zgs.speech_enhance_enabled == 1
+        moco_zgs.renderingControl.GetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled")]
+        )
+
+        moco_zgs.renderingControl.SetEQ.reset_mock()
+        moco_zgs.speech_enhance_enabled = 0
+        moco_zgs.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 0)]
+        )
+
 
 class TestAVTransport:
+    @pytest.fixture
+    def moco_queue_3(self, moco):
+        """A moco with a mocked 3-track queue."""
+        with mock.patch.object(
+            SoCo, "queue_size", new_callable=mock.PropertyMock, return_value=3
+        ):
+            yield moco
+
     @pytest.mark.parametrize(
         "playmode",
         [
@@ -716,6 +770,79 @@ class TestAVTransport:
             ]
         )
 
+    def test_soco_play_uri_with_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+
+        moco.play_uri(uri, title="Example track", mime_type="audio/mpeg")
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        metadata = dict(arguments)["CurrentURIMetaData"]
+        item = from_didl_string(metadata)[0]
+        assert isinstance(item, DidlMusicTrack)
+        assert item.title == "Example track"
+        assert item.resources[0].uri == uri
+        assert item.resources[0].protocol_info == "http-get:*:audio/mpeg:*"
+
+    def test_soco_play_uri_explicit_metadata_takes_precedence(self, moco):
+        metadata = "<DIDL-Lite />"
+
+        moco.play_uri(
+            "https://example.com/audio/stream",
+            meta=metadata,
+            mime_type="audio/mpeg",
+        )
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        assert dict(arguments)["CurrentURIMetaData"] == metadata
+
+    def test_soco_play_uri_rejects_mime_type_with_force_radio(self, moco):
+        with pytest.raises(
+            ValueError, match="mime_type cannot be used with force_radio=True"
+        ):
+            moco.play_uri(
+                "https://example.com/audio/stream",
+                mime_type="audio/mpeg",
+                force_radio=True,
+            )
+
+        moco.avTransport.SetAVTransportURI.assert_not_called()
+
+    def test_soco_play_uri_ignores_empty_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+
+        moco.play_uri(uri, mime_type="")
+
+        arguments = moco.avTransport.SetAVTransportURI.call_args.args[0]
+        assert dict(arguments)["CurrentURIMetaData"] == ""
+
+    def test_soco_add_uri_to_queue_with_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+        moco.avTransport.AddURIToQueue.return_value = {"FirstTrackNumberEnqueued": "1"}
+
+        position = moco.add_uri_to_queue(
+            uri, title="Example track", mime_type="audio/mpeg"
+        )
+
+        arguments = moco.avTransport.AddURIToQueue.call_args.args[0]
+        assert dict(arguments)["EnqueuedURI"] == uri
+        item = from_didl_string(dict(arguments)["EnqueuedURIMetaData"])[0]
+        assert isinstance(item, DidlMusicTrack)
+        assert item.title == "Example track"
+        assert item.resources[0].uri == uri
+        assert item.resources[0].protocol_info == "http-get:*:audio/mpeg:*"
+        assert position == 1
+
+    def test_soco_add_uri_to_queue_with_title_and_empty_mime_type(self, moco):
+        uri = "https://example.com/audio/stream"
+        moco.avTransport.AddURIToQueue.return_value = {"FirstTrackNumberEnqueued": "1"}
+
+        moco.add_uri_to_queue(uri, title="Example track", mime_type="")
+
+        arguments = moco.avTransport.AddURIToQueue.call_args.args[0]
+        item = from_didl_string(dict(arguments)["EnqueuedURIMetaData"])[0]
+        assert item.title == "Example track"
+        assert item.resources[0].protocol_info == "x-rincon-playlist:*:*:*"
+
     def test_soco_pause(self, moco):
         moco.pause()
         moco.avTransport.Pause.assert_called_once_with(
@@ -844,6 +971,126 @@ class TestAVTransport:
         )
         assert queue_size == 384
         moco.contentDirectory.reset_mock()
+
+    def test_soco_reorder_queue(self, moco_queue_3):
+        """ReorderTracksInQueue uses 1-based indices and update id 0."""
+        moco_queue_3.reorder_queue(1, 1, 0)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 2),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_block(self, moco_queue_3):
+        """A block move passes through as a single native call."""
+        moco_queue_3.reorder_queue(1, 2, 0)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 2),
+                ("NumberOfTracks", 2),
+                ("InsertBefore", 1),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_to_end(self, moco_queue_3):
+        """Moving to the end uses queue_length + 1 as InsertBefore."""
+        moco_queue_3.reorder_queue(0, 1, 3)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 4),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_reorder_queue_noop_positions(self, moco_queue_3):
+        moco_queue_3.reorder_queue(1, 1, 1)
+        moco_queue_3.reorder_queue(1, 1, 2)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_reorder_queue_invalid_args(self, moco_queue_3):
+        for args in [(-1, 1, 0), (1, 3, 0), (0, 0, 0), (0, 1, -1), (0, 2, 1)]:
+            with pytest.raises(ValueError):
+                moco_queue_3.reorder_queue(*args)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_reorder_queue_past_end(self, moco_queue_3):
+        """An insert_before past the end of the queue moves to the end."""
+        moco_queue_3.reorder_queue(0, 1, 10)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", 4),
+                ("UpdateID", 0),
+            ]
+        )
+        moco_queue_3.avTransport.reset_mock()
+        # The last track is already at the end
+        moco_queue_3.reorder_queue(2, 1, 10)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "start, new_pos, insert_before",
+        [
+            (2, 0, 1),  # [A, B, C] -> [C, A, B]
+            (0, 1, 3),  # [A, B, C] -> [B, A, C]
+            (0, 2, 4),  # [A, B, C] -> [B, C, A]
+            (1, 0, 1),  # [A, B, C] -> [B, A, C]
+        ],
+    )
+    def test_soco_move_in_queue(self, moco_queue_3, start, new_pos, insert_before):
+        """new_pos is the track's position after the move, as for a list."""
+        moco_queue_3.move_in_queue(start, new_pos)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("StartingIndex", start + 1),
+                ("NumberOfTracks", 1),
+                ("InsertBefore", insert_before),
+                ("UpdateID", 0),
+            ]
+        )
+
+    def test_soco_move_in_queue_same_position(self, moco_queue_3):
+        moco_queue_3.move_in_queue(1, 1)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_move_in_queue_invalid_args(self, moco_queue_3):
+        for args in [(0, 3), (0, -1), (3, 0), (-1, 0)]:
+            with pytest.raises(ValueError):
+                moco_queue_3.move_in_queue(*args)
+        moco_queue_3.avTransport.ReorderTracksInQueue.assert_not_called()
+
+    def test_soco_remove_range_from_queue(self, moco):
+        """RemoveTrackRangeFromQueue uses a 1-based starting index."""
+        moco.avTransport.RemoveTrackRangeFromQueue.return_value = {"NewUpdateID": "9"}
+        result = moco.remove_range_from_queue(2, 3, update_id=5)
+        moco.avTransport.RemoveTrackRangeFromQueue.assert_called_once_with(
+            [
+                ("InstanceID", 0),
+                ("UpdateID", 5),
+                ("StartingIndex", 3),
+                ("NumberOfTracks", 3),
+            ]
+        )
+        assert result == 9
+        moco.avTransport.reset_mock()
+
+    def test_soco_remove_range_from_queue_invalid_args(self, moco):
+        for args in [(-1, 1), (0, 0)]:
+            with pytest.raises(ValueError):
+                moco.remove_range_from_queue(*args)
+        moco.avTransport.RemoveTrackRangeFromQueue.assert_not_called()
 
     def test_join(self, moco_zgs):
         moco2 = mock.Mock()
@@ -1689,6 +1936,46 @@ class TestZoneGroupTopology:
         for zone in zones:
             assert isinstance(zone, SoCo)
         assert moco_zgs in zones
+
+    def test_multi_zone_device_with_shared_ip(self, moco):
+        """Each advertised port represents a distinct virtual player."""
+        moco.zoneGroupTopology.GetZoneGroupState.return_value = {
+            "ZoneGroupState": AMP_MULTI_ZGS
+        }
+
+        zones = moco.visible_zones
+
+        assert {
+            (zone.ip_address, zone.port, zone.uid, zone.player_name) for zone in zones
+        } == {
+            ("192.0.2.10", 1400, "RINCON_00112233445501400", "Zone 1"),
+            ("192.0.2.10", 1500, "RINCON_00112233445501500", "Zone 2"),
+            ("192.0.2.10", 1600, "RINCON_00112233445501600", "Zone 3"),
+            ("192.0.2.10", 1700, "RINCON_00112233445501700", "Zone 4"),
+        }
+        assert {zone.base_url for zone in zones} == {
+            "http://192.0.2.10:1400",
+            "http://192.0.2.10:1500",
+            "http://192.0.2.10:1600",
+            "http://192.0.2.10:1700",
+        }
+
+    def test_multi_zone_device_with_portless_soco_class(self, moco):
+        """A custom SOCO_CLASS without a port argument doesn't break parsing."""
+
+        class PortlessSoCo(SoCo):
+            def __init__(self, ip_address):
+                super().__init__(ip_address)
+
+        moco.zoneGroupTopology.GetZoneGroupState.return_value = {
+            "ZoneGroupState": AMP_MULTI_ZGS
+        }
+        with mock.patch("soco.config.SOCO_CLASS", PortlessSoCo):
+            zones = moco.visible_zones
+
+        assert {(zone.ip_address, zone.port) for zone in zones} == {
+            ("192.0.2.10", 1400)
+        }
 
     def test_group_label(selfself, moco_zgs):
         g = moco_zgs.group

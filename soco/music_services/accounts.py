@@ -66,12 +66,16 @@ class Account:
         # It is likely that the same information is available over UPnP as well
         # via a call to
         # systemProperties.GetStringX([('VariableName','R_SvcAccounts')]))
-        # This returns an encrypted string, and, so far, we cannot decrypt it
+        # This returns an encrypted string. It has been reported that the
+        # related ThirdPartyMediaServersX value (which contains music service
+        # account tokens) can be decrypted; see
+        # https://github.com/SoCo/SoCo/issues/1009
         device = soco or discovery.any_soco()
         log.debug("Fetching account data from %s", device)
-        settings_url = f"http://{device.ip_address}:1400/status/accounts"
+        settings_url = device.base_url + "/status/accounts"
         result = requests.get(settings_url, timeout=config.REQUEST_TIMEOUT).content
-        log.debug("Account data: %s", result)
+        # Don't log the content: it may contain account credentials
+        log.debug("Account data: %d bytes", len(result))
         return result
 
     @classmethod
