@@ -592,6 +592,37 @@ class TestSoco:
             [("InstanceID", 0), ("EQType", "SpeechEnhanceEnabled"), ("DesiredValue", 0)]
         )
 
+    @pytest.mark.parametrize(
+        "model_name", [ARC_ULTRA_PRODUCT_NAME, BEAM_ULTRA_PRODUCT_NAME]
+    )
+    def test_soco_speech_enhance_level(self, moco_zgs, model_name):
+        moco_zgs.renderingControl.GetEQ.reset_mock()
+        moco_zgs.renderingControl.SetEQ.reset_mock()
+
+        moco_zgs._is_soundbar = False
+        moco_zgs.speaker_info["model_name"] = "Sonos Play:3"
+        assert moco_zgs.speech_enhance_level is None
+        assert moco_zgs.renderingControl.GetEQ.call_count == 0
+        with pytest.raises(NotSupportedException):
+            moco_zgs.speech_enhance_level = 2
+
+        moco_zgs._is_soundbar = None
+        moco_zgs.speaker_info["model_name"] = "speaker prefix " + model_name
+        moco_zgs.renderingControl.GetEQ.return_value = {"CurrentValue": "3"}
+        # dialog_level collapses levels above 1 to a bool
+        assert moco_zgs.dialog_level is True
+        assert moco_zgs.speech_enhance_level == 3
+        moco_zgs.renderingControl.GetEQ.assert_called_with(
+            [("InstanceID", 0), ("EQType", "DialogLevel")]
+        )
+
+        moco_zgs.speech_enhance_level = 4
+        moco_zgs.renderingControl.SetEQ.assert_called_once_with(
+            [("InstanceID", 0), ("EQType", "DialogLevel"), ("DesiredValue", 4)]
+        )
+        with pytest.raises(ValueError):
+            moco_zgs.speech_enhance_level = 5
+
 
 class TestAVTransport:
     @pytest.fixture
