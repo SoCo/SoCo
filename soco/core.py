@@ -1610,6 +1610,8 @@ class SoCo(_SocoSingletonBase):
 
         Unlike `dialog_level`, which returns a bool, this returns the raw
         ``DialogLevel`` value so levels above 1 are preserved.
+        Note that setting `dialog_mode` or `dialog_level` to True sets
+        this level to 1.
         """
         if not self.is_ultra_soundbar:
             return None
