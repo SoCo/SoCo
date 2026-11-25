@@ -79,6 +79,23 @@ def test_restore_queue_skipped_when_none(moco):
     moco.add_uri_to_queue.assert_not_called()
 
 
+def test_restore_empty_uri_clears_selected_resource():
+    """Restoring an empty source clears a resource selected by a test."""
+    device = MagicMock()
+    device.get_current_transport_info.return_value = {
+        "current_transport_state": "STOPPED"
+    }
+
+    snap = Snapshot(device)
+    snap.is_coordinator = True
+    snap.media_uri = ""
+    snap.media_metadata = ""
+
+    snap._restore_coordinator()
+
+    device.play_uri.assert_called_once_with("", "", start=False)
+
+
 def test_snapshot_skips_cross_fade_when_not_coordinator(moco):
     """cross_fade must not be read on a non-coordinator (#621)."""
     with playing_local_queue(moco):

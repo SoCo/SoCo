@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import pytest
 from unittest.mock import PropertyMock, Mock, patch
+from soco.exceptions import MusicServiceException
 from soco.music_services import data_structures
 
 # DATA
@@ -220,10 +221,51 @@ def test_parse_response_plain_dict_fields():
 
 
 def test_parse_response_bad_type():
-    """Test parse reponse bad code"""
-    with pytest.raises(ValueError) as exp:
+    """A response with neither result key is a clean provider error."""
+    with pytest.raises(MusicServiceException) as exp:
         data_structures.parse_response(None, {}, "albums")
-    print(exp)
+    assert "searchResult" in str(exp.value)
+
+
+def test_parse_response_bad_type_with_non_dict_response():
+    """Even a non-dict response must yield a clean error, not a crash."""
+    with pytest.raises(MusicServiceException):
+        data_structures.parse_response(None, None, "albums")
+
+
+def test_parse_response_without_result_keys_reports_keys():
+    """The provider error names the keys actually present (eg PowerApp)."""
+    with pytest.raises(MusicServiceException) as exp:
+        data_structures.parse_response(None, {"nonsense": 1}, "albums")
+    assert "nonsense" in str(exp.value)
+
+
+def test_parse_response_keeps_raw_value_on_conversion_failure():
+    """Services that send wrongly-typed values (Music Source float duration,
+    IDAGIO literal ``"None"`` boolean) must not crash the whole result."""
+    music_service = Mock()
+    music_service.desc = "DESC"
+    response = {
+        "searchResult": {
+            "count": 1,
+            "mediaMetadata": [
+                {
+                    "id": "track/1",
+                    "itemType": "track",
+                    "title": "Robust Track",
+                    "trackMetadata": {
+                        "duration": "",  # empty, not an int (Music Source)
+                        "canPlay": "None",  # literal string (IDAGIO)
+                    },
+                }
+            ],
+        }
+    }
+    results = data_structures.parse_response(music_service, response, "albums")
+    assert len(results) == 1
+    # The raw values are kept so the item still parses
+    assert results[0].track_metadata.duration == ""
+    assert results[0].track_metadata.can_play == "None"
 
 
 def test_form_uri():

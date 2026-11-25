@@ -44,12 +44,9 @@ class Account:
         self.key = ""
 
     def __repr__(self):
-        return "<{} '{}:{}:{}' at {}>".format(
-            self.__class__.__name__,
-            self.serial_number,
-            self.service_type,
-            self.nickname,
-            hex(id(self)),
+        return (
+            f"<{self.__class__.__name__} '{self.serial_number}:"
+            f"{self.service_type}:{self.nickname}' at {hex(id(self))}>"
         )
 
     def __str__(self):
