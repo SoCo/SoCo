@@ -1603,6 +1603,50 @@ class SoCo(_SocoSingletonBase):
         )
 
     @property
+    def speech_enhance_level(self):
+        """int: The Ultra soundbar speech enhancement level.
+
+        Ranges from 0 (off) to 4 (max). None if not supported.
+
+        Unlike `dialog_level`, which returns a bool, this returns the raw
+        ``DialogLevel`` value so levels above 1 are preserved.
+        Note that setting `dialog_mode` or `dialog_level` to True sets
+        this level to 1.
+        """
+        if not self.is_ultra_soundbar:
+            return None
+
+        response = self.renderingControl.GetEQ(
+            [("InstanceID", 0), ("EQType", "DialogLevel")]
+        )
+        return int(response["CurrentValue"])
+
+    @speech_enhance_level.setter
+    def speech_enhance_level(self, level):
+        """Set the Ultra soundbar speech enhancement level.
+
+        :param level: Speech enhancement level, 0 (off) to 4 (max)
+        :type level: int
+        :raises NotSupportedException: If the device does not support
+        speech enhancement levels.
+        :raises ValueError: If the level is out of range.
+        """
+        if not self.is_ultra_soundbar:
+            raise NotSupportedException(
+                "The device is not an Ultra soundbar and doesn't support "
+                "speech_enhance_level."
+            )
+        if not 0 <= level <= 4:
+            raise ValueError("Value must be [0, 4]")
+        self.renderingControl.SetEQ(
+            [
+                ("InstanceID", 0),
+                ("EQType", "DialogLevel"),
+                ("DesiredValue", level),
+            ]
+        )
+
+    @property
     def trueplay(self):
         """bool: Whether Trueplay is enabled on this device.
         True if on, False if off.
